@@ -4176,6 +4176,7 @@ function libreClear(){
       لأن الرفض المفاجئ يُنزل تصنيف الموقع ويصعّب الطلب لاحقًا.
    ⚠️ يعمل على أندرويد من أي متصفح · وعلى iOS بعد التثبيت كـPWA فقط.
    ============================================================ */
+var SW_READY=false, SW_ERR='';
 var PUSH_URL='https://nafa-push.alhutar0.workers.dev';   /* ✅ خادم الإشعارات — منشور ويعمل */
 var PUSH_ON=stGet('push_on')==='1';
 var PUSH_ASKED=stGet('push_asked')||'';
@@ -4213,7 +4214,12 @@ function pushSubscribe(){
   })
   .then(function(perm){
    if(perm!=='granted')throw new Error('denied');
-   return navigator.serviceWorker.ready;
+   /* ★ حارس: serviceWorker.ready ينتظر للأبد إن لم يُسجَّل عامل خدمة.
+      نضع مهلة ٨ ثوانٍ فلا يتجمّد الزر بصمت أبدًا. */
+   return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise(function(_,rej){setTimeout(function(){rej(new Error('sw-timeout'));},8000);})
+   ]);
   })
   .then(function(reg){
    /* لو فيه اشتراك سابق، أعد استخدامه بدل إنشاء جديد */
@@ -4247,6 +4253,8 @@ function pushSubscribe(){
    var why;
    if(m==='denied')why=pick('رفضت إذن الإشعارات. فعّلها من إعدادات المتصفح للموقع.',
      'تم رفض إذن الإشعارات؛ فعّله من إعدادات المتصفح.','Permission denied — enable it in browser site settings.');
+   else if(m==='sw-timeout')why=pick('عامل الخدمة ما اشتغل. تأكّد أن ملف sw.js مرفوع بجانب index.html.',
+     'لم يعمل عامل الخدمة؛ تأكد من رفع sw.js.','Service worker not active — make sure sw.js is uploaded next to index.html.');
    else if(m.indexOf('vapid')===0)why=pick('تعذّر الاتصال بخادم الإشعارات.','تعذّر الاتصال بالخادم.','Could not reach the push server.');
    else if(m.indexOf('server-')===0)why=pick('الخادم رفض التسجيل ('+m.replace('server-','')+').',
      'رفض الخادم التسجيل.','Server rejected the subscription.');
@@ -4299,6 +4307,53 @@ function toast(msg,isErr){
  t.className='nafToast on'+(isErr?' err':'');
  clearTimeout(window.__toastT);
  window.__toastT=setTimeout(function(){t.className='nafToast';},isErr?6500:3500);
+}
+
+
+/* ============================================================
+   أداة تشخيص الإشعارات — تكشف أين تتوقف العملية بالضبط
+   ============================================================ */
+function pushDiagnose(){
+ var L=[];
+ function add(ok,label,extra){L.push((ok?'✅':'❌')+' '+label+(extra?' — '+extra:''));}
+
+ add(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1',
+   'الرابط آمن (https)', location.protocol+'//'+location.hostname);
+ add('serviceWorker' in navigator,'دعم عامل الخدمة');
+ add('PushManager' in window,'دعم الإشعارات الخلفية');
+ add(typeof Notification!=='undefined','واجهة الإشعارات',
+   typeof Notification!=='undefined'?('الإذن: '+Notification.permission):'غير متاحة');
+ add(!!PUSH_URL,'رابط الخادم مضبوط',PUSH_URL||'فارغ');
+ add(typeof pushSubscribe==='function','دالة الاشتراك موجودة');
+ add(typeof toast==='function','دالة الرسائل موجودة');
+
+ var out=L.join('<br>');
+ /* افحص تسجيل عامل الخدمة فعليًا */
+ if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistration().then(function(reg){
+   out+='<br>'+(reg?'✅ عامل الخدمة مسجّل':'❌ عامل الخدمة غير مسجّل — هذا يمنع الإشعارات');
+   if(reg&&reg.pushManager){
+    return reg.pushManager.getSubscription().then(function(sub){
+     out+='<br>'+(sub?'✅ يوجد اشتراك فعلي':'⚠️ لا يوجد اشتراك بعد');
+     showDiag(out);
+    });
+   }
+   showDiag(out);
+  }).catch(function(e){showDiag(out+'<br>❌ خطأ فحص العامل: '+e.message);});
+ } else showDiag(out);
+}
+function showDiag(html){
+ var ov=document.getElementById('diagBox');
+ if(!ov){
+  ov=document.createElement('div');ov.id='diagBox';
+  ov.style.cssText='position:fixed;inset:8% 6%;z-index:99;background:#0e1b33;color:#fff;'+
+   'border:1px solid rgba(255,255,255,.25);border-radius:18px;padding:18px;overflow:auto;'+
+   'font-size:12.5px;line-height:2;direction:rtl;box-shadow:0 20px 50px rgba(0,0,0,.6)';
+  document.body.appendChild(ov);
+ }
+ ov.innerHTML='<div style="font-weight:800;font-size:15px;margin-bottom:12px">تشخيص الإشعارات</div>'+
+  html+'<br><br><button onclick="document.getElementById(\'diagBox\').remove()" '+
+  'style="width:100%;padding:12px;border:0;border-radius:12px;background:#e6b45e;color:#3a2405;font-weight:800;font-size:14px">إغلاق</button>';
 }
 
 /* الشريط اللطيف — يُسأل مرتين فقط طوال العمر */
@@ -4359,19 +4414,20 @@ function renderSettings(){
     optBtn(pick('م/ث','م/ث','m/s'),WUNIT==='ms','data-wu="ms"')+
     optBtn(pick('عقدة','عقدة','knots'),WUNIT==='kn','data-wu="kn"');
  h+='<div class="m-sec">'+pick('تنبيه المطر','تنبيه المطر','Rain alerts')+'</div>';
- if(!pushSupported()){
-  h+='<div class="m-hint">'+pick('الإشعارات تحتاج فتح نفاف من رابط https أو تثبيته على الشاشة الرئيسية.',
-   'تتطلب الإشعارات تشغيل التطبيق عبر https أو تثبيته.',
-   'Alerts need Nafaf served over https, or installed to your home screen.')+'</div>';
- } else if(!PUSH_URL){
-  h+='<div class="m-hint">'+pick('خادم الإشعارات ما ينُشر بعد.','لم يُنشر خادم الإشعارات بعد.','Push server not deployed yet.')+'</div>';
- } else {
-  h+='<div class="m-hint">'+pick('إشعار واحد يتحدّث مع الحدث: يبدأ عند أول قطرة، ويتابع اشتداد المطر، وينتهي عند انحساره. ما يتكدّس بشريط إشعاراتك.',
+ h+='<div class="m-hint">'+pick('إشعار واحد يتحدّث مع الحدث: يبدأ عند أول قطرة، ويتابع اشتداده، وينتهي عند انحساره. ما يتكدّس بشريط إشعاراتك.',
    'إشعار واحد يتابع الحدث من بدايته حتى انحساره دون تراكم.',
-   'One notification that follows the event — from first drop to fading. It never stacks up.')+'</div>';
-  h+=optBtn(pick('مطفأ','مطفأ','Off'),!PUSH_ON,'data-push="0"')+
-     optBtn(pick('مفعّل','مفعّل','On'),PUSH_ON,'data-push="1"');
+   'One notification that follows the event — from first drop to fading.')+'</div>';
+ /* ★ المفتاح يظهر دائمًا — وإن فشل التفعيل تُعرض رسالة بالسبب */
+ h+=optBtn(pick('مطفأ','مطفأ','Off'),!PUSH_ON,'data-push="0"')+
+    optBtn(pick('مفعّل','مفعّل','On'),PUSH_ON,'data-push="1"');
+ if(!pushSupported()){
+  h+='<div class="cinWarn">'+pick(
+   '⚠️ متصفحك أو طريقة فتحك للتطبيق ما تسمح بالإشعارات حاليًا. اضغط «افحص سبب المشكلة» تحت لتعرف السبب بالضبط.',
+   '⚠️ لا تتوفر الإشعارات حاليًا؛ استخدم زر التشخيص لمعرفة السبب.',
+   '⚠️ Notifications unavailable right now — tap Diagnose below to see why.')+'</div>';
  }
+ h+='<button class="shbtn ghost" id="diagBtn" style="margin-top:8px">'+
+   pick('🔍 افحص سبب المشكلة','🔍 تشخيص الإشعارات','🔍 Diagnose')+'</button>';
  h+='<div class="m-sec">'+pick('الوضع السينمائي','الوضع السينمائي','Cinematic mode')+'</div>';
  h+='<div class="m-hint">'+pick('عند العواصف والمطر الغزير فقط: وميض برق خفيف، وصوت مطر، واهتزاز مع الرعد.',
    'يعمل أثناء العواصف فقط: وميض خفيف وصوت مطر واهتزاز.',
@@ -4410,6 +4466,7 @@ function renderSettings(){
   else if(b.getAttribute('data-ts')){TSCALE=parseFloat(b.getAttribute('data-ts'));stSet('tscale',String(TSCALE));applyScale();}
   else if(b.getAttribute('data-tu')){TUNIT=b.getAttribute('data-tu');stSet('tunit',TUNIT);}
   else if(b.getAttribute('data-wu')){WUNIT=b.getAttribute('data-wu');stSet('wunit',WUNIT);}
+  else if(b.id==='diagBtn'){pushDiagnose();return;}
   else if(b.hasAttribute('data-push')){
    if(b.getAttribute('data-push')==='1'){
     pushSubscribe().then(function(res){
@@ -4556,58 +4613,20 @@ function fetchAll(){
       من file:// تعمل الواجهة لكن لا تثبيت — هذا قيد المتصفح.
    ============================================================ */
 (function initPWA(){
+ /* ★ manifest من ملف حقيقي — blob: غير موثوق للتثبيت */
  try{
-  var mf='{"name": "نفاف — Nafaf", "short_name": "نفاف", "description": "طقسك بين يديك، بلسان أهلك", "start_url": ".", "scope": ".", "display": "standalone", "orientation": "portrait", "background_color": "#0d1a33", "theme_color": "#0e1b33", "dir": "rtl", "lang": "ar", "icons": [{"src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%230d1a33%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%232e86c4%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22d%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%237cc4f5%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%231b63b0%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%22112%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Cpath%20d%3D%22M256%2096c0%200%2096%20112%2096%20168a96%2096%200%201%201-192%200c0-56%2096-168%2096-168z%22%20fill%3D%22url%28%23d%29%22%2F%3E%3Cellipse%20cx%3D%22248%22%20cy%3D%22288%22%20rx%3D%2262%22%20ry%3D%2240%22%20fill%3D%22%23ffffff%22%2F%3E%3Cellipse%20cx%3D%22216%22%20cy%3D%22300%22%20rx%3D%2234%22%20ry%3D%2226%22%20fill%3D%22%23ffffff%22%2F%3E%3Cellipse%20cx%3D%22282%22%20cy%3D%22302%22%20rx%3D%2230%22%20ry%3D%2224%22%20fill%3D%22%23eef6ff%22%2F%3E%3Crect%20x%3D%22186%22%20y%3D%22292%22%20width%3D%22128%22%20height%3D%2230%22%20rx%3D%2215%22%20fill%3D%22%23ffffff%22%2F%3E%3C%2Fsvg%3E", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any"}, {"src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%230d1a33%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%232e86c4%22%2F%3E%3C%2FlinearGradient%3E%3ClinearGradient%20id%3D%22d%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%237cc4f5%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%231b63b0%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%22112%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Cpath%20d%3D%22M256%2096c0%200%2096%20112%2096%20168a96%2096%200%201%201-192%200c0-56%2096-168%2096-168z%22%20fill%3D%22url%28%23d%29%22%2F%3E%3Cellipse%20cx%3D%22248%22%20cy%3D%22288%22%20rx%3D%2262%22%20ry%3D%2240%22%20fill%3D%22%23ffffff%22%2F%3E%3Cellipse%20cx%3D%22216%22%20cy%3D%22300%22%20rx%3D%2234%22%20ry%3D%2226%22%20fill%3D%22%23ffffff%22%2F%3E%3Cellipse%20cx%3D%22282%22%20cy%3D%22302%22%20rx%3D%2230%22%20ry%3D%2224%22%20fill%3D%22%23eef6ff%22%2F%3E%3Crect%20x%3D%22186%22%20y%3D%22292%22%20width%3D%22128%22%20height%3D%2230%22%20rx%3D%2215%22%20fill%3D%22%23ffffff%22%2F%3E%3C%2Fsvg%3E", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable"}]}';
-  var blob=new Blob([mf],{type:'application/manifest+json'});
   var el=document.getElementById('mf');
-  if(el)el.href=URL.createObjectURL(blob);
+  if(el)el.href='manifest.json';
  }catch(e){}
 
  if(!('serviceWorker' in navigator))return;
+
  if(location.protocol!=='https:'&&location.hostname!=='localhost')return;
 
- var swCode=[
-  "var C='nafaf-v1';",
-  "self.addEventListener('install',function(e){self.skipWaiting();});",
-  "self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim());});",
-  "self.addEventListener('fetch',function(e){",
-  " var u=e.request.url;",
-  " if(e.request.method!=='GET')return;",
-  /* الصفحة نفسها: الشبكة أولًا ثم المخزن */
-  " if(e.request.mode==='navigate'){",
-  "  e.respondWith(fetch(e.request).then(function(r){",
-  "   var c=r.clone();caches.open(C).then(function(x){x.put(e.request,c);});return r;",
-  "  }).catch(function(){return caches.match(e.request);}));return;}",
-  /* بيانات الطقس: شبكة أولًا مع نسخة احتياطية */
-  " if(u.indexOf('open-meteo.com')>=0||u.indexOf('rainviewer.com')>=0){",
-  "  e.respondWith(fetch(e.request).then(function(r){",
-  "   var c=r.clone();caches.open(C).then(function(x){x.put(e.request,c);});return r;",
-  "  }).catch(function(){return caches.match(e.request);}));return;}",
-  /* بقية الموارد: المخزن أولًا */
-  " e.respondWith(caches.match(e.request).then(function(m){return m||fetch(e.request);}));",
-  "});",
-  "self.addEventListener('push',function(e){",
-  " var d={};try{d=e.data.json();}catch(x){d={title:'\u0646\u0641\u0627\u0641',body:e.data?e.data.text():''};}",
-  " e.waitUntil(self.registration.showNotification(d.title||'\u0646\u0641\u0627\u0641',{",
-  "  body:d.body||'', tag:d.tag||'nafaf-rain',",
-  "  renotify:!!d.renotify, silent:!!d.silent,",
-  "  dir:'rtl', lang:'ar', data:{url:'./'}",
-  " }));",
-  "});",
-  "self.addEventListener('notificationclick',function(e){",
-  " e.notification.close();",
-  " e.waitUntil(clients.matchAll({type:'window'}).then(function(cs){",
-  "  for(var i=0;i<cs.length;i++)if('focus' in cs[i])return cs[i].focus();",
-  "  if(clients.openWindow)return clients.openWindow('./');",
-  " }));",
-  "});"
- ].join('\n');
-
- try{
-  var swBlob=new Blob([swCode],{type:'text/javascript'});
-  navigator.serviceWorker.register(URL.createObjectURL(swBlob),{scope:'./'})
-   .catch(function(){});
- }catch(e){}
+ /* ★ تسجيل عامل الخدمة من ملف حقيقي — blob: ممنوع في كل المتصفحات */
+ navigator.serviceWorker.register('sw.js', {scope:'./'})
+  .then(function(reg){ SW_READY=true; })
+  .catch(function(err){ SW_ERR=String(err&&err.message||err); });
 })();
 
 /* زر التثبيت — يظهر فقط حين يسمح المتصفح */
