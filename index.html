@@ -569,6 +569,14 @@
   .an-b{font-size:13px;line-height:1.8;font-weight:600;color:rgba(255,255,255,.88)}
   .an-s{font-size:9.5px;font-weight:600;color:rgba(255,255,255,.5);line-height:1.6;
     margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.1)}
+  .nafToast{position:fixed;left:14px;right:14px;bottom:88px;z-index:70;
+    background:rgba(18,32,60,.97);color:#fff;border:1px solid rgba(255,255,255,.2);
+    border-radius:16px;padding:13px 16px;font-size:13px;font-weight:700;line-height:1.7;
+    text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.45);
+    opacity:0;transform:translateY(14px);pointer-events:none;
+    transition:opacity .28s,transform .28s}
+  .nafToast.on{opacity:1;transform:translateY(0)}
+  .nafToast.err{border-color:rgba(255,143,143,.5);background:rgba(60,22,28,.97)}
   .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
   .noanim .fadeIn{opacity:1;animation:none}
   @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -3414,9 +3422,13 @@ function wireSheet(){
 (function(){
  var y=document.getElementById('pbYes'),n=document.getElementById('pbNo');
  if(y)y.onclick=function(){
-  pushBarHide();
-  pushSubscribe().then(function(ok){
-   if(ok&&$("setBody"))renderSettings();
+  var btn=this;
+  btn.innerHTML=pick('لحظة…','لحظة…','…');
+  pushSubscribe().then(function(res){
+   pushBarHide();
+   if(res.ok)toast(pick('تم! بينبّهك نفاف أول ما ينزل مطر.',
+     'تم التفعيل بنجاح.','Done — you\u2019ll be alerted when rain starts.'));
+   else toast(res.why,true);
   });
  };
  if(n)n.onclick=pushBarHide;
@@ -4181,24 +4193,71 @@ function b64ToU8(b64){
 }
 /* اشترك فعليًا */
 function pushSubscribe(){
- if(!pushSupported()||!PUSH_URL)return Promise.resolve(false);
- return navigator.serviceWorker.ready.then(function(reg){
-  return fetch(PUSH_URL+'/vapid').then(function(r){return r.json();})
-   .then(function(v){
-    if(!v.key)throw 0;
-    return reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToU8(v.key)});
-   }).then(function(sub){
-    return fetch(PUSH_URL+'/subscribe',{method:'POST',
-     headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
-   }).then(function(){
-    PUSH_ON=true;stSet('push_on','1');return true;
+ /* ⚠️ لا نبتلع الأخطاء — نعيد سببها ليُعرض للمستخدم */
+ if(!('serviceWorker' in navigator))
+  return Promise.resolve({ok:false,why:pick('متصفحك ما يدعم الإشعارات.','المتصفح لا يدعم الإشعارات.','Your browser does not support notifications.')});
+ if(!('PushManager' in window))
+  return Promise.resolve({ok:false,why:pick('متصفحك ما يدعم الإشعارات الخلفية.','المتصفح لا يدعم Push.','Push not supported here.')});
+ if(location.protocol!=='https:'&&location.hostname!=='localhost'&&location.hostname!=='127.0.0.1')
+  return Promise.resolve({ok:false,why:pick('الإشعارات تحتاج فتح نفاف من رابط https.','تتطلب الإشعارات https.','Notifications need an https link.')});
+ if(!PUSH_URL)
+  return Promise.resolve({ok:false,why:pick('خادم الإشعارات غير مربوط.','الخادم غير مربوط.','Push server not linked.')});
+
+ /* ★ اطلب الإذن صراحةً أولًا — أوضح للمستخدم وأثبت عبر المتصفحات */
+ return Promise.resolve()
+  .then(function(){
+   if(typeof Notification==='undefined')throw new Error('no-notification-api');
+   if(Notification.permission==='granted')return 'granted';
+   if(Notification.permission==='denied')throw new Error('denied');
+   return Notification.requestPermission();
+  })
+  .then(function(perm){
+   if(perm!=='granted')throw new Error('denied');
+   return navigator.serviceWorker.ready;
+  })
+  .then(function(reg){
+   /* لو فيه اشتراك سابق، أعد استخدامه بدل إنشاء جديد */
+   return reg.pushManager.getSubscription().then(function(existing){
+    if(existing)return existing;
+    return fetch(PUSH_URL+'/vapid')
+     .then(function(r){if(!r.ok)throw new Error('vapid-http');return r.json();})
+     .then(function(v){
+      if(!v.key)throw new Error('vapid-empty');
+      return reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToU8(v.key)});
+     });
    });
- }).catch(function(){return false;});
+  })
+  .then(function(sub){
+   return fetch(PUSH_URL+'/subscribe',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(sub)}).then(function(r){
+     if(!r.ok)throw new Error('server-'+r.status);
+     return true;
+    });
+  })
+  .then(function(){
+   PUSH_ON=true;stSet('push_on','1');
+   refreshPushUI();
+   return {ok:true};
+  })
+  .catch(function(e){
+   PUSH_ON=false;stSet('push_on','0');
+   refreshPushUI();
+   var m=String(e&&e.message||e);
+   var why;
+   if(m==='denied')why=pick('رفضت إذن الإشعارات. فعّلها من إعدادات المتصفح للموقع.',
+     'تم رفض إذن الإشعارات؛ فعّله من إعدادات المتصفح.','Permission denied — enable it in browser site settings.');
+   else if(m.indexOf('vapid')===0)why=pick('تعذّر الاتصال بخادم الإشعارات.','تعذّر الاتصال بالخادم.','Could not reach the push server.');
+   else if(m.indexOf('server-')===0)why=pick('الخادم رفض التسجيل ('+m.replace('server-','')+').',
+     'رفض الخادم التسجيل.','Server rejected the subscription.');
+   else why=pick('ما قدرت أفعّل الإشعارات: '+m,'تعذّر التفعيل: '+m,'Could not enable: '+m);
+   return {ok:false,why:why};
+  });
 }
 function pushUnsubscribe(){
- PUSH_ON=false;stSet('push_on','0');
- if(!pushSupported())return;
- navigator.serviceWorker.ready.then(function(reg){
+ PUSH_ON=false;stSet('push_on','0');refreshPushUI();
+ if(!('serviceWorker' in navigator))return Promise.resolve();
+ return navigator.serviceWorker.ready.then(function(reg){
   return reg.pushManager.getSubscription();
  }).then(function(sub){
   if(!sub)return;
@@ -4207,6 +4266,41 @@ function pushUnsubscribe(){
   return sub.unsubscribe();
  }).catch(function(){});
 }
+
+/* ★ يحدّث واجهة الإعدادات فورًا إن كانت مفتوحة — كان هذا سبب بقاء «مطفأ» */
+function refreshPushUI(){
+ try{
+  var ov=$("ovSet");
+  if(ov&&ov.className.indexOf('on')>=0)renderSettings();
+ }catch(e){}
+}
+
+/* ★ يزامن الحالة الحقيقية عند كل إقلاع: قد يكون المستخدم ألغى الإذن من المتصفح */
+function pushSync(){
+ if(!('serviceWorker' in navigator)||!('PushManager' in window))return;
+ if(typeof Notification!=='undefined'&&Notification.permission!=='granted'){
+  if(PUSH_ON){PUSH_ON=false;stSet('push_on','0');refreshPushUI();}
+  return;
+ }
+ navigator.serviceWorker.ready.then(function(reg){
+  return reg.pushManager.getSubscription();
+ }).then(function(sub){
+  var real=!!sub;
+  if(real!==PUSH_ON){PUSH_ON=real;stSet('push_on',real?'1':'0');refreshPushUI();}
+ }).catch(function(){});
+}
+
+
+/* رسالة عابرة أسفل الشاشة — بديل alert المزعج */
+function toast(msg,isErr){
+ var t=document.getElementById('nafToast');
+ if(!t){t=document.createElement('div');t.id='nafToast';t.className='nafToast';document.body.appendChild(t);}
+ t.innerHTML=msg;
+ t.className='nafToast on'+(isErr?' err':'');
+ clearTimeout(window.__toastT);
+ window.__toastT=setTimeout(function(){t.className='nafToast';},isErr?6500:3500);
+}
+
 /* الشريط اللطيف — يُسأل مرتين فقط طوال العمر */
 function maybeAskPush(){
  if(PUSH_ON||!pushSupported()||!PUSH_URL)return;
@@ -4317,8 +4411,19 @@ function renderSettings(){
   else if(b.getAttribute('data-tu')){TUNIT=b.getAttribute('data-tu');stSet('tunit',TUNIT);}
   else if(b.getAttribute('data-wu')){WUNIT=b.getAttribute('data-wu');stSet('wunit',WUNIT);}
   else if(b.hasAttribute('data-push')){
-   if(b.getAttribute('data-push')==='1')pushSubscribe();
-   else pushUnsubscribe();}
+   if(b.getAttribute('data-push')==='1'){
+    pushSubscribe().then(function(res){
+     if(res.ok)toast(pick('تم تفعيل تنبيه المطر.','تم التفعيل.','Rain alerts enabled.'));
+     else toast(res.why,true);
+     renderSettings();
+    });
+   } else {
+    pushUnsubscribe().then(function(){
+     toast(pick('أُوقف تنبيه المطر.','تم الإيقاف.','Rain alerts off.'));
+     renderSettings();
+    });
+   }
+   return;}
   else if(b.hasAttribute('data-cin')){
    CINEMA=b.getAttribute('data-cin')==='1';stSet('cinema',CINEMA?'1':'0');
    if(CINEMA){if(TAB==='now')cinemaStart();}else cinemaStop();}
@@ -4535,7 +4640,7 @@ document.addEventListener('visibilitychange',function(){
 });
 
 /* ============ إقلاع ============ */
-touchStreak();applyAll();maybeAskPush();
+touchStreak();applyAll();pushSync();maybeAskPush();
 
 /* ★ الإقلاع: موقعك الجغرافي الحقيقي هو الأصل — لا مدينة افتراضية
    ⚠️ لا نعرض الرستاق ولا أي مدينة من القائمة إلا إن رُفض إذن الموقع تمامًا. */
