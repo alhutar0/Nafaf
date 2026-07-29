@@ -4310,52 +4310,6 @@ function toast(msg,isErr){
 }
 
 
-/* ============================================================
-   أداة تشخيص الإشعارات — تكشف أين تتوقف العملية بالضبط
-   ============================================================ */
-function pushDiagnose(){
- var L=[];
- function add(ok,label,extra){L.push((ok?'✅':'❌')+' '+label+(extra?' — '+extra:''));}
-
- add(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1',
-   'الرابط آمن (https)', location.protocol+'//'+location.hostname);
- add('serviceWorker' in navigator,'دعم عامل الخدمة');
- add('PushManager' in window,'دعم الإشعارات الخلفية');
- add(typeof Notification!=='undefined','واجهة الإشعارات',
-   typeof Notification!=='undefined'?('الإذن: '+Notification.permission):'غير متاحة');
- add(!!PUSH_URL,'رابط الخادم مضبوط',PUSH_URL||'فارغ');
- add(typeof pushSubscribe==='function','دالة الاشتراك موجودة');
- add(typeof toast==='function','دالة الرسائل موجودة');
-
- var out=L.join('<br>');
- /* افحص تسجيل عامل الخدمة فعليًا */
- if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistration().then(function(reg){
-   out+='<br>'+(reg?'✅ عامل الخدمة مسجّل':'❌ عامل الخدمة غير مسجّل — هذا يمنع الإشعارات');
-   if(reg&&reg.pushManager){
-    return reg.pushManager.getSubscription().then(function(sub){
-     out+='<br>'+(sub?'✅ يوجد اشتراك فعلي':'⚠️ لا يوجد اشتراك بعد');
-     showDiag(out);
-    });
-   }
-   showDiag(out);
-  }).catch(function(e){showDiag(out+'<br>❌ خطأ فحص العامل: '+e.message);});
- } else showDiag(out);
-}
-function showDiag(html){
- var ov=document.getElementById('diagBox');
- if(!ov){
-  ov=document.createElement('div');ov.id='diagBox';
-  ov.style.cssText='position:fixed;inset:8% 6%;z-index:99;background:#0e1b33;color:#fff;'+
-   'border:1px solid rgba(255,255,255,.25);border-radius:18px;padding:18px;overflow:auto;'+
-   'font-size:12.5px;line-height:2;direction:rtl;box-shadow:0 20px 50px rgba(0,0,0,.6)';
-  document.body.appendChild(ov);
- }
- ov.innerHTML='<div style="font-weight:800;font-size:15px;margin-bottom:12px">تشخيص الإشعارات</div>'+
-  html+'<br><br><button onclick="document.getElementById(\'diagBox\').remove()" '+
-  'style="width:100%;padding:12px;border:0;border-radius:12px;background:#e6b45e;color:#3a2405;font-weight:800;font-size:14px">إغلاق</button>';
-}
-
 /* الشريط اللطيف — يُسأل مرتين فقط طوال العمر */
 function maybeAskPush(){
  if(PUSH_ON||!pushSupported()||!PUSH_URL)return;
@@ -4426,9 +4380,7 @@ function renderSettings(){
    '⚠️ لا تتوفر الإشعارات حاليًا؛ استخدم زر التشخيص لمعرفة السبب.',
    '⚠️ Notifications unavailable right now — tap Diagnose below to see why.')+'</div>';
  }
- h+='<button class="shbtn ghost" id="diagBtn" style="margin-top:8px">'+
-   pick('🔍 افحص سبب المشكلة','🔍 تشخيص الإشعارات','🔍 Diagnose')+'</button>';
- h+='<div class="m-sec">'+pick('الوضع السينمائي','الوضع السينمائي','Cinematic mode')+'</div>';
+h+='<div class="m-sec">'+pick('الوضع السينمائي','الوضع السينمائي','Cinematic mode')+'</div>';
  h+='<div class="m-hint">'+pick('عند العواصف والمطر الغزير فقط: وميض برق خفيف، وصوت مطر، واهتزاز مع الرعد.',
    'يعمل أثناء العواصف فقط: وميض خفيف وصوت مطر واهتزاز.',
    'During storms only: gentle lightning, rain sound, and haptic thunder.')+'</div>';
@@ -4466,7 +4418,6 @@ function renderSettings(){
   else if(b.getAttribute('data-ts')){TSCALE=parseFloat(b.getAttribute('data-ts'));stSet('tscale',String(TSCALE));applyScale();}
   else if(b.getAttribute('data-tu')){TUNIT=b.getAttribute('data-tu');stSet('tunit',TUNIT);}
   else if(b.getAttribute('data-wu')){WUNIT=b.getAttribute('data-wu');stSet('wunit',WUNIT);}
-  else if(b.id==='diagBtn'){pushDiagnose();return;}
   else if(b.hasAttribute('data-push')){
    if(b.getAttribute('data-push')==='1'){
     pushSubscribe().then(function(res){
