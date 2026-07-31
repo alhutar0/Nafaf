@@ -3038,6 +3038,58 @@ function yearMapCard(){
  '</div>';
 }
 
+
+/* ============================================================
+   سؤال نفاف — عرض الجواب والأسئلة الجاهزة
+   ⚠️ حُذفت هذه الكتلة سهوًا في تعديل سابق فتوقّف renderNow عندها
+   ============================================================ */
+function setNafaf(t,src){
+ NAFAF_TXT=t;NAFAF_SRC=src||"";
+ var e=$("nafafText");if(e)e.innerHTML=t;
+ var e2=$("nafafText2");if(e2)e2.innerHTML=t;
+}
+function doAsk(){
+ var el=$("qin");if(!el||!W)return;
+ var q=el.value.replace(/^\s+|\s+$/g,"");
+ if(!q)return;
+ setNafaf(nafafAnswer(q),"");
+ el.value="";
+}
+var QA=[
+ {k:'what',q:['وش الجو اليوم؟','ما حالة الطقس؟',"How's the weather?"]},
+ {k:'sea',q:['أطلع البحر؟','هل أخرج إلى البحر؟','Go to sea?']},
+ {k:'bbq',q:['أشوي بره؟','هل أشوي في الخارج؟','BBQ outside?']},
+ {k:'carwash',q:['أغسل سيارتي؟','هل أغسل سيارتي؟','Wash my car?']},
+ {k:'walk',q:['الجو زين للمشي؟','مناسب للمشي؟','Good for a walk?']},
+ {k:'laundry',q:['أنشر غسيلي؟','هل أنشر الغسيل؟','Hang laundry?']}
+];
+function answer(k){
+ if(!W)return;
+ if(k==='what'){
+  setNafaf(nafafAnswer('وش الجو'),pick('قريت كل بياناتك','قرأتُ كل البيانات','Read all your data'));
+  return;
+ }
+ var res=evalActs(),i;
+ for(i=0;i<res.length;i++){
+  if(res[i].a.k===k){
+   var src=(k==='sea'&&MARINE&&MARINE.wave_height!=null)
+     ?pick('قريت بيانات الموج الحيّة','قرأتُ بيانات الموج','Read live wave data')
+     :pick('قريت توقعات الساعات الجاية','قرأتُ التوقعات القادمة','Read the coming hours');
+   setNafaf(res[i].note,src);
+   return;
+  }
+ }
+ setNafaf(pickLocal(stateOf(W)),"");
+}
+function buildChips(){
+ var box=$("chips");if(!box)return;
+ var h="",i,L=LI();
+ for(i=0;i<QA.length;i++)h+='<button class="chip" data-k="'+QA[i].k+'">'+QA[i].q[L]+'</button>';
+ box.innerHTML=h;
+ var b=box.getElementsByTagName("button"),j;
+ for(j=0;j<b.length;j++)b[j].onclick=function(){answer(this.getAttribute("data-k"));};
+}
+
 /* ============ عرض: الآن ============ */
 function stat(k,v,cls){return '<div class="stat"><div class="k">'+k+'</div><div class="v '+(cls||'')+'">'+v+'</div></div>';}
 function renderNow(){
