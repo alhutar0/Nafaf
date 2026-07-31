@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>بوابة نفاف — لوحة التحكم</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:"Segoe UI","Helvetica Neue",Tahoma,Arial,sans-serif;color:#fff;
+ background:linear-gradient(180deg,#0d1a33 0%,#16294a 50%,#1e3560 100%);
+ background-attachment:fixed;min-height:100vh;padding:16px 14px 40px}
+.wrap{max-width:640px;margin:0 auto}
+.top{text-align:center;padding:10px 0 18px}
+.top h1{font-size:22px;font-weight:800;letter-spacing:1px}
+.top p{font-size:11.5px;color:rgba(255,255,255,.55);font-weight:600;margin-top:4px}
+
+/* بوابة الدخول */
+.gate{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);
+ border-radius:20px;padding:24px 20px;text-align:center;margin-top:30px}
+.gate h2{font-size:16px;font-weight:800;margin-bottom:6px}
+.gate p{font-size:12px;color:rgba(255,255,255,.6);font-weight:600;margin-bottom:16px;line-height:1.7}
+.inp{width:100%;background:rgba(255,255,255,.95);border:0;border-radius:14px;color:#1b2c47;
+ font-family:inherit;font-size:16px;font-weight:700;padding:14px;outline:none;text-align:center;
+ letter-spacing:2px}
+.btn{width:100%;border:0;border-radius:14px;padding:14px;font-family:inherit;
+ font-size:14px;font-weight:800;margin-top:10px;cursor:pointer}
+.btn.gold{background:#e6b45e;color:#3a2405}
+.btn.ghost{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.2);color:#fff}
+.btn.red{background:rgba(220,90,90,.9);color:#fff}
+.btn:active{transform:scale(.98)}
+
+.hide{display:none}
+
+/* التبويبات */
+.tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.tab{flex:0 0 auto;font-size:12.5px;font-weight:700;color:rgba(255,255,255,.75);
+ background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+ border-radius:99px;padding:9px 16px;cursor:pointer;white-space:nowrap}
+.tab.on{background:#fff;color:#12203c;border-color:#fff}
+
+.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+ border-radius:18px;padding:15px 16px;margin-bottom:12px}
+.card h3{font-size:13.5px;font-weight:800;margin-bottom:10px;color:#e6b45e}
+.card h3 small{display:block;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);
+ margin-top:3px;line-height:1.6}
+
+/* صفوف المعلومات */
+.row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+ padding:9px 0;border-top:1px solid rgba(255,255,255,.08)}
+.row:first-of-type{border-top:0}
+.row .k{font-size:11.5px;font-weight:700;color:rgba(255,255,255,.65);flex:0 0 auto}
+.row .v{font-size:12px;font-weight:600;text-align:left;direction:ltr;
+ word-break:break-all;flex:1 1 auto;color:#fff}
+.row .v a{color:#9fd4f5;text-decoration:none}
+.copy{flex:0 0 auto;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+ color:#fff;font-size:10px;font-weight:700;border-radius:8px;padding:4px 9px;cursor:pointer}
+
+.secret{background:rgba(220,90,90,.12);border:1px solid rgba(220,90,90,.35);
+ border-radius:12px;padding:11px 13px;font-size:11px;font-weight:600;
+ color:#ffb3b3;line-height:1.75;margin-top:8px}
+
+/* نموذج الأخبار */
+.lbl{font-size:11.5px;font-weight:700;color:rgba(255,255,255,.7);margin:12px 0 6px;display:block}
+.fld{width:100%;background:rgba(255,255,255,.95);border:0;border-radius:12px;color:#1b2c47;
+ font-family:inherit;font-size:14px;font-weight:600;padding:12px 13px;outline:none}
+textarea.fld{min-height:80px;resize:vertical;line-height:1.7}
+.kinds{display:flex;gap:7px;flex-wrap:wrap;margin-top:2px}
+.kind{flex:1 1 auto;min-width:70px;text-align:center;font-size:12px;font-weight:700;
+ border-radius:12px;padding:11px 8px;cursor:pointer;border:1px solid}
+.kind.k-urgent{background:rgba(220,90,90,.14);border-color:rgba(220,90,90,.4);color:#ff9b9b}
+.kind.k-alert{background:rgba(255,209,102,.14);border-color:rgba(255,209,102,.4);color:#ffd166}
+.kind.k-info{background:rgba(159,212,245,.14);border-color:rgba(159,212,245,.4);color:#9fd4f5}
+.kind.k-good{background:rgba(127,227,154,.14);border-color:rgba(127,227,154,.4);color:#7fe39a}
+.kind.sel{outline:2px solid #fff;outline-offset:1px}
+.opts{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.opt{font-size:11.5px;font-weight:700;color:#fff;background:rgba(255,255,255,.08);
+ border:1px solid rgba(255,255,255,.18);border-radius:99px;padding:8px 14px;cursor:pointer}
+.opt.sel{background:#e6b45e;color:#3a2405;border-color:#e6b45e}
+
+/* المعاينة */
+.prev{border-radius:14px;padding:13px 15px;margin-top:12px;border:1px solid}
+.prev.k-urgent{background:linear-gradient(135deg,rgba(220,90,90,.2),rgba(255,255,255,.04));border-color:rgba(220,90,90,.5)}
+.prev.k-alert{background:linear-gradient(135deg,rgba(255,209,102,.18),rgba(255,255,255,.04));border-color:rgba(255,209,102,.45)}
+.prev.k-info{background:linear-gradient(135deg,rgba(159,212,245,.18),rgba(255,255,255,.04));border-color:rgba(159,212,245,.45)}
+.prev.k-good{background:linear-gradient(135deg,rgba(127,227,154,.18),rgba(255,255,255,.04));border-color:rgba(127,227,154,.45)}
+.prev .pt{font-size:10.5px;font-weight:800;margin-bottom:6px;opacity:.85}
+.prev .ph{font-size:14.5px;font-weight:800;line-height:1.5}
+.prev .pb{font-size:12.5px;font-weight:600;line-height:1.8;color:rgba(255,255,255,.88);margin-top:5px}
+
+/* الحالة الحية */
+.live{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
+ background:rgba(127,227,154,.12);border:1px solid rgba(127,227,154,.35);
+ border-radius:12px;padding:11px 13px;color:#7fe39a;margin-bottom:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:#7fe39a;flex:0 0 auto;
+ animation:p 2s ease-in-out infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.4}}
+
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:4px}
+.st{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+ border-radius:14px;padding:12px;text-align:center}
+.st .n{font-size:22px;font-weight:800;color:#e6b45e}
+.st .l{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.6);margin-top:2px}
+
+.toast{position:fixed;left:14px;right:14px;bottom:20px;z-index:99;
+ background:rgba(18,32,60,.97);border:1px solid rgba(255,255,255,.22);border-radius:16px;
+ padding:14px 16px;font-size:13px;font-weight:700;text-align:center;line-height:1.7;
+ box-shadow:0 12px 34px rgba(0,0,0,.5);opacity:0;transform:translateY(14px);
+ pointer-events:none;transition:opacity .28s,transform .28s}
+.toast.on{opacity:1;transform:translateY(0)}
+.toast.err{border-color:rgba(255,143,143,.5);background:rgba(60,22,28,.97)}
+
+.note{font-size:11px;color:rgba(255,255,255,.55);font-weight:600;line-height:1.8;margin-top:10px}
+.warn{background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.3);
+ border-radius:12px;padding:11px 13px;font-size:11px;font-weight:600;
+ color:#ffd166;line-height:1.75;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>بوابة نفاف</h1>
+    <p>المحطة الواحدة — كل ما يخص التطبيق</p>
+  </div>
+
+  <!-- بوابة الدخول -->
+  <div class="gate" id="gate">
+    <h2>الدخول</h2>
+    <p>أدخل رمز التحكم للوصول إلى لوحة نفاف</p>
+    <input class="inp" id="pass" type="password" inputmode="numeric" placeholder="••••••••" />
+    <button class="btn gold" id="loginBtn">دخول</button>
+  </div>
+
+  <!-- اللوحة -->
+  <div class="hide" id="panel">
+    <div class="tabs">
+      <span class="tab on" data-t="news">📢 الأخبار</span>
+      <span class="tab" data-t="links">🔗 الروابط</span>
+      <span class="tab" data-t="keys">🔑 المفاتيح</span>
+      <span class="tab" data-t="services">🌐 الخدمات</span>
+      <span class="tab" data-t="files">📁 الملفات</span>
+      <span class="tab" data-t="settings">⚙️ الإعدادات</span>
+    </div>
+
+    <!-- ═══════ الأخبار ═══════ -->
+    <div id="p-news">
+      <div id="liveNews"></div>
+
+      <div class="card">
+        <h3>نشر خبر جديد
+          <small>يظهر فورًا في الصفحة الرئيسية لكل من يفتح نفاف</small>
+        </h3>
+
+        <span class="lbl">نوع الخبر</span>
+        <div class="kinds" id="kinds">
+          <span class="kind k-urgent" data-k="urgent">عاجل</span>
+          <span class="kind k-alert" data-k="alert">تنبيه</span>
+          <span class="kind k-info sel" data-k="info">معلومة</span>
+          <span class="kind k-good" data-k="good">بشارة</span>
+        </div>
+
+        <span class="lbl">العنوان (إلزامي)</span>
+        <input class="fld" id="nTitle" maxlength="120" placeholder="مثال: تجمّعات مائية على طريق نزوى" />
+
+        <span class="lbl">التفاصيل (اختياري — اتركه فارغًا لعرض العنوان فقط)</span>
+        <textarea class="fld" id="nBody" maxlength="400" placeholder="تفاصيل إضافية تظهر تحت العنوان…"></textarea>
+
+        <span class="lbl">مدة العرض</span>
+        <div class="opts" id="hours">
+          <span class="opt" data-h="3">٣ ساعات</span>
+          <span class="opt" data-h="6">٦ ساعات</span>
+          <span class="opt" data-h="12">١٢ ساعة</span>
+          <span class="opt" data-h="24">يوم كامل</span>
+          <span class="opt sel" data-h="0">حتى أوقفه</span>
+        </div>
+
+        <span class="lbl">إشعار للأجهزة</span>
+        <div class="opts" id="notify">
+          <span class="opt sel" data-n="0">بدون إشعار</span>
+          <span class="opt" data-n="1">أرسل إشعارًا أيضًا</span>
+        </div>
+
+        <div id="preview"></div>
+        <button class="btn gold" id="pubBtn">نشر الخبر</button>
+        <div class="warn">
+          ⚠️ التزم بالخط الذي بنينا عليه نفاف: <b>وصف لا تحذير رسمي</b>.
+          «تجمّعات مائية على الطريق» ✅ — «أخلوا المنطقة» ❌ (اختصاص الجهات الرسمية وحدها).
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>الحالة الحية</h3>
+        <div class="stat" id="stats"></div>
+        <button class="btn ghost" id="refreshBtn" style="margin-top:12px">تحديث الحالة</button>
+      </div>
+    </div>
+
+    <!-- ═══════ الروابط ═══════ -->
+    <div id="p-links" class="hide">
+      <div class="card">
+        <h3>روابط الإنتاج
+          <small>الروابط الحيّة التي يعمل عليها نفاف الآن</small>
+        </h3>
+        <div class="row"><span class="k">التطبيق</span>
+          <span class="v"><a href="https://alhutar0.github.io/Nafaf/" target="_blank">alhutar0.github.io/Nafaf/</a></span>
+          <button class="copy" data-c="https://alhutar0.github.io/Nafaf/">نسخ</button></div>
+        <div class="row"><span class="k">الخادم</span>
+          <span class="v"><a href="https://nafa-push.alhutar0.workers.dev" target="_blank">nafa-push.alhutar0.workers.dev</a></span>
+          <button class="copy" data-c="https://nafa-push.alhutar0.workers.dev">نسخ</button></div>
+        <div class="row"><span class="k">المستودع</span>
+          <span class="v"><a href="https://github.com/alhutar0/Nafaf" target="_blank">github.com/alhutar0/Nafaf</a></span>
+          <button class="copy" data-c="https://github.com/alhutar0/Nafaf">نسخ</button></div>
+        <div class="row"><span class="k">Cloudflare</span>
+          <span class="v"><a href="https://dash.cloudflare.com" target="_blank">dash.cloudflare.com</a></span>
+          <button class="copy" data-c="https://dash.cloudflare.com">نسخ</button></div>
+      </div>
+
+      <div class="card">
+        <h3>نقاط الخادم (API)
+          <small>ما يستدعيه التطبيق واللوحة من الخادم</small>
+        </h3>
+        <div class="row"><span class="k">/news</span><span class="v">قراءة الخبر الحالي</span></div>
+        <div class="row"><span class="k">/news/publish</span><span class="v">نشر خبر (محمي)</span></div>
+        <div class="row"><span class="k">/news/stop</span><span class="v">إيقاف الخبر (محمي)</span></div>
+        <div class="row"><span class="k">/subscribe</span><span class="v">تسجيل جهاز للإشعارات</span></div>
+        <div class="row"><span class="k">/heartbeat</span><span class="v">نبض السلسلة</span></div>
+        <div class="row"><span class="k">/vapid</span><span class="v">المفتاح العام</span></div>
+        <div class="row"><span class="k">/state</span><span class="v">حالة المطر الحالية</span></div>
+        <div class="row"><span class="k">/admin/stats</span><span class="v">إحصاءات (محمي)</span></div>
+      </div>
+    </div>
+
+    <!-- ═══════ المفاتيح ═══════ -->
+    <div id="p-keys" class="hide">
+      <div class="card">
+        <h3>مفاتيح VAPID
+          <small>تُثبت هوية خادمك للمتصفحات عند إرسال الإشعارات</small>
+        </h3>
+        <div class="row"><span class="k">العام</span>
+          <span class="v" style="font-size:10px">BF_eeXmsa5AZoAMZwl6in3UbJT7eDiXaI576Kp6M4jrxb8fg5DKXBZhi4O89lV4VBcQLxb8feOzMKpxFTWAuszI</span>
+          <button class="copy" data-c="BF_eeXmsa5AZoAMZwl6in3UbJT7eDiXaI576Kp6M4jrxb8fg5DKXBZhi4O89lV4VBcQLxb8feOzMKpxFTWAuszI">نسخ</button></div>
+        <div class="secret">
+          🔒 <b>المفتاح الخاص</b> محفوظ مشفّرًا في Cloudflare باسم <code>VAPID_PRIVATE_KEY</code>
+          ولا يظهر هنا عمدًا. لعرضه أو تغييره: لوحة Cloudflare ← nafa-push ← Settings ← Variables and Secrets.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>قاعدة البيانات</h3>
+        <div class="row"><span class="k">اسم الربط</span><span class="v">NAFAF_KV</span></div>
+        <div class="row"><span class="k">القاعدة</span><span class="v">nafaf-subscribers</span></div>
+        <div class="row"><span class="k">الجدولة</span><span class="v">*/10 * * * * (كل ١٠ دقائق)</span></div>
+      </div>
+    </div>
+
+    <!-- ═══════ الخدمات ═══════ -->
+    <div id="p-services" class="hide">
+      <div class="card">
+        <h3>مصادر البيانات
+          <small>كل خدمة خارجية يعتمد عليها نفاف وقيود ترخيصها</small>
+        </h3>
+        <div class="row"><span class="k">Open-Meteo</span>
+          <span class="v">الطقس · الأرشيف · البحر · جودة الهواء<br>
+          <small style="color:rgba(255,255,255,.5)">CC-BY 4.0 · بلا مفتاح · مجاني</small></span></div>
+        <div class="row"><span class="k">NASA GIBS</span>
+          <span class="v">صور الأقمار · كشف الغبار<br>
+          <small style="color:rgba(255,255,255,.5)">مفتوح · التضمين مسموح صراحةً</small></span></div>
+        <div class="row"><span class="k">NASA IMERG</span>
+          <span class="v">رصد المطر الساتلي<br>
+          <small style="color:rgba(255,255,255,.5)">مفتوح · تأخير ٤ ساعات</small></span></div>
+        <div class="row"><span class="k">RainViewer</span>
+          <span class="v">سحب حيّة · رادار<br>
+          <small style="color:#ffd166">⚠️ الإسناد إلزامي · راسلهم قبل الاستخدام التجاري</small></span></div>
+        <div class="row"><span class="k">LibreWXR</span>
+          <span class="v">رادار بديل<br>
+          <small style="color:rgba(255,255,255,.5)">CC-BY-4.0 · الأنظف ترخيصًا</small></span></div>
+        <div class="row"><span class="k">NCSI عُمان</span>
+          <span class="v">المعدّلات المناخية الرسمية<br>
+          <small style="color:rgba(255,255,255,.5)">١١ محطة · ٢٠٢١–٢٠٢٥</small></span></div>
+        <div class="warn">
+          ⛔ <b>ممنوع نهائيًا:</b> Windy (iframe محظور في التطبيقات) ·
+          كشط المواقع الرسمية · الكاميرات الحيّة.
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ الملفات ═══════ -->
+    <div id="p-files" class="hide">
+      <div class="card">
+        <h3>ملفات التطبيق
+          <small>يجب أن تكون الثلاثة معًا في نفس المجلد على GitHub</small>
+        </h3>
+        <div class="row"><span class="k">index.html</span><span class="v">التطبيق كاملًا (~٢٩٠ KB)</span></div>
+        <div class="row"><span class="k">sw.js</span><span class="v">عامل الخدمة — الإشعارات والعمل أوفلاين</span></div>
+        <div class="row"><span class="k">manifest.json</span><span class="v">بيانات التثبيت والأيقونة</span></div>
+        <div class="note">
+          ⚠️ حذف <b>sw.js</b> أو نسيان رفعه يعطّل الإشعارات والتثبيت بالكامل — وهذا ما حدث فعلًا من قبل.
+        </div>
+      </div>
+      <div class="card">
+        <h3>ملفات الخادم</h3>
+        <div class="row"><span class="k">push.js</span><span class="v">كود Worker — يُلصق في محرّر Cloudflare</span></div>
+        <div class="note">
+          طريقة التحديث: Cloudflare ← nafa-push ← Edit code ← تحديد الكل ← لصق الجديد ← Deploy.
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ الإعدادات ═══════ -->
+    <div id="p-settings" class="hide">
+      <div class="card">
+        <h3>تغيير رمز التحكم
+          <small>يُخزَّن في قاعدة البيانات ويتقدّم على الرمز الأصلي</small>
+        </h3>
+        <span class="lbl">الرمز الجديد (٦ خانات فأكثر)</span>
+        <input class="fld" id="newPass" type="text" placeholder="رمز جديد قوي" />
+        <button class="btn gold" id="passBtn">حفظ الرمز الجديد</button>
+        <div class="warn">
+          ⚠️ الرمز الحالي رقم هاتف — <b>قابل للتخمين</b>. غيّره إلى رقم لا صلة له بمعلوماتك الشخصية.
+        </div>
+      </div>
+      <div class="card">
+        <h3>الخروج</h3>
+        <button class="btn red" id="logoutBtn">تسجيل الخروج</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var API='https://nafa-push.alhutar0.workers.dev';
+var PASS='';
+var KIND='info', HOURS=0, NOTIFY=0;
+
+function $(i){return document.getElementById(i);}
+function toast(m,err){
+ var t=$('toast');t.innerHTML=m;t.className='toast on'+(err?' err':'');
+ clearTimeout(window._tt);window._tt=setTimeout(function(){t.className='toast';},err?6000:3200);
+}
+function api(path,body){
+ return fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify(Object.assign({pass:PASS},body||{}))}).then(function(r){return r.json();});
+}
+
+/* ===== الدخول ===== */
+$('loginBtn').onclick=function(){
+ var v=$('pass').value.trim();
+ if(!v){toast('أدخل الرمز',true);return;}
+ PASS=v;
+ api('/admin/stats').then(function(r){
+  if(r.error){toast('رمز غير صحيح',true);PASS='';return;}
+  try{sessionStorage.setItem('nafaf_pass',v);}catch(e){}
+  $('gate').className='gate hide';
+  $('panel').className='';
+  showStats(r);
+  loadNews();
+ }).catch(function(){toast('تعذّر الاتصال بالخادم',true);});
+};
+$('pass').onkeydown=function(e){if(e.key==='Enter')$('loginBtn').click();};
+
+/* استعادة الجلسة */
+try{
+ var saved=sessionStorage.getItem('nafaf_pass');
+ if(saved){$('pass').value=saved;setTimeout(function(){$('loginBtn').click();},100);}
+}catch(e){}
+
+/* ===== التبويبات ===== */
+var tabs=document.querySelectorAll('.tab');
+for(var i=0;i<tabs.length;i++){
+ tabs[i].onclick=function(){
+  var t=this.getAttribute('data-t');
+  for(var j=0;j<tabs.length;j++)tabs[j].className='tab';
+  this.className='tab on';
+  ['news','links','keys','services','files','settings'].forEach(function(k){
+   $('p-'+k).className=(k===t)?'':'hide';
+  });
+ };
+}
+
+/* ===== اختيار النوع والمدة ===== */
+function wirePick(boxId,attr,cb){
+ var box=$(boxId),items=box.children,k;
+ for(k=0;k<items.length;k++){
+  items[k].onclick=function(){
+   for(var m=0;m<items.length;m++)items[m].className=items[m].className.replace(' sel','');
+   this.className+=' sel';
+   cb(this.getAttribute(attr));
+  };
+ }
+}
+wirePick('kinds','data-k',function(v){KIND=v;renderPreview();});
+wirePick('hours','data-h',function(v){HOURS=parseInt(v,10);});
+wirePick('notify','data-n',function(v){NOTIFY=parseInt(v,10);});
+
+/* ===== المعاينة الحيّة ===== */
+var KIND_LABEL={urgent:'عاجل',alert:'تنبيه',info:'معلومة',good:'بشارة'};
+function renderPreview(){
+ var t=$('nTitle').value.trim(), b=$('nBody').value.trim();
+ if(!t){$('preview').innerHTML='';return;}
+ $('preview').innerHTML='<div class="prev k-'+KIND+'">'+
+  '<div class="pt">'+KIND_LABEL[KIND]+' — معاينة كما سيراها المستخدم</div>'+
+  '<div class="ph">'+t+'</div>'+
+  (b?'<div class="pb">'+b+'</div>':'')+'</div>';
+}
+$('nTitle').oninput=renderPreview;
+$('nBody').oninput=renderPreview;
+
+/* ===== النشر ===== */
+$('pubBtn').onclick=function(){
+ var t=$('nTitle').value.trim();
+ if(!t){toast('العنوان إلزامي',true);return;}
+ var btn=this;btn.innerHTML='جارٍ النشر…';
+ api('/news/publish',{kind:KIND,title:t,body:$('nBody').value.trim(),
+  hours:HOURS||null,notify:NOTIFY===1}).then(function(r){
+  btn.innerHTML='نشر الخبر';
+  if(r.error){toast('فشل النشر: '+r.error,true);return;}
+  toast('تم النشر'+(r.pushed?' — أُرسل إشعار لـ'+r.pushed+' جهاز':''));
+  $('nTitle').value='';$('nBody').value='';renderPreview();
+  loadNews();
+ }).catch(function(){btn.innerHTML='نشر الخبر';toast('تعذّر الاتصال',true);});
+};
+
+/* ===== الخبر الحالي ===== */
+function loadNews(){
+ fetch(API+'/news').then(function(r){return r.json();}).then(function(n){
+  if(!n||!n.active){$('liveNews').innerHTML='';return;}
+  var age=Math.round((Date.now()-n.ts)/60000);
+  var exp=n.expires?('ينتهي بعد '+Math.max(0,Math.round((n.expires-Date.now())/60000))+' دقيقة'):'يبقى حتى توقفه';
+  $('liveNews').innerHTML='<div class="card">'+
+   '<div class="live"><span class="dot"></span>خبر منشور الآن</div>'+
+   '<div class="prev k-'+n.kind+'"><div class="pt">'+KIND_LABEL[n.kind]+' · منذ '+age+' دقيقة · '+exp+'</div>'+
+   '<div class="ph">'+n.title+'</div>'+(n.body?'<div class="pb">'+n.body+'</div>':'')+'</div>'+
+   '<button class="btn red" id="stopBtn" style="margin-top:12px">إيقاف الخبر فورًا</button></div>';
+  $('stopBtn').onclick=function(){
+   this.innerHTML='جارٍ…';
+   api('/news/stop').then(function(r){
+    if(r.error){toast('فشل الإيقاف',true);return;}
+    toast('أُوقف الخبر');loadNews();
+   });
+  };
+ }).catch(function(){});
+}
+
+/* ===== الإحصاءات ===== */
+function showStats(r){
+ $('stats').innerHTML=
+  '<div class="st"><div class="n">'+(r.subscribers||0)+'</div><div class="l">مشترك بالإشعارات</div></div>'+
+  '<div class="st"><div class="n">'+(r.activeUsers||0)+'</div><div class="l">مستخدم نشط</div></div>'+
+  '<div class="st"><div class="n">'+((r.rain&&r.rain.n)||0)+'</div><div class="l">منطقة تمطر الآن</div></div>'+
+  '<div class="st"><div class="n">'+(r.news&&r.news.active?'نعم':'لا')+'</div><div class="l">خبر منشور</div></div>';
+}
+$('refreshBtn').onclick=function(){
+ var b=this;b.innerHTML='جارٍ…';
+ api('/admin/stats').then(function(r){
+  b.innerHTML='تحديث الحالة';
+  if(r.error){toast('انتهت الجلسة',true);return;}
+  showStats(r);loadNews();toast('حُدّثت الحالة');
+ });
+};
+
+/* ===== تغيير الرمز ===== */
+$('passBtn').onclick=function(){
+ var np=$('newPass').value.trim();
+ if(np.length<6){toast('الرمز قصير — ٦ خانات على الأقل',true);return;}
+ api('/admin/pass',{newPass:np}).then(function(r){
+  if(r.error){toast('فشل: '+r.error,true);return;}
+  PASS=np;
+  try{sessionStorage.setItem('nafaf_pass',np);}catch(e){}
+  $('newPass').value='';
+  toast('تم تغيير الرمز بنجاح');
+ });
+};
+
+/* ===== النسخ ===== */
+document.addEventListener('click',function(e){
+ if(e.target.className==='copy'){
+  var v=e.target.getAttribute('data-c');
+  try{
+   navigator.clipboard.writeText(v).then(function(){toast('نُسخ');});
+  }catch(err){toast('تعذّر النسخ',true);}
+ }
+});
+
+/* ===== الخروج ===== */
+$('logoutBtn').onclick=function(){
+ PASS='';
+ try{sessionStorage.removeItem('nafaf_pass');}catch(e){}
+ $('panel').className='hide';
+ $('gate').className='gate';
+ $('pass').value='';
+ toast('خرجت من اللوحة');
+};
+</script>
+</body>
+</html>

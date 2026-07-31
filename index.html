@@ -3090,6 +3090,37 @@ function buildChips(){
  for(j=0;j<b.length;j++)b[j].onclick=function(){answer(this.getAttribute("data-k"));};
 }
 
+
+/* ============================================================
+   الأخبار العاجلة — تُنشر من بوابة التحكم وتظهر هنا
+   ============================================================ */
+var NEWS=null;
+function newsLoad(){
+ if(!PUSH_URL)return;
+ fetch(PUSH_URL+'/news').then(function(r){return r.json();})
+  .then(function(n){
+   var had=NEWS&&NEWS.active;
+   NEWS=(n&&n.active)?n:null;
+   if((NEWS?1:0)!==(had?1:0)&&TAB==='now')renderNow();
+  }).catch(function(){});
+}
+var NEWS_LABEL={
+ urgent:['عاجل','عاجل','Breaking'],
+ alert:['تنبيه','تنبيه','Alert'],
+ info:['معلومة','معلومة','Notice'],
+ good:['بشارة','بشارة','Good news']
+};
+function newsCard(){
+ if(!NEWS||!NEWS.active)return '';
+ var L=LI(),k=NEWS.kind||'info';
+ var lbl=(NEWS_LABEL[k]||NEWS_LABEL.info)[L];
+ return '<div class="newsCard nk-'+k+'">'+
+  '<div class="nc-t"><span class="nc-dot"></span>'+lbl+'</div>'+
+  '<div class="nc-h">'+NEWS.title+'</div>'+
+  (NEWS.body?'<div class="nc-b">'+NEWS.body+'</div>':'')+
+ '</div>';
+}
+
 /* ============ عرض: الآن ============ */
 function stat(k,v,cls){return '<div class="stat"><div class="k">'+k+'</div><div class="v '+(cls||'')+'">'+v+'</div></div>';}
 function renderNow(){
@@ -3108,6 +3139,7 @@ function renderNow(){
  var nx=nextChangeLine();
  var h='';
  /* ★ الترتيب: مرصد الأمطار ← الحرارة ← السما الآن */
+ var nc=newsCard(); if(nc)h+='<div class="fadeIn d1">'+nc+'</div>';
  var wc=watchCard(); if(wc)h+='<div class="fadeIn d1">'+wc+'</div>';
  var lf=liveFeedCard();
  var brf=briefCard();
@@ -4803,6 +4835,7 @@ function fetchAll(){
  if(TAB==='life')renderLife();}).catch(function(){});
  fetchModels(lat,lon);
  watchLoad(true);
+ newsLoad();
  WORLD=null; /* أعِد جلب سماء العالم مع كل تحديث */
  if(TAB==='world')worldLoad();}
 
@@ -4861,7 +4894,7 @@ document.addEventListener('visibilitychange',function(){
 });
 
 /* ============ إقلاع ============ */
-touchStreak();applyAll();pushSync();maybeAskPush();sendHeartbeat();
+touchStreak();applyAll();pushSync();maybeAskPush();sendHeartbeat();newsLoad();
 
 /* ★ الإقلاع: موقعك الجغرافي الحقيقي هو الأصل — لا مدينة افتراضية
  ⚠️ لا نعرض الرستاق ولا أي مدينة من القائمة إلا إن رُفض إذن الموقع تمامًا. */
