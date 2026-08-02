@@ -138,6 +138,8 @@ textarea.fld{min-height:80px;resize:vertical;line-height:1.7}
       <span class="tab" data-t="keys">🔑 المفاتيح</span>
       <span class="tab" data-t="services">🌐 الخدمات</span>
       <span class="tab" data-t="files">📁 الملفات</span>
+      <span class="tab" data-t="control">🎛️ التحكم</span>
+      <span class="tab" data-t="visitors">📊 الزوار</span>
       <span class="tab" data-t="settings">⚙️ الإعدادات</span>
     </div>
 
@@ -305,6 +307,65 @@ textarea.fld{min-height:80px;resize:vertical;line-height:1.7}
       </div>
     </div>
 
+
+    <!-- ═══════ التحكم في التطبيق ═══════ -->
+    <div id="p-control" class="hide">
+      <div class="card">
+        <h3>البطاقة الدوّارة
+          <small>تظهر في الصفحة الرئيسية وتتبدّل تلقائيًا</small>
+        </h3>
+        <span class="lbl">مدة عرض كل شريحة</span>
+        <div class="opts" id="rotSec">
+          <span class="opt" data-s="2">٢ ثانية</span>
+          <span class="opt" data-s="3">٣ ثوانٍ</span>
+          <span class="opt sel" data-s="4">٤ ثوانٍ</span>
+          <span class="opt" data-s="6">٦ ثوانٍ</span>
+          <span class="opt" data-s="8">٨ ثوانٍ</span>
+          <span class="opt" data-s="12">١٢ ثانية</span>
+        </div>
+
+        <span class="lbl">الشرائح المعروضة (اختر ما تريد إظهاره)</span>
+        <div class="opts" id="rotSlides">
+          <span class="opt sel" data-k="anomaly">المعدّل الرسمي</span>
+          <span class="opt sel" data-k="brief">موجز نفاف</span>
+          <span class="opt sel" data-k="astro">سماء الليلة</span>
+          <span class="opt sel" data-k="onday">في مثل هذا اليوم</span>
+          <span class="opt sel" data-k="story">قصة اليوم</span>
+          <span class="opt sel" data-k="star">الدرور والنجوم</span>
+          <span class="opt sel" data-k="models">اتفاق النماذج</span>
+          <span class="opt sel" data-k="stab">استقرار السماء</span>
+          <span class="opt sel" data-k="smell">رائحة الجو</span>
+        </div>
+        <div class="note">اضغط لتفعيل أو تعطيل — المفعّل ذهبي. لو عطّلت الكل تعود كلها تلقائيًا.</div>
+      </div>
+
+      <div class="card">
+        <h3>ترتيب التبويبات
+          <small>اسحب بالأزرار لتغيير ترتيب ظهورها في التطبيق</small>
+        </h3>
+        <div id="tabOrder"></div>
+        <div class="note">التبويب الأول هو ما يفتح عليه التطبيق.</div>
+      </div>
+
+      <button class="btn gold" id="saveCfgBtn">حفظ إعدادات التطبيق</button>
+      <div class="note">التغييرات تصل لكل مستخدم خلال ثوانٍ من فتحه للتطبيق.</div>
+    </div>
+
+    <!-- ═══════ الزوار ═══════ -->
+    <div id="p-visitors" class="hide">
+      <div class="card">
+        <h3>الآن مباشر</h3>
+        <div class="stat" id="vLive"></div>
+        <button class="btn ghost" id="vRefresh" style="margin-top:12px">تحديث</button>
+      </div>
+      <div class="card">
+        <h3>آخر ١٤ يومًا
+          <small>الفريد = أشخاص مختلفون · الفتحات = مرات الفتح الكلية</small>
+        </h3>
+        <div id="vDays"></div>
+      </div>
+    </div>
+
     <!-- ═══════ الإعدادات ═══════ -->
     <div id="p-settings" class="hide">
       <div class="card">
@@ -355,6 +416,8 @@ $('loginBtn').onclick=function(){
   $('panel').className='';
   showStats(r);
   loadNews();
+  cfgLoad();
+  loadVisitors();
  }).catch(function(){toast('تعذّر الاتصال بالخادم',true);});
 };
 $('pass').onkeydown=function(e){if(e.key==='Enter')$('loginBtn').click();};
@@ -372,7 +435,7 @@ for(var i=0;i<tabs.length;i++){
   var t=this.getAttribute('data-t');
   for(var j=0;j<tabs.length;j++)tabs[j].className='tab';
   this.className='tab on';
-  ['news','links','keys','services','files','settings'].forEach(function(k){
+  ['news','links','keys','services','files','control','visitors','settings'].forEach(function(k){
    $('p-'+k).className=(k===t)?'':'hide';
   });
  };
@@ -481,6 +544,124 @@ document.addEventListener('click',function(e){
   }catch(err){toast('تعذّر النسخ',true);}
  }
 });
+
+
+/* ═══════ التحكم في التطبيق ═══════ */
+var CFG={rotateSec:4,rotateSlides:null,tabOrder:null};
+var TAB_LIST=[
+ {k:'now',n:'الآن'},{k:'life',n:'يومك'},{k:'fc',n:'التوقعات'},
+ {k:'live',n:'الرصد المباشر'},{k:'world',n:'نافذة العالم'},{k:'src',n:'المصادر'}
+];
+var TAB_ORDER=TAB_LIST.map(function(t){return t.k;});
+
+function cfgLoad(){
+ fetch(API+'/config').then(function(r){return r.json();}).then(function(c){
+  if(!c)return;
+  CFG=Object.assign(CFG,c);
+  /* الثواني */
+  var secs=$('rotSec').children,i;
+  for(i=0;i<secs.length;i++){
+   secs[i].className='opt'+(parseInt(secs[i].getAttribute('data-s'),10)===CFG.rotateSec?' sel':'');
+  }
+  /* الشرائح */
+  if(CFG.rotateSlides&&CFG.rotateSlides.length){
+   var sl=$('rotSlides').children;
+   for(i=0;i<sl.length;i++){
+    var k=sl[i].getAttribute('data-k');
+    sl[i].className='opt'+(CFG.rotateSlides.indexOf(k)>=0?' sel':'');
+   }
+  }
+  /* التبويبات */
+  if(CFG.tabOrder&&CFG.tabOrder.length)TAB_ORDER=CFG.tabOrder.slice();
+  renderTabOrder();
+ }).catch(function(){renderTabOrder();});
+}
+
+function renderTabOrder(){
+ var h='',i;
+ for(i=0;i<TAB_ORDER.length;i++){
+  var k=TAB_ORDER[i],nm=k;
+  for(var j=0;j<TAB_LIST.length;j++)if(TAB_LIST[j].k===k)nm=TAB_LIST[j].n;
+  h+='<div class="row" style="align-items:center">'+
+   '<span class="k" style="flex:1 1 auto;color:#fff;font-size:13px">'+(i+1)+'. '+nm+'</span>'+
+   '<button class="copy" data-up="'+i+'">▲</button>'+
+   '<button class="copy" data-dn="'+i+'">▼</button></div>';
+ }
+ $('tabOrder').innerHTML=h;
+ var btns=$('tabOrder').querySelectorAll('button');
+ for(var b=0;b<btns.length;b++){
+  btns[b].onclick=function(){
+   var u=this.getAttribute('data-up'),dn=this.getAttribute('data-dn');
+   if(u!==null&&u!==undefined&&this.hasAttribute('data-up')){
+    var iu=parseInt(u,10);
+    if(iu>0){var t=TAB_ORDER[iu-1];TAB_ORDER[iu-1]=TAB_ORDER[iu];TAB_ORDER[iu]=t;}
+   } else if(this.hasAttribute('data-dn')){
+    var id=parseInt(dn,10);
+    if(id<TAB_ORDER.length-1){var t2=TAB_ORDER[id+1];TAB_ORDER[id+1]=TAB_ORDER[id];TAB_ORDER[id]=t2;}
+   }
+   renderTabOrder();
+  };
+ }
+}
+
+/* اختيار الثواني */
+(function(){
+ var secs=$('rotSec').children,i;
+ for(i=0;i<secs.length;i++){
+  secs[i].onclick=function(){
+   for(var m=0;m<secs.length;m++)secs[m].className='opt';
+   this.className='opt sel';
+   CFG.rotateSec=parseInt(this.getAttribute('data-s'),10);
+  };
+ }
+})();
+
+/* تفعيل/تعطيل الشرائح */
+(function(){
+ var sl=$('rotSlides').children,i;
+ for(i=0;i<sl.length;i++){
+  sl[i].onclick=function(){
+   this.className=(this.className.indexOf('sel')>=0)?'opt':'opt sel';
+  };
+ }
+})();
+
+$('saveCfgBtn').onclick=function(){
+ var btn=this;btn.innerHTML='جارٍ الحفظ…';
+ var slides=[],sl=$('rotSlides').children,i;
+ for(i=0;i<sl.length;i++)if(sl[i].className.indexOf('sel')>=0)slides.push(sl[i].getAttribute('data-k'));
+ api('/config/save',{rotateSec:CFG.rotateSec,
+  rotateSlides:slides.length?slides:null,tabOrder:TAB_ORDER}).then(function(r){
+  btn.innerHTML='حفظ إعدادات التطبيق';
+  if(r.error){toast('فشل الحفظ: '+r.error,true);return;}
+  toast('حُفظت الإعدادات — ستصل للمستخدمين خلال ثوانٍ');
+ }).catch(function(){btn.innerHTML='حفظ إعدادات التطبيق';toast('تعذّر الاتصال',true);});
+};
+
+/* ═══════ الزوار ═══════ */
+function loadVisitors(){
+ api('/admin/visitors').then(function(r){
+  if(r.error){toast('انتهت الجلسة',true);return;}
+  $('vLive').innerHTML=
+   '<div class="st"><div class="n">'+r.liveNow+'</div><div class="l">نشط الآن</div></div>'+
+   '<div class="st"><div class="n">'+r.total+'</div><div class="l">إجمالي الزوار</div></div>';
+  var h='',max=1,i;
+  for(i=0;i<r.days.length;i++)if(r.days[i].opens>max)max=r.days[i].opens;
+  for(i=0;i<r.days.length;i++){
+   var d=r.days[i],w=Math.round(d.opens/max*100);
+   var lbl=(i===0)?'اليوم':(i===1?'أمس':d.day.slice(5));
+   h+='<div style="margin-bottom:9px">'+
+    '<div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;margin-bottom:4px">'+
+     '<span style="color:rgba(255,255,255,.75)">'+lbl+'</span>'+
+     '<span style="color:#e6b45e">'+d.unique+' فريد · '+d.opens+' فتحة</span></div>'+
+    '<div style="height:6px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden">'+
+     '<div style="height:100%;width:'+w+'%;background:linear-gradient(90deg,#e6b45e,#7fe39a);border-radius:99px"></div>'+
+    '</div></div>';
+  }
+  $('vDays').innerHTML=h;
+ }).catch(function(){toast('تعذّر جلب الإحصاءات',true);});
+}
+$('vRefresh').onclick=function(){loadVisitors();toast('حُدّثت');};
 
 /* ===== الخروج ===== */
 $('logoutBtn').onclick=function(){

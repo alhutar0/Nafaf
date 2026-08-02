@@ -625,6 +625,23 @@
   .rt-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.22);
     transition:background .3s,width .3s}
   .rt-dot.on{background:#e6b45e;width:16px;border-radius:99px}
+  /* أرشيف الزلازل */
+  .qk{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);
+    border-radius:16px;padding:12px 14px;margin-bottom:9px}
+  .qk-row{display:flex;align-items:flex-start;gap:12px}
+  .qk-mag{flex:0 0 46px;width:46px;height:46px;border-radius:14px;border:1.5px solid;
+    display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800}
+  .qk-tx{flex:1 1 auto;min-width:0}
+  .qk-p{font-size:13px;font-weight:700;line-height:1.5;color:#fff}
+  .qk-m{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.6);margin-top:3px;line-height:1.6}
+  .qk-felt{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.7);
+    margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);line-height:1.65}
+  .qk-empty{font-size:13px;font-weight:600;color:rgba(255,255,255,.75);line-height:1.8;text-align:center;padding:8px 0}
+  .qk-foot{background:rgba(255,209,102,.09);border:1px solid rgba(255,209,102,.28);
+    border-radius:14px;padding:12px 14px;margin-top:12px;font-size:11px;font-weight:600;
+    color:rgba(255,255,255,.75);line-height:1.85}
+  .qk-foot b{color:#ffd166}
+  .qk-foot a{color:#9fd4f5}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -652,6 +669,7 @@
  <div class="panel" id="p-fc"><div id="fcBody"><div class="loading">…</div></div></div>
  <div class="panel" id="p-world"><div id="worldBody"><div class="loading">…</div></div></div>
  <div class="panel" id="p-live"><div id="liveBody"><div class="loading">…</div></div></div>
+ <div class="panel" id="p-quake"><div id="quakeBody"><div class="loading">…</div></div></div>
  <div class="panel" id="p-src"><div id="srcBody"><div class="loading">…</div></div></div>
  <div class="foot" id="footTxt">نفاف — طقسك بين يديك بلسان أهلك.<br>ECMWF · NOAA/GFS · ICON · UKMO · Marine · Air</div>
 </div>
@@ -3256,6 +3274,11 @@ function rotSlides(){
    badge:'', col:'#9fd4f5', b:sm.t[L], s:''});
  }
 
+ /* تصفية حسب اختيار المشغّل من اللوحة */
+ if(CFG.rotateSlides&&CFG.rotateSlides.length){
+  var keep=out.filter(function(x){return CFG.rotateSlides.indexOf(x.k)>=0;});
+  if(keep.length)out=keep;
+ }
  return out;
 }
 
@@ -3298,7 +3321,7 @@ function rotStart(){
  rotStop();
  var sl=rotSlides();
  if(sl.length<2)return;
- ROT_TIMER=setInterval(rotNext,4000);
+ ROT_TIMER=setInterval(rotNext,(CFG.rotateSec||4)*1000);
 }
 function rotStop(){if(ROT_TIMER){clearInterval(ROT_TIMER);ROT_TIMER=null;}}
 function rotWire(){
@@ -3309,6 +3332,170 @@ function rotWire(){
   rotNext();
   rotStart();
  };
+}
+
+
+/* ============================================================
+   الإعدادات الحيّة + عدّاد الزوار
+   يقرأ التطبيق إعداداته من الخادم فيتحكم المشغّل عن بُعد
+   ============================================================ */
+var CFG={rotateSec:4,rotateSlides:null,tabOrder:null,features:{}};
+
+function cfgLoad(){
+ if(!PUSH_URL)return;
+ fetch(PUSH_URL+'/config').then(function(r){return r.json();})
+  .then(function(c){
+   if(!c)return;
+   var oldTabs=JSON.stringify(CFG.tabOrder);
+   CFG=Object.assign(CFG,c);
+   /* أعد تشغيل الدوران بالتوقيت الجديد */
+   if(typeof rotStart==='function'&&TAB==='now'){rotStop();rotStart();}
+   /* أعد بناء التبويبات لو تغيّر ترتيبها */
+   if(JSON.stringify(CFG.tabOrder)!==oldTabs&&typeof buildTabs==='function')buildTabs();
+  }).catch(function(){});
+}
+
+/* معرّف زائر مجهول — يُولَّد مرة ويبقى محليًا */
+function visitorId(){
+ var v=stGet('vid');
+ if(!v){
+  v='v'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+  stSet('vid',v);
+ }
+ return v;
+}
+function pingVisit(){
+ if(!PUSH_URL)return;
+ fetch(PUSH_URL+'/visit',{method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({vid:visitorId()})}).catch(function(){});
+}
+
+
+/* ============================================================
+   أرشيف الزلازل — تعليمي صامت
+   المصدر: USGS (هيئة المسح الجيولوجي الأمريكية) — مجاني بلا مفتاح
+   ⚠️ مبادئ غير قابلة للتفاوض:
+     • لا إشعارات إطلاقًا — هذا أرشيف لا نظام إنذار
+     • لا تحذيرات ولا توجيهات سلامة
+     • رابط دائم للجهة الرسمية المختصة
+   ⚠️ تقني: GeoJSON يعطي [lon, lat, depth] لا [lat, lon] — والوقت بالميلي ثانية
+   ============================================================ */
+var QUAKES=null, QUAKES_LOADING=false, QUAKES_TS=0;
+
+function quakesLoad(force){
+ if(QUAKES_LOADING)return;
+ if(!force&&QUAKES&&(Date.now()-QUAKES_TS)<15*60000)return;
+ QUAKES_LOADING=true;
+ /* نطاق الجزيرة العربية وبحر العرب وإيران الجنوبية */
+ var start=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
+ var url='https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson'+
+  '&starttime='+start+'&minmagnitude=3.5'+
+  '&minlatitude=14&maxlatitude=34&minlongitude=44&maxlongitude=64'+
+  '&orderby=time&limit=40';
+ fetch(url).then(function(r){if(!r.ok)throw 0;return r.json();})
+  .then(function(d){
+   var out=[],i;
+   var feats=(d&&d.features)||[];
+   for(i=0;i<feats.length;i++){
+    var f=feats[i],pr=f.properties,c=f.geometry&&f.geometry.coordinates;
+    if(!pr||!c)continue;
+    out.push({
+     mag:pr.mag, place:pr.place||'', time:pr.time,   /* ميلي ثانية */
+     lon:c[0], lat:c[1], depth:c[2],                 /* ★ الترتيب الصحيح */
+     tsunami:pr.tsunami||0, url:pr.url||''
+    });
+   }
+   QUAKES=out; QUAKES_TS=Date.now(); QUAKES_LOADING=false;
+   if(TAB==='quake')renderQuakes();
+  }).catch(function(){
+   QUAKES_LOADING=false; QUAKES=[];
+   if(TAB==='quake')renderQuakes();
+  });
+}
+
+/* المسافة من موقع المستخدم */
+function quakeDistance(q){
+ if(typeof kmBetween!=='function')return null;
+ return Math.round(kmBetween(CUR.lat,CUR.lon,q.lat,q.lon));
+}
+/* هل يُشعر به عادةً؟ — قاعدة تعليمية مبسّطة لا تنبؤ */
+function feltNote(mag,km,depth){
+ var L=LI();
+ if(km==null)return '';
+ /* تقدير تعليمي عام: الشدة تقل مع المسافة والعمق */
+ if(mag<4)return ['نادرًا ما يُشعر به إلا قرب مركزه.','نادرًا ما يُشعر به بعيدًا عن مركزه.','Rarely felt beyond the epicentre.'][L];
+ if(km>600)return ['بعيد جدًا — لا يُشعر به عادةً على هذي المسافة.','بعيد؛ لا يُشعر به عادةً على هذه المسافة.','Too far to be felt here.'][L];
+ if(mag>=5.5&&km<300)return ['قد يُشعر به في المباني العالية على هذي المسافة.','قد يُشعر به في المباني المرتفعة.','May be felt in tall buildings at this distance.'][L];
+ if(mag>=5&&km<150)return ['قد يُشعر به خفيفًا.','قد يُشعر به بشكل خفيف.','May be felt lightly.'][L];
+ return ['ما يُحسّ به عادةً على هذي المسافة.','غالبًا لا يُشعر به على هذه المسافة.','Generally not felt at this distance.'][L];
+}
+function magColor(m){
+ if(m>=6)return '#d9483a';
+ if(m>=5)return '#e8a33a';
+ if(m>=4.5)return '#c9d94a';
+ return '#9fd4f5';
+}
+function quakeAgo(t){
+ var L=LI(),mins=Math.round((Date.now()-t)/60000);
+ if(mins<60)return ['قبل '+mins+' دقيقة','قبل '+mins+' دقيقة',mins+' min ago'][L];
+ var h=Math.round(mins/60);
+ if(h<24)return ['قبل '+h+' ساعة','قبل '+h+' ساعة',h+'h ago'][L];
+ var dd=Math.round(h/24);
+ return ['قبل '+dd+' يوم','قبل '+dd+' يومًا',dd+'d ago'][L];
+}
+
+function renderQuakes(){
+ var b=$("quakeBody");if(!b)return;
+ var L=LI();
+ var head='<div class="sec-t">'+['أرشيف الزلازل','أرشيف الزلازل','Earthquake archive'][L]+'</div>'+
+  '<div class="sec-s">'+['رصد علمي لآخر ٣٠ يومًا في الجزيرة وبحر العرب — للاطلاع والتعلّم',
+   'سجل علمي لآخر ٣٠ يومًا في المنطقة — للاطلاع',
+   'Scientific record of the past 30 days — for reference'][L]+'</div>';
+
+ if(!QUAKES){b.innerHTML=head+'<div class="loading">'+
+  ['نجيب سجل الزلازل…','جارٍ الجلب…','Loading…'][L]+'</div>';quakesLoad();return;}
+
+ if(!QUAKES.length){
+  b.innerHTML=head+'<div class="card"><div class="qk-empty">'+
+   ['ما في زلازل مسجّلة بقوة ٣.٥ فأعلى في المنطقة خلال آخر ٣٠ يوم.',
+    'لا زلازل مسجّلة بقوة ٣.٥ فأعلى خلال ٣٠ يومًا.',
+    'No quakes of M3.5+ recorded in the region in 30 days.'][L]+
+   '</div></div>'+quakeFooter();
+  return;
+ }
+
+ var h=head,i;
+ for(i=0;i<QUAKES.length;i++){
+  var q=QUAKES[i],km=quakeDistance(q),col=magColor(q.mag);
+  h+='<div class="qk">'+
+   '<div class="qk-row">'+
+    '<span class="qk-mag" style="color:'+col+';border-color:'+col+'55;background:'+col+'1a">'+
+     q.mag.toFixed(1)+'</span>'+
+    '<span class="qk-tx">'+
+     '<div class="qk-p">'+q.place+'</div>'+
+     '<div class="qk-m">'+quakeAgo(q.time)+
+      (km!=null?' · '+['يبعد '+km+' كم عنك','على بُعد '+km+' كم',km+' km away'][L]:'')+
+      ' · '+['عمق','عمق','depth'][L]+' '+Math.round(q.depth)+' '+['كم','كم','km'][L]+'</div>'+
+    '</span>'+
+   '</div>'+
+   '<div class="qk-felt">'+feltNote(q.mag,km,q.depth)+'</div>'+
+  '</div>';
+ }
+ b.innerHTML=h+quakeFooter();
+}
+
+function quakeFooter(){
+ var L=LI();
+ return '<div class="qk-foot">'+
+  ['<b>هذا أرشيف علمي للاطلاع فقط — ليس نظام إنذار.</b><br>'+
+   'المصدر: هيئة المسح الجيولوجي الأمريكية (USGS). للمعلومات الرسمية في السلطنة: '+
+   '<a href="https://www.squ.edu.om" target="_blank" rel="noopener">مركز رصد الزلازل — جامعة السلطان قابوس</a>.',
+   '<b>أرشيف علمي للاطلاع — ليس نظام إنذار.</b><br>'+
+   'المصدر: USGS. الجهة المختصة: مركز رصد الزلازل بجامعة السلطان قابوس.',
+   '<b>Scientific archive only — not a warning system.</b><br>'+
+   'Source: USGS. For official info: Sultan Qaboos University Seismology Centre.'][L]+
+ '</div>';
 }
 
 /* ============ عرض: الآن ============ */
@@ -4275,7 +4462,7 @@ function worldLoad(){
  lo:(it.daily&&it.daily.temperature_2m_min)?it.daily.temperature_2m_min[0]:null});
  }
  WORLD_LOADING=false;
- if(TAB==='world')renderWorld();
+ if(TAB==='world')renderWorld();if(TAB==='quake')renderQuakes();
  }).catch(function(){WORLD_LOADING=false;
  var b=$("worldBody");
  if(b)b.innerHTML='<div class="loading">'+pick('تعذّر جلب سما العالم.','تعذّر الجلب.','Could not load world skies.')+'</div>';});
@@ -4805,16 +4992,31 @@ var TABS=[{k:'now',t:['الآن','الآن','Now']},{k:'life',t:['يومك','ي�
  {k:'fc',t:['التوقعات','التوقعات','Forecast']},
  {k:'live',t:['الرصد المباشر','الرصد المباشر','Live radar']},
  {k:'world',t:['نافذة العالم','نافذة العالم','World']},
+ {k:'quake',t:['الزلازل','الزلازل','Quakes']},
  {k:'src',t:['المصادر','المصادر','Sources']}];
-function buildTabs(){var h="",i,L=LI();
- for(i=0;i<TABS.length;i++)h+='<button class="tab'+(TAB===TABS[i].k?' on':'')+'" data-t="'+TABS[i].k+'">'+TABS[i].t[L]+'</button>';
+function orderedTabs(){
+ if(!CFG.tabOrder||!CFG.tabOrder.length)return TABS;
+ var out=[],i,j;
+ for(i=0;i<CFG.tabOrder.length;i++)
+  for(j=0;j<TABS.length;j++)
+   if(TABS[j].k===CFG.tabOrder[i]){out.push(TABS[j]);break;}
+ /* أضف أي تبويب لم يُذكر في الترتيب */
+ for(j=0;j<TABS.length;j++){
+  var found=false;
+  for(i=0;i<out.length;i++)if(out[i].k===TABS[j].k){found=true;break;}
+  if(!found)out.push(TABS[j]);
+ }
+ return out;
+}
+function buildTabs(){var h="",i,L=LI(),TABS_=orderedTabs();
+ for(i=0;i<TABS_.length;i++)h+='<button class="tab'+(TAB===TABS_[i].k?' on':'')+'" data-t="'+TABS_[i].k+'">'+TABS_[i].t[L]+'</button>';
  $("tabs").innerHTML=h;
  var b=$("tabs").getElementsByTagName("button"),j;
  for(j=0;j<b.length;j++)b[j].onclick=function(){TAB=this.getAttribute("data-t");buildTabs();showPanels();};}
 function showPanels(){var i;
  if(TAB!=='now'){cinemaStop();rotStop();}
  for(i=0;i<TABS.length;i++){var el=$("p-"+TABS[i].k);if(el)el.className="panel"+(TAB===TABS[i].k?" on":"");}
- if(TAB==='now')renderNow();if(TAB==='life')renderLife();if(TAB==='fc')renderFc();if(TAB==='world')renderWorld();if(TAB==='live')renderLive();if(TAB==='src')renderSrc();}
+ if(TAB==='now')renderNow();if(TAB==='life')renderLife();if(TAB==='fc')renderFc();if(TAB==='world')renderWorld();if(TAB==='quake')renderQuakes();if(TAB==='live')renderLive();if(TAB==='src')renderSrc();}
 
 /* ============ الإعدادات ============ */
 function optBtn(label,on,attr){return '<button class="opt'+(on?' on':'')+'" '+attr+'>'+label+'</button>';}
@@ -5084,7 +5286,7 @@ document.addEventListener('visibilitychange',function(){
 });
 
 /* ============ إقلاع ============ */
-touchStreak();applyAll();pushSync();maybeAskPush();sendHeartbeat();newsLoad();
+touchStreak();applyAll();pushSync();maybeAskPush();sendHeartbeat();newsLoad();cfgLoad();pingVisit();
 
 /* ★ الإقلاع: موقعك الجغرافي الحقيقي هو الأصل — لا مدينة افتراضية
  ⚠️ لا نعرض الرستاق ولا أي مدينة من القائمة إلا إن رُفض إذن الموقع تمامًا. */
@@ -5144,6 +5346,7 @@ function useRealLocation(lat,lon){
  stSet('myLat',String(lat));stSet('myLon',String(lon));stSet('myName',nm);stSet('myCo','');
  selectGlobal(lat,lon,nm,'');});}
 
+setInterval(function(){pingVisit();},180000);
 setInterval(function(){
  feedAstro();feedSave(); /* الأحداث الفلكية تتحرك دائمًا */
  var prev=IS_NIGHT,prevG=IS_GOLDEN;computeNight();
