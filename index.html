@@ -521,7 +521,7 @@
  border-top:1px solid rgba(255,255,255,.07)}
 .fd-row:first-of-type{border-top:0;padding-top:0}
 .fd-row.fresh.fd-tx{color:#fff}
-.anim .fd-row.fresh{animation:fdIn.5s cubic-bezier(.2,.9,.3,1)}
+.anim .fd-row.fresh{animation:fdIn .5s cubic-bezier(.2,.9,.3,1)}
  @keyframes fdIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 .fd-ic{flex:0 0 18px;font-size:13px;color:#e6b45e;text-align:center;line-height:1.5}
 .fd-tx{flex:1 1 auto;min-width:0;font-size:12.5px;font-weight:600;line-height:1.65;
@@ -579,7 +579,53 @@
  transition:opacity .28s,transform .28s}
 .nafToast.on{opacity:1;transform:translateY(0)}
 .nafToast.err{border-color:rgba(255,143,143,.5);background:rgba(60,22,28,.97)}
-.fadeIn{opacity:0;animation:fadeUp.5s ease forwards}
+  /* ===== الأخبار العاجلة — بطاقة بهوية نفاف ===== */
+  .newsCard{position:relative;border-radius:20px;padding:15px 17px 14px;margin-bottom:12px;
+    border:1px solid;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.22)}
+  .newsCard:before{content:"";position:absolute;top:0;bottom:0;inset-inline-start:0;width:4px}
+  .nk-urgent{background:linear-gradient(135deg,rgba(220,90,90,.26),rgba(255,255,255,.05));
+    border-color:rgba(255,143,143,.5)}
+  .nk-urgent:before{background:#ff6b6b}
+  .nk-alert{background:linear-gradient(135deg,rgba(255,209,102,.24),rgba(255,255,255,.05));
+    border-color:rgba(255,209,102,.5)}
+  .nk-alert:before{background:#ffd166}
+  .nk-info{background:linear-gradient(135deg,rgba(159,212,245,.24),rgba(255,255,255,.05));
+    border-color:rgba(159,212,245,.5)}
+  .nk-info:before{background:#9fd4f5}
+  .nk-good{background:linear-gradient(135deg,rgba(127,227,154,.24),rgba(255,255,255,.05));
+    border-color:rgba(127,227,154,.5)}
+  .nk-good:before{background:#7fe39a}
+  .nc-t{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;
+    letter-spacing:.05em;padding:4px 11px;border-radius:99px;margin-bottom:9px;
+    background:rgba(0,0,0,.28)}
+  .nk-urgent .nc-t{color:#ffb3b3}
+  .nk-alert .nc-t{color:#ffd166}
+  .nk-info .nc-t{color:#bfe0f8}
+  .nk-good .nc-t{color:#9fe9b8}
+  .nc-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:0 0 auto}
+  .anim .nk-urgent .nc-dot{animation:ncPulse 1.3s ease-in-out infinite}
+  @keyframes ncPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.75)}}
+  .nc-h{font-size:16px;font-weight:800;line-height:1.55;color:#fff}
+  .nc-b{font-size:13px;font-weight:600;line-height:1.85;color:rgba(255,255,255,.88);
+    margin-top:7px;padding-top:9px;border-top:1px solid rgba(255,255,255,.14)}
+  /* ===== البطاقة الدوّارة ===== */
+  .rotator{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);
+    border-radius:20px;padding:15px 17px 12px;margin-bottom:12px;cursor:pointer;
+    transition:opacity .26s ease;min-height:118px;position:relative}
+  .rt-head{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+  .rt-t{font-size:11.5px;font-weight:800;letter-spacing:.02em}
+  .rt-badge{margin-inline-start:auto;font-size:12px;font-weight:800;
+    border:1px solid;border-radius:99px;padding:3px 11px;white-space:nowrap}
+  .rt-lead{font-size:15px;font-weight:800;margin-bottom:7px;line-height:1.5;color:#fff}
+  .rt-b{font-size:13.5px;font-weight:600;line-height:1.85;color:rgba(255,255,255,.92)}
+  .rt-b b{color:#fff;font-weight:800}
+  .rt-s{font-size:9.5px;font-weight:600;color:rgba(255,255,255,.5);line-height:1.6;
+    margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.1)}
+  .rt-dots{display:flex;justify-content:center;gap:5px;margin-top:11px}
+  .rt-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.22);
+    transition:background .3s,width .3s}
+  .rt-dot.on{background:#e6b45e;width:16px;border-radius:99px}
+.fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .d1{animation-delay:.05s}.d2{animation-delay:.13s}.d3{animation-delay:.21s}
@@ -857,7 +903,7 @@ var MOTION=stGet('motion')||'full';
 var TSCALE=parseFloat(stGet('tscale')||'1');
 var TUNIT=stGet('tunit')||'c';
 var WUNIT=stGet('wunit')||'kmh';
-var CARDS_DEFAULT=['anomaly','astro','onday','streak','activities','smell','story','pressure','star','models','sun','rain','yearago'];
+var CARDS_DEFAULT=['brief','anomaly','astro','onday','streak','activities','smell','story','pressure','star','models','sun','rain','yearago'];
 var CARDS=(function(){
  var saved=stGet('cards'),arr=saved?saved.split(','):[];
  /* ترحيل: أضف أي بطاقة جديدة غير موجودة في الترتيب المحفوظ */
@@ -3121,6 +3167,150 @@ function newsCard(){
  '</div>';
 }
 
+
+/* ============================================================
+   البطاقة الدوّارة — تعرض معلومة مختلفة كل ٤ ثوانٍ
+   تحل محل «مقابل المعدّل الرسمي» الثابت وتعرّف المستخدم بكل شيء
+   ============================================================ */
+var ROT_I=0, ROT_TIMER=null, ROT_PAUSED=false;
+
+/* تبني قائمة الشرائح المتاحة الآن — تتخطى الفارغ تلقائيًا */
+function rotSlides(){
+ var out=[],L=LI();
+
+ /* ١) المعدّل الرسمي */
+ var an=(typeof anomalyInfo==='function')?anomalyInfo():null;
+ if(an){
+  var d=Math.round(an.diff*10)/10, sign=d>0?'+':(d<0?'−':'');
+  var col=Math.abs(d)<1.5?'#9fd4f5':(d>=4?'#ff8f8f':(d>0?'#ffd166':'#7fe39a'));
+  var mo=(typeof MONTHS_AR!=='undefined')?(L===2?MONTHS_EN[new Date().getMonth()]:MONTHS_AR[new Date().getMonth()]):'';
+  out.push({k:'anomaly',
+   t:['مقابل المعدّل الرسمي','المعدّل الرسمي','vs official average'][L],
+   badge:sign+Math.abs(d)+'°', col:col,
+   b:['حرارتك '+tconv(W.temperature_2m)+'° ومعدّل '+mo+' الرسمي '+tconv(an.normT)+'°.',
+      'الحالية '+tconv(W.temperature_2m)+'° مقابل معدّل '+mo+' '+tconv(an.normT)+'°.',
+      'You are at '+tconv(W.temperature_2m)+'°, the '+mo+' average is '+tconv(an.normT)+'°.'][L],
+   s:['المصدر: المركز الوطني للإحصاء · '+an.station,
+      'المصدر: المركز الوطني للإحصاء','Source: Oman NCSI · '+an.station][L]});
+ }
+
+ /* ٢) موجز نفاف */
+ var b=(typeof nafafBrief==='function')?nafafBrief():null;
+ if(b&&b.items&&b.items.length){
+  var lines='';
+  for(var i=0;i<Math.min(3,b.items.length);i++)
+   lines+=(i?'<br>':'')+'<span style="color:#e6b45e;font-weight:800">'+
+    ((typeof BRIEF_ICONS!=='undefined'?BRIEF_ICONS[b.items[i].e]:'')||'•')+'</span> '+b.items[i].t;
+  out.push({k:'brief',t:['موجز نفاف','موجز نفاف','Nafaf brief'][L],
+   badge:'', col:'#e6b45e', b:lines, s:'', head:b.head});
+ }
+
+ /* ٣) سماء الليلة */
+ var a=(typeof astroToday==='function')?astroToday():null;
+ if(a)out.push({k:'astro',t:['سماء الليلة','حدث السماء','Tonight\u2019s sky'][L],
+  badge:a.r||'', col:'#b9c4f5', b:'<b>'+a.t+'</b><br>'+a.b, s:''});
+
+ /* ٤) في مثل هذا اليوم */
+ if(typeof onThisDayCard==='function'){
+  var ev=(typeof todayEvents==='function')?todayEvents():null;
+  var pick1=ev&&(ev.exact.length?ev.exact[0]:(ev.near.length?ev.near[0]:null));
+  if(pick1){
+   var ya=(typeof yearsAgo==='function')?yearsAgo(pick1.y):0;
+   out.push({k:'onday',t:['في مثل هذا اليوم','في مثل هذا اليوم','On this day'][L],
+    badge:ya?('قبل '+ya+' سنة'):'', col:'#9fd4f5',
+    b:'<b>'+pick1.t[L]+'</b><br>'+pick1.b[L], s:['المصدر: '+pick1.src[L],'المصدر: '+pick1.src[L],'Source: '+pick1.src[L]][L]});
+  } else if(typeof monthEvent==='function'){
+   var me=monthEvent();
+   if(me)out.push({k:'onday',t:['هذا الشهر','هذا الشهر','This month'][L],
+    badge:'', col:'#9fd4f5', b:'<b>'+me.t[L]+'</b><br>'+me.b[L], s:''});
+  }
+ }
+
+ /* ٥) قصة اليوم */
+ var st=(typeof todayStory==='function')?todayStory():null;
+ if(st)out.push({k:'story',t:['قصة اليوم','قصة اليوم','Today\u2019s story'][L],
+  badge:'', col:'#e6b45e', b:'<b>'+st.t+'</b><br>'+st.b, s:''});
+
+ /* ٦) الدرور والنجوم */
+ if(typeof starLine==='function'){
+  var sl=starLine();
+  if(sl)out.push({k:'star',t:['الدرور والنجوم','المواسم النجمية','Star season'][L],
+   badge:'', col:'#e6b45e', b:sl, s:''});
+ }
+
+ /* ٧) اتفاق النماذج */
+ if(typeof MODEL_NOTE!=='undefined'&&MODEL_NOTE)
+  out.push({k:'models',t:['اتفاق النماذج العالمية','اتفاق النماذج','Model agreement'][L],
+   badge:'', col:'#9fd4f5', b:MODEL_NOTE, s:'ECMWF · GFS · ICON · UKMO'});
+
+ /* ٨) استقرار السماء */
+ if(typeof STAB!=='undefined'&&STAB)
+  out.push({k:'stab',t:['استقرار السماء','مؤشر الاستقرار','Sky stability'][L],
+   badge:STAB.score+'%', col:STAB.score>=80?'#7fe39a':(STAB.score>=55?'#9fd4f5':(STAB.score>=35?'#ffd166':'#ff8f8f')),
+   b:STAB.verdict, s:['محسوب من بياناتك — لا تخمين.','محسوب من البيانات المتاحة.','Computed from live data.'][L]});
+
+ /* ٩) رائحة الجو */
+ if(typeof smellLine==='function'){
+  var sm=smellLine();
+  if(sm)out.push({k:'smell',t:['رائحة الجو','رائحة الأجواء','Scent of the air'][L],
+   badge:'', col:'#9fd4f5', b:sm.t[L], s:''});
+ }
+
+ return out;
+}
+
+function rotCard(){
+ var sl=rotSlides();
+ if(!sl.length)return '';
+ if(ROT_I>=sl.length)ROT_I=0;
+ var c=sl[ROT_I];
+ var dots='';
+ for(var i=0;i<sl.length;i++)dots+='<span class="rt-dot'+(i===ROT_I?' on':'')+'"></span>';
+ return '<div class="rotator" id="rotCard">'+
+  '<div class="rt-head">'+
+   '<span class="rt-t" style="color:'+c.col+'">'+c.t+'</span>'+
+   (c.badge?'<span class="rt-badge" style="color:'+c.col+';border-color:'+c.col+'55;background:'+c.col+'1f">'+c.badge+'</span>':'')+
+  '</div>'+
+  (c.head?'<div class="rt-lead">'+c.head+'</div>':'')+
+  '<div class="rt-b" id="rotBody">'+c.b+'</div>'+
+  (c.s?'<div class="rt-s">'+c.s+'</div>':'')+
+  '<div class="rt-dots">'+dots+'</div>'+
+ '</div>';
+}
+
+function rotNext(){
+ if(ROT_PAUSED)return;
+ var sl=rotSlides();
+ if(sl.length<2)return;
+ ROT_I=(ROT_I+1)%sl.length;
+ var el=$("rotCard");
+ if(!el){rotStop();return;}
+ el.style.opacity='0';
+ setTimeout(function(){
+  var host=el.parentNode;
+  if(host)host.innerHTML=rotCard();
+  var ne=$("rotCard");
+  if(ne){ne.style.opacity='0';setTimeout(function(){ne.style.opacity='1';},20);}
+  rotWire();
+ },260);
+}
+function rotStart(){
+ rotStop();
+ var sl=rotSlides();
+ if(sl.length<2)return;
+ ROT_TIMER=setInterval(rotNext,4000);
+}
+function rotStop(){if(ROT_TIMER){clearInterval(ROT_TIMER);ROT_TIMER=null;}}
+function rotWire(){
+ var el=$("rotCard");if(!el)return;
+ /* اللمس يوقف الدوران مؤقتًا وينتقل للتالي */
+ el.onclick=function(){
+  ROT_PAUSED=false;
+  rotNext();
+  rotStart();
+ };
+}
+
 /* ============ عرض: الآن ============ */
 function stat(k,v,cls){return '<div class="stat"><div class="k">'+k+'</div><div class="v '+(cls||'')+'">'+v+'</div></div>';}
 function renderNow(){
@@ -3157,8 +3347,7 @@ function renderNow(){
     '<div class="tt">'+tconv(HOURLY.temperature_2m[i])+'°</div><div class="pp">'+hrPrecip(i)+'</div></div>';}
    h+='<div class="strip6 fadeIn d2">'+sh+'</div>';}}
  if(lf)h+='<div class="fadeIn d2">'+lf+'</div>';    /* ★ السما الآن بعد الحرارة */
- var anc=anomalyCard(); if(anc)h+='<div class="fadeIn d2">'+anc+'</div>';
- if(brf)h+='<div class="fadeIn d2">'+brf+'</div>';
+ var rc=rotCard(); if(rc)h+='<div class="fadeIn d2" id="rotHost">'+rc+'</div>';
  var chg=changesCard(); if(chg)h+='<div class="fadeIn d2">'+chg+'</div>';
  var tlc=timelineCard(); if(tlc)h+='<div class="fadeIn d3">'+tlc+'</div>';
  var stc=stabilityCard(); if(stc)h+='<div class="fadeIn d3">'+stc+'</div>';
@@ -3182,9 +3371,9 @@ function renderNow(){
  var rs=rainScaleLine();
  if(rs)h+='<div class="smart fadeIn d6"><div class="h">'+pick('حجم المطر','مقياس الهطول','Rain in scale')+'</div><div class="b">'+rs+'</div></div>';
  var pc=pressureCard();if(pc)h+='<div class="fadeIn d6">'+pc+'</div>';
- if(MODEL_NOTE)h+='<div class="smart fadeIn d6"><div class="h">'+pick('اتفاق النماذج العالمية','اتفاق النماذج','Model agreement')+'</div><div class="b">'+MODEL_NOTE+'</div></div>';
  $("nowBody").innerHTML=h;
  wireTimeline();
+ rotWire();rotStart();
  var wcEl=$("watchCard");
  if(wcEl){var more=wcEl.querySelector('.wt-more');
   if(more)more.onclick=function(){WATCH_OPEN=!WATCH_OPEN;renderNow();};}
@@ -3218,6 +3407,7 @@ function renderLife(){
  var s=todayStory();
  blocks.story=s?'<div class="story"><div class="h">'+pick('قصة اليوم','قصة اليوم',"Today's story")+'</div><div class="t">'+s.t+'</div><div class="b">'+s.b+'</div></div>':'';
  blocks.smell=smellCard();
+ blocks.brief=briefCard();
  blocks.anomaly=anomalyCard();
  blocks.astro=astroCard();
  blocks.onday=onThisDayCard();
@@ -4622,7 +4812,7 @@ function buildTabs(){var h="",i,L=LI();
  var b=$("tabs").getElementsByTagName("button"),j;
  for(j=0;j<b.length;j++)b[j].onclick=function(){TAB=this.getAttribute("data-t");buildTabs();showPanels();};}
 function showPanels(){var i;
- if(TAB!=='now')cinemaStop();
+ if(TAB!=='now'){cinemaStop();rotStop();}
  for(i=0;i<TABS.length;i++){var el=$("p-"+TABS[i].k);if(el)el.className="panel"+(TAB===TABS[i].k?" on":"");}
  if(TAB==='now')renderNow();if(TAB==='life')renderLife();if(TAB==='fc')renderFc();if(TAB==='world')renderWorld();if(TAB==='live')renderLive();if(TAB==='src')renderSrc();}
 
@@ -4685,7 +4875,7 @@ h+='<div class="m-sec">'+pick('الوضع السينمائي','الوضع الس
  h+='<div class="m-hint">'+pick('رتّبها كما يناسبك.','أعد الترتيب.','Reorder as you like.')+'</div>';
  var names={streak:['السلسلة','السلسلة','Streak'],activities:['أنشطة يومك','الأنشطة','Activities'],
  story:['قصة اليوم','قصة اليوم',"Today's story"],star:['الدرور والنجوم','المواسم النجمية','Star season'],
- anomaly:['مقابل المعدّل الرسمي','المعدّل الرسمي','Official average'],astro:['سماء الليلة','حدث السماء','Tonight\u2019s sky'],onday:['في مثل هذا اليوم','في مثل هذا اليوم','On this day'],smell:['رائحة الجو','رائحة الأجواء','Scent of the air'],pressure:['الضغط الجوي','الضغط الجوي','Pressure'],models:['اتفاق النماذج','اتفاق النماذج','Model agreement'],sun:['الشروق والغروب','الشروق والغروب','Sun times'],
+ brief:['موجز نفاف','موجز نفاف','Nafaf brief'],anomaly:['مقابل المعدّل الرسمي','المعدّل الرسمي','Official average'],astro:['سماء الليلة','حدث السماء','Tonight\u2019s sky'],onday:['في مثل هذا اليوم','في مثل هذا اليوم','On this day'],smell:['رائحة الجو','رائحة الأجواء','Scent of the air'],pressure:['الضغط الجوي','الضغط الجوي','Pressure'],models:['اتفاق النماذج','اتفاق النماذج','Model agreement'],sun:['الشروق والغروب','الشروق والغروب','Sun times'],
  rain:['عدّاد النفاف','عدّاد المطر','Rain counter'],yearago:['قبل سنة','قبل عام','A year ago']};
  var L=LI(),i;
  for(i=0;i<CARDS.length;i++){var k=CARDS[i],nm=(names[k]||[k,k,k])[L];
