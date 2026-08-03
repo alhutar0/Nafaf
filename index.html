@@ -807,6 +807,37 @@
   /* بلا حركة: يظهر كل شيء فورًا */
   .noanim .sp-drop,.noanim .sp-ring,.noanim .sp-surface{display:none}
   .noanim .sp-word,.noanim .sp-tag{opacity:1;animation:none}
+  /* رصدات المجتمع */
+  .cfeed{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12)}
+  .cf-sec{font-size:10.5px;font-weight:800;color:#e6b45e;margin:10px 0 6px;letter-spacing:.02em}
+  .cf-sec:first-child{margin-top:0}
+  .cf-row{display:flex;align-items:center;gap:9px;padding:7px 10px;margin-bottom:5px;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px}
+  .cf-row.corr{border-color:rgba(230,180,94,.35);background:rgba(230,180,94,.08)}
+  .cf-k{flex:0 0 auto;font-size:11.5px;font-weight:800;color:#9fd4f5;
+    background:rgba(159,212,245,.14);border-radius:99px;padding:3px 10px}
+  .cf-row.corr .cf-k{color:#e6b45e;background:rgba(230,180,94,.16)}
+  .cf-w{flex:1 1 auto;min-width:0;font-size:12px;font-weight:700;color:rgba(255,255,255,.88)}
+  .cf-t{flex:0 0 auto;font-size:9.5px;font-weight:600;color:rgba(255,255,255,.5)}
+  /* ★ أيقونة الدخول/الخروج وختم المراسل */
+  .authBadge{display:inline-flex;align-items:center;gap:6px;vertical-align:middle;
+    margin-inline-end:6px}
+  .ab-ic{width:28px;height:28px;border-radius:50%;display:inline-flex;
+    align-items:center;justify-content:center;font-size:13px;cursor:pointer;
+    background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.2);
+    color:rgba(255,255,255,.8);transition:background .2s}
+  .ab-ic:active{transform:scale(.92)}
+  .ab-ic.out{color:#ff9b9b;border-color:rgba(255,143,143,.35)}
+  .ab-stamp{font-size:9.5px;font-weight:800;color:#3a2405;background:#e6b45e;
+    border-radius:99px;padding:3px 9px;white-space:nowrap;
+    box-shadow:0 2px 8px rgba(230,180,94,.35)}
+  .authBadge.on .ab-stamp{animation:none}
+  #gsiBtnHost{display:none;margin-top:10px}
+  .fd-sec{font-size:10.5px;font-weight:800;color:#e6b45e;margin:14px 0 6px}
+  .cf-badge{font-size:9px;font-weight:800;color:#3a2405;background:#e6b45e;
+    border-radius:99px;padding:2px 7px;margin-inline-end:7px}
+  .cf-cnt{font-size:11px;font-weight:800;color:#12203c;background:#9fd4f5;
+    border-radius:99px;padding:2px 8px;margin-inline-end:7px}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -836,6 +867,7 @@
 <div class="wrap">
  <div class="top">
  <span class="brandbox"><span class="wm-en">NAFAF</span><span class="wm-sep">|</span><span class="wm-ar">نفاف</span></span>
+ <span class="authBadge" id="authBadge"></span>
  <button class="gearbtn" id="gearBtn">⚙</button>
  </div>
  <div class="locbar">
@@ -3705,6 +3737,140 @@ function quakeFooter(){
  '</div>';
 }
 
+
+/* ============================================================
+   تسجيل الدخول بجوجل + حالة المراسل من الخادم
+   ⚠️ الخادم هو مصدر الحقيقة — لا نثق بحالة محفوظة محليًا
+   ============================================================ */
+var USER=null;          /* {email,name} */
+var CORR={status:'none',name:''};
+var GSI_ID='';          /* معرّف عميل جوجل — يُجلب من الخادم */
+
+function authLoad(){
+ if(!PUSH_URL)return;
+ fetch(PUSH_URL+'/auth/config').then(function(r){return r.json();})
+  .then(function(c){
+   GSI_ID=c.clientId||'';
+   if(GSI_ID)loadGSI();
+  }).catch(function(){});
+ /* حدّث حالة المراسل */
+ corrRefresh();
+}
+function corrRefresh(){
+ if(!PUSH_URL)return;
+ fetch(PUSH_URL+'/correspondent/status',{method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({vid:visitorId()})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+   if(d&&d.ok){CORR={status:d.status||'none',name:d.name||''};renderAuthBadge();}
+  }).catch(function(){});
+}
+/* حمّل مكتبة جوجل عند الحاجة فقط */
+function loadGSI(){
+ if(document.getElementById('gsiLib'))return;
+ var sc=document.createElement('script');
+ sc.id='gsiLib';sc.src='https://accounts.google.com/gsi/client';
+ sc.async=true;sc.defer=true;
+ sc.onload=function(){
+  try{
+   google.accounts.id.initialize({client_id:GSI_ID,callback:onGoogleCred});
+  }catch(e){}
+ };
+ document.head.appendChild(sc);
+}
+function onGoogleCred(resp){
+ if(!resp||!resp.credential)return;
+ fetch(PUSH_URL+'/auth/google',{method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({credential:resp.credential,vid:visitorId()})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+   if(d.error){toast(pick('تعذّر تسجيل الدخول','تعذّر تسجيل الدخول','Sign-in failed'),true);return;}
+   USER={email:d.email,name:d.name};
+   CORR={status:d.status||'none',name:d.corrName||''};
+   try{stSet('user_email',d.email);stSet('user_name',d.name||'');}catch(e){}
+   renderAuthBadge();
+   toast(pick('أهلًا '+(d.name||'')+'!','مرحبًا '+(d.name||''),'Welcome '+(d.name||'')));
+   if(SHEET_OPEN)renderSheet();
+  }).catch(function(){toast(pick('تعذّر الاتصال','تعذّر الاتصال','Connection failed'),true);});
+}
+function doSignIn(){
+ if(!GSI_ID){toast(pick('تسجيل الدخول غير مفعّل بعد.','لم يُفعّل تسجيل الدخول.','Sign-in not configured yet.'),true);return;}
+ try{
+  google.accounts.id.prompt(function(n){
+   if(n&&(n.isNotDisplayed&&n.isNotDisplayed()||n.isSkippedMoment&&n.isSkippedMoment())){
+    /* المتصفح منع النافذة — اعرض زر بديل */
+    showGoogleButton();
+   }
+  });
+ }catch(e){showGoogleButton();}
+}
+function showGoogleButton(){
+ var host=document.getElementById('gsiBtnHost');
+ if(!host)return;
+ host.innerHTML='';
+ try{
+  google.accounts.id.renderButton(host,{theme:'filled_black',size:'large',
+   shape:'pill',text:'signin_with',locale:'ar'});
+  host.style.display='block';
+ }catch(e){}
+}
+function doSignOut(){
+ if(PUSH_URL)fetch(PUSH_URL+'/auth/logout',{method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({vid:visitorId()})}).catch(function(){});
+ USER=null;CORR={status:'none',name:''};
+ try{stSet('user_email','');stSet('user_name','');}catch(e){}
+ try{google.accounts.id.disableAutoSelect();}catch(e){}
+ renderAuthBadge();
+ if(SHEET_OPEN)renderSheet();
+ toast(pick('سجّلت خروجك','تم تسجيل الخروج','Signed out'));
+}
+
+/* ★ الأيقونة الصغيرة أعلى الصفحة — تتبدّل بين دخول وخروج */
+function renderAuthBadge(){
+ var el=$("authBadge");if(!el)return;
+ if(CORR.status==='approved'){
+  el.innerHTML='<span class="ab-stamp">'+pick('مراسل معتمد','مراسل معتمد','Reporter')+'</span>'+
+   '<span class="ab-ic out" title="'+pick('خروج','خروج','Sign out')+'">⏻</span>';
+  el.className='authBadge on';
+ } else if(USER){
+  el.innerHTML='<span class="ab-ic out" title="'+pick('خروج','خروج','Sign out')+'">⏻</span>';
+  el.className='authBadge';
+ } else {
+  el.innerHTML='<span class="ab-ic in" title="'+pick('دخول','دخول','Sign in')+'">◍</span>';
+  el.className='authBadge';
+ }
+ var ic=el.querySelector('.ab-ic');
+ if(ic)ic.onclick=function(){
+  if(USER||CORR.status==='approved')doSignOut(); else doSignIn();
+ };
+}
+
+/* ★ إرسال الرصد إلى الخادم فعليًا */
+function sendReport(kind){
+ if(!PUSH_URL)return Promise.resolve({ok:false});
+ var body={vid:visitorId(),kind:kind,
+  wilaya:(CUR&&CUR.n)||'',note:''};
+ if(CUR&&typeof CUR.lat==='number'){body.lat=CUR.lat;body.lon=CUR.lon;}
+ return fetch(PUSH_URL+'/report',{method:'POST',
+  headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+  .then(function(r){return r.json();})
+  .catch(function(){return {error:'net'};});
+}
+
+/* ★ جلب الرصدات المعروضة */
+var FEED={corr:[],consensus:[],solo:[]};
+function reportsLoad(){
+ if(!PUSH_URL)return;
+ fetch(PUSH_URL+'/reports').then(function(r){return r.json();})
+  .then(function(d){
+   if(d&&d.ok){FEED={corr:d.corr||[],consensus:d.consensus||[],solo:d.solo||[]};
+    if(SHEET_OPEN)renderSheet();}
+  }).catch(function(){});
+}
+
 /* ============ عرض: الآن ============ */
 function stat(k,v,cls){return '<div class="stat"><div class="k">'+k+'</div><div class="v '+(cls||'')+'">'+v+'</div></div>';}
 function renderNow(){
@@ -4318,6 +4484,84 @@ var OBS_OPTS=[
 ];
 var SHEET_MODE='obs', PICKED=null;
 
+
+/* ============================================================
+   الرصد الشعبي — الاتصال بالخادم
+   ⚠️ الإحداثيات تُرسل للتدقيق فقط ولا تُعرض للجمهور
+   ============================================================ */
+var REPORTS=null, REP_SYNCED=false;
+
+/* أقرب ولاية من قائمة المرصد */
+function nearestWilaya(){
+ if(typeof WATCH_SPOTS==='undefined'||!kmBetween)return CUR.n||'';
+ var best=null,i;
+ for(i=0;i<WATCH_SPOTS.length;i++){
+  var d=kmBetween(CUR.lat,CUR.lon,WATCH_SPOTS[i].lat,WATCH_SPOTS[i].lon);
+  if(!best||d<best.d)best={d:d,n:WATCH_SPOTS[i].n};
+ }
+ return (best&&best.d<80)?best.n:(CUR.n||'');
+}
+
+/* إرسال رصد */
+function sendReport(kind){
+ if(!PUSH_URL)return Promise.resolve({ok:false,why:pick('الخادم غير مربوط.','الخادم غير مربوط.','Server not linked.')});
+ var body={
+  vid:visitorId(), kind:kind,
+  wilaya:nearestWilaya(),
+  lat:CUR.lat, lon:CUR.lon,          /* للتدقيق فقط */
+  model:W?stateOf(W):null
+ };
+ return fetch(PUSH_URL+'/report',{method:'POST',
+  headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+  .then(function(r){return r.json();})
+  .then(function(r){
+   if(r.error==='too soon')return {ok:false,why:pick('رصدت قبل شوي — انتظر ٢٠ دقيقة.',
+     'يُسمح برصد كل ٢٠ دقيقة.','One report per 20 minutes.')};
+   if(r.error)return {ok:false,why:pick('تعذّر الإرسال.','تعذّر الإرسال.','Could not send.')};
+   repsLoad(true);
+   return {ok:true,auto:r.auto,corr:r.correspondent};
+  }).catch(function(){return {ok:false,why:pick('تعذّر الاتصال.','تعذّر الاتصال.','Connection failed.')};});
+}
+
+/* جلب الرصدات المعتمدة */
+function repsLoad(force){
+ if(!PUSH_URL)return;
+ if(!force&&REPORTS)return;
+ fetch(PUSH_URL+'/reports').then(function(r){return r.json();})
+  .then(function(d){
+   REPORTS=d&&d.ok?d:null;
+   if(SHEET_MODE==='obs'&&$("sheet")&&$("sheet").className.indexOf('on')>=0)renderSheet();
+  }).catch(function(){});
+}
+
+/* مزامنة حالة المراسل مع الخادم */
+function corrSync(){
+ if(!PUSH_URL||REP_SYNCED)return;
+ REP_SYNCED=true;
+ fetch(PUSH_URL+'/correspondent/status',{method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({vid:visitorId()})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+   if(!d||!d.ok)return;
+   var cur=stGet('rep_status')||'none';
+   if(d.status!==cur){
+    stSet('rep_status',d.status);
+    if(d.name)stSet('rep_name',d.name);
+    if($("sheet")&&$("sheet").className.indexOf('on')>=0)renderSheet();
+   }
+  }).catch(function(){});
+}
+
+/* إرسال طلب مراسل */
+function sendCorrApply(nm,wl,ct,why){
+ if(!PUSH_URL)return Promise.resolve({ok:false});
+ return fetch(PUSH_URL+'/correspondent/apply',{method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({vid:visitorId(),name:nm,wilaya:wl,contact:ct,why:why||''})})
+  .then(function(r){return r.json();}).catch(function(){return {ok:false};});
+}
+
 function openSheet(mode){
  SHEET_MODE=mode||'obs';PICKED=null;renderSheet();
  $("sheet").className='sheet on';$("sheetBack").className='sheetBack on';}
@@ -4329,6 +4573,88 @@ function repName(){return stGet('rep_name')||'';}
 function repWilayat(){return stGet('rep_wilayat')||'';}
 function myObsCount(){return parseInt(stGet('obs_count')||'0',10);}
 
+
+/* عرض رصدات المجتمع داخل اللوحة */
+var OBS_LABEL={clear:['صحو','صحو','Clear'],cloudy:['غيوم','غيوم','Cloudy'],
+ rain:['مطر','مطر','Rain'],dust:['غبار','غبار','Dust'],
+ humid:['رطوبة','رطوبة','Humid'],cold:['برد','برد','Cold']};
+function repAgo(t){
+ var L=LI(),m=Math.round((Date.now()-t)/60000);
+ if(m<2)return ['الحين','الآن','now'][L];
+ if(m<60)return ['قبل '+m+' دقيقة','قبل '+m+' دقيقة',m+'m ago'][L];
+ var h=Math.round(m/60);
+ return ['قبل '+h+' ساعة','قبل '+h+' ساعة',h+'h ago'][L];
+}
+function communityFeed(){
+ if(!REPORTS)return '';
+ var L=LI(),h='',i;
+ var corrs=(REPORTS.approved||[]).filter(function(x){return x.corr;});
+ var autos=REPORTS.auto||[];
+ var others=(REPORTS.approved||[]).filter(function(x){return !x.corr;});
+ if(!corrs.length&&!autos.length&&!others.length)return '';
+
+ /* ★ تبويب المراسلين المعتمدين — منفصل */
+ if(corrs.length){
+  h+='<div class="cf-sec">'+['من مراسلي نفاف','من مراسلي نفاف','From Nafaf reporters'][L]+'</div>';
+  for(i=0;i<Math.min(4,corrs.length);i++){
+   var c=corrs[i];
+   h+='<div class="cf-row corr">'+
+    '<span class="cf-k">'+(OBS_LABEL[c.kind]||['—','—','—'])[L]+'</span>'+
+    '<span class="cf-w">'+c.wilaya+(c.name?' · '+c.name:'')+'</span>'+
+    '<span class="cf-t">'+repAgo(c.ts)+'</span></div>';
+  }
+ }
+ /* الاتفاق التلقائي */
+ if(autos.length){
+  h+='<div class="cf-sec">'+['اتفق عليها أهل الولاية','رصدات متفق عليها','Community consensus'][L]+'</div>';
+  for(i=0;i<Math.min(4,autos.length);i++){
+   var a=autos[i];
+   h+='<div class="cf-row">'+
+    '<span class="cf-k">'+(OBS_LABEL[a.kind]||['—','—','—'])[L]+'</span>'+
+    '<span class="cf-w">'+a.wilaya+' · '+['اتفق '+a.count,'اتفق '+a.count,a.count+' agree'][L]+'</span>'+
+    '<span class="cf-t">'+repAgo(a.ts)+'</span></div>';
+  }
+ }
+ /* المعتمد يدويًا */
+ if(others.length){
+  h+='<div class="cf-sec">'+['رصدات معتمدة','رصدات معتمدة','Approved reports'][L]+'</div>';
+  for(i=0;i<Math.min(3,others.length);i++){
+   var o=others[i];
+   h+='<div class="cf-row">'+
+    '<span class="cf-k">'+(OBS_LABEL[o.kind]||['—','—','—'])[L]+'</span>'+
+    '<span class="cf-w">'+o.wilaya+'</span>'+
+    '<span class="cf-t">'+repAgo(o.ts)+'</span></div>';
+  }
+ }
+ return h?'<div class="cfeed">'+h+'</div>':'';
+}
+
+
+/* ★ رصدات الخادم — مراسلون معتمدون وإجماع */
+function serverFeed(){
+ var L=LI(),h='';
+ if(FEED.corr&&FEED.corr.length){
+  h+='<div class="fd-sec">'+pick('من مراسلي نفاف','من المراسلين','From our reporters')+'</div>';
+  for(var i=0;i<Math.min(4,FEED.corr.length);i++){
+   var c=FEED.corr[i];
+   h+='<div class="cf"><span class="cf-badge">'+pick('مراسل','مراسل','Reporter')+'</span>'+
+    '<span class="cf-k">'+(OBS_LABEL[c.kind]||['—','—','—'])[L]+'</span>'+
+    '<span class="cf-w">'+c.wilaya+(c.name?' · '+c.name:'')+'</span>'+
+    '<span class="cf-t">'+repAgo(c.ts)+'</span></div>';
+  }
+ }
+ if(FEED.consensus&&FEED.consensus.length){
+  h+='<div class="fd-sec">'+pick('اتفاق الناس الحين','إجماع المستخدمين','What people agree on')+'</div>';
+  for(var j=0;j<Math.min(4,FEED.consensus.length);j++){
+   var g=FEED.consensus[j];
+   h+='<div class="cf"><span class="cf-cnt">'+g.count+'</span>'+
+    '<span class="cf-k">'+(OBS_LABEL[g.kind]||['—','—','—'])[L]+'</span>'+
+    '<span class="cf-w">'+g.wilaya+'</span></div>';
+  }
+ }
+ return h;
+}
+
 function renderSheet(){
  var h='',i,L=LI();
  if(SHEET_MODE==='obs'){
@@ -4339,9 +4665,19 @@ function renderSheet(){
  h+='<div class="ob'+(PICKED===o.k?' sel':'')+'" data-k="'+o.k+'">'+IC[o.ic]+'<div class="on3">'+o.nm[L]+'</div></div>';}
  h+='</div>';
  if(PICKED)h+=obsVerdict(PICKED);
+ h+=serverFeed();
+ h+=communityFeed();
  /* بوابة المراسلين */
- var st=repStatus();
- if(st==='approved'){
+ var st=(CORR&&CORR.status)||repStatus();
+ /* ★ لا يُقدَّم طلب بلا تسجيل دخول */
+ if(!USER&&st!=='approved'){
+ h+='<div class="repBox"><div class="rt">'+pick('تبي تصير مراسل نفاف؟','انضم كمراسل','Become a reporter')+'</div>'+
+ '<div class="rs">'+pick('سجّل دخولك بحساب جوجل أول — حساب واحد لكل مراسل.',
+  'يلزم تسجيل الدخول بحساب جوجل؛ حساب واحد لكل مراسل.',
+  'Sign in with Google first — one account per reporter.')+'</div>'+
+ '<button class="shbtn gold" id="signBtn">'+pick('🔑 تسجيل الدخول','🔑 تسجيل الدخول','🔑 Sign in')+'</button>'+
+ '<div id="gsiBtnHost"></div></div>';
+ } else if(st==='approved'){
  h+='<div class="repBox"><div class="rt">'+pick('مراسل نفاف — '+repWilayat(),'مراسل نفاف — '+repWilayat(),'Nafaf reporter — '+repWilayat())+'</div>'+
  '<div class="rs">'+pick('تقدر ترفع صورة لجوّك مع رصدك.','يمكنك إرفاق صورة مع رصدك.','You can attach a photo with your report.')+'</div>'+
  '<span class="pill">'+pick('معتمد','معتمد','Approved')+'</span>'+
@@ -4403,18 +4739,45 @@ function wireSheet(){
  var g=$("obsGrid");
  if(g){var b=g.getElementsByClassName('ob'),i;
  for(i=0;i<b.length;i++)b[i].onclick=function(){
- PICKED=this.getAttribute('data-k');
+ var k=this.getAttribute('data-k');
+ PICKED=k;
  stSet('obs_count',String(myObsCount()+1));
- stSet('obs_last',JSON.stringify({k:PICKED,t:Date.now(),c:CUR.n}));
- renderSheet();};}
+ stSet('obs_last',JSON.stringify({k:k,t:Date.now(),c:CUR.n}));
+ renderSheet();
+ /* ★ أرسله للخادم فعليًا */
+ sendReport(k).then(function(r){
+  if(r.ok){
+   if(r.isCorr)toast(pick('وصل رصدك — بيُنشر بعد المراجعة بتبويب المراسلين.',
+     'وصل رصدك؛ يُنشر بعد المراجعة.','Received — publishes after review.'));
+   else if(r.status==='approved')toast(pick('نُشر رصدك. شكرًا.',
+     'نُشر رصدك.','Published. Thanks.'));
+   else toast(pick('وصل رصدك — يُراجع قبل النشر.',
+     'وصل رصدك؛ تتم مراجعته.','Received — pending review.'));
+   reportsLoad();
+  } else if(r.error==='rate'){
+   toast(pick('رصدت قبل شوي — انتظر '+(r.minutes||30)+' دقيقة.',
+    'يرجى الانتظار '+(r.minutes||30)+' دقيقة.','Please wait '+(r.minutes||30)+' min.'),true);
+  } else toast(pick('تعذّر إرسال الرصد.','تعذّر الإرسال.','Could not send.'),true);
+ });};}
+ var sgn=$("signBtn");if(sgn)sgn.onclick=doSignIn;
  var j=$("joinBtn");if(j)j.onclick=function(){SHEET_MODE='join';renderSheet();};
  var bk=$("backJoin");if(bk)bk.onclick=function(){SHEET_MODE='obs';renderSheet();};
  var sj=$("sendJoin");
  if(sj)sj.onclick=function(){
  var nm=($("rnm").value||'').trim(),wl=($("rwl").value||'').trim();
- if(!nm||!wl){alert(pick('اكتب اسمك وولايتك.','الرجاء إدخال الاسم والولاية.','Name and wilayat are required.'));return;}
- stSet('rep_name',nm);stSet('rep_wilayat',wl);stSet('rep_status','pending');
- SHEET_MODE='obs';renderSheet();};
+ var ct=($("rct")?$("rct").value||'':'').trim();
+ if(!nm||!wl){toast(pick('اكتب اسمك وولايتك.','الرجاء إدخال الاسم والولاية.','Name and wilayat are required.'),true);return;}
+ var btn=this;btn.innerHTML=pick('جارٍ الإرسال…','جارٍ الإرسال…','Sending…');
+ sendCorrApply(nm,wl,ct).then(function(r){
+  if(r.ok){
+   stSet('rep_name',nm);stSet('rep_wilayat',wl);stSet('rep_status','pending');
+   toast(pick('وصل طلبك — نراجعه ونتواصل معك.','تم استلام طلبك.','Application received.'));
+   SHEET_MODE='obs';renderSheet();
+  } else {
+   btn.innerHTML=pick('أوافق وأرسل الطلب','أوافق وأرسل','Agree & submit');
+   toast(pick('تعذّر إرسال الطلب.','تعذّر الإرسال.','Could not submit.'),true);
+  }
+ });};
  var pb=$("photoBtn2");
  if(pb)pb.onclick=function(){alert(pick('رفع الصور يشتغل في نسخة التطبيق مع الخادم.','ميزة الصور تعمل في نسخة التطبيق.','Photo upload works in the app build with the server.'));};
 }
@@ -5671,7 +6034,7 @@ document.addEventListener('visibilitychange',function(){
  },wait);
 })();
 
-touchStreak();applyAll();pushSync();maybeAskPush();sendHeartbeat();newsLoad();cfgLoad();pingVisit();
+touchStreak();applyAll();pushSync();maybeAskPush();sendHeartbeat();newsLoad();cfgLoad();pingVisit();authLoad();reportsLoad();corrSync();repsLoad();
 
 /* ★ الإقلاع: موقعك الجغرافي الحقيقي هو الأصل — لا مدينة افتراضية
  ⚠️ لا نعرض الرستاق ولا أي مدينة من القائمة إلا إن رُفض إذن الموقع تمامًا. */
