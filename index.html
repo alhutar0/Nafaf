@@ -239,19 +239,52 @@
  @keyframes cdr{from{transform:translateX(-160px)}to{transform:translateX(520px)}}
  @keyframes cdrRev{from{transform:translateX(520px)}to{transform:translateX(-160px)}}
 .anim .s-cl.reverse{animation-name:cdrRev}
-.s-drop{position:absolute;top:-20%;width:2px;height:20px;border-radius:2px;opacity:0;
- background:linear-gradient(rgba(190,225,255,.9),rgba(190,225,255,0))}
-.anim .s-drop{opacity:1;animation:rf linear infinite}
- @keyframes rf{to{transform:translateY(240px)}}
-.s-splash{position:absolute;width:3px;height:3px;border-radius:50%;
- background:rgba(198,228,255,.7);opacity:0}
-.anim .s-splash{animation:splash 1.1s ease-out infinite}
- @keyframes splash{0%{opacity:0;transform:translateY(0) scale(.4)}
- 18%{opacity:.85;transform:translateY(-9px) scale(1)}
- 100%{opacity:0;transform:translateY(-16px) scale(.3)}}
-.s-flash{position:absolute;top:0;left:0;right:0;bottom:0;background:#fff;opacity:0}
-.anim .s-flash{animation:fl 6s infinite}
- @keyframes fl{0%,93%,97%,100%{opacity:0}94%,96%{opacity:.24}}
+.s-drop{position:absolute;top:-25%;width:2px;height:20px;border-radius:99px;opacity:0;
+ background:linear-gradient(to bottom,rgba(190,225,255,0),rgba(200,232,255,.95) 45%,rgba(190,225,255,.35))}
+ .anim .s-drop{opacity:1;animation:rf linear infinite}
+ @keyframes rf{0%{transform:translateY(0)}100%{transform:translateY(125vh)}}
+ /* وقع القطرة على الأرض */
+ .s-splash{position:absolute;bottom:0;width:14px;height:5px;border-radius:50%;
+ border:1.4px solid rgba(200,232,255,.75);border-top-color:transparent;opacity:0;
+ transform-origin:center bottom}
+ .anim .s-splash{animation:splash ease-out infinite}
+ @keyframes splash{
+ 0%{opacity:0;width:2px;height:1px;transform:translateY(2px)}
+ 22%{opacity:.9;width:9px;height:4px;transform:translateY(0)}
+ 100%{opacity:0;width:26px;height:9px;transform:translateY(-3px)}}
+ /* ضباب رذاذي عند الغزارة */
+ .s-mist{position:absolute;left:0;right:0;bottom:0;height:30%;pointer-events:none;
+ background:linear-gradient(to top,rgba(190,225,255,.16),rgba(190,225,255,0))}
+ .anim .s-mist{animation:mistPulse 3.5s ease-in-out infinite}
+ @keyframes mistPulse{0%,100%{opacity:.5}50%{opacity:1}}
+ /* ★ البرق — وميض عام من الأعلى */
+ .s-flash{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;
+ background:linear-gradient(to bottom,rgba(255,255,255,.95),rgba(214,232,255,.45) 35%,rgba(255,255,255,0) 70%);
+ opacity:0}
+ .anim .s-flash{animation:fl 7s infinite}
+ @keyframes fl{
+ 0%,88%{opacity:0}
+ 89%{opacity:.55}90%{opacity:.08}
+ 91%{opacity:.75}92.5%{opacity:0}
+ 96%{opacity:.42}97%{opacity:0}
+ 100%{opacity:0}}
+ /* شعاع البرق المتفرّع */
+ .s-bolt{position:absolute;top:-4%;width:3px;height:46%;opacity:0;pointer-events:none;
+ background:linear-gradient(to bottom,rgba(255,255,255,.98),rgba(190,225,255,.85) 55%,rgba(190,225,255,0));
+ filter:drop-shadow(0 0 8px rgba(200,232,255,.9));
+ transform-origin:top center}
+ .s-bolt:before,.s-bolt:after{content:"";position:absolute;background:inherit;border-radius:99px}
+ .s-bolt:before{top:32%;left:1px;width:2px;height:34%;transform:rotate(24deg);transform-origin:top}
+ .s-bolt:after{top:56%;left:-1px;width:1.6px;height:26%;transform:rotate(-19deg);transform-origin:top}
+ .blt1{left:22%;transform:rotate(9deg)}
+ .blt2{left:68%;height:38%;transform:rotate(-11deg)}
+ .anim .blt1{animation:bolt 7s infinite}
+ .anim .blt2{animation:bolt 7s infinite .18s}
+ @keyframes bolt{
+ 0%,88.6%{opacity:0}
+ 89%{opacity:1}89.8%{opacity:0}
+ 91%{opacity:.9}91.8%{opacity:0}
+ 100%{opacity:0}}
 .s-dust{position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(255,220,160,.7)}
 .anim .s-dust{animation:df linear infinite}
  @keyframes df{from{transform:translate(-30px,0)}to{transform:translate(460px,-20px)}}
@@ -642,6 +675,138 @@
     color:rgba(255,255,255,.75);line-height:1.85}
   .qk-foot b{color:#ffd166}
   .qk-foot a{color:#9fd4f5}
+  /* ===== البطاقات الحيّة في «يومك» ===== */
+  .smartV{display:flex;align-items:flex-start;gap:13px;
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);
+    border-radius:18px;padding:14px 15px;margin-bottom:9px}
+  .sv-ic{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+  .sv-tx{flex:1 1 auto;min-width:0}
+  .sv-h{font-size:11.5px;font-weight:800;color:#e6b45e;margin-bottom:5px}
+  .sv-b{font-size:13.5px;line-height:1.8;font-weight:600;color:rgba(255,255,255,.92)}
+  .sv-b b{color:#fff;font-weight:800}
+  .sv-s{font-size:9.5px;font-weight:600;color:rgba(255,255,255,.5);margin-top:7px;
+    padding-top:7px;border-top:1px solid rgba(255,255,255,.1);line-height:1.6}
+  .mv{display:block}
+  .anim .mv .tw{animation:svTwinkle 2.6s ease-in-out infinite}
+  @keyframes svTwinkle{0%,100%{opacity:.3}50%{opacity:1}}
+  /* ظهور متدرّج عند التمرير */
+  .smartV,.yearmap,.story,.astro,.onday,.anom{transition:transform .3s,opacity .3s}
+  .astro.hasMoon{display:flex;align-items:flex-start;gap:14px}
+  .as-moon{flex:0 0 auto;padding-top:2px}
+  .as-body{flex:1 1 auto;min-width:0}
+  /* ===== يومك: دوائر مدمجة ===== */
+  .actGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 6px;margin:6px 0 4px}
+  .actBtn{position:relative;text-align:center;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+  .actRing{position:relative;width:56px;height:56px;margin:0 auto;border-radius:50%;
+    border:2.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    transition:transform .3s cubic-bezier(.34,1.5,.5,1),box-shadow .3s,background .3s}
+  .actRing svg{width:24px;height:24px;position:relative;z-index:2}
+  .actBtn:active .actRing{transform:scale(.9)}
+  .actBtn.sel .actRing{transform:scale(1.12)}
+  .actLbl{font-size:9.5px;font-weight:700;color:rgba(255,255,255,.72);margin-top:5px;
+    line-height:1.3;min-height:24px;padding:0 1px}
+  .actBtn.sel .actLbl{color:#fff;font-weight:800}
+  .rG{border-color:rgba(127,227,154,.75)}
+  .rO{border-color:rgba(255,209,102,.75)}
+  .rB{border-color:rgba(255,143,143,.7)}
+  .actBtn.sel .rG{background:rgba(127,227,154,.22);box-shadow:0 0 0 4px rgba(127,227,154,.14)}
+  .actBtn.sel .rO{background:rgba(255,209,102,.22);box-shadow:0 0 0 4px rgba(255,209,102,.14)}
+  .actBtn.sel .rB{background:rgba(255,143,143,.2);box-shadow:0 0 0 4px rgba(255,143,143,.13)}
+  .actDot{position:absolute;top:-1px;inset-inline-end:-1px;width:12px;height:12px;border-radius:50%;
+    border:2px solid #12203c;z-index:3}
+  .dG{background:#7fe39a}.dO{background:#ffd166}.dB{background:#ff8f8f}
+  .actSeen{position:absolute;bottom:-2px;inset-inline-start:2px;width:5px;height:5px;
+    border-radius:50%;background:rgba(255,255,255,.45);z-index:3}
+  .actRip{position:absolute;top:50%;left:50%;width:8px;height:8px;margin:-4px 0 0 -4px;
+    border-radius:50%;background:rgba(255,255,255,.5);pointer-events:none;z-index:1;
+    animation:actRipple .55s ease-out forwards}
+  @keyframes actRipple{to{width:72px;height:72px;margin:-36px 0 0 -36px;opacity:0}}
+  .noanim .actRip{display:none}
+  .actPanel{background:#fff;color:#1b2c47;border-radius:18px;padding:14px 16px;margin:6px 0 12px;
+    min-height:70px;position:relative;overflow:hidden}
+  .actPanel:before{content:"";position:absolute;top:0;bottom:0;inset-inline-start:0;width:5px}
+  .apG:before{background:#3fb968}.apO:before{background:#e0a52c}.apB:before{background:#dc5a5a}
+  .ap-top{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+  .ap-ic{width:30px;height:30px;flex:0 0 30px;border-radius:10px;background:#eef3f8;
+    display:flex;align-items:center;justify-content:center}
+  .ap-ic svg{width:17px;height:17px;stroke:#1b2c47}
+  .ap-nm{font-size:14.5px;font-weight:800;flex:1 1 auto;min-width:0}
+  .ap-vd{font-size:10.5px;font-weight:800;border-radius:99px;padding:3px 11px;flex:0 0 auto}
+  .vG{background:rgba(63,185,104,.16);color:#2b8f4c}
+  .vO{background:rgba(224,165,44,.18);color:#9c7112}
+  .vB{background:rgba(220,90,90,.16);color:#b03e3e}
+  .ap-tx{font-size:13.5px;font-weight:600;line-height:1.75;color:#33445c}
+  .ap-hint{font-size:11.5px;font-weight:600;color:#8fa3b8;line-height:1.7}
+  .anim .actPanel{animation:apIn .34s cubic-bezier(.2,.9,.3,1)}
+  @keyframes apIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  .actProg{display:flex;align-items:center;gap:8px;margin:2px 4px 10px}
+  .apBar{flex:1 1 auto;height:3px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+  .apFill{height:100%;background:linear-gradient(90deg,#e6b45e,#7fe39a);border-radius:99px;
+    transition:width .5s cubic-bezier(.2,.9,.3,1)}
+  .apTxt{font-size:9.5px;font-weight:700;color:rgba(255,255,255,.55);white-space:nowrap}
+  /* ═══════ شاشة الافتتاح ═══════ */
+  .splash{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#0a1526 0%,#101f3a 45%,#16294a 100%);
+    transition:opacity .55s ease,visibility .55s}
+  .splash.gone{opacity:0;visibility:hidden;pointer-events:none}
+
+  .sp-stage{position:relative;width:190px;height:150px;margin-bottom:6px}
+
+  /* القطرة تسقط من الأعلى */
+  .sp-drop{position:absolute;left:50%;top:-14px;width:11px;height:15px;margin-left:-5.5px;
+    border-radius:50% 50% 50% 50%/62% 62% 38% 38%;
+    background:linear-gradient(to bottom,rgba(210,238,255,.98),rgba(150,205,245,.92));
+    box-shadow:0 0 14px rgba(170,215,255,.7);
+    transform:scaleY(1.5);opacity:0}
+  .anim .sp-drop{animation:spFall 1.05s cubic-bezier(.55,.06,.68,.19) forwards}
+  @keyframes spFall{
+    0%{opacity:0;top:-14px;transform:scaleY(1.1)}
+    12%{opacity:1}
+    78%{opacity:1;top:104px;transform:scaleY(2.1)}
+    92%{opacity:1;top:118px;transform:scaleY(.55) scaleX(1.5)}
+    100%{opacity:0;top:120px;transform:scaleY(.25) scaleX(1.9)}}
+
+  /* سطح الماء */
+  .sp-surface{position:absolute;left:50%;top:120px;width:150px;height:3px;margin-left:-75px;
+    border-radius:99px;opacity:0;
+    background:linear-gradient(90deg,rgba(150,205,245,0),rgba(180,220,255,.55),rgba(150,205,245,0))}
+  .anim .sp-surface{animation:spSurf 2.4s ease-out .95s forwards}
+  @keyframes spSurf{0%{opacity:0;width:20px;margin-left:-10px}
+    30%{opacity:1;width:170px;margin-left:-85px}
+    100%{opacity:.35;width:190px;margin-left:-95px}}
+
+  /* التموجات المائية */
+  .sp-ring{position:absolute;left:50%;top:120px;width:14px;height:5px;margin:-2.5px 0 0 -7px;
+    border:1.6px solid rgba(185,225,255,.85);border-radius:50%;opacity:0}
+  .anim .r1{animation:spRing 1.9s cubic-bezier(.15,.7,.35,1) 1.0s forwards}
+  .anim .r2{animation:spRing 2.1s cubic-bezier(.15,.7,.35,1) 1.16s forwards}
+  .anim .r3{animation:spRing 2.3s cubic-bezier(.15,.7,.35,1) 1.34s forwards}
+  @keyframes spRing{
+    0%{opacity:0;width:14px;height:5px;margin:-2.5px 0 0 -7px;border-width:2px}
+    14%{opacity:.95}
+    100%{opacity:0;width:196px;height:62px;margin:-31px 0 0 -98px;border-width:.6px}}
+
+  /* الاسم */
+  .sp-word{text-align:center;opacity:0}
+  .anim .sp-word{animation:spWord .85s cubic-bezier(.2,.9,.3,1) 1.42s forwards}
+  @keyframes spWord{from{opacity:0;transform:translateY(14px) scale(.94)}
+    to{opacity:1;transform:none}}
+  .sp-en{display:block;font-size:40px;font-weight:800;letter-spacing:9px;
+    color:#fff;text-shadow:0 4px 26px rgba(150,205,245,.45)}
+  .sp-ar{display:block;font-size:25px;font-weight:800;color:#e6b45e;
+    margin-top:2px;letter-spacing:2px}
+
+  .sp-tag{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.5);
+    margin-top:14px;opacity:0;letter-spacing:.5px}
+  .anim .sp-tag{animation:spTag .8s ease 2.0s forwards}
+  @keyframes spTag{to{opacity:1}}
+
+  /* بلا حركة: يظهر كل شيء فورًا */
+  .noanim .sp-drop,.noanim .sp-ring,.noanim .sp-surface{display:none}
+  .noanim .sp-word,.noanim .sp-tag{opacity:1;animation:none}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -650,6 +815,23 @@
 </style>
 </head>
 <body class="anim">
+
+<!-- ═══════ شاشة الافتتاح: قطرة نفاف ═══════ -->
+<div id="splash" class="splash">
+  <div class="sp-stage">
+    <div class="sp-drop"></div>
+    <div class="sp-ring r1"></div>
+    <div class="sp-ring r2"></div>
+    <div class="sp-ring r3"></div>
+    <div class="sp-surface"></div>
+  </div>
+  <div class="sp-word">
+    <span class="sp-en">NAFAF</span>
+    <span class="sp-ar">نفاف</span>
+  </div>
+  <div class="sp-tag">طقسك بين يديك بلسان أهلك</div>
+</div>
+
 <div id="skyScene" aria-hidden="true"></div>
 <div class="wrap">
  <div class="top">
@@ -1058,6 +1240,7 @@ function droughtLine(){
 /* ============ الحالة العامة ============ */
 var CUR=CITIES[0],W=null,HOURLY=null,DAILY=null,MARINE=null,GUSTS=null,UVv=null,PMv=null;
 var SUNRISE=null,SUNSET=null,IS_NIGHT=false,IS_GOLDEN=false,PRESS=null,PTREND=null;
+var SEL_ACT=null;
 var DAYS_SINCE_RAIN=null,YEARAGO=null,MODELS=null,MODEL_NOTE=null,NAFAF_TXT="",NAFAF_SRC="";
 var TAB='now';
 function $(i){return document.getElementById(i);}
@@ -1103,7 +1286,7 @@ function buildScene(st){
  if(st==='cloudy'||st==='rain'||st==='rain_heavy'||st==='storm')
  h+='<div class="s-cl c3'+rev+'" style="animation-duration:'+(dur1*0.8).toFixed(1)+'s;animation-delay:-'+(dur1*0.3).toFixed(1)+'s"></div>';
  }
- /* ★ القطرات تتبع شدّة المطر الحقيقية بالملّيمتر */
+ /* ★ المطر الحقيقي — الكثافة والسرعة والوقع تتبع الملّيمتر الفعلي */
  if(st==="rain_light"||st==="rain"||st==="rain_heavy"||st==="storm"){
  var mmNow=0;
  if(HOURLY&&HOURLY.precipitation){
@@ -1111,27 +1294,45 @@ function buildScene(st){
  mmNow=HOURLY.precipitation[Math.min(nowH2,HOURLY.precipitation.length-1)]||0;
  }
  if(!mmNow&&DAILY&&DAILY.precipitation_sum)mmNow=(DAILY.precipitation_sum[0]||0)/12;
- /* عدد القطرات: من ٦ (رذاذ) إلى ٥٤ (وابل) */
- var base=st==="rain_light"?8:(st==="rain"?18:(st==="rain_heavy"?32:26));
- var n=Math.round(Math.max(6,Math.min(54,base+mmNow*7)));
- /* السرعة: كل ما زاد المطر أسرع */
- var spd=Math.max(0.32,0.95-Math.min(0.55,mmNow*0.09));
- /* السماكة والشفافية تزيدان مع الغزارة */
- var wdt=(1.4+Math.min(1.6,mmNow*0.3)).toFixed(1);
- var opa=(0.55+Math.min(0.42,mmNow*0.07)).toFixed(2);
- for(i=0;i<n;i++){
- var jitter=(Math.random()*2-1)*2.2;
- h+='<div class="s-drop" style="left:'+(2+i*(96/n)+jitter).toFixed(1)+'%;'+
- 'width:'+wdt+'px;opacity:'+opa+';'+
- 'height:'+(16+Math.min(14,mmNow*2.4)).toFixed(0)+'px;'+
- 'animation-duration:'+(spd+Math.random()*0.3).toFixed(2)+'s;'+
- 'animation-delay:'+(Math.random()*spd*1.6).toFixed(2)+'s"></div>';}
- /* رذاذ متطاير عند الغزارة الشديدة */
- if(mmNow>=4||st==="rain_heavy"){
- for(i=0;i<10;i++)h+='<div class="s-splash" style="left:'+(5+Math.random()*90).toFixed(1)+'%;'+
- 'bottom:'+(Math.random()*14).toFixed(0)+'%;animation-delay:'+(Math.random()*1.4).toFixed(2)+'s"></div>';}
+ /* الشدّة ٠–١ من الملّيمتر الحقيقي مع أرضية حسب الحالة */
+ var floorI=st==="rain_light"?0.12:(st==="rain"?0.34:(st==="rain_heavy"?0.62:0.52));
+ var I=Math.max(floorI,Math.min(1,mmNow/14));
+ /* عدد القطرات: من ١٠ (رذاذ) إلى ١٣٠ (وابل) */
+ var n=Math.round(10+I*120);
+ /* ثلاث طبقات عمق — الأمامية أسرع وأوضح */
+ var layers=[
+ {c:0.42,w:1.0,o:0.30,sp:1.25,hh:14},
+ {c:0.34,w:1.6,o:0.55,sp:0.95,hh:20},
+ {c:0.24,w:2.3,o:0.80,sp:0.70,hh:28}
+ ];
+ for(var Lz=0;Lz<layers.length;Lz++){
+ var ly=layers[Lz],cnt=Math.round(n*ly.c);
+ var dur=Math.max(0.22,ly.sp-I*0.62);
+ var wd=(ly.w+I*1.3).toFixed(1);
+ var op=Math.min(0.95,ly.o+I*0.2).toFixed(2);
+ var hg=Math.round(ly.hh+I*22);
+ for(i=0;i<cnt;i++){
+ h+='<div class="s-drop" style="left:'+(Math.random()*100).toFixed(1)+'%;'+
+ 'width:'+wd+'px;opacity:'+op+';height:'+hg+'px;'+
+ 'animation-duration:'+(dur+Math.random()*0.18).toFixed(2)+'s;'+
+ 'animation-delay:'+(Math.random()*dur*2).toFixed(2)+'s"></div>';}
  }
- if(st==="storm")h+='<div class="s-flash"></div>';
+ /* ★ وقع القطرات على الأرض — دوائر ترتد من الأسفل */
+ var splashes=Math.round(6+I*26);
+ for(i=0;i<splashes;i++){
+ var ss=(0.5+Math.random()*0.7).toFixed(2);
+ h+='<div class="s-splash" style="left:'+(Math.random()*100).toFixed(1)+'%;'+
+ 'animation-duration:'+ss+'s;'+
+ 'animation-delay:'+(Math.random()*1.2).toFixed(2)+'s;'+
+ 'transform:scale('+(0.6+I*0.9).toFixed(2)+')"></div>';}
+ /* ضباب رذاذي عند الغزارة */
+ if(I>0.55)h+='<div class="s-mist"></div>';
+ }
+ /* ★ البرق — وميض من أعلى الصفحة مع شعاع */
+ if(st==="storm"){
+ h+='<div class="s-flash"></div>';
+ h+='<div class="s-bolt blt1"></div><div class="s-bolt blt2"></div>';
+ }
  if(st==="dust")for(i=0;i<10;i++)h+='<div class="s-dust" style="top:'+(15+Math.random()*70)+'%;animation-duration:'+(2.5+Math.random()*3)+'s;animation-delay:'+(Math.random()*3)+'s"></div>';
  if(st==="fog")h+='<div class="s-fog" style="top:26%"></div><div class="s-fog" style="top:54%;animation-delay:-4s"></div><div class="s-fog" style="top:78%;animation-delay:-7s"></div>';
  if(IS_GOLDEN)h+='<div class="s-glow"></div>';
@@ -2416,10 +2617,16 @@ function astroToday(){
 var ASTRO_ICONS={moon:'☾',star:'✦',meteor:'☄',sun:'☀'};
 function astroCard(){
  var a=astroToday();if(!a)return '';
- return '<div class="astro"><div class="as-h">'+(ASTRO_ICONS[a.icon]||'✦')+' '+
+ /* ★ قمر حقيقي بطوره الفعلي حين يكون الحدث قمريًا */
+ var vis=(a.icon==='moon'&&typeof moonSVG==='function')?moonSVG(54):'';
+ return '<div class="astro'+(vis?' hasMoon':'')+'">'+
+ (vis?'<div class="as-moon">'+vis+'</div>':'')+
+ '<div class="as-body">'+
+ '<div class="as-h">'+(vis?'':((ASTRO_ICONS[a.icon]||'✦')+' '))+
  pick('سماء الليلة','حدث السماء','Tonight\u2019s sky')+
  (a.r?'<span class="as-r">'+a.r+'</span>':'')+'</div>'+
- '<div class="as-t">'+a.t+'</div><div class="as-b">'+a.b+'</div></div>';
+ '<div class="as-t">'+a.t+'</div><div class="as-b">'+a.b+'</div>'+
+ '</div></div>';
 }
 
 
@@ -3572,8 +3779,130 @@ function renderNow(){
  $("qin").onkeydown=function(e){if(e.key==="Enter")doAsk();};}
 
 /* ============ عرض: يومك ============ */
+
+/* ============================================================
+   الرسوم الحيّة لصفحة «يومك» — SVG خفيف يعرض البيانات الحقيقية
+   ⚠️ لا مكتبات ثلاثية الأبعاد: تستنزف البطارية وتضاعف حجم التطبيق
+      وهذه تعرض الحقيقة (طور القمر الفعلي) لا زخرفة عامة
+   ============================================================ */
+
+/* قمر بطوره الحقيقي — الظل يتحرك حسب الحساب الفلكي */
+function moonSVG(size){
+ var sz=size||46;
+ var mi=(typeof moonInfo==='function')?moonInfo(new Date()):{phase:0.5,illum:0.5};
+ var ph=mi.phase;            /* ٠ محاق · ٠.٥ بدر */
+ var r=22;
+ /* نصف عرض الظل: يتحرك من +r (محاق) إلى -r (بدر) ثم يعود */
+ var k=Math.cos(2*Math.PI*ph);      /* ١ عند المحاق · -١ عند البدر */
+ var rx=Math.abs(k*r);
+ var waxing=(ph<0.5);               /* متزايد: الظل على اليسار */
+ var shadowX=waxing?(-k*r*0):0;
+ /* نبني الظل كقطع ناقص يغطي جزءًا من القرص */
+ var sweepOuter=waxing?1:0;
+ var sweepInner=(k>0)?(waxing?1:0):(waxing?0:1);
+ var d='M 24 2 A '+r+' '+r+' 0 0 '+sweepOuter+' 24 46 A '+rx.toFixed(1)+' '+r+' 0 0 '+sweepInner+' 24 2 Z';
+ return '<svg class="mv" viewBox="0 0 48 48" width="'+sz+'" height="'+sz+'">'+
+  '<defs><radialGradient id="mg" cx="38%" cy="34%">'+
+   '<stop offset="0%" stop-color="#fdfbf3"/><stop offset="70%" stop-color="#e8e3d2"/>'+
+   '<stop offset="100%" stop-color="#c9c2ac"/></radialGradient></defs>'+
+  '<circle cx="24" cy="24" r="'+r+'" fill="url(#mg)"/>'+
+  '<circle cx="17" cy="18" r="3.2" fill="rgba(150,144,126,.35)"/>'+
+  '<circle cx="30" cy="27" r="4.4" fill="rgba(150,144,126,.28)"/>'+
+  '<circle cx="21" cy="33" r="2.4" fill="rgba(150,144,126,.3)"/>'+
+  '<path d="'+d+'" fill="rgba(10,16,32,.88)"/>'+
+  '<circle cx="24" cy="24" r="'+r+'" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1"/>'+
+ '</svg>';
+}
+
+/* بوصلة ضغط بإبرة تتحرك حسب القراءة الحقيقية */
+function pressureSVG(){
+ if(typeof PRESS==='undefined'||PRESS==null)return '';
+ var p=PRESS;
+ /* النطاق ٩٨٠–١٠٤٠ يُخرَّط على قوس ٢٧٠ درجة */
+ var t=Math.max(0,Math.min(1,(p-980)/60));
+ var ang=-135+t*270;
+ var rad=ang*Math.PI/180;
+ var x=24+Math.sin(rad)*15, y=24-Math.cos(rad)*15;
+ var col=p<1005?'#ff8f8f':(p>1018?'#7fe39a':'#9fd4f5');
+ return '<svg class="mv" viewBox="0 0 48 48" width="44" height="44">'+
+  '<circle cx="24" cy="24" r="19" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/>'+
+  '<path d="M 13 35 A 19 19 0 1 1 35 35" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="3" stroke-linecap="round"/>'+
+  '<line x1="24" y1="24" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="'+col+'" stroke-width="2.4" stroke-linecap="round"/>'+
+  '<circle cx="24" cy="24" r="3" fill="'+col+'"/>'+
+ '</svg>';
+}
+
+/* شمس على قوسها الحقيقي حسب الوقت */
+function sunArcSVG(){
+ if(!SUNRISE||!SUNSET)return '';
+ var now=new Date(),sr=new Date(SUNRISE),ss=new Date(SUNSET);
+ function at(b){var x=new Date(now);x.setHours(b.getHours(),b.getMinutes(),0,0);return x;}
+ var srT=at(sr),ssT=at(ss);
+ var prog=(now-srT)/Math.max(1,(ssT-srT));
+ var night=(prog<0||prog>1);
+ prog=Math.max(0,Math.min(1,prog));
+ var x=6+prog*36, y=38-Math.sin(prog*Math.PI)*26;
+ return '<svg class="mv" viewBox="0 0 48 48" width="46" height="46">'+
+  '<path d="M 6 38 Q 24 4 42 38" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1.5" stroke-dasharray="3 3"/>'+
+  '<line x1="4" y1="38" x2="44" y2="38" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>'+
+  (night?'':'<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="5.5" fill="#ffd24a"/>'+
+   '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="9" fill="rgba(255,210,74,.22)"/>')+
+ '</svg>';
+}
+
+/* نجوم متلألئة للدرور */
+function starsSVG(){
+ var h='<svg class="mv" viewBox="0 0 48 48" width="44" height="44">';
+ var pts=[[12,14,1.8],[24,9,2.4],[35,16,1.5],[18,26,1.6],[30,30,2],[10,34,1.3],[40,32,1.7],[24,38,1.4]];
+ for(var i=0;i<pts.length;i++){
+  h+='<circle class="tw" cx="'+pts[i][0]+'" cy="'+pts[i][1]+'" r="'+pts[i][2]+'" fill="#fff"'+
+   ' style="animation-delay:'+(i*0.35).toFixed(2)+'s"/>';
+ }
+ return h+'</svg>';
+}
+
+/* قطرات لعدّاد المطر */
+function rainDropSVG(){
+ return '<svg class="mv" viewBox="0 0 48 48" width="42" height="42">'+
+  '<path d="M24 8c0 0 11 13 11 20a11 11 0 1 1-22 0c0-7 11-20 11-20z" fill="rgba(159,212,245,.85)"/>'+
+  '<circle class="tw" cx="19" cy="26" r="2.4" fill="rgba(255,255,255,.55)"/>'+
+ '</svg>';
+}
+
+/* بطاقة ذكية بصورة حيّة ونبرة متحدثة */
+function smartV(icon,title,body,src){
+ return '<div class="smartV">'+
+  (icon?'<div class="sv-ic">'+icon+'</div>':'')+
+  '<div class="sv-tx">'+
+   '<div class="sv-h">'+title+'</div>'+
+   '<div class="sv-b">'+body+'</div>'+
+   (src?'<div class="sv-s">'+src+'</div>':'')+
+  '</div>'+
+ '</div>';
+}
+
 function smart(t,b){return '<div class="smart"><div class="h">'+t+'</div><div class="b">'+b+'</div></div>';}
 function skel(t){return '<div class="sk">'+t+'</div>';}
+
+/* ---------- تفاعل دوائر يومك ---------- */
+function wireActs(){
+ var g=$("actGrid");if(!g)return;
+ var btns=g.getElementsByClassName('actBtn'),i;
+ for(i=0;i<btns.length;i++){
+  btns[i].onclick=function(){
+   var k=this.getAttribute('data-k');
+   var ring=this.querySelector('.actRing');
+   if(ring){var rip=document.createElement('span');rip.className='actRip';
+    ring.appendChild(rip);setTimeout(function(){if(rip.parentNode)rip.parentNode.removeChild(rip);},600);}
+   var seen=(stGet('act_seen')||'').split(',').filter(function(x){return x;});
+   if(seen.indexOf(k)<0){seen.push(k);stSet('act_seen',seen.join(','));}
+   if(typeof CIN_VIBE!=='undefined'&&CIN_VIBE){try{if(navigator.vibrate)navigator.vibrate(12);}catch(e2){}}
+   SEL_ACT=(SEL_ACT===k?null:k);
+   renderLife();
+  };
+ }
+}
+
 function renderLife(){
  if(!W){$("lifeBody").innerHTML='<div class="loading">'+pick('نجيب بياناتك…','جارٍ الجلب…','Loading…')+'</div>';return;}
  var res=evalActs(),h="",i,L=LI();
@@ -3583,12 +3912,38 @@ function renderLife(){
  /* السلسلة */
  blocks.streak=yearMapCard();
  /* الأنشطة */
+ /* ★ شبكة دوائر مدمجة — أربعة أعمدة بدل مستطيلات متتالية */
+ var rings=['rG','rO','rB'],dots=['dG','dO','dB'],aps=['apG','apO','apB'],vds=['vG','vO','vB'];
+ var seen=(stGet('act_seen')||'').split(',').filter(function(x){return x;});
  var ah='<div class="sec-t">'+pick('يومك مع نفاف','يومك مع نفاف','Your day with Nafaf')+'</div>'+
- '<div class="sec-s">'+pick('قرار لكل نشاط من الأرقام الحقيقية','تقييم مبني على بيانات حقيقية','Judged from live data')+'</div>';
+ '<div class="sec-s">'+pick('المس أي نشاط يقول لك نفاف رأيه','اضغط أي نشاط لعرض التقييم','Tap any activity for the verdict')+'</div>';
+ var pctSeen=Math.round(seen.length/Math.max(1,res.length)*100);
+ ah+='<div class="actProg"><span class="apTxt">'+seen.length+'/'+res.length+'</span>'+
+ '<span class="apBar"><span class="apFill" style="width:'+pctSeen+'%"></span></span>'+
+ '<span class="apTxt">'+(pctSeen>=100?pick('شفت الكل ✦','اكتمل ✦','All seen ✦'):pick('اكتشفهم','تابع','explore'))+'</span></div>';
+ ah+='<div class="actGrid" id="actGrid">';
  for(i=0;i<res.length;i++){var r=res[i];
- ah+='<div class="row"><span class="strip '+sp[r.v]+'"></span><div class="ic">'+AI[r.a.k]+'</div>'+
- '<div class="tx"><div class="nm">'+r.a.nm[L]+'</div><div class="sub">'+r.note+'</div></div>'+
- '<div class="bg '+bg[r.v]+'">'+lb[r.v]+'</div></div>';}
+ var isSel=(SEL_ACT===r.a.k);
+ ah+='<div class="actBtn'+(isSel?' sel':'')+'" data-k="'+r.a.k+'">'+
+ '<div class="actRing '+rings[r.v]+'">'+AI[r.a.k]+
+ '<span class="actDot '+dots[r.v]+'"></span>'+
+ (seen.indexOf(r.a.k)>=0?'<span class="actSeen"></span>':'')+
+ '</div><div class="actLbl">'+r.a.nm[L]+'</div></div>';}
+ ah+='</div>';
+ var cur=null;
+ for(i=0;i<res.length;i++)if(res[i].a.k===SEL_ACT)cur=res[i];
+ if(cur){
+ ah+='<div class="actPanel '+aps[cur.v]+'"><div class="ap-top">'+
+ '<span class="ap-ic">'+AI[cur.a.k]+'</span>'+
+ '<span class="ap-nm">'+cur.a.nm[L]+'</span>'+
+ '<span class="ap-vd '+vds[cur.v]+'">'+lb[cur.v]+'</span></div>'+
+ '<div class="ap-tx">'+cur.note+'</div></div>';
+ } else {
+ ah+='<div class="actPanel"><div class="ap-hint">'+
+ pick('المس أي دائرة فوق — نفاف قرأ الأرقام وجهّز رأيه بكل نشاط. الأخضر ممتاز والأصفر ينفع والأحمر أجّله.',
+ 'اضغط أي دائرة أعلاه لعرض التقييم. الأخضر ممتاز والأصفر مقبول والأحمر غير مناسب.',
+ 'Tap any circle above. Green is great, amber is okay, red means postpone.')+'</div></div>';
+ }
  blocks.activities=ah;
  /* القصة */
  var s=todayStory();
@@ -3599,20 +3954,28 @@ function renderLife(){
  blocks.astro=astroCard();
  blocks.onday=onThisDayCard();
  blocks.pressure=pressureCard();
- blocks.star=smart(pick('الدرور والنجوم','المواسم النجمية','Star season'),starLine());
- blocks.models=MODEL_NOTE?smart(pick('اتفاق النماذج العالمية','اتفاق النماذج','Model agreement'),MODEL_NOTE):'';
+ blocks.star=smartV(starsSVG(),
+  pick('نفاف يقرأ لك النجوم','المواسم النجمية','Reading the stars'),
+  starLine());
+ blocks.models=MODEL_NOTE?smartV('',
+  pick('سألت النماذج العالمية','اتفاق النماذج','I asked the global models'),
+  MODEL_NOTE,'ECMWF · GFS · ICON · UKMO'):'';
  if(SUNRISE&&SUNSET){var sr=new Date(SUNRISE),ss=new Date(SUNSET);
  var t2=function(d){return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");};
- blocks.sun=smart(pick('الشروق والغروب','الشروق والغروب','Sunrise & sunset'),
- pick('الشروق '+t2(sr)+' · الغروب '+t2(ss)+(IS_NIGHT?' — إحنا بالليل الحين.':' — إحنا بالنهار.'),
- 'الشروق '+t2(sr)+' · الغروب '+t2(ss),'Sunrise '+t2(sr)+' · Sunset '+t2(ss)));}
+ blocks.sun=smartV(sunArcSVG(),
+  pick('وين وصلت الشمس','مسار الشمس','Where the sun is'),
+  pick('طلعت <b>'+t2(sr)+'</b> وتغرب <b>'+t2(ss)+'</b>'+(IS_NIGHT?' — وإحنا بالليل الحين.':' — وإحنا بالنهار.'),
+  'الشروق '+t2(sr)+' · الغروب '+t2(ss),'Rose at <b>'+t2(sr)+'</b>, sets at <b>'+t2(ss)+'</b>'));}
  else blocks.sun='';
  var dl=droughtLine();
- blocks.rain=(DAYS_SINCE_RAIN!=null||dl)?smart(pick('عدّاد النفاف','عدّاد المطر','Rain counter'),
- dl||(DAYS_SINCE_RAIN===0?pick('اليوم نزل نفاف!','هطل المطر اليوم.','It rained today!')
-:pick('آخر نفاف بالمنطقة: قبل '+DAYS_SINCE_RAIN+' يوم.','آخر هطول: قبل '+DAYS_SINCE_RAIN+' يومًا.','Last rain: '+DAYS_SINCE_RAIN+' days ago.')))
-:skel(pick('نحسب من الأرشيف…','جارٍ الحساب…','Counting…'));
- blocks.yearago=YEARAGO?smart(pick('قبل سنة','قبل عام','A year ago'),YEARAGO):skel(pick('نجيب أرشيف السنة الماضية…','جارٍ الجلب…','Loading…'));
+ blocks.rain=(DAYS_SINCE_RAIN!=null||dl)?smartV(rainDropSVG(),
+  pick('عدّاد النفاف','عدّاد المطر','Rain counter'),
+  dl||(DAYS_SINCE_RAIN===0?pick('اليوم نزل نفاف!','هطل المطر اليوم.','It rained today!')
+   :pick('آخر نفاف بالمنطقة قبل <b>'+DAYS_SINCE_RAIN+'</b> يوم.','آخر هطول: قبل '+DAYS_SINCE_RAIN+' يومًا.','Last rain: <b>'+DAYS_SINCE_RAIN+'</b> days ago.')))
+  :skel(pick('نحسب من الأرشيف…','جارٍ الحساب…','Counting…'));
+ blocks.yearago=YEARAGO?smartV('',
+  pick('تذكر السنة اللي راحت؟','قبل عام','Remember last year?'),
+  YEARAGO):skel(pick('نجيب أرشيف السنة الماضية…','جارٍ الجلب…','Loading…'));
  /* ترتيب المستخدم */
  for(i=0;i<CARDS.length;i++){var key=CARDS[i];
  if(key==='activities'){h+=blocks.activities;
@@ -3628,7 +3991,10 @@ function renderLife(){
  rh+='<div class="rec"><div class="k">'+keys[i][1]+'</div><div class="v">'+val+'</div><div class="d">'+o.c+' · '+o.d+'</div></div>';}
  if(rh)h+='<div class="sec-t" style="margin-top:14px">'+pick('أرقامك مع نفاف','أرقامك المسجّلة','Your records')+'</div>'+
  '<div class="sec-s">'+pick('من يوم ما بدأت تستخدم نفاف','منذ بداية الاستخدام','Since you started using Nafaf')+'</div><div class="recs">'+rh+'</div>';
- $("lifeBody").innerHTML=h;}
+ $("lifeBody").innerHTML=h;
+ wireActs();
+ var scb=$("stabCard");
+ if(scb)scb.onclick=function(){STAB_OPEN=!STAB_OPEN;renderLife();};}
 
 /* ============ عرض: التوقعات ============ */
 function renderFc(){
@@ -5286,6 +5652,25 @@ document.addEventListener('visibilitychange',function(){
 });
 
 /* ============ إقلاع ============ */
+
+/* ═══════ إخفاء شاشة الافتتاح ═══════ */
+(function(){
+ var reduced=false;
+ try{reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
+ /* من رآها اليوم لا نعيدها عليه */
+ var seenToday=false;
+ try{seenToday=(stGet('splash_day')===new Date().toDateString());}catch(e){}
+ var wait=(reduced||seenToday)?600:2900;
+ setTimeout(function(){
+  var el=document.getElementById('splash');
+  if(el){
+   el.className='splash gone';
+   setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},700);
+  }
+  try{stSet('splash_day',new Date().toDateString());}catch(e){}
+ },wait);
+})();
+
 touchStreak();applyAll();pushSync();maybeAskPush();sendHeartbeat();newsLoad();cfgLoad();pingVisit();
 
 /* ★ الإقلاع: موقعك الجغرافي الحقيقي هو الأصل — لا مدينة افتراضية
