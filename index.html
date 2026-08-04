@@ -3748,11 +3748,13 @@ var GSI_ID='';          /* معرّف عميل جوجل — يُجلب من ال
 
 function authLoad(){
  if(!PUSH_URL)return;
- fetch(PUSH_URL+'/auth/config').then(function(r){return r.json();})
-  .then(function(c){
+ fetch(PUSH_URL+'/auth/config').then(function(r){
+   if(!r.ok)throw new Error('HTTP '+r.status);
+   return r.json();
+  }).then(function(c){
    GSI_ID=c.clientId||'';
    if(GSI_ID)loadGSI();
-  }).catch(function(){});
+  }).catch(function(){/* صامت عند الإقلاع — يُبلَّغ عند الضغط */});
  /* حدّث حالة المراسل */
  corrRefresh();
 }
@@ -3796,7 +3798,21 @@ function onGoogleCred(resp){
   }).catch(function(){toast(pick('تعذّر الاتصال','تعذّر الاتصال','Connection failed'),true);});
 }
 function doSignIn(){
- if(!GSI_ID){toast(pick('تسجيل الدخول غير مفعّل بعد.','لم يُفعّل تسجيل الدخول.','Sign-in not configured yet.'),true);return;}
+ if(!PUSH_URL){toast(pick('خادم نفاف غير مربوط.','الخادم غير مربوط.','Server not linked.'),true);return;}
+ if(!GSI_ID){
+  /* أعد المحاولة مرة — قد يكون الجلب الأول فشل */
+  fetch(PUSH_URL+'/auth/config').then(function(r){
+   if(!r.ok)throw new Error('HTTP '+r.status);
+   return r.json();
+  }).then(function(c){
+   if(c.clientId){GSI_ID=c.clientId;loadGSI();
+    toast(pick('جاهز — اضغط مرة ثانية.','جاهز؛ حاول مجددًا.','Ready — tap again.'));}
+   else toast(pick('معرّف جوجل غير مضبوط في الخادم.','لم يُضبط معرّف جوجل.','Google client ID not set on server.'),true);
+  }).catch(function(e){
+   toast(pick('تعذّر الوصول للخادم ('+e.message+')','تعذّر الوصول للخادم','Server unreachable ('+e.message+')'),true);
+  });
+  return;
+ }
  try{
   google.accounts.id.prompt(function(n){
    if(n&&(n.isNotDisplayed&&n.isNotDisplayed()||n.isSkippedMoment&&n.isSkippedMoment())){
