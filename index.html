@@ -4518,57 +4518,6 @@ function nearestWilaya(){
  return (best&&best.d<80)?best.n:(CUR.n||'');
 }
 
-/* إرسال رصد */
-function sendReport(kind){
- if(!PUSH_URL)return Promise.resolve({ok:false,why:pick('الخادم غير مربوط.','الخادم غير مربوط.','Server not linked.')});
- var body={
-  vid:visitorId(), kind:kind,
-  wilaya:nearestWilaya(),
-  lat:CUR.lat, lon:CUR.lon,          /* للتدقيق فقط */
-  model:W?stateOf(W):null
- };
- return fetch(PUSH_URL+'/report',{method:'POST',
-  headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
-  .then(function(r){return r.json();})
-  .then(function(r){
-   if(r.error==='too soon')return {ok:false,why:pick('رصدت قبل شوي — انتظر ٢٠ دقيقة.',
-     'يُسمح برصد كل ٢٠ دقيقة.','One report per 20 minutes.')};
-   if(r.error)return {ok:false,why:pick('تعذّر الإرسال.','تعذّر الإرسال.','Could not send.')};
-   repsLoad(true);
-   return {ok:true,auto:r.auto,corr:r.correspondent};
-  }).catch(function(){return {ok:false,why:pick('تعذّر الاتصال.','تعذّر الاتصال.','Connection failed.')};});
-}
-
-/* جلب الرصدات المعتمدة */
-function repsLoad(force){
- if(!PUSH_URL)return;
- if(!force&&REPORTS)return;
- fetch(PUSH_URL+'/reports').then(function(r){return r.json();})
-  .then(function(d){
-   REPORTS=d&&d.ok?d:null;
-   if(SHEET_MODE==='obs'&&$("sheet")&&$("sheet").className.indexOf('on')>=0)renderSheet();
-  }).catch(function(){});
-}
-
-/* مزامنة حالة المراسل مع الخادم */
-function corrSync(){
- if(!PUSH_URL||REP_SYNCED)return;
- REP_SYNCED=true;
- fetch(PUSH_URL+'/correspondent/status',{method:'POST',
-  headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({vid:visitorId()})})
-  .then(function(r){return r.json();})
-  .then(function(d){
-   if(!d||!d.ok)return;
-   var cur=stGet('rep_status')||'none';
-   if(d.status!==cur){
-    stSet('rep_status',d.status);
-    if(d.name)stSet('rep_name',d.name);
-    if($("sheet")&&$("sheet").className.indexOf('on')>=0)renderSheet();
-   }
-  }).catch(function(){});
-}
-
 /* إرسال طلب مراسل */
 function sendCorrApply(nm,wl,ct,why){
  if(!PUSH_URL)return Promise.resolve({ok:false});
@@ -6050,7 +5999,7 @@ document.addEventListener('visibilitychange',function(){
  },wait);
 })();
 
-touchStreak();applyAll();pushSync();maybeAskPush();sendHeartbeat();newsLoad();cfgLoad();pingVisit();authLoad();reportsLoad();corrSync();repsLoad();
+touchStreak();applyAll();pushSync();maybeAskPush();sendHeartbeat();newsLoad();cfgLoad();pingVisit();authLoad();reportsLoad();corrRefresh();
 
 /* ★ الإقلاع: موقعك الجغرافي الحقيقي هو الأصل — لا مدينة افتراضية
  ⚠️ لا نعرض الرستاق ولا أي مدينة من القائمة إلا إن رُفض إذن الموقع تمامًا. */
