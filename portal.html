@@ -391,7 +391,10 @@ textarea.fld{min-height:80px;resize:vertical;line-height:1.7}
           <small>الإحداثيات للتدقيق فقط — لا تُعرض للمستخدمين</small>
         </h3>
         <div id="repList"></div>
-        <button class="btn ghost" id="repRefresh" style="margin-top:10px">تحديث</button>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn ghost" id="repRefresh" style="flex:1;margin:0">تحديث</button>
+          <button class="btn ghost" id="repClearOld" style="flex:1;margin:0">🗑 حذف المنتهية</button>
+        </div>
       </div>
     </div>
 
@@ -790,13 +793,14 @@ function loadReports(){
     '</div>'+
     (x.lat!=null?'<div style="font-size:9.5px;color:rgba(255,255,255,.45);direction:ltr;text-align:left">'+
       x.lat+', '+x.lon+' · <a href="https://maps.google.com/?q='+x.lat+','+x.lon+'" target="_blank" style="color:#9fd4f5">خريطة</a></div>':'')+
-    (x.status==='pending'&&!x.expired?
-     '<div style="display:flex;gap:7px;margin-top:3px">'+
-      '<button class="copy" style="flex:1;background:rgba(127,227,154,.2);border-color:rgba(127,227,154,.5)" data-ra="'+x.id+'">نشر</button>'+
-      '<button class="copy" style="flex:1;background:rgba(220,90,90,.18);border-color:rgba(220,90,90,.45)" data-rr="'+x.id+'">حذف</button>'+
-     '</div>':
-     '<div style="font-size:10px;color:'+col+';font-weight:700">'+
-      (x.expired?'انتهت صلاحيته':(x.status==='approved'?'منشور':''))+'</div>')+
+    '<div style="display:flex;gap:7px;margin-top:3px;align-items:center">'+
+     (x.status==='pending'&&!x.expired?
+      '<button class="copy" style="flex:1;background:rgba(127,227,154,.2);border-color:rgba(127,227,154,.5)" data-ra="'+x.id+'">نشر</button>':
+      '<span style="flex:1;font-size:10px;color:'+col+';font-weight:700">'+
+       (x.expired?'انتهت صلاحيته':(x.status==='approved'?'✓ منشور':''))+'</span>')+
+     /* ★ الحذف متاح دائمًا — حتى للمنشور والمنتهي */
+     '<button class="copy" style="flex:0 0 auto;background:rgba(220,90,90,.18);border-color:rgba(220,90,90,.45)" data-rr="'+x.id+'">🗑 حذف</button>'+
+    '</div>'+
    '</div>';
   });
   $('repList').innerHTML=h;
@@ -815,6 +819,21 @@ function loadReports(){
  });
 }
 $('repRefresh').onclick=function(){loadReports();loadCorr();toast('حُدّثت');};
+/* ★ حذف كل الرصدات المنتهية دفعة واحدة */
+if($('repClearOld'))$('repClearOld').onclick=function(){
+ var b=this;b.innerHTML='جارٍ…';
+ api('/admin/reports').then(function(r){
+  var old=(r.reports||[]).filter(function(x){return x.expired;});
+  if(!old.length){b.innerHTML='🗑 حذف المنتهية';toast('لا رصدات منتهية');return;}
+  var done=0;
+  old.forEach(function(x){
+   api('/admin/report/decide',{id:x.id,decision:'reject'}).then(function(){
+    done++;
+    if(done===old.length){b.innerHTML='🗑 حذف المنتهية';toast('حُذفت '+done+' رصدة منتهية');loadReports();}
+   });
+  });
+ });
+};
 
 /* ═══════ الزوار ═══════ */
 function loadVisitors(){
