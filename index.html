@@ -3782,20 +3782,36 @@ function loadGSI(){
  document.head.appendChild(sc);
 }
 function onGoogleCred(resp){
- if(!resp||!resp.credential)return;
+ if(!resp||!resp.credential){toast(pick('ما وصل رمز من جوجل.','لم يصل رمز التحقق.','No credential from Google.'),true);return;}
+ var st=0;
  fetch(PUSH_URL+'/auth/google',{method:'POST',
   headers:{'Content-Type':'application/json'},
   body:JSON.stringify({credential:resp.credential,vid:visitorId()})})
-  .then(function(r){return r.json();})
+  .then(function(r){st=r.status;return r.json().catch(function(){return {error:'HTTP '+r.status};});})
   .then(function(d){
-   if(d.error){toast(pick('تعذّر تسجيل الدخول','تعذّر تسجيل الدخول','Sign-in failed'),true);return;}
+   if(d.error){
+    /* ★ اعرض السبب الحقيقي لا رسالة عامة */
+    var why=d.error;
+    if(why==='wrong audience')why=pick('معرّف جوجل غير متطابق.<br>الخادم: '+(d.expected||'?')+'<br>الرمز: '+(d.got||'?'),
+      'عدم تطابق معرّف جوجل.','Client ID mismatch: server '+(d.expected||'?')+' vs token '+(d.got||'?'));
+    else if(why==='invalid token')why=pick('رفضت جوجل الرمز: '+(d.gError||'?')+' ('+(d.gStatus||'?')+')',
+      'رمز غير صالح: '+(d.gError||'?'),'Google rejected: '+(d.gError||'?'));
+    else if(why==='email unverified')why=pick('بريدك غير موثّق عند جوجل.',
+      'البريد غير موثّق.','Email not verified.');
+    else why=pick('فشل الدخول: '+why+' ('+st+')','فشل الدخول: '+why,'Sign-in failed: '+why);
+    toast(why,true);
+    return;
+   }
    USER={email:d.email,name:d.name};
    CORR={status:d.status||'none',name:d.corrName||''};
    try{stSet('user_email',d.email);stSet('user_name',d.name||'');}catch(e){}
    renderAuthBadge();
    toast(pick('أهلًا '+(d.name||'')+'!','مرحبًا '+(d.name||''),'Welcome '+(d.name||'')));
    if(SHEET_OPEN)renderSheet();
-  }).catch(function(){toast(pick('تعذّر الاتصال','تعذّر الاتصال','Connection failed'),true);});
+  }).catch(function(e){
+   toast(pick('تعذّر الوصول للخادم: '+(e&&e.message||'?'),
+    'تعذّر الوصول للخادم','Server error: '+(e&&e.message||'?')),true);
+  });
 }
 function doSignIn(){
  if(!PUSH_URL){toast(pick('خادم نفاف غير مربوط.','الخادم غير مربوط.','Server not linked.'),true);return;}
