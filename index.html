@@ -3807,7 +3807,7 @@ function onGoogleCred(resp){
    try{stSet('user_email',d.email);stSet('user_name',d.name||'');}catch(e){}
    renderAuthBadge();
    toast(pick('أهلًا '+(d.name||'')+'!','مرحبًا '+(d.name||''),'Welcome '+(d.name||'')));
-   if(SHEET_OPEN)renderSheet();
+   if(sheetIsOpen())renderSheet();
   }).catch(function(e){
    toast(pick('تعذّر الوصول للخادم: '+(e&&e.message||'?'),
     'تعذّر الوصول للخادم','Server error: '+(e&&e.message||'?')),true);
@@ -3856,7 +3856,7 @@ function doSignOut(){
  try{stSet('user_email','');stSet('user_name','');}catch(e){}
  try{google.accounts.id.disableAutoSelect();}catch(e){}
  renderAuthBadge();
- if(SHEET_OPEN)renderSheet();
+ if(sheetIsOpen())renderSheet();
  toast(pick('سجّلت خروجك','تم تسجيل الخروج','Signed out'));
 }
 
@@ -3899,7 +3899,7 @@ function reportsLoad(){
  fetch(PUSH_URL+'/reports').then(function(r){return r.json();})
   .then(function(d){
    if(d&&d.ok){FEED={corr:d.corr||[],consensus:d.consensus||[],solo:d.solo||[]};
-    if(SHEET_OPEN)renderSheet();}
+    if(sheetIsOpen())renderSheet();}
   }).catch(function(){});
 }
 
@@ -4515,6 +4515,13 @@ var OBS_OPTS=[
  {k:'cool',ic:'cool',nm:['برد','برد','Cold']}
 ];
 var SHEET_MODE='obs', PICKED=null;
+
+/* هل لوحة الرصد مفتوحة الآن؟ — يُفحص من الصفحة لا من متغيّر منفصل */
+function sheetIsOpen(){
+ var el=$("sheet");
+ return !!(el&&el.className.indexOf('on')>=0);
+}
+
 
 
 /* ============================================================
