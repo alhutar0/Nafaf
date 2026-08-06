@@ -904,6 +904,94 @@
   .m-grp{font-size:11px;font-weight:800;color:#8fa3b8;letter-spacing:.06em;
     margin:22px 0 6px;padding-bottom:6px;border-bottom:1px solid rgba(27,44,71,.14)}
   .m-grp:first-of-type{margin-top:6px}
+  /* ★ فقاعة الرصد المتحركة */
+  .pill{position:relative;display:flex;align-items:center;gap:12px;overflow:hidden;
+    border-radius:20px;padding:13px 15px;margin-bottom:11px;cursor:pointer;
+    border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);
+    transition:opacity .25s}
+  .pill.k-rain{background:linear-gradient(120deg,rgba(90,168,224,.24),rgba(255,255,255,.04));
+    border-color:rgba(159,212,245,.45)}
+  .pill.k-dust{background:linear-gradient(120deg,rgba(214,170,110,.24),rgba(255,255,255,.04));
+    border-color:rgba(230,180,94,.45)}
+  .pill.k-humid{background:linear-gradient(120deg,rgba(120,190,200,.22),rgba(255,255,255,.04));
+    border-color:rgba(150,215,225,.42)}
+  .pill.k-clouds{background:linear-gradient(120deg,rgba(150,165,190,.22),rgba(255,255,255,.04));
+    border-color:rgba(190,205,225,.4)}
+  .pill.k-clear{background:linear-gradient(120deg,rgba(255,209,102,.22),rgba(255,255,255,.04));
+    border-color:rgba(255,209,102,.42)}
+  .pill.k-cold{background:linear-gradient(120deg,rgba(160,200,245,.22),rgba(255,255,255,.04));
+    border-color:rgba(180,215,250,.42)}
+  /* الرسوم الحيّة */
+  .pill-art{position:relative;flex:0 0 52px;width:52px;height:52px;border-radius:14px;
+    background:rgba(0,0,0,.18);overflow:hidden}
+  .pd{position:absolute;top:-20%;width:1.6px;height:11px;border-radius:99px;
+    background:linear-gradient(rgba(200,232,255,.95),rgba(200,232,255,0))}
+  .anim .pd{animation:pdFall linear infinite}
+  @keyframes pdFall{to{transform:translateY(72px)}}
+  .pu{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(255,222,170,.85)}
+  .anim .pu{animation:puFly linear infinite}
+  @keyframes puFly{from{transform:translateX(-8px);opacity:0}
+    20%{opacity:1}80%{opacity:1}to{transform:translateX(60px);opacity:0}}
+  .ph{position:absolute;bottom:14%;width:7px;height:7px;border-radius:50%;
+    background:rgba(190,235,245,.8)}
+  .anim .ph{animation:phRise 2.4s ease-in infinite}
+  @keyframes phRise{from{transform:translateY(0) scale(.6);opacity:0}
+    30%{opacity:.9}to{transform:translateY(-34px) scale(1.3);opacity:0}}
+  .pc{position:absolute;top:34%;left:14%;width:26px;height:9px;border-radius:99px;
+    background:rgba(235,242,252,.85)}
+  .pc:before{content:"";position:absolute;top:-6px;left:6px;width:13px;height:13px;
+    border-radius:50%;background:inherit}
+  .pc2{top:58%;left:32%;width:18px;height:7px;opacity:.6}
+  .anim .pc{animation:pcDrift 5s ease-in-out infinite}
+  .anim .pc2{animation:pcDrift 6.5s ease-in-out infinite reverse}
+  @keyframes pcDrift{0%,100%{transform:translateX(-4px)}50%{transform:translateX(8px)}}
+  .ps{position:absolute;top:50%;left:50%;width:20px;height:20px;margin:-10px 0 0 -10px;
+    border-radius:50%;background:radial-gradient(circle,#ffe38a,#ffc53d)}
+  .anim .ps{animation:psGlow 3s ease-in-out infinite}
+  @keyframes psGlow{0%,100%{box-shadow:0 0 8px rgba(255,197,61,.5)}
+    50%{box-shadow:0 0 18px rgba(255,197,61,.9)}}
+  .pf{position:absolute;top:30%;left:28%;width:12px;height:2px;border-radius:99px;
+    background:rgba(210,235,255,.9)}
+  .pf:before,.pf:after{content:"";position:absolute;inset:0;background:inherit;border-radius:99px}
+  .pf:before{transform:rotate(60deg)}.pf:after{transform:rotate(-60deg)}
+  .pf2{top:62%;left:52%;width:8px;opacity:.7}
+  .anim .pf{animation:pfSpin 8s linear infinite}
+  @keyframes pfSpin{to{transform:rotate(360deg)}}
+  /* النص */
+  .pill-tx{flex:1 1 auto;min-width:0}
+  .pl-k{font-size:13.5px;font-weight:800;color:#fff;line-height:1.4}
+  .pl-m{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:4px}
+  .pl-badge{font-size:9px;font-weight:800;color:#3a2405;background:#e6b45e;
+    border-radius:99px;padding:2px 7px}
+  .pl-cnt{font-size:9.5px;font-weight:800;color:#12203c;background:#9fd4f5;
+    border-radius:99px;padding:2px 8px}
+  .pl-nm{font-size:10.5px;font-weight:700;color:#e6b45e}
+  .pl-t{font-size:9.5px;font-weight:600;color:rgba(255,255,255,.5)}
+  .pl-img{flex:0 0 46px;width:46px;height:46px;border-radius:12px;object-fit:cover;
+    border:1px solid rgba(255,255,255,.25)}
+  .pl-dots{position:absolute;bottom:6px;inset-inline-end:14px;display:flex;gap:4px}
+  .pl-dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.25);
+    transition:background .3s,width .3s}
+  .pl-dot.on{background:#e6b45e;width:12px;border-radius:99px}
+  .photoPrev{display:block;width:100%;max-height:150px;object-fit:cover;
+    border-radius:14px;margin-top:9px;border:1px solid rgba(255,255,255,.22)}
+  /* ★ إعادة تنسيق الإعدادات */
+  .m-grp{display:flex;align-items:center;gap:9px;font-size:11px;font-weight:800;
+    color:#7f8fa6;letter-spacing:.05em;margin:24px 0 12px}
+  .m-grp:first-of-type{margin-top:4px}
+  .m-grp:after{content:"";flex:1 1 auto;height:1px;background:rgba(27,44,71,.12)}
+  .m-card{background:#f4f7fb;border:1px solid rgba(27,44,71,.09);
+    border-radius:16px;padding:14px 15px;margin-bottom:10px}
+  .m-sec{font-size:13px;font-weight:800;color:#1b2c47;margin:0 0 9px}
+  .m-card .m-sec{margin-bottom:9px}
+  .m-hint{font-size:11.5px;font-weight:600;color:#7f8fa6;line-height:1.75;
+    margin:-3px 0 10px}
+  .m-row{display:flex;flex-wrap:wrap;gap:7px}
+  .mbtn{border:1px solid rgba(27,44,71,.14);background:#fff;color:#33445c;
+    font-family:inherit;font-size:12.5px;font-weight:700;border-radius:99px;
+    padding:9px 16px;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+  .mbtn.on{background:#e6b45e;color:#3a2405;border-color:#e6b45e;font-weight:800}
+  .mbtn:active{transform:scale(.96)}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -4008,7 +4096,7 @@ function renderAccount(){
 function sendReport(kind){
  if(!PUSH_URL)return Promise.resolve({ok:false});
  var body={vid:visitorId(),kind:kind,
-  wilaya:(CUR&&CUR.n)||'',note:''};
+  wilaya:(CUR&&CUR.n)||'',note:'',photo:PHOTO||null};
  if(CUR&&typeof CUR.lat==='number'){body.lat=CUR.lat;body.lon=CUR.lon;}
  return fetch(PUSH_URL+'/report',{method:'POST',
   headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
@@ -4056,6 +4144,102 @@ function corrCard(){
  return h+'</div>';
 }
 
+
+/* ============================================================
+   ★ فقاعات الرصد المتحركة — كل نوع بتصميمه الحيّ
+   تظهر جانب الشاشة وتتبدّل تلقائيًا
+   ============================================================ */
+var PILL_I=0, PILL_TIMER=null;
+
+function pillArt(kind){
+ /* رسم حيّ صغير لكل نوع رصد */
+ if(kind==='rain'){
+  var d='';
+  for(var i=0;i<7;i++)d+='<span class="pd" style="left:'+(8+i*13)+'%;'+
+   'animation-duration:'+(0.5+Math.random()*0.3).toFixed(2)+'s;'+
+   'animation-delay:'+(Math.random()*0.6).toFixed(2)+'s"></span>';
+  return '<span class="pill-art pa-rain">'+d+'</span>';
+ }
+ if(kind==='dust'){
+  var u='';
+  for(var j=0;j<8;j++)u+='<span class="pu" style="top:'+(15+Math.random()*65)+'%;'+
+   'animation-duration:'+(1.6+Math.random()*1.4).toFixed(1)+'s;'+
+   'animation-delay:'+(Math.random()*2).toFixed(1)+'s"></span>';
+  return '<span class="pill-art pa-dust">'+u+'</span>';
+ }
+ if(kind==='humid'){
+  var h='';
+  for(var k=0;k<4;k++)h+='<span class="ph" style="left:'+(15+k*22)+'%;'+
+   'animation-delay:'+(k*0.4).toFixed(1)+'s"></span>';
+  return '<span class="pill-art pa-humid">'+h+'</span>';
+ }
+ if(kind==='clouds')return '<span class="pill-art pa-cloud"><span class="pc"></span><span class="pc pc2"></span></span>';
+ if(kind==='clear')return '<span class="pill-art pa-sun"><span class="ps"></span></span>';
+ if(kind==='cold')return '<span class="pill-art pa-cold"><span class="pf"></span><span class="pf pf2"></span></span>';
+ return '<span class="pill-art"></span>';
+}
+
+/* اجمع كل الرصدات في قائمة واحدة */
+function pillItems(){
+ var out=[],L=LI();
+ if(FEED&&FEED.corr)FEED.corr.forEach(function(c){
+  out.push({kind:c.kind,wilaya:c.wilaya,name:c.name,corr:true,ts:c.ts,photo:c.photo});
+ });
+ if(FEED&&FEED.consensus)FEED.consensus.forEach(function(g){
+  out.push({kind:g.kind,wilaya:g.wilaya,count:g.count,ts:Date.now()});
+ });
+ if(FEED&&FEED.solo)FEED.solo.forEach(function(x){
+  out.push({kind:x.kind,wilaya:x.wilaya,ts:x.ts,photo:x.photo});
+ });
+ return out;
+}
+
+function pillCard(){
+ var items=pillItems();
+ if(!items.length)return '';
+ if(PILL_I>=items.length)PILL_I=0;
+ var it=items[PILL_I],L=LI();
+ var kn=(OBS_LABEL[it.kind]||['—','—','—'])[L];
+ var dots='';
+ for(var i=0;i<Math.min(items.length,6);i++)dots+='<span class="pl-dot'+(i===PILL_I?' on':'')+'"></span>';
+ return '<div class="pill k-'+it.kind+'" id="pillCard">'+
+  pillArt(it.kind)+
+  '<div class="pill-tx">'+
+   '<div class="pl-k">'+kn+' — '+it.wilaya+'</div>'+
+   '<div class="pl-m">'+
+    (it.corr?'<span class="pl-badge">'+pick('مراسل','مراسل','Reporter')+'</span>':'')+
+    (it.count?'<span class="pl-cnt">'+it.count+' '+pick('اتفقوا','إجماع','agree')+'</span>':'')+
+    (it.name?'<span class="pl-nm">'+it.name+'</span>':'')+
+    '<span class="pl-t">'+repAgo(it.ts)+'</span>'+
+   '</div>'+
+  '</div>'+
+  (it.photo?'<img class="pl-img" src="'+it.photo+'" alt="" />':'')+
+  (items.length>1?'<div class="pl-dots">'+dots+'</div>':'')+
+ '</div>';
+}
+
+function pillNext(){
+ var items=pillItems();
+ if(items.length<2)return;
+ PILL_I=(PILL_I+1)%items.length;
+ var host=$("pillHost");
+ if(!host){pillStop();return;}
+ var el=$("pillCard");
+ if(el)el.style.opacity='0';
+ setTimeout(function(){
+  host.innerHTML=pillCard();
+  var ne=$("pillCard");
+  if(ne){ne.style.opacity='0';setTimeout(function(){ne.style.opacity='1';},20);
+   ne.onclick=function(){pillNext();pillStart();};}
+ },250);
+}
+function pillStart(){
+ pillStop();
+ if(pillItems().length<2)return;
+ PILL_TIMER=setInterval(pillNext,5000);
+}
+function pillStop(){if(PILL_TIMER){clearInterval(PILL_TIMER);PILL_TIMER=null;}}
+
 /* ============ عرض: الآن ============ */
 function stat(k,v,cls){return '<div class="stat"><div class="k">'+k+'</div><div class="v '+(cls||'')+'">'+v+'</div></div>';}
 function renderNow(){
@@ -4075,7 +4259,7 @@ function renderNow(){
  var h='';
  /* ★ الترتيب: مرصد الأمطار ← الحرارة ← السما الآن */
  var nc=newsCard(); if(nc)h+='<div class="fadeIn d1">'+nc+'</div>';
- var cc=corrCard(); if(cc)h+='<div class="fadeIn d1">'+cc+'</div>';
+ var pc2=pillCard(); if(pc2)h+='<div class="fadeIn d1" id="pillHost">'+pc2+'</div>';
  var wc=watchCard(); if(wc)h+='<div class="fadeIn d1">'+wc+'</div>';
  var lf=liveFeedCard();
  var brf=briefCard();
@@ -4120,6 +4304,8 @@ function renderNow(){
  $("nowBody").innerHTML=h;
  wireTimeline();
  rotWire();rotStart();
+ var ph=$("pillCard");if(ph)ph.onclick=function(){pillNext();pillStart();};
+ pillStart();
  var wcEl=$("watchCard");
  if(wcEl){var more=wcEl.querySelector('.wt-more');
   if(more)more.onclick=function(){WATCH_OPEN=!WATCH_OPEN;renderNow();};}
@@ -4435,6 +4621,9 @@ function renderLive(){
  '<button class="lbtn2'+(LKIND==='rainmap'?' on':'')+'" data-k="rainmap">'+pick('خريطة الأمطار','خريطة الأمطار','Rain map')+'</button>'+
  '<button class="lbtn2'+(LKIND==='windmap'?' on':'')+'" data-k="windmap">'+pick('خريطة الرياح','خريطة الرياح','Wind map')+'</button>'+
  '<button class="lbtn2'+(LKIND==='stormmap'?' on':'')+'" data-k="stormmap">'+pick('خريطة العواصف','خريطة العواصف','Storm map')+'</button>'+
+ '<button class="lbtn2'+(LKIND==='aerosol'?' on':'')+'" data-k="aerosol">'+pick('كثافة العوالق','مؤشر العوالق','Aerosol index')+'</button>'+
+ '<button class="lbtn2'+(LKIND==='snow'?' on':'')+'" data-k="snow">'+pick('غطاء الثلج','غطاء الثلج','Snow cover')+'</button>'+
+ '<button class="lbtn2'+(LKIND==='fires'?' on':'')+'" data-k="fires">'+pick('بؤر الحرارة','بؤر الحرارة','Thermal hotspots')+'</button>'+
  '<button class="lbtn2'+(LKIND==='imerg'?' on':'')+'" data-k="imerg">'+pick('رصد المطر — ناسا','رصد المطر الساتلي','NASA rain (IMERG)')+'</button>'+
  '<button class="lbtn2'+(LKIND==='libre'?' on':'')+'" data-k="libre">'+pick('رادار LibreWXR','رادار LibreWXR','LibreWXR radar')+'</button>'+
  '<button class="lbtn2'+(LKIND==='radar'?' on':'')+'" data-k="radar">'+pick('رادار RainViewer','رادار RainViewer','RainViewer radar')+'</button>'+
@@ -4506,6 +4695,10 @@ function initLiveMap(){
  var pb=$("playB");if(pb)pb.style.display='none';
  var rg=$("tlRange");if(rg)rg.style.display='none';
  showGibs(LKIND);
+ } else if(LKIND==='aerosol'||LKIND==='snow'||LKIND==='fires'){
+  var pbG=$("playB");if(pbG)pbG.style.display='none';
+  var rgG=$("tlRange");if(rgG)rgG.style.display='none';
+  showGibsExtra(LKIND);
  } else if(LKIND==='imerg'){
  IMERG_OFFSET=4;
  var pbI=$("playB");if(pbI)pbI.style.display='none';
@@ -4668,6 +4861,29 @@ var OBS_OPTS=[
  {k:'humid',ic:'humid',nm:['رطوبة','رطوبة','Humid']},
  {k:'cool',ic:'cool',nm:['برد','برد','Cold']}
 ];
+
+var PHOTO=null;
+/* ★ ضغط الصورة قبل الإرسال — الأصلية قد تتجاوز ٥ ميجا */
+function compressImage(file,cb){
+ try{
+  var rd=new FileReader();
+  rd.onload=function(e){
+   var img=new Image();
+   img.onload=function(){
+    var max=900,w=img.width,h=img.height;
+    if(w>h&&w>max){h=Math.round(h*max/w);w=max;}
+    else if(h>max){w=Math.round(w*max/h);h=max;}
+    var cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    var cx=cv.getContext('2d');cx.drawImage(img,0,0,w,h);
+    try{cb(cv.toDataURL('image/jpeg',0.72));}catch(x){cb(null);}
+   };
+   img.onerror=function(){cb(null);};
+   img.src=e.target.result;
+  };
+  rd.onerror=function(){cb(null);};
+  rd.readAsDataURL(file);
+ }catch(e){cb(null);}
+}
 var SHEET_MODE='obs', PICKED=null;
 
 /* هل لوحة الرصد مفتوحة الآن؟ — يُفحص من الصفحة لا من متغيّر منفصل */
@@ -4823,7 +5039,10 @@ function renderSheet(){
  h+='<div class="repBox"><div class="rt">'+pick('مراسل نفاف — '+repWilayat(),'مراسل نفاف — '+repWilayat(),'Nafaf reporter — '+repWilayat())+'</div>'+
  '<div class="rs">'+pick('تقدر ترفع صورة لجوّك مع رصدك.','يمكنك إرفاق صورة مع رصدك.','You can attach a photo with your report.')+'</div>'+
  '<span class="pill">'+pick('معتمد','معتمد','Approved')+'</span>'+
- '<button class="shbtn ghost" id="photoBtn2">'+pick('📷 أرفق صورة','📷 إرفاق صورة','📷 Attach photo')+'</button></div>';
+ '<button class="shbtn ghost" id="photoBtn2">'+
+ (PHOTO?pick('✓ صورة مرفقة — غيّرها','✓ صورة مرفقة','✓ Photo attached'):pick('📷 أرفق صورة','📷 إرفاق صورة','📷 Attach photo'))+'</button>'+
+ '<input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" />'+
+ (PHOTO?'<img class="photoPrev" src="'+PHOTO+'" alt="" />':'')+'</div>';
  } else if(st==='pending'){
  h+='<div class="repBox"><div class="rt">'+pick('طلبك وصل','تم استلام طلبك','Application received')+'</div>'+
  '<div class="rs">'+pick('يُراجع يدويًا — نتواصل معك.','تتم المراجعة يدويًا.','Reviewed manually — we\'ll be in touch.')+'</div>'+
@@ -4895,6 +5114,7 @@ function wireSheet(){
      'نُشر رصدك.','Published. Thanks.'));
    else toast(pick('وصل رصدك — يُراجع قبل النشر.',
      'وصل رصدك؛ تتم مراجعته.','Received — pending review.'));
+   PHOTO=null;
    reportsLoad();
   } else if(r.error==='rate'){
    toast(pick('رصدت قبل شوي — انتظر '+(r.minutes||30)+' دقيقة.',
@@ -4921,7 +5141,18 @@ function wireSheet(){
   }
  });};
  var pb=$("photoBtn2");
- if(pb)pb.onclick=function(){alert(pick('رفع الصور يشتغل في نسخة التطبيق مع الخادم.','ميزة الصور تعمل في نسخة التطبيق.','Photo upload works in the app build with the server.'));};
+ if(pb)pb.onclick=function(){var pi=$("photoInput");if(pi)pi.click();};
+ var pin=$("photoInput");
+ if(pin)pin.onchange=function(){
+  var f=this.files&&this.files[0];
+  if(!f)return;
+  if(f.size>8*1024*1024){toast(pick('الصورة كبيرة — أقل من ٨ ميجا.','الصورة كبيرة جدًا.','Image too large.'),true);return;}
+  compressImage(f,function(dataUrl){
+   if(!dataUrl){toast(pick('تعذّر قراءة الصورة.','تعذّر القراءة.','Could not read image.'),true);return;}
+   PHOTO=dataUrl;renderSheet();
+   toast(pick('أُرفقت الصورة','تم الإرفاق','Photo attached'));
+  });
+ };
 }
 
 /* ربط شريط الإشعارات */
@@ -5896,6 +6127,51 @@ function pushBarHide(){
  stSet('push_times',String(parseInt(stGet('push_times')||'0',10)+1));
 }
 
+
+/* ★ طبقات GIBS إضافية — كلها مجانية ومفتوحة من ناسا */
+var GIBS_EXTRA={
+ aerosol:{
+  id:'MODIS_Combined_Value_Added_AOD',
+  lvl:'GoogleMapsCompatible_Level6',
+  daily:true,
+  note:['العمق البصري للعوالق — يكشف الغبار والدخان في الجو. الأحمر يعني هواء عالق كثيف.',
+   'العمق البصري للهباء الجوي؛ يوضح كثافة الغبار والدخان.',
+   'Aerosol optical depth — reveals dust and smoke. Red means heavy particles aloft.']},
+ snow:{
+  id:'MODIS_Terra_NDSI_Snow_Cover',
+  lvl:'GoogleMapsCompatible_Level8',
+  daily:true,
+  note:['غطاء الثلج — نادر بالخليج لكنه يظهر على جبال إيران وتركيا شتاءً.',
+   'غطاء الثلج؛ يظهر على المرتفعات المجاورة شتاءً.',
+   'Snow cover — rare in the Gulf but visible on nearby ranges in winter.']},
+ fires:{
+  id:'MODIS_Combined_Thermal_Anomalies_All',
+  lvl:'GoogleMapsCompatible_Level7',
+  daily:true,
+  note:['بؤر حرارية يرصدها القمر — حرائق ومشاعل نفطية. للاطلاع لا للإنذار.',
+   'بؤر حرارية مرصودة من الأقمار؛ للاطلاع فقط.',
+   'Satellite-detected thermal anomalies — fires and flares. Informational only.']}
+};
+function showGibsExtra(kind){
+ if(!LMAP)return;
+ clearOverlays();
+ var g=GIBS_EXTRA[kind];if(!g)return;
+ var d=new Date(Date.now()-24*3600000);
+ var day=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+
+   String(d.getUTCDate()).padStart(2,'0');
+ GIBSLAYER=window.L.tileLayer(
+  'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/'+g.id+'/default/'+day+
+  '/'+g.lvl+'/{z}/{y}/{x}.png',
+  {opacity:0.82,zIndex:11,maxNativeZoom:g.lvl.indexOf('Level8')>=0?8:(g.lvl.indexOf('Level7')>=0?7:6),
+   maxZoom:12,updateWhenIdle:true,keepBuffer:1});
+ GIBSLAYER.addTo(LMAP);
+ var el=$("tlTime");
+ if(el)el.innerHTML=pick('صورة أمس','صورة أمس','Yesterday')+' <small>· '+day+'</small>';
+ var cv=$("covNote");
+ if(cv)cv.innerHTML='<div class="cov">'+g.note[LI()]+'<br><span style="opacity:.75">'+
+  pick('المصدر: NASA GIBS · تُحدَّث يوميًا','المصدر: NASA GIBS','Source: NASA GIBS · daily')+'</span></div>';
+}
+
 /* ============ التبويبات ============ */
 var TABS=[{k:'now',t:['الآن','الآن','Now']},{k:'life',t:['يومك','يومك','Your day']},
  {k:'fc',t:['التوقعات','التوقعات','Forecast']},
@@ -5923,7 +6199,7 @@ function buildTabs(){var h="",i,L=LI(),TABS_=orderedTabs();
  var b=$("tabs").getElementsByTagName("button"),j;
  for(j=0;j<b.length;j++)b[j].onclick=function(){TAB=this.getAttribute("data-t");buildTabs();showPanels();};}
 function showPanels(){var i;
- if(TAB!=='now'){cinemaStop();rotStop();}
+ if(TAB!=='now'){cinemaStop();rotStop();pillStop();}
  for(i=0;i<TABS.length;i++){var el=$("p-"+TABS[i].k);if(el)el.className="panel"+(TAB===TABS[i].k?" on":"");}
  if(TAB==='now')renderNow();if(TAB==='life')renderLife();if(TAB==='fc')renderFc();if(TAB==='world')renderWorld();if(TAB==='quake')renderQuakes();if(TAB==='live')renderLive();if(TAB==='src')renderSrc();}
 
@@ -5934,29 +6210,29 @@ function renderSettings(){
  /* ★ تعليمات التثبيت على iOS أولًا لأنها الأهم هناك */
  var iosC=iosInstallCard(); if(iosC)h+=iosC;
  h+='<div class="m-grp">'+pick('العرض','العرض','Display')+'</div>';
- h+='<div class="m-sec">'+pick('اللغة','اللغة','Language')+'</div>';
+ h+='<div class="m-card"><div class="m-sec">'+pick('اللغة','اللغة','Language')+'</div><div class="m-row">';
  h+=optBtn(pick('المحلية','المحلية','Dialect'),LANG==='dial','data-lang="dial"')+
  optBtn(pick('الفصحى','الفصحى','Arabic'),LANG==='fus','data-lang="fus"')+
  optBtn('English',LANG==='en','data-lang="en"');
- h+='<div class="m-sec">'+pick('الحركة','الحركة','Motion')+'</div>';
+ h+='</div></div><div class="m-card"><div class="m-sec">'+pick('الحركة','الحركة','Motion')+'</div>';
  h+='<div class="m-hint">'+pick('لو تحسّ الحركة تشتّتك خفّفها أو أطفئها. ولو فعّلت «تقليل الحركة» بإعدادات جهازك نحترمها تلقائيًا.','يمكن تقليل الحركة أو إيقافها ونحترم إعداد النظام تلقائيًا.','Reduce or disable motion. System-level reduce-motion is always respected.')+'</div>';
  h+=optBtn(pick('كاملة','كاملة','Full'),MOTION==='full','data-mo="full"')+
  optBtn(pick('هادئة','هادئة','Calm'),MOTION==='calm','data-mo="calm"')+
  optBtn(pick('مطفأة','مطفأة','Off'),MOTION==='off','data-mo="off"');
- h+='<div class="m-sec">'+pick('حجم الخط','حجم الخط','Text size')+'</div>';
+ h+='</div></div><div class="m-card"><div class="m-sec">'+pick('حجم الخط','حجم الخط','Text size')+'</div><div class="m-row">';
  h+=optBtn(pick('صغير','صغير','Small'),TSCALE===0.9,'data-ts="0.9"')+
  optBtn(pick('عادي','عادي','Normal'),TSCALE===1,'data-ts="1"')+
  optBtn(pick('كبير','كبير','Large'),TSCALE===1.15,'data-ts="1.15"')+
  optBtn(pick('أكبر','أكبر','Larger'),TSCALE===1.3,'data-ts="1.3"');
  h+='<div class="m-grp">'+pick('الوحدات','الوحدات','Units')+'</div>';
- h+='<div class="m-sec">'+pick('وحدة الحرارة','وحدة الحرارة','Temperature')+'</div>';
+ h+='</div></div><div class="m-card"><div class="m-sec">'+pick('وحدة الحرارة','وحدة الحرارة','Temperature')+'</div><div class="m-row">';
  h+=optBtn('°C',TUNIT==='c','data-tu="c"')+optBtn('°F',TUNIT==='f','data-tu="f"');
- h+='<div class="m-sec">'+pick('وحدة الرياح','وحدة الرياح','Wind unit')+'</div>';
+ h+='</div></div><div class="m-card"><div class="m-sec">'+pick('وحدة الرياح','وحدة الرياح','Wind unit')+'</div><div class="m-row">';
  h+=optBtn(pick('كم/س','كم/س','km/h'),WUNIT==='kmh','data-wu="kmh"')+
  optBtn(pick('م/ث','م/ث','m/s'),WUNIT==='ms','data-wu="ms"')+
  optBtn(pick('عقدة','عقدة','knots'),WUNIT==='kn','data-wu="kn"');
  h+='<div class="m-grp">'+pick('التنبيهات والتجربة','التنبيهات','Alerts & experience')+'</div>';
- h+='<div class="m-sec">'+pick('تنبيه المطر','تنبيه المطر','Rain alerts')+'</div>';
+ h+='</div></div><div class="m-card"><div class="m-sec">'+pick('تنبيه المطر','تنبيه المطر','Rain alerts')+'</div>';
  h+='<div class="m-hint">'+pick('إشعار واحد يتحدّث مع الحدث: يبدأ عند أول قطرة ويتابع اشتداده وينتهي عند انحساره. ما يتكدّس بشريط إشعاراتك.',
  'إشعار واحد يتابع الحدث من بدايته حتى انحساره دون تراكم.',
  'One notification that follows the event — from first drop to fading.')+'</div>';
@@ -5965,7 +6241,7 @@ function renderSettings(){
  optBtn(pick('مفعّل','مفعّل','On'),PUSH_ON,'data-push="1"');
  var blk=pushBlockedReason();
  if(blk)h+='<div class="cinWarn">⚠️ '+blk+'</div>';
-h+='<div class="m-sec">'+pick('الوضع السينمائي','الوضع السينمائي','Cinematic mode')+'</div>';
+h+='</div><div class="m-card"><div class="m-sec">'+pick('الوضع السينمائي','الوضع السينمائي','Cinematic mode')+'</div>';
  h+='<div class="m-hint">'+pick('عند العواصف والمطر الغزير فقط: وميض برق خفيف وصوت مطر واهتزاز مع الرعد.',
  'يعمل أثناء العواصف فقط: وميض خفيف وصوت مطر واهتزاز.',
  'During storms only: gentle lightning, rain sound, and haptic thunder.')+'</div>';
@@ -5984,7 +6260,7 @@ h+='<div class="m-sec">'+pick('الوضع السينمائي','الوضع الس
  '⚠️ Flashes are gentle and at least 7 s apart, but keep this off if you have photosensitivity. System reduce-motion is always respected.')+'</div>';
  }
  h+='<div class="m-grp">'+pick('التخصيص','التخصيص','Customize')+'</div>';
- h+='<div class="m-sec">'+pick('ترتيب بطاقات «يومك»','ترتيب البطاقات','Card order')+'</div>';
+ h+='</div><div class="m-card"><div class="m-sec">'+pick('ترتيب بطاقات «يومك»','ترتيب البطاقات','Card order')+'</div>';
  h+='<div class="m-hint">'+pick('رتّبها كما يناسبك.','أعد الترتيب.','Reorder as you like.')+'</div>';
  var names={streak:['السلسلة','السلسلة','Streak'],activities:['أنشطة يومك','الأنشطة','Activities'],
  story:['قصة اليوم','قصة اليوم',"Today's story"],star:['الدرور والنجوم','المواسم النجمية','Star season'],
@@ -5995,6 +6271,7 @@ h+='<div class="m-sec">'+pick('الوضع السينمائي','الوضع الس
  h+='<div class="ordrow"><span class="on2">'+nm+'</span>'+
  '<button class="ordbtn" data-dn="'+i+'">↓</button><button class="ordbtn" data-up="'+i+'">↑</button></div>';}
  h+='<button class="danger" id="delBtn">'+pick('حذف سجلّي وأرقامي','حذف بياناتي','Delete my data')+'</button>';
+ h+='</div>';
  $("setBody").innerHTML=h;
  var bs=$("setBody").getElementsByTagName("button"),j;
  for(j=0;j<bs.length;j++)bs[j].onclick=function(){
