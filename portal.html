@@ -140,6 +140,7 @@ textarea.fld{min-height:80px;resize:vertical;line-height:1.7}
       <span class="tab" data-t="files">📁 الملفات</span>
       <span class="tab" data-t="control">🎛️ التحكم</span>
       <span class="tab" data-t="reports">👁 الرصدات</span>
+      <span class="tab" data-t="feedback">✉ الملاحظات</span>
       <span class="tab" data-t="visitors">📊 الزوار</span>
       <span class="tab" data-t="settings">⚙️ الإعدادات</span>
     </div>
@@ -398,6 +399,15 @@ textarea.fld{min-height:80px;resize:vertical;line-height:1.7}
       </div>
     </div>
 
+    <!-- ═══════ الملاحظات ═══════ -->
+    <div id="p-feedback" class="hide">
+      <div class="card">
+        <h3>ملاحظات المستخدمين<small>تصل مباشرة من التطبيق</small></h3>
+        <div id="fbList"></div>
+        <button class="btn ghost" id="fbRefresh" style="margin-top:10px">تحديث</button>
+      </div>
+    </div>
+
     <!-- ═══════ الزوار ═══════ -->
     <div id="p-visitors" class="hide">
       <div class="card">
@@ -467,6 +477,7 @@ $('loginBtn').onclick=function(){
   loadVisitors();
   loadCorr();
   loadReports();
+  loadFeedback();
  }).catch(function(){toast('تعذّر الاتصال بالخادم',true);});
 };
 $('pass').onkeydown=function(e){if(e.key==='Enter')$('loginBtn').click();};
@@ -484,7 +495,7 @@ for(var i=0;i<tabs.length;i++){
   var t=this.getAttribute('data-t');
   for(var j=0;j<tabs.length;j++)tabs[j].className='tab';
   this.className='tab on';
-  ['news','links','keys','services','files','control','reports','visitors','settings'].forEach(function(k){
+  ['news','links','keys','services','files','control','reports','feedback','visitors','settings'].forEach(function(k){
    $('p-'+k).className=(k===t)?'':'hide';
   });
  };
@@ -791,6 +802,7 @@ function loadReports(){
      '<span style="margin-inline-start:auto;font-size:9.5px;color:rgba(255,255,255,.45)">'+
       new Date(x.ts).toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'})+'</span>'+
     '</div>'+
+    (x.photo?'<img src="'+x.photo+'" style="width:100%;max-height:120px;object-fit:cover;border-radius:10px;margin:4px 0" />':'')+
     (x.lat!=null?'<div style="font-size:9.5px;color:rgba(255,255,255,.45);direction:ltr;text-align:left">'+
       x.lat+', '+x.lon+' · <a href="https://maps.google.com/?q='+x.lat+','+x.lon+'" target="_blank" style="color:#9fd4f5">خريطة</a></div>':'')+
     '<div style="display:flex;gap:7px;margin-top:3px;align-items:center">'+
@@ -799,6 +811,7 @@ function loadReports(){
       '<span style="flex:1;font-size:10px;color:'+col+';font-weight:700">'+
        (x.expired?'انتهت صلاحيته':(x.status==='approved'?'✓ منشور':''))+'</span>')+
      /* ★ الحذف متاح دائمًا — حتى للمنشور والمنتهي */
+     (x.photo?'<button class="copy" style="flex:0 0 auto;background:rgba(159,212,245,.2);border-color:rgba(159,212,245,.5)" data-gp="'+x.id+'">📷 للمعرض</button>':'')+
      '<button class="copy" style="flex:0 0 auto;background:rgba(220,90,90,.18);border-color:rgba(220,90,90,.45)" data-rr="'+x.id+'">🗑 حذف</button>'+
     '</div>'+
    '</div>';
@@ -807,6 +820,12 @@ function loadReports(){
   var btns=$('repList').querySelectorAll('button');
   for(var i=0;i<btns.length;i++){
    btns[i].onclick=function(){
+    if(this.hasAttribute('data-gp')){
+     var gid=this.getAttribute('data-gp');this.innerHTML='…';
+     api('/admin/gallery/add',{id:gid}).then(function(r){
+      toast(r.error?('فشل: '+r.error):'أُضيفت للمعرض');loadReports();});
+     return;
+    }
     var id=this.getAttribute('data-ra')||this.getAttribute('data-rr');
     var dec=this.hasAttribute('data-ra')?'approve':'reject';
     this.innerHTML='…';
@@ -834,6 +853,46 @@ if($('repClearOld'))$('repClearOld').onclick=function(){
   });
  });
 };
+
+
+/* ═══════ ملاحظات المستخدمين ═══════ */
+var FB_KIND_AR={idea:'💡 اقتراح',bug:'🐞 مشكلة',complaint:'⚠ شكوى',other:'✉ أخرى'};
+function loadFeedback(){
+ api('/admin/feedback').then(function(r){
+  if(r.error)return;
+  var items=r.items||[];
+  if(!items.length){$('fbList').innerHTML='<div class="note">لا ملاحظات واردة.</div>';return;}
+  var h='';
+  if(r.unread)h+='<div style="font-size:11px;font-weight:800;color:#ffd166;margin-bottom:10px">'+r.unread+' غير مقروءة</div>';
+  items.forEach(function(f){
+   h+='<div class="row" style="flex-direction:column;align-items:stretch;gap:6px;'+
+    (f.read?'opacity:.6':'')+'">'+
+    '<div style="display:flex;align-items:center;gap:8px">'+
+     '<span style="font-size:12px;font-weight:800;color:#e6b45e">'+(FB_KIND_AR[f.kind]||f.kind)+'</span>'+
+     '<span style="margin-inline-start:auto;font-size:9.5px;color:rgba(255,255,255,.45)">'+
+      new Date(f.ts).toLocaleString('ar',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+'</span>'+
+    '</div>'+
+    '<div style="font-size:12.5px;line-height:1.85;color:rgba(255,255,255,.9)">'+
+     f.text.replace(/</g,'&lt;')+'</div>'+
+    (f.contact?'<div style="font-size:10.5px;color:#9fd4f5;direction:ltr;text-align:left">'+
+      f.contact.replace(/</g,'&lt;')+'</div>':'')+
+    '<div style="display:flex;gap:7px;margin-top:3px">'+
+     (f.read?'':'<button class="copy" style="flex:1;background:rgba(127,227,154,.2);border-color:rgba(127,227,154,.5)" data-fr="'+f.id+'">✓ مقروءة</button>')+
+     '<button class="copy" style="flex:0 0 auto;background:rgba(220,90,90,.18);border-color:rgba(220,90,90,.45)" data-fd="'+f.id+'">🗑</button>'+
+    '</div></div>';
+  });
+  $('fbList').innerHTML=h;
+  var btns=$('fbList').querySelectorAll('button');
+  for(var i=0;i<btns.length;i++)btns[i].onclick=function(){
+   var id=this.getAttribute('data-fr')||this.getAttribute('data-fd');
+   var act=this.hasAttribute('data-fd')?'delete':'read';
+   this.innerHTML='…';
+   api('/admin/feedback/act',{id:id,act:act}).then(function(){
+    toast(act==='delete'?'حُذفت':'عُلّمت مقروءة');loadFeedback();});
+  };
+ });
+}
+$('fbRefresh').onclick=function(){loadFeedback();toast('حُدّثت');};
 
 /* ═══════ الزوار ═══════ */
 function loadVisitors(){
