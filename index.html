@@ -832,7 +832,8 @@
  border-radius:99px;padding:3px 9px;white-space:nowrap;
  box-shadow:0 2px 8px rgba(230,180,94,.35)}
  .authBadge.on .ab-stamp{animation:none}
- #gsiBtnHost{display:none;margin-top:10px}
+ #gsiBtnHost{display:none;margin-top:12px}
+ #gsiBtnHost.show{display:flex;justify-content:center}
  .fd-sec{font-size:10.5px;font-weight:800;color:#e6b45e;margin:14px 0 6px}
  .cf-badge{font-size:9px;font-weight:800;color:#3a2405;background:#e6b45e;
  border-radius:99px;padding:2px 7px;margin-inline-end:7px}
@@ -4063,37 +4064,38 @@ function onGoogleCred(resp){
 function doSignIn(){
  if(!PUSH_URL){toast(pick('خادم نفاف غير مربوط.','الخادم غير مربوط.','Server not linked.'),true);return;}
  if(!GSI_ID){
- /* أعد المحاولة مرة — قد يكون الجلب الأول فشل */
  fetch(PUSH_URL+'/auth/config').then(function(r){
  if(!r.ok)throw new Error('HTTP '+r.status);
  return r.json();
  }).then(function(c){
  if(c.clientId){GSI_ID=c.clientId;loadGSI();
- toast(pick('جاهز — اضغط مرة ثانية.','جاهز؛ حاول مجددًا.','Ready — tap again.'));}
+ setTimeout(doSignIn,700);}
  else toast(pick('معرّف جوجل غير مضبوط في الخادم.','لم يُضبط معرّف جوجل.','Google client ID not set on server.'),true);
  }).catch(function(e){
  toast(pick('تعذّر الوصول للخادم ('+e.message+')','تعذّر الوصول للخادم','Server unreachable ('+e.message+')'),true);
  });
  return;
  }
- try{
- google.accounts.id.prompt(function(n){
- if(n&&(n.isNotDisplayed&&n.isNotDisplayed()||n.isSkippedMoment&&n.isSkippedMoment())){
- /* المتصفح منع النافذة — اعرض زر بديل */
+ /* ★ لا نعتمد على النافذة التلقائية "One Tap" وحدها — كثير من المتصفحات
+    (سامسونج إنترنت، متصفح واتساب الداخلي، الخفي) تمنعها بصمت تام
+    ولا تستدعي حتى دالة الفشل. نعرض الزر الرسمي مباشرة ودائمًا،
+    فهو الطريقة الوحيدة الموثوقة عبر كل المتصفحات. */
  showGoogleButton();
- }
- });
- }catch(e){showGoogleButton();}
+ try{ google.accounts.id.prompt(); }catch(e){}
 }
 function showGoogleButton(){
  var host=document.getElementById('gsiBtnHost');
  if(!host)return;
  host.innerHTML='';
+ host.className='show';
  try{
  google.accounts.id.renderButton(host,{theme:'filled_black',size:'large',
  shape:'pill',text:'signin_with',locale:'ar'});
- host.style.display='block';
- }catch(e){}
+ }catch(e){
+ host.innerHTML='<div style="color:#ff9b9b;font-size:11.5px;font-weight:700;text-align:center">'+
+ pick('تعذّر تحميل زر جوجل — تأكّد من الاتصال وأعد المحاولة.',
+ 'تعذّر تحميل الزر؛ تحقق من الاتصال.','Could not load the button — check your connection.')+'</div>';
+ }
 }
 function doSignOut(){
  if(PUSH_URL)fetch(PUSH_URL+'/auth/logout',{method:'POST',
