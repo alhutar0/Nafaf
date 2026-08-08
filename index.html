@@ -2058,6 +2058,11 @@ function nafafAnswer(q){
 
  var has=function(list){for(var i=0;i<list.length;i++)if(t.indexOf(list[i])>=0)return true;return false;};
 
+ /* ★ المكتبة العلمية أولًا — عباراتها أطول وأكثر تحديدًا من
+    الكلمات المفردة بالكتل التالية (مطر · هبوب · رعد · ضغط · قمر)
+    فلو فحصناها لاحقًا، تخطفها تلك الكلمات القصيرة قبل الوصول لها. */
+ for(var fq=0;fq<FAQ_LIB.length;fq++)if(has(FAQ_LIB[fq].kw))return A(FAQ_LIB[fq].a[0],FAQ_LIB[fq].a[1],FAQ_LIB[fq].a[2]);
+
  /* ===== البحر ===== */
  if(has(['بحر','صيد','موج','قارب','sea','fish','wave','boat'])){
  if(c.wave==null)return A('ما وصلتني بيانات الموج لموقعك — غالبًا داخلي. جرّب مدينة ساحلية.',
@@ -2257,13 +2262,63 @@ function nafafAnswer(q){
  /* ===== الموسم النجمي ===== */
  if(has(['نجم','درور','موسم','سهيل','وسم','مربعانية','star','season']))return starLine();
 
- /* ===== الأنشطة ===== */
+ /* ===== الأنشطة — موسّعة ===== */
  var acts={bbq:['شوي','كشتة','شواء','bbq','grill'],desert:['بر','صحرا','رملة','desert'],
  carwash:['سيارتي','اغسل','غسيل السيارة','car wash'],laundry:['غسيل','انشر','نشر','laundry'],
  walk:['مشي','امشي','ركض','walk','run'],ac:['تكييف','مكيف','ac'],farm:['مزرع','سقي','نخل','farm']};
  var res=evalActs(),k,i2,j2;
  for(k in acts)for(i2=0;i2<acts[k].length;i2++)if(t.indexOf(acts[k][i2])>=0)
  for(j2=0;j2<res.length;j2++)if(res[j2].a.k===k)return res[j2].note;
+
+ /* ===== أنشطة إضافية بحكم مباشر من البيانات الحيّة ===== */
+ if(has(['سباحة','اسبح','مسبح','بحر اسبح','swim','pool'])){
+ if(c.wave==null)return A('ما عندي بيانات بحرية لموقعك — لو تقصد مسبح، الحرارة مناسبة عمومًا لو فوق ٢٠ درجة.',
+ 'لا تتوفر بيانات بحرية لهذا الموقع.','No marine data here.');
+ if(c.wave<0.6&&c.wind<22)return A('البحر رايق والسباحة تمدح اليوم.','ظروف مناسبة للسباحة.','Good swimming conditions today.');
+ if(c.wave<1.25)return A('السباحة ماشية بس خذ حذرك من التيار قرب الشط.','مقبولة مع الانتباه للتيار.','Okay, but watch for currents.');
+ return A('البحر هايج — أجّل السباحة ليوم أهدى.','غير مناسب؛ البحر مضطرب.','Not ideal — rough sea today.');
+ }
+ if(has(['تخييم','اخيم','مخيم','camping','camp'])){
+ var campN=A(0,0,0);
+ if(c.wind>=30)return A('الرياح قوية الليلة — التخييم بيكون متعب على الخيمة.','رياح قوية غير مناسبة للتخييم.','Winds too strong for comfortable camping.');
+ if(c.state==='storm'||c.rain6>=40)return A('فيه نشاط رعدي أو احتمال مطر — أجّل التخييم.','نشاط جوي غير مناسب للتخييم.','Unsettled weather — not ideal for camping.');
+ return A('الجو مناسب للتخييم الليلة — هوا لطيف وسما صافية غالبًا.','ظروف مناسبة للتخييم.','Good camping conditions tonight.');
+ }
+ if(has(['طيارة ورقية','طياره ورقيه','kite','kite flying'])){
+ if(c.wind>=12&&c.wind<=35)return A('الرياح مثالية للطيارة الورقية الحين — '+wconv(c.wind)+'.','رياح مناسبة لتطيير الطائرة الورقية.','Good kite-flying wind right now.');
+ if(c.wind<12)return A('الرياح خفيفة شوي للطيارة — تحتاج هوا أقوى.','الرياح ضعيفة لتطيير الطائرة الورقية.','Wind too light for kites.');
+ return A('الرياح قوية زيادة عن اللازم — خطر على الطيارة.','رياح قوية جدًا؛ غير مناسبة.','Wind too strong for kite flying.');
+ }
+ if(has(['تصوير','صور بره','تصوير خارجي','photography','photo shoot'])){
+ if(c.stability!=null&&c.stability>=70)return A('السما صافية — وقت ممتاز للتصوير خصوصًا وقت الشروق أو الغروب.','ظروف ممتازة للتصوير.','Excellent conditions, especially at golden hour.');
+ if(c.stability!=null&&c.stability<40)return A('السما مضطربة — التصوير الخارجي بيكون صعب.','ظروف غير مثالية للتصوير الخارجي.','Not ideal for outdoor photography.');
+ return A('ظروف متوسطة للتصوير — جرّب وقت قريب من الغروب.','ظروف متوسطة؛ الغروب قد يكون أفضل.','Moderate conditions — try near sunset.');
+ }
+ if(has(['رصد النجوم','تصوير فلكي','stargazing','astrophotography'])){
+ if(c.stability!=null&&c.stability>=70)return A('السما صافية الليلة — فرصة زينة لرصد النجوم.','ظروف جيدة لرصد النجوم.','Clear skies — good for stargazing.');
+ return A('فيه غيوم أو غبار بالجو — الرؤية للنجوم بتكون محدودة.','الرؤية محدودة لوجود غيوم أو غبار.','Limited visibility due to clouds or dust.');
+ }
+ if(has(['دراجة','دراجه هوائية','cycling','bike ride'])){
+ if(c.temp>=38)return A('الحرارة عالية جدًا للدراجة الحين — أفضل تأجيلها لوقت أبرد باليوم.','الحرارة مرتفعة جدًا لركوب الدراجة.','Too hot for cycling right now.');
+ if(c.wind>=30)return A('الرياح قوية — بتصعّب عليك الدراجة خصوصًا بالعكس.','رياح قوية تصعّب ركوب الدراجة.','Strong winds will make cycling difficult.');
+ return A('الجو مناسب للدراجة الحين.','ظروف مناسبة لركوب الدراجة.','Good conditions for cycling.');
+ }
+ if(has(['رحلة برية','طلعة بر','road trip','رحلة سفر'])){
+ var rtBits=[];
+ if(c.state==='dust')rtBits.push(A('فيه غبار يقلل الرؤية على الطريق','رؤية منخفضة بسبب الغبار','reduced visibility from dust'));
+ if(c.rain6>=40)rtBits.push(A('احتمال مطر بالطريق','احتمال هطول أثناء الرحلة','possible rain en route'));
+ if(!rtBits.length)return A('الجو العام مناسب للطلعة البرية اليوم.','ظروف مناسبة عمومًا للرحلة.','Generally good conditions for a road trip.');
+ return A('انتبه: '+rtBits.join(A(' و',' و',' and '))+'.','تنبيه: '+rtBits.join('، ')+'.','Note: '+rtBits.join(' and ')+'.');
+ }
+ if(has(['حفلة خارجية','مناسبة بره','outdoor event','outdoor party'])){
+ if(c.wind<30&&c.rain6<30&&c.temp<40)return A('الظروف مناسبة عمومًا لمناسبة خارجية.','ظروف عامة مناسبة.','Generally suitable conditions.');
+ return A('فيه عوامل قد تأثر على مناسبتك الخارجية — حرارة أو رياح أو احتمال مطر.','قد تتأثر المناسبة بعوامل جوية.','Weather factors may affect your outdoor event.');
+ }
+ if(has(['غوص','اغطس','diving','scuba'])){
+ if(c.wave==null)return A('ما عندي بيانات بحرية لموقعك.','لا تتوفر بيانات بحرية.','No marine data available.');
+ if(c.wave<0.8)return A('البحر هادئ — ظروف طيبة للغوص من ناحية سطح الماء.','ظروف سطحية جيدة للغوص.','Calm surface conditions for diving.');
+ return A('فيه موج — الرؤية تحت الماء ممكن تتأثر.','قد تتأثر الرؤية تحت الماء بسبب الموج.','Wave action may reduce underwater visibility.');
+ }
 
  /* ===== سؤال عام ===== */
  var g1=A('عندك '+c.stateName+' '+tconv(c.temp)+'° والإحساس '+tconv(c.feels)+'°.',
@@ -2285,6 +2340,135 @@ function nafafAnswer(q){
  ⚠️ قاعدة النبرة: كل حدث فيه ضحايا يُذكر عددهم. لا احتفاء.
  ⚠️ ممنوع: أي تحذير أو توقّع مبني على هذا الأرشيف.
  ============================================================ */
+/* ============================================================
+   ★ مكتبة المعرفة العلمية والثقافية — علوم الطقس بلهجتك
+   ⚠️ قاعدة صارمة: تفسير علمي أو ثقافي عام لا مرتبط بلحظتك،
+      لا أرقامًا محددة لموقعك (تلك من بيانات حيّة فقط لا هنا).
+   ⚠️ لا نصائح صحية ولا سلامة — علم بحت يُشرح ببساطة.
+   ============================================================ */
+var FAQ_LIB=[
+ {kw:['ليش السما زرقا','السماء زرقاء','sky blue','why is the sky'],
+  a:['السما زرقا لأن الهوا يبعثر الضوء الأزرق أكثر من غيره — طول موجته أقصر فينكسر بسهولة. لو ما كان عندنا هوا، السما تكون سوده حتى بالنهار.',
+   'يرجع لون السماء الأزرق إلى تبعثر الضوء الأزرق في الغلاف الجوي أكثر من باقي الألوان لقصر طول موجته.',
+   'The sky is blue because air molecules scatter blue light more than other colors — it has a shorter wavelength.']},
+ {kw:['ليش الغروب احمر','لماذا الغروب برتقالي','sunset red','sunset orange','sunset color'],
+  a:['وقت الغروب الضوء يقطع مسافة أطول بالهوا، فالأزرق يتبعثر ويضيع بالطريق ويوصلك الأحمر والبرتقالي بس.',
+   'عند الغروب يقطع الضوء مسافة أطول في الغلاف الجوي فيتبعثر اللون الأزرق ويبقى الأحمر والبرتقالي.',
+   'At sunset, light travels a longer path through the atmosphere, scattering away the blue and leaving red and orange.']},
+ {kw:['كيف يتكون المطر','كيف يتشكل المطر','how does rain form','rain formation'],
+  a:['قطرات الماء الصغيرة بالسحاب تتصادم وتكبر وتكبر لين توزن أكثر من الهوا اللي تحتها فتسقط مطر.',
+   'يتشكل المطر عندما تتصادم قطيرات الماء داخل السحب وتكبر حتى تصبح أثقل من أن يحملها الهواء الصاعد.',
+   'Cloud droplets collide and merge until they grow heavy enough to fall as rain.']},
+ {kw:['ايش الرطوبة','ما هي الرطوبة','ايش يعني رطوبة','what is humidity'],
+  a:['الرطوبة هي كمية بخار الماء العالقة بالهوا. كل ما زادت، صار الهوا يحمل مويه أكثر ويصعب على العرق يتبخر منك.',
+   'الرطوبة هي نسبة بخار الماء الموجود في الهواء مقارنة بأقصى ما يستطيع حمله عند درجة حرارة معينة.',
+   'Humidity is the amount of water vapor in the air — more humidity means sweat evaporates less easily.']},
+ {kw:['ليش الخليج رطب بالصيف','رطوبة الخليج','why is gulf humid'],
+  a:['لأن البحر جنبك مباشرة. الهوا الحار يمر فوق مويه دافية ويحمل بخارها وياه، فتحس الجو خانق حتى لو الحرارة مو أعلى شي.',
+   'ترتفع رطوبة الخليج صيفًا بسبب قرب البحار الدافئة التي يحمل الهواء بخارها.',
+   'Gulf humidity is high in summer because warm air passes over warm seas and picks up their moisture.']},
+ {kw:['نقطة الندى','dew point','ايش نقطة الندى'],
+  a:['نقطة الندى هي الحرارة اللي لازم الهوا يبرد لها عشان يتكاثف بخار الماء لقطرات. كل ما قربت نقطة الندى من حرارة الجو، صار الإحساس أثقل.',
+   'نقطة الندى هي الدرجة التي يتشبع عندها الهواء ببخار الماء ويبدأ بالتكاثف.',
+   'Dew point is the temperature air must cool to for water vapor to condense — the closer it is to actual temp, the muggier it feels.']},
+ {kw:['ليش يصير غبار','سبب العاصفة الترابية','why dust storm','sandstorm cause'],
+  a:['الغبار يصير لما رياح قوية تهب على تربة جافة وناعمة وترفعها بالهوا. وكل ما كانت الرياح أقوى والتربة أجف، صار الغبار أكثف.',
+   'تحدث العواصف الترابية عند هبوب رياح قوية فوق تربة جافة وناعمة فترفع الجسيمات إلى الجو.',
+   'Dust storms form when strong winds lift dry, loose soil into the air.']},
+ {kw:['ايش الهبوب','هبوب','haboob'],
+  a:['الهبوب جدار غبار كثيف يجي فجأة قبل عاصفة رعدية — الهوا البارد النازل من السحابة يدفع الغبار قدامه كأنه موجة.',
+   'الهبوب جدار غبار كثيف يسبق العاصفة الرعدية بسبب الهواء البارد الهابط منها.',
+   'A haboob is a dense wall of dust pushed ahead of a thunderstorm\u2019s cold downdraft.']},
+ {kw:['كيف يتكون البرق','سبب البرق','how lightning forms','what causes lightning'],
+  a:['جوّا السحابة الرعدية، بلورات الثلج وقطرات الماء تتصادم وتتشحن كهربائيًا. لما الشحنة تكبر، تنفرغ فجأة على شكل برق.',
+   'يتكون البرق نتيجة تصادم بلورات الثلج وقطرات الماء داخل السحابة الرعدية وتراكم الشحنات الكهربائية.',
+   'Lightning forms when ice crystals and water droplets collide inside a storm cloud, building up electrical charge that discharges suddenly.']},
+ {kw:['ليش الرعد يجي بعد البرق','لماذا الرعد متأخر','thunder after lightning','why thunder delayed'],
+  a:['الضوء يوصلك فورًا لأنه سريع جدًا، لكن الصوت أبطأ بكثير — يقطع تقريبًا كيلومتر كل ٣ ثوانٍ. فكل ما بعُد البرق عنك، طال الوقت قبل ما يوصلك صوت الرعد.',
+   'يصل الضوء فورًا بينما ينتقل الصوت بسرعة أبطأ بكثير، فيتأخر وصول الرعد بحسب بُعد المصدر.',
+   'Light reaches you instantly, but sound travels far slower — roughly 1km every 3 seconds — so the farther the strike, the longer the delay.']},
+ {kw:['ايش الضغط الجوي','ضغط جوي وعلاقته','atmospheric pressure meaning'],
+  a:['الضغط الجوي هو وزن الهوا فوقك. المرتفع يعني هوا هادئ ينزل ويصفّي السما، والمنخفض يعني هوا يصعد ويكوّن سحب وأمطار.',
+   'الضغط الجوي المرتفع يرتبط عادة بالطقس الصافي، بينما يرتبط المنخفض بتكوّن السحب والاضطراب الجوي.',
+   'High pressure usually brings clear skies as air sinks; low pressure brings clouds and unsettled weather as air rises.']},
+ {kw:['نسيم البحر','نسيم البر','sea breeze','land breeze'],
+  a:['بالنهار اليابسة تسخن أسرع من البحر، فالهوا الحار يصعد فوقها وينسحب هوا بارد من البحر يعوّضه — هذا نسيم البحر. بالليل العكس يصير.',
+   'ينشأ نسيم البحر نهارًا نتيجة تسخّن اليابسة أسرع من البحر، وينعكس الاتجاه ليلًا.',
+   'Sea breeze forms by day as land heats faster than the sea, pulling cooler sea air inland; it reverses at night.']},
+ {kw:['ليش الصيف حار بالخليج','لماذا حار الخليج','why gulf hot summer'],
+  a:['الخليج تحت حزام ضغط مرتفع شبه دائم صيفًا، والهوا النازل يسخن ويجف. وبعده وبين البحار الدافية، تركيبة تصنع حرارة عالية ورطوبة خانقة معًا.',
+   'يقع الخليج تحت تأثير الضغط المرتفع شبه الدائم صيفًا إضافة إلى قربه من بحار دافئة.',
+   'The Gulf sits under a near-permanent summer high-pressure belt, plus warm seas nearby — a combination of heat and humidity.']},
+ {kw:['ايش الخريف الظفاري','خريف صلالة','خريف ظفار','khareef','monsoon dhofar'],
+  a:['الخريف موسم موسمي هندي يجي من المحيط الهندي محمّل برطوبة، ويصطدم بجبال ظفار فيرتفع ويبرد ويكوّن ضباب وأمطار خفيفة مستمرة — ظاهرة نادرة بالجزيرة العربية كلها.',
+   'الخريف هو تأثير الرياح الموسمية الهندية على جبال ظفار، حيث ترتفع الرطوبة وتتكاثف مكوّنة ضبابًا وأمطارًا خفيفة.',
+   'Khareef is the Indian monsoon\u2019s effect on Dhofar\u2019s mountains — moist air rises and cools into fog and steady drizzle, rare across Arabia.']},
+ {kw:['الفرق بين الطقس والمناخ','weather vs climate','فرق طقس مناخ'],
+  a:['الطقس هو حالة الجو اليوم أو هالأسبوع. المناخ هو معدّل الطقس على سنين طويلة. يعني الطقس صورة، والمناخ فيلم كامل.',
+   'الطقس يصف الحالة الجوية الآنية أو قصيرة المدى، بينما المناخ يمثل المعدلات طويلة الأمد.',
+   'Weather is the short-term state of the atmosphere; climate is the long-term average pattern over years.']},
+ {kw:['ايش مؤشر الأشعة','مؤشر uv','uv index meaning','ايش يعني uv'],
+  a:['مؤشر الأشعة فوق البنفسجية رقم يوضّح قوة أشعة الشمس المؤذية للبشرة. كل ما زاد الرقم، زادت شدة الأشعة بذاك الوقت.',
+   'مؤشر الأشعة فوق البنفسجية يقيس شدة الإشعاع الشمسي المؤثر على الجلد.',
+   'The UV index measures the strength of the sun\u2019s skin-affecting radiation at a given time.']},
+ {kw:['ايش يعني الاحساس الحراري','feels like meaning','ايش الاحساس','apparent temperature'],
+  a:['الإحساس الحراري رقم يحسب كيف يحس جسمك بالحرارة الفعلية بعد ما تضيف تأثير الرطوبة والرياح — مو بس رقم الترمومتر.',
+   'يمثل الإحساس الحراري كيفية شعور الجسم بالحرارة الفعلية بعد تأثير الرطوبة والرياح.',
+   'The "feels like" temperature accounts for how humidity and wind affect your body\u2019s perceived heat, not just the raw reading.']},
+ {kw:['ليش الليل بارد بالصحرا','برودة الصحراء ليلا','why desert cold night'],
+  a:['الرمل والهوا الجاف يفقدون حرارتهم بسرعة بعد ما تغيب الشمس لأن ما فيه رطوبة تحبس الحرارة زي المناطق الرطبة. فيصير الفرق بين حرارة النهار والليل كبير.',
+   'يفقد الهواء الجاف حرارته بسرعة بعد الغروب لغياب الرطوبة التي تحبس الحرارة، فيتسع الفارق بين حرارتي النهار والليل.',
+   'Dry desert air loses heat fast after sunset since there\u2019s no humidity to trap it, creating a big day-night temperature swing.']},
+ {kw:['كيف تتكون الاعاصير','تكوّن الاعاصير','tropical cyclone formation','how cyclones form'],
+  a:['الأعاصير المدارية تحتاج مويه بحر دافية فوق ٢٦ درجة، ورطوبة عالية، ورياح ما تتغيّر كثير بالارتفاع. الهوا الحار يصعد ويلف حول نفسه ويكبر لين يصير إعصار.',
+   'تحتاج الأعاصير المدارية مياه بحر دافئة ورطوبة عالية وثباتًا نسبيًا في اتجاه الرياح مع الارتفاع لتتكوّن وتنمو.',
+   'Tropical cyclones need warm sea water above 26°C, high humidity, and low wind shear to spin up and grow.']},
+ {kw:['ليش عمان يصيبها اعاصير','اعاصير بحر العرب','arabian sea cyclones oman'],
+  a:['عُمان تطل على بحر العرب اللي مويته تدفى بالصيف والخريف، فيصير أحيانًا بيئة مناسبة لتكوّن أعاصير — وهذا نادر عالميًا لكنه معروف بهذا الجزء من العالم.',
+   'يطل عُمان على بحر العرب الذي تدفأ مياهه في مواسم معينة مما يهيئ أحيانًا لتكوّن الأعاصير.',
+   'Oman faces the Arabian Sea, whose waters warm enough in certain seasons to occasionally support cyclone formation.']},
+ {kw:['الفرق بين الغيوم الركامية والطبقية','cumulus vs stratus','انواع الغيوم'],
+  a:['الركامية سحب كتلية متكوّمة زي القطن، غالبًا تجيب مطر رعدي قوي ومفاجئ. والطبقية سحب مفرودة زي بطانية، تجيب غالبًا مطر خفيف مستمر.',
+   'الغيوم الركامية كتلية وترتبط بالأمطار الرعدية القوية، أما الطبقية فمفرودة وترتبط بأمطار خفيفة مستمرة.',
+   'Cumulus clouds are puffy and heap-like, often bringing sudden heavy rain; stratus clouds are flat sheets bringing light, steady rain.']},
+ {kw:['سبب قوس قزح','ليش يصير قوس قزح','rainbow cause','why rainbow'],
+  a:['قوس قزح يصير لما ضوء الشمس يدخل قطرة مطر وينكسر جواها وينعكس ويطلع مفكّك لألوانه السبعة.',
+   'يتكوّن قوس قزح نتيجة انكسار ضوء الشمس داخل قطرات المطر وانعكاسه وتحلله إلى ألوانه المختلفة.',
+   'A rainbow forms when sunlight enters a raindrop, refracts, reflects internally, and splits into its component colors.']},
+ {kw:['ايش الصقيع','هل يصير صقيع بعمان','frost oman','what is frost'],
+  a:['الصقيع طبقة ثلج رقيقة تتكوّن لما حرارة السطح تنزل تحت الصفر ليلًا. بعُمان يصير نادرًا وبس بالمرتفعات العالية زي الجبل الأخضر شتاءً.',
+   'الصقيع طبقة جليدية رقيقة تتشكل عند انخفاض حرارة السطح تحت الصفر، وقد يحدث نادرًا في المرتفعات العُمانية شتاءً.',
+   'Frost is a thin ice layer that forms when surface temperatures drop below freezing — rare in Oman, seen only at high elevations like Jabal Akhdar in winter.']},
+ {kw:['ثلج بالجبل الاخضر','snow jabal akhdar','ثلج بعمان'],
+  a:['الجبل الأخضر يرتفع فوق ٢٠٠٠ متر، والحرارة تنزل مع الارتفاع تقريبًا درجة كل ١٠٠ متر. فبعض الشتوات الباردة جدًا سُجّلت فيه أوصاف صقيع أو رذاذ متجمد، رغم أنه نادر جدًا ومو سنوي.',
+   'يرتفع الجبل الأخضر فوق 2000 متر، وتنخفض الحرارة مع الارتفاع، ما يجعل تشكّل الصقيع فيه ممكنًا نادرًا في الشتاءات الباردة.',
+   'Jabal Akhdar rises above 2000m, and temperature drops with altitude — very rare frost has been documented there in exceptionally cold winters.']},
+ {kw:['ايش دورة الماء','water cycle','دورة المياه'],
+  a:['الماء يتبخر من البحار بحرارة الشمس، يصعد ويتكاثف سحب، ينزل مطر، يجري بالأودية أو يتسرب للأرض، ويرجع البحر من جديد — دورة بلا توقف.',
+   'تتضمن دورة الماء التبخر من المسطحات المائية والتكاثف في السحب ثم الهطول وعودة المياه إلى مصادرها.',
+   'Water evaporates from seas, condenses into clouds, falls as rain, flows through wadis or seeps underground, and returns to the sea.']},
+ {kw:['علاقة القمر بالمد والجزر','tides moon','ليش القمر يأثر على البحر'],
+  a:['جاذبية القمر تشد مويه البحر القريبة منه فترتفع — هذا المد. والجهة المقابلة ترتفع بردّة فعل. لما القمر يدور، مستوى البحر يتغيّر بالتبع.',
+   'تجذب قوة الجاذبية القمرية مياه البحر القريبة فترتفع مكوّنة المد، بينما ترتفع الجهة المقابلة بفعل رد الفعل.',
+   'The Moon\u2019s gravity pulls nearby seawater up, creating high tide, while the opposite side rises too — as the Moon moves, sea level shifts accordingly.']},
+ {kw:['ليش الصحاري قليلة الامطار','جفاف الصحراء','why deserts dry'],
+  a:['أغلب صحارى العالم تقع تحت حزام ضغط مرتفع دائم، والهوا فيه ينزل ويسخن ويجف بدل ما يصعد ويكوّن سحب ومطر.',
+   'تقع معظم الصحاري تحت أحزمة الضغط المرتفع الدائمة حيث ينزل الهواء ويجف بدل أن يصعد ويكوّن السحب.',
+   'Most deserts sit under permanent high-pressure belts where air sinks and dries instead of rising to form rain clouds.']},
+ {kw:['ايش الجفاف المناخي','تعريف الجفاف','drought definition'],
+  a:['الجفاف يعني استمرار نقص الأمطار عن المعدّل الطبيعي لفترة طويلة، لدرجة تأثر فيها الزراعة أو المياه الجوفية أو الأودية.',
+   'الجفاف هو استمرار نقص الهطول المطري عن المعدل الطبيعي لفترة زمنية ممتدة.',
+   'Drought is a prolonged period of below-average rainfall significant enough to affect agriculture, groundwater, or wadis.']},
+ {kw:['النينو واللانينا','el nino la nina','تأثير النينو'],
+  a:['النينو واللانينا نمطان لحرارة مويه المحيط الهادئ يتبدّلان كل بضع سنين، ويأثرون على أنماط الطقس بمناطق كثيرة من العالم — منها أحيانًا شدة موسم الأمطار عندنا.',
+   'يمثل النينو واللانينا نمطين متبادلين لحرارة سطح المحيط الهادئ يؤثران على أنماط الطقس عالميًا.',
+   'El Niño and La Niña are alternating Pacific Ocean temperature patterns that influence weather worldwide, sometimes affecting our rainy seasons too.']},
+ {kw:['ايش الضباب','كيف يتكون الضباب','fog formation','what is fog'],
+  a:['الضباب سحابة عند سطح الأرض — يصير لما الهوا يبرد لدرجة نقطة الندى قربه من الأرض، فيتكاثف بخار الماء لقطرات صغيرة معلّقة.',
+   'يتكون الضباب عندما يبرد الهواء القريب من سطح الأرض إلى نقطة الندى فيتكاثف بخار الماء.',
+   'Fog is a cloud at ground level — it forms when air near the surface cools to its dew point, condensing water vapor into tiny suspended droplets.']}
+];
+
 var ARCHIVE=[
  {m:1,d:26,y:2011,sc:'jeddah',
  t:['سيول جدة ٢٠١١','سيول جدة ٢٠١١','Jeddah floods 2011'],
