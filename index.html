@@ -1118,14 +1118,31 @@
   .vlgBox:after{content:"";position:absolute;left:0;right:0;top:0;height:38%;
     pointer-events:none;z-index:3;
     background:linear-gradient(180deg,rgba(255,255,255,.09),transparent)}
-  /* ★ محتوى الحرارة داخل النافذة */
-  .hero>*:not(.vlgBox){position:absolute;left:0;right:0;z-index:4;text-align:center}
-  .hero .city{top:16px}
-  .hero .big{top:42%;transform:translateY(-50%)}
-  .hero .heroIcon{top:26%}
-  .hero .desc{bottom:78px}
-  .hero .hl{bottom:52px}
-  .hero .next{bottom:16px}
+  /* ★ محتوى الحرارة داخل النافذة — تخطيط عمودي بلا تداخل */
+  .vlgContent{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;
+    align-items:center;justify-content:space-between;
+    padding:16px 14px 14px;text-align:center;pointer-events:none}
+  .vlgTop{width:100%}
+  .vlgMid{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .vlgBot{width:100%;display:flex;flex-direction:column;align-items:center;gap:7px}
+  .hero .city{font-size:15px;font-weight:700;color:#fff;
+    text-shadow:0 2px 12px rgba(0,0,0,.7)}
+  .hero .city small{display:block;font-size:11px;font-weight:600;
+    color:rgba(255,255,255,.82);margin-top:2px}
+  .hero .heroIcon{margin-bottom:-6px}
+  .hero .heroIcon svg{width:46px;height:46px;display:block;
+    filter:drop-shadow(0 3px 10px rgba(0,0,0,.5))}
+  .hero .big{font-size:88px;font-weight:200;line-height:.95;letter-spacing:-4px;
+    color:#fff;text-shadow:0 4px 22px rgba(0,0,0,.6);margin:0}
+  .hero .big sup{font-size:30px;font-weight:300;vertical-align:super;letter-spacing:0}
+  .hero .desc{font-size:14px;font-weight:700;color:#fff;
+    text-shadow:0 2px 10px rgba(0,0,0,.65)}
+  .hero .hl{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.88);
+    text-shadow:0 1px 8px rgba(0,0,0,.6)}
+  .hero .next{width:100%;font-size:11.5px;font-weight:700;color:#fff;
+    background:rgba(8,14,28,.55);backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.16);border-radius:14px;
+    padding:9px 12px;line-height:1.6}
 
   /* ★ شارة الحالة الحيّة أعلى النافذة */
   .vlgTag{position:absolute;top:14px;inset-inline-start:14px;z-index:5;
@@ -1193,6 +1210,18 @@
   @keyframes vlgHt{0%,100%{opacity:.5;transform:translateY(0) scaleY(1)}
     50%{opacity:.9;transform:translateY(-2px) scaleY(1.03)}}
 
+  /* ★ شعاع البرق داخل النافذة */
+  .vlgBolt{position:absolute;top:-2%;left:26%;width:3px;height:52%;opacity:0;z-index:3;
+    background:linear-gradient(to bottom,rgba(255,255,255,.98),rgba(200,230,255,.85) 60%,transparent);
+    filter:drop-shadow(0 0 9px rgba(200,232,255,.95));transform:rotate(7deg);transform-origin:top}
+  .vlgBolt:before,.vlgBolt:after{content:"";position:absolute;background:inherit;border-radius:99px}
+  .vlgBolt:before{top:34%;left:1px;width:2px;height:32%;transform:rotate(26deg);transform-origin:top}
+  .vlgBolt:after{top:58%;left:-1px;width:1.5px;height:24%;transform:rotate(-20deg);transform-origin:top}
+  .vlgBolt.b2{left:68%;height:42%;transform:rotate(-9deg)}
+  .anim .vlgBolt{animation:vlgBo infinite}
+  @keyframes vlgBo{0%,87.4%{opacity:0}87.8%{opacity:1}88.4%{opacity:0}
+    90%{opacity:.9}90.6%{opacity:0}100%{opacity:0}}
+  .noanim .vlgBolt{animation:none}
   .noanim .vd,.noanim .vsp,.noanim .vlgFlash,.noanim .vlgDust,.noanim .vlgDust2,
   .noanim .vlgGlow,.noanim .vlgCloud,.noanim .vst,.noanim .vlgHeat,
   .noanim .vlgMist,.noanim .vlgImg{animation:none}
@@ -1838,10 +1867,25 @@ function villageCard(st){
  var wet=(key==='rain'||key==='storm');
  var temp=W?W.temperature_2m:28;
  var wind=W?W.wind_speed_10m:12;
- var i,h='<div class="vlgBox">';
+ var L=LI(),i;
+
+ /* ★ شدّة المطر من القراءة الحقيقية بالملّيمتر لا من الحالة فقط */
+ var mm=0;
+ if(HOURLY&&HOURLY.precipitation){
+  var hNow=new Date().getHours();
+  mm=HOURLY.precipitation[Math.min(hNow,HOURLY.precipitation.length-1)]||0;
+ }
+ if(!mm&&DAILY&&DAILY.precipitation_sum)mm=(DAILY.precipitation_sum[0]||0)/12;
+ /* ★ الشدّة ٠–١: القراءة الفعلية هي الأساس، والأرضية دنيا فقط
+    حتى لا تُلغي الأرضيةُ الفروقَ بين ٠.٢ ملم و٢ ملم */
+ var floorI=(st==='rain_light')?0.08:((st==='rain')?0.18:((st==='rain_heavy')?0.42:0.34));
+ var fromMM=Math.min(1,mm/12);
+ var I=wet?Math.max(floorI,fromMM):0;
+
+ var h='<div class="vlgBox">';
  h+='<img class="vlgImg" src="'+VLG_IMG[key]+'" alt="" />';
- /* ★ شارة الحالة الحيّة داخل النافذة */
- var L=LI();
+
+ /* شارة الحالة */
  var tagTxt={clear:['نهار صافي','نهار صافٍ','Clear day'],
   night:['ليل هادئ','ليل هادئ','Calm night'],
   golden:['ساعة ذهبية','الساعة الذهبية','Golden hour'],
@@ -1850,55 +1894,76 @@ function villageCard(st){
   dust:['غبار بالجو','غبار عالق','Dusty']}[key]||['','',''];
  var tagCol={clear:'#9fd4f5',night:'#b9c4f5',golden:'#ffd166',
   rain:'#7fc9e8',storm:'#ff9b9b',dust:'#e6b45e'}[key]||'#fff';
- h+='<span class="vlgTag" style="color:'+tagCol+'"><i></i>'+tagTxt[L]+'</span>';
+ /* أضف شدّة المطر للشارة حين ينزل فعلًا */
+ var tagExtra='';
+ if(wet&&mm>=0.1)tagExtra=' · '+mm.toFixed(1)+(L===2?'mm':' ملم');
+ h+='<span class="vlgTag" style="color:'+tagCol+'"><i></i>'+tagTxt[L]+tagExtra+'</span>';
 
  if(mo.scenery){
-  /* ★ سحب تنساب بسرعة الرياح الحقيقية */
-  var cloudDur=Math.max(16,Math.min(90,900/Math.max(5,wind)));
-  h+='<span class="vlgCloud" style="top:6%;animation-duration:'+cloudDur.toFixed(0)+'s"></span>'+
-     '<span class="vlgCloud" style="top:20%;width:40%;opacity:.7;'+
-     'animation-duration:'+(cloudDur*1.6).toFixed(0)+'s;animation-delay:-'+(cloudDur*0.5).toFixed(0)+'s"></span>';
+  /* سحب تنساب بسرعة الرياح */
+  var cloudDur=Math.max(14,Math.min(90,900/Math.max(5,wind)));
+  h+='<span class="vlgCloud" style="top:5%;animation-duration:'+cloudDur.toFixed(0)+'s"></span>'+
+     '<span class="vlgCloud" style="top:19%;width:42%;opacity:.65;'+
+     'animation-duration:'+(cloudDur*1.7).toFixed(0)+'s;animation-delay:-'+(cloudDur*0.5).toFixed(0)+'s"></span>';
 
-  /* ★ المطر — كثافة تتبع الحالة مع ثلاث طبقات عمق */
   if(wet){
-   var n=(key==='storm')?68:44;
-   var layers=[{w:1.0,o:.35,sp:1.05,hh:9},{w:1.5,o:.62,sp:.82,hh:14},{w:2.1,o:.88,sp:.58,hh:19}];
+   /* ★ عدد القطرات وسرعتها وسماكتها تتبع الملّيمتر الفعلي */
+   var n=Math.round(22+I*95);
+   var layers=[
+    {c:0.40,w:0.9,o:0.30,sp:1.15,hh:8},
+    {c:0.34,w:1.4,o:0.58,sp:0.88,hh:13},
+    {c:0.26,w:2.0,o:0.88,sp:0.62,hh:18}
+   ];
    for(var Lz=0;Lz<3;Lz++){
-    var ly=layers[Lz],cnt=Math.round(n*(Lz===0?.42:(Lz===1?.34:.24)));
+    var ly=layers[Lz],cnt=Math.round(n*ly.c);
+    var dur=Math.max(0.26,ly.sp-I*0.55);
+    var wd=(ly.w+I*1.1).toFixed(1);
+    var hg=Math.round(ly.hh+I*14);
     for(i=0;i<cnt;i++){
      h+='<span class="vd" style="left:'+(Math.random()*100).toFixed(1)+'%;'+
-      'width:'+ly.w+'px;opacity:'+ly.o+';height:'+(ly.hh+Math.random()*6).toFixed(0)+'px;'+
-      'animation-duration:'+(ly.sp*(0.85+Math.random()*0.3)).toFixed(2)+'s;'+
-      'animation-delay:'+(Math.random()*1.1).toFixed(2)+'s"></span>';
+      'width:'+wd+'px;opacity:'+ly.o+';height:'+hg+'px;'+
+      'animation-duration:'+(dur*(0.85+Math.random()*0.3)).toFixed(2)+'s;'+
+      'animation-delay:'+(Math.random()*1.2).toFixed(2)+'s"></span>';
     }
    }
-   /* رذاذ يرتد من الأرض */
-   var sp=(key==='storm')?16:10;
+   /* رذاذ يرتد — عدده يتبع الشدّة */
+   var sp=Math.round(5+I*18);
    for(i=0;i<sp;i++)
     h+='<span class="vsp" style="left:'+(Math.random()*100).toFixed(1)+'%;'+
-     'bottom:'+(2+Math.random()*22).toFixed(0)+'%;'+
-     'animation-duration:'+(0.7+Math.random()*0.5).toFixed(2)+'s;'+
-     'animation-delay:'+(Math.random()*1.4).toFixed(2)+'s"></span>';
-   h+='<div class="vlgMist"></div>';
+     'bottom:'+(2+Math.random()*20).toFixed(0)+'%;'+
+     'animation-duration:'+(0.65+Math.random()*0.5).toFixed(2)+'s;'+
+     'animation-delay:'+(Math.random()*1.5).toFixed(2)+'s"></span>';
+   /* ضباب مطري يكثف مع الغزارة */
+   h+='<div class="vlgMist" style="opacity:'+(0.4+I*0.6).toFixed(2)+'"></div>';
   }
 
-  /* ★ البرق */
-  if(key==='storm')h+='<div class="vlgFlash"></div>';
+  /* ★ البرق — تواتره يتبع شدّة العاصفة */
+  if(key==='storm'){
+   var flashDur=Math.max(3.5,9-I*5).toFixed(1);
+   h+='<div class="vlgFlash" style="animation-duration:'+flashDur+'s"></div>';
+   /* شعاع برق متفرّع */
+   h+='<div class="vlgBolt" style="animation-duration:'+flashDur+'s"></div>';
+   h+='<div class="vlgBolt b2" style="animation-duration:'+flashDur+'s;animation-delay:.22s"></div>';
+  }
 
-  /* ★ الغبار بطبقتين */
-  if(key==='dust')h+='<div class="vlgDust"></div><div class="vlgDust2"></div>';
+  /* الغبار بطبقتين — سرعتهما تتبع الرياح */
+  if(key==='dust'){
+   var dDur=Math.max(5,Math.min(16,260/Math.max(6,wind))).toFixed(0);
+   h+='<div class="vlgDust" style="animation-duration:'+dDur+'s"></div>'+
+      '<div class="vlgDust2" style="animation-duration:'+(dDur*1.7).toFixed(0)+'s"></div>';
+  }
 
-  /* ★ ليل: توهج النوافذ ونجوم متلألئة */
+  /* ليل: توهج ونجوم */
   if(key==='night'){
    h+='<div class="vlgGlow"></div>';
-   for(i=0;i<22;i++)
-    h+='<span class="vst" style="top:'+(3+Math.random()*26).toFixed(1)+'%;'+
+   for(i=0;i<24;i++)
+    h+='<span class="vst" style="top:'+(3+Math.random()*24).toFixed(1)+'%;'+
      'left:'+(Math.random()*100).toFixed(1)+'%;'+
      'animation-duration:'+(1.8+Math.random()*2.6).toFixed(1)+'s;'+
      'animation-delay:'+(Math.random()*3).toFixed(1)+'s"></span>';
   }
 
-  /* ★ ارتعاش الحرارة عند الحر الشديد */
+  /* ارتعاش الحرارة */
   if(temp>=40&&!wet&&key!=='night')h+='<div class="vlgHeat"></div>';
  }
 
@@ -5334,11 +5399,19 @@ function renderNow(){
  var lf=liveFeedCard();
  var brf=briefCard();
  /* ★ رقم الحرارة الكبير أولًا ثم الأيقونة صغيرة أسفله */
- h+='<div class="hero fadeIn d1">'+villageCard(st)+'<div class="city">'+cName(CUR)+' <small>'+cCountry(CUR)+'</small></div>'+
- '<div class="big" id="bigTemp">—<sup>°</sup></div><div class="heroIcon heroIconSmall">'+IC[iconKey(st)]+'</div>'+
- '<div class="desc">'+m.t[L]+(tod?' · '+tod:'')+'</div>'+
- (hi!==''?'<div class="hl">'+pick('العليا','العليا','H')+' '+hi+'° · '+pick('الدنيا','الدنيا','L')+' '+lo+'° · '+pick('الإحساس','الإحساس','Feels')+' '+tconv(W.apparent_temperature)+'°</div>':'')+
- (nx?'<div class="next">'+nx+'</div>':'')+'</div>';
+ h+='<div class="hero fadeIn d1">'+villageCard(st)+
+ '<div class="vlgContent">'+
+  '<div class="vlgTop"><div class="city">'+cName(CUR)+'<small>'+cCountry(CUR)+'</small></div></div>'+
+  '<div class="vlgMid">'+
+   '<div class="heroIcon">'+IC[iconKey(st)]+'</div>'+
+   '<div class="big" id="bigTemp">—<sup>°</sup></div>'+
+  '</div>'+
+  '<div class="vlgBot">'+
+   '<div class="desc">'+m.t[L]+(tod?' · '+tod:'')+'</div>'+
+   (hi!==''?'<div class="hl">'+pick('العليا','العليا','H')+' '+hi+'° · '+pick('الدنيا','الدنيا','L')+' '+lo+'° · '+pick('الإحساس','الإحساس','Feels')+' '+tconv(W.apparent_temperature)+'°</div>':'')+
+   (nx?'<div class="next">'+nx+'</div>':'')+
+  '</div>'+
+ '</div></div>';
  if(HOURLY){var sh='',i,now=new Date(),si=-1;
  for(i=0;i<HOURLY.time.length;i++){if(new Date(HOURLY.time[i])>now){si=i;break;}}
  if(si>=0){for(i=si;i<Math.min(si+6,HOURLY.time.length);i++){var hh=new Date(HOURLY.time[i]);
