@@ -23,13 +23,13 @@
 .wrap{position:relative;z-index:1;width:100%;max-width:430px;margin:0 auto}
  button{font-family:inherit;cursor:pointer}
 
-.top{width:100%;margin-bottom:9px}.top:after{content:"";display:table;clear:both}
-.brandbox{float:right;padding-top:4px}
+.top{width:100%;margin-bottom:9px;display:flex;align-items:center;gap:8px;flex-direction:row-reverse}
+.brandbox{padding-top:2px;margin-inline-end:auto}
 .wm-en{font-size:21px;font-weight:800;letter-spacing:2px;vertical-align:middle}
 .wm-sep{font-size:19px;color:rgba(255,255,255,.68);margin:0 7px;vertical-align:middle}
 .wm-ar{font-size:23px;font-weight:800;vertical-align:middle}
-.gearbtn{float:left;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
- border-radius:12px;width:38px;height:38px;color:#fff;font-size:17px}
+.gearbtn{flex:0 0 auto;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+ border-radius:12px;width:38px;height:38px;color:#fff;font-size:17px;cursor:pointer}
 
 .locbar{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
  border-radius:16px;padding:10px 12px;margin-bottom:11px}
@@ -820,9 +820,8 @@
  .cf-w{flex:1 1 auto;min-width:0;font-size:12px;font-weight:700;color:rgba(255,255,255,.88)}
  .cf-t{flex:0 0 auto;font-size:9.5px;font-weight:600;color:rgba(255,255,255,.5)}
  /* ★ أيقونة الدخول/الخروج وختم المراسل */
- .authBadge{display:inline-flex;align-items:center;gap:6px;vertical-align:middle;
- margin-inline-end:6px}
- .ab-ic{width:28px;height:28px;border-radius:50%;display:inline-flex;
+ .authBadgeOLD{display:none}
+ .ab-icOLD{width:28px;height:28px;border-radius:50%;display:inline-flex;
  align-items:center;justify-content:center;font-size:13px;cursor:pointer;
  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.2);
  color:rgba(255,255,255,.8);transition:background .2s}
@@ -859,7 +858,7 @@
  .cc-note{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.8);
  line-height:1.7;padding:2px 0 6px;padding-inline-start:4px}
  /* ★ أيقونة الباب */
- .authBadge{display:inline-flex;align-items:center;gap:7px;vertical-align:middle;margin-inline-start:6px}
+ .authBadge{display:inline-flex;align-items:center;gap:7px;flex:0 0 auto}
  .ab-ic{width:34px;height:34px;border-radius:12px;display:inline-flex;
  align-items:center;justify-content:center;cursor:pointer;
  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.2);
@@ -1156,7 +1155,9 @@
 <div class="sheet" id="docSheet"><div class="sh-grip"></div>
  <button class="docClose" id="docCloseBtn" aria-label="إغلاق">✕</button>
  <div id="docBody"></div></div>
-<div class="sheet" id="accSheet"><div class="sh-grip"></div><div id="accBody"></div></div>
+<div class="sheet" id="accSheet"><div class="sh-grip"></div>
+ <button class="docClose" id="accCloseBtn" aria-label="إغلاق">✕</button>
+ <div id="accBody"></div></div>
 <div class="sheet" id="sheet"><div class="grab"></div><div id="sheetBody"></div></div>
 
 <div class="ov" id="ovSet"><div class="modal">
@@ -2062,6 +2063,7 @@ function nafafAnswer(q){
     الكلمات المفردة بالكتل التالية (مطر · هبوب · رعد · ضغط · قمر)
     فلو فحصناها لاحقًا، تخطفها تلك الكلمات القصيرة قبل الوصول لها. */
  for(var fq=0;fq<FAQ_LIB.length;fq++)if(has(FAQ_LIB[fq].kw))return A(FAQ_LIB[fq].a[0],FAQ_LIB[fq].a[1],FAQ_LIB[fq].a[2]);
+ for(var fq2=0;fq2<FAQ_LIB2.length;fq2++)if(has(FAQ_LIB2[fq2].kw))return A(FAQ_LIB2[fq2].a[0],FAQ_LIB2[fq2].a[1],FAQ_LIB2[fq2].a[2]);
 
  /* ===== البحر ===== */
  if(has(['بحر','صيد','موج','قارب','sea','fish','wave','boat'])){
@@ -2467,6 +2469,158 @@ var FAQ_LIB=[
   a:['الضباب سحابة عند سطح الأرض — يصير لما الهوا يبرد لدرجة نقطة الندى قربه من الأرض، فيتكاثف بخار الماء لقطرات صغيرة معلّقة.',
    'يتكون الضباب عندما يبرد الهواء القريب من سطح الأرض إلى نقطة الندى فيتكاثف بخار الماء.',
    'Fog is a cloud at ground level — it forms when air near the surface cools to its dew point, condensing water vapor into tiny suspended droplets.']}
+];
+
+/* ============================================================
+   ★ المكتبة الموسّعة — الجزء الثاني
+   مصطلحات محلية · مواسم · زراعة · بحر · أسئلة شائعة
+   ⚠️ معرفة عامة موثّقة لا مرتبطة بلحظة — لا نصائح سلامة أو صحة.
+   ============================================================ */
+var FAQ_LIB2=[
+ {kw:['ايش الوسم','موسم الوسم','wasm season'],
+  a:['الوسم موسم مطر الخريف عند أهل الجزيرة يبدأ تقريبًا منتصف أكتوبر. سُمّي وسمًا لأن مطره «يسم» الأرض ويعلّمها بالعشب بعد جفاف الصيف.',
+   'الوسم موسم الأمطار الخريفية في الجزيرة العربية ويبدأ منتصف أكتوبر تقريبًا.',
+   'Al-Wasm is the autumn rain season in Arabia, beginning around mid-October.']},
+ {kw:['ايش المربعانية','مربعانية','marbaaniya'],
+  a:['المربعانية أربعون يومًا هي أشد أيام الشتاء بردًا بالجزيرة، تبدأ تقريبًا ٧ ديسمبر وتنتهي منتصف يناير.',
+   'المربعانية أربعون يومًا تمثل ذروة البرد الشتوي وتبدأ في أوائل ديسمبر.',
+   'Al-Marbaaniya is the 40 coldest days of Arabian winter, starting around 7 December.']},
+ {kw:['ايش سهيل','نجم سهيل','طلوع سهيل','suhail star','canopus'],
+  a:['سهيل نجم يظهر بسماء الجزيرة أواخر أغسطس، وطلوعه علامة عند أهل المنطقة على بداية انكسار حدة الحر وبرودة الليل تدريجيًا. واسمه العلمي كانوبس وهو ثاني ألمع نجم بالسماء.',
+   'سهيل نجم يظهر أواخر أغسطس ويُعد علامة على بدء انكسار حدة الحر، واسمه العلمي كانوبس.',
+   'Suhail (Canopus) appears in late August and traditionally marks the start of summer\u2019s heat breaking.']},
+ {kw:['ايش الصفري','موسم الصفري','safari season'],
+  a:['الصفري موسم يلي الوسم تقريبًا من أواخر نوفمبر، ويتميز باعتدال نهاره وبرودة ليله وبداية اخضرار الأرض.',
+   'الصفري موسم يعقب الوسم من أواخر نوفمبر ويتميز باعتدال النهار وبرودة الليل.',
+   'Al-Safari follows Al-Wasm from late November, with mild days and cold nights.']},
+ {kw:['ايش الثريا','نجم الثريا','pleiades'],
+  a:['الثريا عنقود نجمي يظهر بالسماء ويُستخدم بالتقويم النجمي العربي علامة على مواسم المطر والزراعة منذ قديم الزمان.',
+   'الثريا عنقود نجمي يُستخدم في التقويم النجمي العربي لتحديد مواسم المطر والزراعة.',
+   'Al-Thurayya (the Pleiades) is a star cluster long used in the Arabian calendar to mark rain and planting seasons.']},
+ {kw:['ايش الكوس','رياح الكوس','kaus wind'],
+  a:['الكوس رياح جنوبية غربية رطبة تهب على سواحل عُمان بموسم الخريف، ترتبط بالرياح الموسمية الهندية.',
+   'الكوس رياح جنوبية غربية رطبة ترتبط بموسم الرياح الموسمية على سواحل عُمان.',
+   'Al-Kaus is the humid southwesterly wind on Oman\u2019s coast, linked to the Indian monsoon.']},
+ {kw:['ايش النشو','رياح النشو','nashu wind'],
+  a:['النشو رياح شمالية شرقية تهب بموسم الشتاء على سواحل عُمان، وهي عكس اتجاه الكوس الصيفي.',
+   'النشو رياح شمالية شرقية شتوية على سواحل عُمان.',
+   'Al-Nashu is the winter northeasterly wind along Oman\u2019s coast.']},
+ {kw:['ايش الهماليل','هماليل','hamalil'],
+  a:['الهماليل تعبير محلي عن المطر الخفيف المتفرق الذي ينزل على شكل زخات متقطعة لا مستمرة.',
+   'الهماليل تعبير محلي عن الأمطار الخفيفة المتفرقة.',
+   'Al-Hamalil is a local term for light, scattered showers.']},
+ {kw:['ايش البتريكور','ريحة المطر','رائحة التراب','petrichor'],
+  a:['البتريكور اسم علمي لرائحة المطر على التراب الجاف. سببها زيوت نباتية تتراكم بالتربة بالجفاف، ومركب اسمه الجيوسمين تنتجه بكتيريا بالتربة، يتحرران بالهواء أول ما تنزل القطرات.',
+   'البتريكور هو الاسم العلمي لرائحة المطر على التربة الجافة الناتجة عن الجيوسمين وزيوت نباتية.',
+   'Petrichor is the scientific name for the smell of rain on dry soil, caused by geosmin and plant oils.']},
+ {kw:['متى موسم الامطار بعمان','موسم المطر عمان','oman rainy season'],
+  a:['عمومًا لعُمان موسمان: أمطار شتوية من ديسمبر لمارس ترتبط بمنخفضات قادمة من الغرب، وأمطار صيفية بظفار (الخريف) من يونيو لسبتمبر. وقد تجي أمطار رعدية بالربيع أيضًا على الجبال.',
+   'لعُمان موسمان: أمطار شتوية من ديسمبر لمارس، وخريف ظفار من يونيو لسبتمبر.',
+   'Oman has two seasons: winter rain (Dec–Mar) and the Dhofar khareef (Jun–Sep).']},
+ {kw:['ليش الرطوبة تخلي الجو اثقل','ليش احس الحر اكثر بالرطوبة','humidity feels hotter'],
+  a:['جسمك يبرد نفسه بتبخّر العرق. لما الهوا يكون مشبع برطوبة، العرق ما يتبخر بسهولة، فتحس الحرارة أعلى من الرقم الفعلي.',
+   'ترتفع درجة الإحساس بالحرارة مع الرطوبة لأن تبخر العرق يقل فيقل تبريد الجسم.',
+   'Your body cools by evaporating sweat; humid air slows evaporation, so it feels hotter than the actual reading.']},
+ {kw:['ايش الجزيرة الحرارية','جزيرة حرارية','urban heat island'],
+  a:['الجزيرة الحرارية ظاهرة تكون فيها المدن أحر من المناطق المحيطة، لأن الأسفلت والخرسانة يمتصون الحرارة نهارًا ويطلقونها ليلًا.',
+   'الجزيرة الحرارية ظاهرة ارتفاع حرارة المدن عن محيطها بسبب امتصاص الأسفلت والخرسانة للحرارة.',
+   'The urban heat island effect makes cities warmer than surroundings, as asphalt and concrete absorb and re-release heat.']},
+ {kw:['ايش السراب','لماذا يظهر السراب','mirage'],
+  a:['السراب ينشأ لما طبقة الهوا القريبة من الأرض تسخن كثير وتصير أقل كثافة، فينكسر الضوء عبرها وينعكس فتشوف صورة السما وكأنها مويه على الأرض.',
+   'ينشأ السراب من انكسار الضوء عبر طبقات هواء شديدة الحرارة قرب سطح الأرض.',
+   'A mirage forms when light bends through very hot, less-dense air near the ground, reflecting the sky like water.']},
+ {kw:['كيف اعرف اتجاه الرياح','اتجاه الريح شمالية يعني','wind direction meaning'],
+  a:['اتجاه الرياح يُسمّى بالجهة اللي تجي منها لا اللي تروح لها. يعني «رياح شمالية» تعني قادمة من الشمال متجهة للجنوب.',
+   'يُسمّى اتجاه الرياح بالجهة التي تهب منها لا التي تتجه إليها.',
+   'Wind direction is named for where it comes FROM, not where it goes — a "north wind" blows from the north.']},
+ {kw:['ايش العقدة','knot سرعة','ايش يعني عقدة'],
+  a:['العقدة وحدة سرعة بحرية تساوي ميلًا بحريًا في الساعة، أي حوالي ١.٨٥ كيلومتر بالساعة. تُستخدم بالملاحة والطيران.',
+   'العقدة وحدة سرعة تساوي ميلًا بحريًا في الساعة أي نحو 1.85 كم/س.',
+   'A knot is one nautical mile per hour, about 1.85 km/h, used in marine and aviation contexts.']},
+ {kw:['ايش المليمتر بالمطر','يعني ايش 10 ملم مطر','mm rainfall meaning'],
+  a:['المليمتر يعني ارتفاع طبقة الماء لو تجمّعت بمكان مستوٍ بلا تسرب. عشرة مليمتر يعني لتر واحد من الماء على كل متر مربع.',
+   'يمثل المليمتر ارتفاع طبقة الماء المتجمعة، وعشرة مليمترات تعادل لترًا لكل متر مربع.',
+   'A millimetre of rain means that depth of water on a flat surface — 10mm equals 1 litre per square metre.']},
+ {kw:['ليش النماذج تختلف','ليش التوقعات تتغير','why forecasts change','model disagreement'],
+  a:['الجو نظام فوضوي، وأي فرق بسيط بالبيانات الأولية يكبر مع الوقت. كل نموذج يحسب بطريقة مختلفة، فالاختلاف بينهم طبيعي — واتفاقهم يعطي ثقة أعلى.',
+   'يعد الجو نظامًا فوضويًا تتضخم فيه الفروق الصغيرة، لذا تختلف النماذج، واتفاقها يزيد الثقة.',
+   'Weather is chaotic — small differences grow over time. Models compute differently, so disagreement is normal, and agreement raises confidence.']},
+ {kw:['كم مدى دقة التوقعات','دقة التوقع كم يوم','forecast accuracy days'],
+  a:['التوقعات لليوم واليومين الجايين دقتها عالية عمومًا، وتقل تدريجيًا بعد الخمسة أيام، وبعد العشرة تصير مؤشرًا عامًا لا توقعًا دقيقًا.',
+   'تكون التوقعات دقيقة نسبيًا لليومين الأولين وتقل دقتها بعد خمسة أيام.',
+   'Forecasts are generally reliable 1–2 days out, degrade after five days, and beyond ten are broad indications only.']},
+ {kw:['ايش الرادار','كيف يشتغل الرادار','how weather radar works'],
+  a:['الرادار الجوي يرسل موجات لاسلكية وينتظر انعكاسها من قطرات المطر. قوة الانعكاس تدل على شدة الهطول، والفرق بالتردد يدل على حركة القطرات. الخليج ما فيه شبكة رادار أرضي مفتوحة للعامة.',
+   'يعمل الرادار الجوي بإرسال موجات لاسلكية وقياس انعكاسها من قطرات المطر لتحديد شدة الهطول.',
+   'Weather radar sends radio waves and measures their reflection off raindrops to gauge intensity.']},
+ {kw:['ايش القمر الصناعي الجوي','satellite weather','كيف الاقمار تصور الطقس'],
+  a:['أقمار الطقس تصوّر الأرض بأطوال موجية مختلفة. الصور المرئية تشوف السحب بضوء الشمس، والأشعة تحت الحمراء تقيس حرارة قمة السحابة فتشتغل حتى بالليل.',
+   'تصوّر أقمار الطقس الأرض بأطوال موجية مختلفة؛ المرئية بالنهار والأشعة تحت الحمراء ليلًا ونهارًا.',
+   'Weather satellites image Earth at different wavelengths — visible light by day, infrared measuring cloud-top temperature day and night.']},
+ {kw:['ايش الجبهة الهوائية','جبهة باردة','cold front','weather front'],
+  a:['الجبهة هي حدّ الفصل بين كتلتين هوائيتين مختلفتين بالحرارة والرطوبة. الجبهة الباردة تدفع الهوا الدافئ لأعلى بسرعة فتكوّن سحبًا ركامية وأمطارًا قصيرة قوية.',
+   'الجبهة الهوائية هي حد الفصل بين كتلتين هوائيتين مختلفتين، والجبهة الباردة تكوّن سحبًا ركامية.',
+   'A front is the boundary between two air masses; a cold front lifts warm air sharply, forming towering clouds and brief heavy rain.']},
+ {kw:['ايش المنخفض الجوي','منخفض جوي يعني','low pressure system'],
+  a:['المنخفض منطقة ضغطها أقل من محيطها، فالهوا يندفع نحوها ويصعد لأعلى ويبرد ويتكاثف — لهذا ترتبط المنخفضات بالسحب والأمطار والرياح.',
+   'المنخفض الجوي منطقة ضغط منخفض يندفع نحوها الهواء ويصعد فيتكاثف مكوّنًا السحب والأمطار.',
+   'A low-pressure system draws air inward and upward, where it cools and condenses — hence clouds, rain, and wind.']},
+ {kw:['ايش خط الاستواء الحراري','itcz','منطقة التقارب'],
+  a:['منطقة التقارب المداري حزام حول خط الاستواء تلتقي فيه رياح النصفين، فيصعد الهوا بقوة وتتكوّن سحب رعدية ضخمة. تحركه شمالًا وجنوبًا موسميًا يفسّر مواسم المطر بمناطق كثيرة.',
+   'منطقة التقارب المداري حزام تلتقي فيه الرياح فيصعد الهواء مكوّنًا سحبًا رعدية، وتحركه الموسمي يفسر مواسم المطر.',
+   'The ITCZ is a belt near the equator where trade winds converge, forcing air up into towering storms; its seasonal shift drives many rainy seasons.']},
+ {kw:['ايش الوادي','جريان الوادي','wadi flow'],
+  a:['الوادي مجرى طبيعي يجري فيه الماء بعد المطر. جريانه يعتمد على كمية المطر ومساحة الحوض وطبيعة التربة، وقد يجري رغم أن المطر نزل بعيدًا عنك بأعالي الجبال.',
+   'الوادي مجرى طبيعي يجري فيه الماء بعد المطر بحسب كمية الهطول وطبيعة الحوض.',
+   'A wadi is a natural watercourse that flows after rain, depending on rainfall volume and catchment characteristics.']},
+ {kw:['ايش الافلاج','فلج','aflaj oman'],
+  a:['الأفلاج نظام ري عُماني قديم ينقل المياه الجوفية أو مياه الأودية بقنوات تعتمد على الجاذبية. بعضها عمره آلاف السنين وخمسة منها مسجّلة بقائمة التراث العالمي لليونسكو.',
+   'الأفلاج نظام ري عُماني تقليدي ينقل المياه بالجاذبية، وخمسة منها مسجلة في التراث العالمي.',
+   'Aflaj are Oman\u2019s ancient gravity-fed irrigation channels; five are UNESCO World Heritage sites.']},
+ {kw:['متى وقت الغروب الذهبي','الساعة الذهبية','golden hour'],
+  a:['الساعة الذهبية هي الفترة القريبة من الشروق أو الغروب حين تكون الشمس منخفضة، فيصير الضوء دافئًا وناعمًا والظلال طويلة — أفضل وقت للتصوير عادةً.',
+   'الساعة الذهبية فترة قرب الشروق أو الغروب يكون فيها الضوء دافئًا وناعمًا.',
+   'The golden hour is the period near sunrise or sunset when low sun gives warm, soft light and long shadows.']},
+ {kw:['ايش الشفق','شفق','twilight'],
+  a:['الشفق الفترة بين غياب قرص الشمس وحلول الظلام الكامل، حيث يبقى الضوء ينتشر بالغلاف الجوي. له ثلاث مراحل: مدني وبحري وفلكي.',
+   'الشفق فترة انتشار الضوء بعد غياب الشمس وله ثلاث مراحل: مدني وبحري وفلكي.',
+   'Twilight is the period after sunset when scattered light remains — it has three stages: civil, nautical, and astronomical.']},
+ {kw:['ليش القمر يبان كبير','وهم القمر','moon illusion'],
+  a:['وهم القمر ظاهرة بصرية يبان فيها القمر أكبر قرب الأفق رغم أن حجمه الفعلي ما تغيّر. سببها طريقة معالجة الدماغ للمقارنة مع الأشياء الأرضية.',
+   'وهم القمر ظاهرة بصرية يبدو فيها القمر أكبر قرب الأفق رغم ثبات حجمه الفعلي.',
+   'The Moon illusion makes the Moon appear larger near the horizon, though its actual size is unchanged — a brain-perception effect.']},
+ {kw:['ايش القمر العملاق','سوبر مون','supermoon'],
+  a:['القمر العملاق يصير لما يكتمل البدر وهو بأقرب نقطة من الأرض بمداره، فيبان أكبر بنحو ١٤٪ وأسطع بنحو ٣٠٪ من أبعد بدر.',
+   'القمر العملاق هو اكتمال البدر عند أقرب نقطة من الأرض فيبدو أكبر وأسطع.',
+   'A supermoon is a full moon at its closest orbital point to Earth, appearing about 14% larger and 30% brighter.']},
+ {kw:['ايش زخات الشهب','شهب','meteor shower'],
+  a:['زخات الشهب تصير لما تعبر الأرض بحطام مذنّب، فتحترق الجسيمات بالغلاف الجوي وتظهر كخطوط ضوئية. تتكرر بمواعيد ثابتة كل سنة لأن مدار الأرض ثابت.',
+   'تحدث زخات الشهب عند عبور الأرض بحطام المذنبات فتحترق الجسيمات في الغلاف الجوي.',
+   'Meteor showers occur as Earth passes through comet debris, burning up in the atmosphere; they recur on fixed annual dates.']},
+ {kw:['ايش هالة القمر','دائرة حول القمر','moon halo'],
+  a:['الهالة حلقة ضوئية حول القمر أو الشمس تنشأ من انكسار الضوء ببلورات الثلج في سحب عالية رقيقة. تقليديًا يعدّها البعض علامة على تغيّر جوي قادم.',
+   'الهالة حلقة ضوئية تنشأ من انكسار الضوء ببلورات الثلج في السحب العالية.',
+   'A halo is a ring of light around the Moon or Sun caused by light refracting through ice crystals in high thin clouds.']},
+ {kw:['متى ازرع','موسم الزراعة','planting season'],
+  a:['بالجزيرة عمومًا يُفضّل الزرع بمواسم الاعتدال، والتقويم النجمي العربي ارتبط تاريخيًا بمواعيد الزراعة — كالوسم للحبوب والصفري لبعض الخضروات. أما النخيل فله دورته الخاصة بالتلقيح ربيعًا والجني آخر الصيف.',
+   'ارتبطت مواسم الزراعة في الجزيرة تاريخيًا بالتقويم النجمي، ولكل محصول موسمه المناسب.',
+   'Planting in Arabia has historically followed the star calendar, each crop with its own season.']},
+ {kw:['ايش تأثير الحر على النخل','النخيل والحرارة','palm heat'],
+  a:['النخلة من أكثر الأشجار تحمّلًا للحر والجفاف، لكن الحرارة الشديدة جدًا وقت التلقيح قد تقلل عقد الثمار، والرطوبة العالية وقت النضج قد تؤثر على جودة التمر.',
+   'يتحمل النخيل الحرارة والجفاف، لكن الحرارة الشديدة وقت التلقيح والرطوبة وقت النضج قد تؤثران على المحصول.',
+   'Date palms tolerate heat and drought well, but extreme heat during pollination or high humidity at ripening can affect the crop.']},
+ {kw:['ليش البحر ملح','ملوحة البحر','why sea salty'],
+  a:['ملوحة البحر جت من ذوبان المعادن بالصخور عبر ملايين السنين وحملها الأنهار للبحر. والماء يتبخر ويترك الملح خلفه فتتراكم الملوحة.',
+   'نتجت ملوحة البحر عن ذوبان المعادن وحملها إلى البحار حيث يتبخر الماء ويبقى الملح.',
+   'Sea salt comes from minerals dissolved from rock over millions of years, carried to the sea where water evaporates and salt remains.']},
+ {kw:['ليش مويه الخليج حارة','حرارة مياه الخليج','gulf sea temperature'],
+  a:['الخليج العربي بحر ضحل ومغلق نسبيًا، فمويته تسخن بسرعة صيفًا وتتجاوز أحيانًا ٣٤ درجة — من أعلى حرارات مياه البحار بالعالم.',
+   'يعد الخليج بحرًا ضحلًا شبه مغلق فترتفع حرارة مياهه صيفًا لتتجاوز أحيانًا 34 درجة.',
+   'The Arabian Gulf is shallow and semi-enclosed, so its water heats quickly in summer, sometimes exceeding 34°C.']},
+ {kw:['ايش المد الاحمر','red tide','مد احمر'],
+  a:['المد الأحمر ازدهار مفاجئ لطحالب مجهرية بمياه البحر يغيّر لونها ويستهلك الأكسجين. يرتبط عادةً بارتفاع حرارة الماء وزيادة المغذيات.',
+   'المد الأحمر ازدهار طحلبي يغير لون الماء ويستهلك الأكسجين ويرتبط بارتفاع الحرارة والمغذيات.',
+   'A red tide is a sudden bloom of microscopic algae that discolours water and depletes oxygen, linked to warm water and excess nutrients.']}
 ];
 
 var ARCHIVE=[
@@ -6994,6 +7148,15 @@ function openSettings(){renderSettings();$("ovSet").className="ov on";}
 function closeSettings(){$("ovSet").className="ov";}
 
 $("gearBtn").onclick=openSettings;
+/* ★ ربط كل مسارات الإغلاق — كانت غير مربوطة فتُحبس اللوحات مفتوحة */
+(function(){
+ var pairs=[['accBack',closeAccount],['accCloseBtn',closeAccount],
+            ['docBack',closeDoc],['fbBack',closeFeedback],['fbCloseBtn',closeFeedback]];
+ for(var i=0;i<pairs.length;i++){
+  var el=$(pairs[i][0]);
+  if(el)el.onclick=pairs[i][1];
+ }
+})();
 (function(){var x=document.querySelectorAll("[data-close]"),i;
  for(i=0;i<x.length;i++)x[i].onclick=function(){$(this.getAttribute("data-close")).className="ov";};})();
 
