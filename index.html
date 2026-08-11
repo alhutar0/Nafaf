@@ -27,10 +27,10 @@
   --bg1:#1e2028; --bg2:#282a33; --bg3:#33353f;
   --card:rgba(255,255,255,.06); --cardBd:rgba(255,255,255,.12);
  }
- body.th-light{      /* نهاري فاتح */
-  --bg1:#eef2f8; --bg2:#e4eaf3; --bg3:#dae2ee;
-  --card:rgba(255,255,255,.82); --cardBd:rgba(27,44,71,.1);
-  --tx:#1b2c47; --tx2:rgba(27,44,71,.72); --tx3:rgba(27,44,71,.5);
+ body.th-light{      /* نهاري فاتح — سماء بيضاء بسحب */
+  --bg1:#dceaf7; --bg2:#eaf2fa; --bg3:#f7fafd;
+  --card:rgba(255,255,255,.92); --cardBd:rgba(27,44,71,.09);
+  --tx:#16233a; --tx2:rgba(22,35,58,.7); --tx3:rgba(22,35,58,.48);
   --gold:#c9942f; --sheet:#fff; --sheetTx:#1b2c47;
  }
  body{font-family:"Segoe UI","Helvetica Neue",Tahoma,Arial,sans-serif;color:var(--tx);
@@ -998,22 +998,23 @@
  .photoPrev{display:block;width:100%;max-height:150px;object-fit:cover;
  border-radius:14px;margin-top:9px;border:1px solid rgba(255,255,255,.22)}
  /* ★ إعادة تنسيق الإعدادات */
- .m-grp{display:flex;align-items:center;gap:9px;font-size:11px;font-weight:800;
- color:#7f8fa6;letter-spacing:.05em;margin:24px 0 12px}
- .m-grp:first-of-type{margin-top:4px}
- .m-grp:after{content:"";flex:1 1 auto;height:1px;background:rgba(27,44,71,.12)}
- .m-card{background:#f4f7fb;border:1px solid rgba(27,44,71,.09);
- border-radius:16px;padding:14px 15px;margin-bottom:10px}
- .m-sec{font-size:13px;font-weight:800;color:#1b2c47;margin:0 0 9px}
- .m-card .m-sec{margin-bottom:9px}
- .m-hint{font-size:11.5px;font-weight:600;color:#7f8fa6;line-height:1.75;
- margin:-3px 0 10px}
- .m-row{display:flex;flex-wrap:wrap;gap:7px}
- .mbtn{border:1px solid rgba(27,44,71,.14);background:#fff;color:#33445c;
- font-family:inherit;font-size:12.5px;font-weight:700;border-radius:99px;
- padding:9px 16px;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
- .mbtn.on{background:#e6b45e;color:#3a2405;border-color:#e6b45e;font-weight:800}
- .mbtn:active{transform:scale(.96)}
+  /* ★ الإعدادات — مدمجة وأصغر */
+  .m-grp{display:flex;align-items:center;gap:8px;font-size:9.5px;font-weight:800;
+    color:#8fa3b8;letter-spacing:.07em;margin:15px 0 7px}
+  .m-grp:first-of-type{margin-top:2px}
+  .m-grp:after{content:"";flex:1 1 auto;height:1px;background:rgba(27,44,71,.1)}
+  .m-card{background:#f5f8fc;border:1px solid rgba(27,44,71,.07);
+    border-radius:13px;padding:10px 12px;margin-bottom:6px}
+  .m-sec{font-size:11.5px;font-weight:800;color:#1b2c47;margin:0 0 6px}
+  .m-card .m-sec{margin-bottom:6px}
+  .m-hint{font-size:10px;font-weight:600;color:#8fa3b8;line-height:1.6;margin:-2px 0 6px}
+  .m-row{display:flex;flex-wrap:wrap;gap:5px}
+  .mbtn{border:1px solid rgba(27,44,71,.12);background:#fff;color:#33445c;
+    font-family:inherit;font-size:11.5px;font-weight:700;border-radius:99px;
+    padding:6px 13px;cursor:pointer;
+    transition:background .18s,color .18s,border-color .18s,transform .12s}
+  .mbtn.on{background:#e6b45e;color:#3a2405;border-color:#e6b45e;font-weight:800}
+  .mbtn:active{transform:scale(.93)}
  /* الوثائق */
  .docSheet{padding:2px 0 8px}
  .doc-h{font-size:17px;font-weight:800;color:#fff;margin-bottom:14px}
@@ -1118,20 +1119,20 @@
   .hero{position:relative;padding:4px 0 2px!important;background:transparent!important;
     border:0!important;text-align:center}
   .pgStage{position:relative;display:flex;align-items:center;justify-content:center;gap:0}
-  .pulseWrap{position:relative;flex:1 1 auto;max-width:296px;aspect-ratio:1;margin:0 auto}
+  .pulseWrap{position:relative;flex:1 1 auto;max-width:340px;aspect-ratio:1;margin:0 auto}
   .pulseSvg{width:100%;height:100%;display:block;overflow:visible}
   /* بطاقات جانبية صغيرة ونحيلة */
-  .pgSide{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:2px;
-    padding:9px 7px;border-radius:15px;min-width:52px;
+  .pgSide{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:1px;
+    padding:6px 5px;border-radius:12px;min-width:42px;
     background:var(--card);border:1px solid var(--cardBd);z-index:2}
-  .pgSide:first-child{margin-inline-end:-14px}
-  .pgSide:last-child{margin-inline-start:-14px}
-  .pgS-ic{display:block;color:#9fd4f5;opacity:.85}
+  .pgSide:first-child{margin-inline-end:-8px}
+  .pgSide:last-child{margin-inline-start:-8px}
+  .pgS-ic{display:block;color:#9fd4f5;opacity:.8}
   .pgS-ic.hum{color:#7fc9e8}
-  .pgS-ic svg{width:16px;height:16px;display:block}
-  .pgS-v{font-size:16px;font-weight:800;color:var(--tx);line-height:1.1}
-  .pgS-v small{font-size:9.5px;font-weight:700;opacity:.7}
-  .pgS-k{font-size:8.5px;font-weight:700;color:var(--tx3);white-space:nowrap}
+  .pgS-ic svg{width:13px;height:13px;display:block}
+  .pgS-v{font-size:13.5px;font-weight:800;color:var(--tx);line-height:1.1}
+  .pgS-v small{font-size:8px;font-weight:700;opacity:.7}
+  .pgS-k{font-size:7.5px;font-weight:700;color:var(--tx3);white-space:nowrap}
   /* الهالة والقوس */
   .pgAura{transform-origin:center;transform-box:view-box}
   .anim .pgAura{animation:pgBreathe ease-in-out infinite}
@@ -1148,15 +1149,15 @@
   @keyframes pgRipple{0%{r:7;opacity:.85}100%{r:24;opacity:0}}
   /* المركز */
   .pulseIn{position:absolute;inset:0;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;gap:0;pointer-events:none;padding:0 22%}
+    align-items:center;justify-content:center;gap:0;pointer-events:none;padding:0 15%}
   .pgIcon{margin-bottom:-4px}
-  .pgIcon svg{width:38px;height:38px;display:block;
+  .pgIcon svg{width:34px;height:34px;display:block;
     filter:drop-shadow(0 3px 10px rgba(0,0,0,.35))}
-  .pgTemp{font-size:76px;font-weight:200;line-height:1;letter-spacing:-3px;color:var(--tx);
+  .pgTemp{font-size:92px;font-weight:200;line-height:.92;letter-spacing:-4px;color:var(--tx);
     text-shadow:0 3px 18px rgba(0,0,0,.25)}
-  .pgTemp sup{font-size:26px;font-weight:300;vertical-align:super;letter-spacing:0}
+  .pgTemp sup{font-size:30px;font-weight:300;vertical-align:super;letter-spacing:0}
   .pgDescIn{font-size:12.5px;font-weight:700;color:var(--tx2);margin-top:3px}
-  .pgRange{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:12px;font-weight:800}
+
   .pgLo{color:#7fc9e0}
   .pgHi{color:#ff9d5c}
   .pgSep{width:26px;height:2px;border-radius:99px;
@@ -1219,6 +1220,109 @@
   .sb-obs{background:rgba(127,227,154,.16);color:#7fe39a}
   .sb-sat{background:rgba(159,212,245,.16);color:#9fd4f5}
   .sb-mdl{background:rgba(255,209,102,.16);color:#ffd166}
+  /* ★ تفاعل فيزيائي باللمس — ارتداد وعمق */
+  .card,.stat,.hitem,.drow,.smartV,.pill,.pgSide,.pgStrip{
+    transition:transform .16s cubic-bezier(.34,1.4,.5,1),box-shadow .2s}
+  .card:active,.smartV:active,.drow:active{transform:scale(.985)}
+  .stat:active,.hitem:active,.pgSide:active{transform:scale(.94)}
+  .tab{transition:transform .16s cubic-bezier(.34,1.5,.5,1),background .2s,color .2s}
+  .tab:active{transform:scale(.93)}
+  .lbtn,.lbtn2,.shbtn,.mbtn,.ob{transition:transform .14s cubic-bezier(.34,1.5,.5,1),
+    background .2s,border-color .2s}
+  .lbtn:active,.lbtn2:active,.shbtn:active,.ob:active{transform:scale(.94)}
+  /* ★ موجة لمس تنتشر من نقطة الضغط */
+  .rippleHost{position:relative;overflow:hidden}
+  .rip{position:absolute;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle,rgba(255,255,255,.32),rgba(255,255,255,0) 70%);
+    transform:translate(-50%,-50%) scale(0);animation:ripGrow .62s ease-out forwards}
+  @keyframes ripGrow{to{transform:translate(-50%,-50%) scale(1);opacity:0}}
+  /* ★ الزر العائم — يتنفس ويستجيب */
+  .fab{transition:transform .2s cubic-bezier(.34,1.5,.5,1),box-shadow .25s}
+  .fab:active{transform:scale(.88)}
+  .anim .fab{animation:fabFloat 4.5s ease-in-out infinite}
+  @keyframes fabFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .fab.pulse:after{content:"";position:absolute;inset:-4px;border-radius:50%;
+    border:2px solid rgba(230,180,94,.6);animation:fabRing 2.2s ease-out infinite}
+  @keyframes fabRing{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.5);opacity:0}}
+  /* ★ ظهور متدرّج عند التمرير */
+  .revealed{animation:revIn .55s cubic-bezier(.2,.9,.3,1) backwards}
+  @keyframes revIn{from{opacity:0;transform:translateY(14px)}}
+  .noanim .rip,.noanim .fab,.noanim .revealed{animation:none}
+  .pullInd{position:fixed;top:-46px;left:50%;transform:translateX(-50%);z-index:60;
+    width:38px;height:38px;border-radius:50%;opacity:0;pointer-events:none;
+    background:rgba(230,180,94,.18);border:1px solid rgba(230,180,94,.45);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .28s cubic-bezier(.2,.9,.3,1),opacity .25s}
+  .pi-ring{width:15px;height:15px;border-radius:50%;
+    border:2px solid rgba(230,180,94,.55);border-top-color:#e6b45e}
+  .pullInd.ready .pi-ring{animation:piSpin .7s linear infinite}
+  @keyframes piSpin{to{transform:rotate(360deg)}}
+  .pullInd.ready{background:rgba(230,180,94,.32)}
+  /* ★ سماء السمة الفاتحة — سحب تنساب بهدوء */
+  body.th-light:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(ellipse 62% 26% at 18% 14%,rgba(255,255,255,.95),transparent 62%),
+      radial-gradient(ellipse 48% 20% at 74% 9%,rgba(255,255,255,.85),transparent 60%),
+      radial-gradient(ellipse 70% 30% at 46% 30%,rgba(255,255,255,.7),transparent 65%),
+      radial-gradient(ellipse 52% 22% at 88% 24%,rgba(255,255,255,.6),transparent 62%),
+      radial-gradient(circle at 78% 6%,rgba(255,225,160,.5),transparent 26%)}
+  body.th-light.anim:before{animation:skyDrift 46s ease-in-out infinite alternate}
+  @keyframes skyDrift{from{transform:translateX(0) scale(1)}
+    to{transform:translateX(-2.4%) scale(1.05)}}
+  body.th-light .wrap{position:relative;z-index:1}
+  body.th-light #skyScene{display:none}
+  /* نصوص السمة الفاتحة */
+  body.th-light .pgTemp,body.th-light .pgCity,body.th-light .pgS-v,
+  body.th-light .pgSt b,body.th-light .pgDesc,body.th-light .big,
+  body.th-light .desc,body.th-light .city,body.th-light .locname,
+  body.th-light .sec-t,body.th-light .wm-en,body.th-light .wm-ar,
+  body.th-light .pgClock b{color:#16233a}
+  body.th-light .pgDescIn,body.th-light .pgCity small,body.th-light .pgS-k,
+  body.th-light .pgS-u,body.th-light .pgSt,body.th-light .sec-s,
+  body.th-light .locname small,body.th-light .foot,
+  body.th-light .pgClock{color:rgba(22,35,58,.6)}
+  body.th-light .wm-sep{color:rgba(22,35,58,.32)}
+  body.th-light .pgTemp{text-shadow:none}
+  body.th-light .pgIcon svg{filter:drop-shadow(0 2px 6px rgba(22,35,58,.18))}
+  body.th-light .pgSide,body.th-light .pgStrip,body.th-light .card,
+  body.th-light .locbar{background:rgba(255,255,255,.9);
+    border-color:rgba(27,44,71,.08);box-shadow:0 2px 12px rgba(22,35,58,.06)}
+  body.th-light .tab{color:rgba(22,35,58,.66);background:rgba(255,255,255,.75);
+    border-color:rgba(27,44,71,.09)}
+  body.th-light .tab.on{background:#16233a;color:#fff;border-color:#16233a}
+  body.th-light .lbtn{color:rgba(22,35,58,.72);background:rgba(255,255,255,.8);
+    border-color:rgba(27,44,71,.1)}
+  body.th-light .lbtn.gold{background:#e6b45e;color:#3a2405;border-color:#e6b45e}
+  body.th-light .gearbtn,body.th-light .ab-ic{background:rgba(255,255,255,.85);
+    border-color:rgba(27,44,71,.12);color:#16233a}
+  body.th-light .stat{background:rgba(255,255,255,.9)}
+  body.th-light .stat .k{color:rgba(22,35,58,.6)}
+  body.th-light .stat .v{color:#16233a}
+  body.th-light .hitem{background:rgba(255,255,255,.85)}
+  body.th-light .hh,body.th-light .tt{color:#16233a}
+  body.th-light .pp{color:rgba(22,35,58,.55)}
+  body.th-light .next,body.th-light .pgNext{background:rgba(255,255,255,.85);
+    border-color:rgba(27,44,71,.1);color:#16233a}
+  /* ★ ساعة الموقع داخل الحلقة */
+  /* ★ الساعة داخل الحلقة أعلى الأيقونة — لا تلامس المؤشر */
+  /* ★ الشريط العلوي — الوقت والمدى خارج الحلقة */
+  .pgTop{display:flex;align-items:center;justify-content:center;gap:8px;
+    margin:0 auto 10px;flex-wrap:wrap}
+  .pgTimeBox,.pgRangeBox{display:inline-flex;align-items:center;gap:6px;
+    white-space:nowrap;border-radius:99px;padding:5px 13px;
+    background:var(--card);border:1px solid var(--cardBd)}
+  .pgTimeBox{font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.03em}
+  .pgTimeBox b{font-size:14px;font-weight:800;color:var(--tx);letter-spacing:.02em}
+  .pgTimeBox em{font-style:normal;font-size:9.5px;font-weight:800;color:var(--gold)}
+  .pgRangeBox{font-size:13px;font-weight:800}
+  /* ★ الحلقة في السمة الفاتحة — توهج أخف ومسار أوضح */
+  body.th-light .pgArcGlow{opacity:.28!important}
+  body.th-light .anim .pgArcGlow{animation:pgGlowLight 4s ease-in-out infinite}
+  @keyframes pgGlowLight{0%,100%{opacity:.22}50%{opacity:.38}}
+  body.th-light .pgAura{opacity:.45}
+  body.th-light .pgSep{background:linear-gradient(90deg,#4a9fd0,#e07a3c)}
+  body.th-light .pgLo{color:#2f86b8}
+  body.th-light .pgHi{color:#d1662c}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -1548,11 +1652,13 @@ function wlabel(){return WUNIT==='ms'?pick('م/ث','م/ث','m/s'):(WUNIT==='kn'?
 function applyMotion(){
  var reduced=false;try{reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
  var on=(MOTION==='full')&&!reduced;
- document.body.className=on?'anim':'noanim';
+ /* ★ لا نكتب className من الصفر — كان يمحو صنف السمة (th-*) */
+ var th=(THEME==='mid')?' th-mid':((THEME==='light')?' th-light':'');
+ document.body.className=(on?'anim':'noanim')+th;
  return {anim:on,scenery:MOTION!=='off'};}
 function applyScale(){document.documentElement.style.fontSize=(16*TSCALE)+'px';}
 /* ★ سمات العرض — اختيار المستخدم */
-var THEME=stGet('theme')||'dark';
+var THEME=stGet('theme')||'dark';   /* ★ الليلي الهادئ هو الافتراضي عند أول فتح */
 function applyTheme(){
  var b=document.body;
  b.className=b.className.replace(/\bth-\w+\b/g,'').replace(/\s+/g,' ').trim();
@@ -1861,10 +1967,31 @@ function villageScene(st){
    • علامات الشروق والغروب في موضعهما الحقيقي
    ⚠️ لا صور — رسم حيّ من بياناتك، حجمه كيلوبايتات
    ============================================================ */
+/* ★ نص ساعة الموقع — بتوقيت المدينة المختارة لا جهازك */
+function clockText(){
+ var L=LI();
+ var hh=Clock.hour(), mm=Clock.minute();
+ var t=String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+ /* فارق التوقيت عن جهازك — يوضّح أن الوقت للمدينة لا لك */
+ var diff='';
+ if(TZ_OFF!=null){
+  var mine=-new Date().getTimezoneOffset()*60;
+  var dh=Math.round((TZ_OFF-mine)/3600);
+  if(dh!==0)diff=' <em>'+(dh>0?'+':'')+dh+(L===2?'h':' س')+'</em>';
+ }
+ return '<b>'+t+'</b>'+diff;
+}
+/* يحدّث الساعة كل دقيقة بلا إعادة رسم الصفحة */
+function tickClock(){
+ var el=$("pgClock");
+ if(el)el.innerHTML=clockText();
+}
+setInterval(tickClock,30000);
+var PG_MIN=null,PG_MAX=null;
 function pulseRing(st){
  if(!W||!HOURLY)return '';
  var L=LI();
- var R=112, CX=140, CY=140, C=2*Math.PI*R;
+ var R=124, CX=140, CY=140, C=2*Math.PI*R;
 
  /* ===== ٢٤ ساعة من الآن ===== */
  var temps=[],rains=[],hrs=[],i,si=0;
@@ -1874,7 +2001,7 @@ function pulseRing(st){
  for(i=si;i<Math.min(si+24,HOURLY.time.length);i++){
   temps.push(HOURLY.temperature_2m[i]);
   rains.push(HOURLY.precipitation_probability?HOURLY.precipitation_probability[i]:0);
-  hrs.push(new Date(HOURLY.time[i]).getHours());
+  hrs.push(Clock.isoHour(HOURLY.time[i]));
  }
  if(temps.length<4)return '';
  var tMin=Math.min.apply(null,temps), tMax=Math.max.apply(null,temps);
@@ -1920,37 +2047,40 @@ function pulseRing(st){
   'style="animation-duration:'+breathDur+'s"/>';
 
  /* ★ قرص زجاجي داخلي — عمق فيزيائي */
- h+='<circle cx="'+CX+'" cy="'+CY+'" r="'+(R-24)+'" fill="url(#pgLens)"/>';
- h+='<circle cx="'+CX+'" cy="'+CY+'" r="'+(R-24)+'" fill="none" '+
-  'stroke="rgba(255,255,255,.06)" stroke-width="1"/>';
+ if(THEME!=='light'){
+  h+='<circle cx="'+CX+'" cy="'+CY+'" r="'+(R-26)+'" fill="url(#pgLens)"/>';
+  h+='<circle cx="'+CX+'" cy="'+CY+'" r="'+(R-26)+'" fill="none" '+
+   'stroke="rgba(255,255,255,.06)" stroke-width="1"/>';
+ }
 
  /* مسار خلفي */
+ var trackCol=(THEME==='light')?'rgba(22,35,58,.07)':'rgba(255,255,255,.06)';
  h+='<circle cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" '+
-  'stroke="rgba(255,255,255,.06)" stroke-width="13" stroke-linecap="round"/>';
+  'stroke="'+trackCol+'" stroke-width="10" stroke-linecap="round"/>';
 
  /* ★ القوس المتصل — تدرّج ناعم بلا فواصل */
  h+='<circle class="pgArcGlow" cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" '+
-  'stroke="url(#pgArc)" stroke-width="13" stroke-linecap="round" '+
-  'filter="url(#pgSoft)" opacity=".5" transform="rotate(-90 '+CX+' '+CY+')"/>';
+  'stroke="url(#pgArc)" stroke-width="10" stroke-linecap="round" '+
+  'filter="url(#pgSoft)" opacity=".42" transform="rotate(-90 '+CX+' '+CY+')"/>';
  h+='<circle class="pgArc" cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" '+
-  'stroke="url(#pgArc)" stroke-width="9" stroke-linecap="round" '+
+  'stroke="url(#pgArc)" stroke-width="7.5" stroke-linecap="round" '+
   'transform="rotate(-90 '+CX+' '+CY+')"/>';
 
  /* ★ علامات الساعات — دقيقة كالأدوات الفيزيائية */
  for(i=0;i<24;i++){
   var a=(i/24)*360-90, rad=a*Math.PI/180;
   var isMain=(i%6===0);
-  var r1=R+9, r2=R+(isMain?15:12);
+  var r1=R+7, r2=R+(isMain?13:10);
   h+='<line x1="'+(CX+Math.cos(rad)*r1).toFixed(1)+'" y1="'+(CY+Math.sin(rad)*r1).toFixed(1)+'" '+
    'x2="'+(CX+Math.cos(rad)*r2).toFixed(1)+'" y2="'+(CY+Math.sin(rad)*r2).toFixed(1)+'" '+
-   'stroke="rgba(255,255,255,'+(isMain?'.3':'.13')+')" stroke-width="'+(isMain?1.6:1)+'" stroke-linecap="round"/>';
+   'stroke="'+((THEME==='light')?'rgba(22,35,58,':'rgba(255,255,255,')+(isMain?'.32':'.14')+')" stroke-width="'+(isMain?1.6:1)+'" stroke-linecap="round"/>';
  }
 
  /* ★ قوس المطر الداخلي */
  var hasRain=false;
  for(i=0;i<rains.length;i++)if(rains[i]>=20){hasRain=true;break;}
  if(hasRain){
-  var R2=R-19, C2=2*Math.PI*R2, seg2=C2/rains.length;
+  var R2=R-15, C2=2*Math.PI*R2, seg2=C2/rains.length;
   for(i=0;i<rains.length;i++){
    if(rains[i]<15)continue;
    h+='<circle class="pgRain" cx="'+CX+'" cy="'+CY+'" r="'+R2+'" fill="none" '+
@@ -1968,9 +2098,9 @@ function pulseRing(st){
   if(idx<0)return '';
   var ang=(idx/24)*360-90, rad=ang*Math.PI/180;
   var mx=CX+Math.cos(rad)*R, my=CY+Math.sin(rad)*R;
-  return '<circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="5" fill="'+col+'"/>'+
+  return '<circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="4.2" fill="'+col+'"/>'+
    '<circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="5" fill="none" '+
-   'stroke="rgba(8,14,28,.75)" stroke-width="2.5"/>';
+   'stroke="rgba(8,14,28,.75)" stroke-width="2"/>';
  }
  var srH=SUNRISE?parseInt(String(SUNRISE).match(/T(\d{2})/)[1],10):null;
  var ssH=SUNSET?parseInt(String(SUNSET).match(/T(\d{2})/)[1],10):null;
@@ -1992,15 +2122,14 @@ function pulseRing(st){
 
  /* ===== المركز ===== */
  h+='<div class="pulseIn">';
+ /* ★ التوقيت الحقيقي للموقع المختار — يحدّث كل دقيقة */
  h+='<div class="pgIcon">'+IC[iconKey(st)]+'</div>';
  h+='<div class="pgTemp" id="bigTemp">—<sup>°</sup></div>';
  var mm2=META[st]||META.clear;
  h+='<div class="pgDescIn">'+(mm2&&mm2.t?mm2.t[L]:'')+'</div>';
- h+='<div class="pgRange">'+
-   '<span class="pgLo">'+tconv(tMin)+'°</span>'+
-   '<span class="pgSep"></span>'+
-   '<span class="pgHi">'+tconv(tMax)+'°</span></div>';
+
  h+='</div></div>';
+ PG_MIN=tMin; PG_MAX=tMax;
  return h;
 }
 
@@ -2081,6 +2210,62 @@ function buildScene(st){
  if(IS_GOLDEN)h+='<div class="s-glow"></div>';
  return h;}
 /* منحنى الليل: 0 = نهار كامل · 1 = ليل كامل — بانتقال ناعم عبر ٩٠ دقيقة حول الشروق والغروب */
+/* ============================================================
+   ★ ساعة نفاف — مرجع الوقت الوحيد لكل التطبيق
+   ⚠️ القاعدة: كل وقت يخص الطقس يمر من هنا، لا من new Date()
+      مباشرة — وإلا ظهر توقيت جهازك بدل توقيت المدينة المختارة.
+   ⚠️ Open-Meteo يعيد الأوقات بتوقيت المدينة أصلًا (timezone=auto)
+      لذا نقرأ الساعة من النص لا بتحويل كائن Date.
+   ============================================================ */
+var Clock={
+ /* دقائق منتصف الليل بتوقيت المدينة */
+ minutes:function(){
+  var d=new Date();
+  if(typeof TZ_OFF==='undefined'||TZ_OFF==null)return d.getHours()*60+d.getMinutes();
+  var utcMs=d.getTime()+d.getTimezoneOffset()*60000;
+  var c=new Date(utcMs+TZ_OFF*1000);
+  return c.getHours()*60+c.getMinutes();
+ },
+ hour:function(){return Math.floor(Clock.minutes()/60);},
+ minute:function(){return Clock.minutes()%60;},
+ /* كائن Date يمثل "الآن" بتوقيت المدينة — للعرض فقط */
+ now:function(){
+  var d=new Date();
+  if(typeof TZ_OFF==='undefined'||TZ_OFF==null)return d;
+  return new Date(d.getTime()+d.getTimezoneOffset()*60000+TZ_OFF*1000);
+ },
+ /* ساعة نص ISO كما تعيده Open-Meteo — بتوقيت المدينة */
+ isoHour:function(iso){
+  var m=String(iso).match(/T(\d{2}):/);
+  return m?parseInt(m[1],10):null;
+ },
+ isoMinutes:function(iso){
+  var m=String(iso).match(/T(\d{2}):(\d{2})/);
+  return m?(parseInt(m[1],10)*60+parseInt(m[2],10)):null;
+ },
+ /* تنسيق HH:MM من ISO بلا أي تحويل منطقة */
+ fmt:function(iso){
+  var m=String(iso).match(/T(\d{2}:\d{2})/);
+  return m?m[1]:'';
+ },
+ /* اليوم بتوقيت المدينة */
+ dayKey:function(){
+  var c=Clock.now();
+  return c.getFullYear()+'-'+String(c.getMonth()+1).padStart(2,'0')+'-'+
+   String(c.getDate()).padStart(2,'0');
+ },
+ /* فهرس الساعة الحالية داخل مصفوفة HOURLY */
+ hourIndex:function(){
+  if(!HOURLY||!HOURLY.time)return 0;
+  var nowM=Clock.minutes();
+  for(var i=0;i<HOURLY.time.length;i++){
+   var hm=Clock.isoMinutes(HOURLY.time[i]);
+   if(hm!=null&&hm>=nowM)return i;
+  }
+  return 0;
+ }
+};
+
 /* ★ دقائق منتصف الليل بتوقيت المدينة المختارة لا توقيت جهازك */
 function cityMinutes(dt){
  var d=dt||new Date();
@@ -2135,7 +2320,7 @@ function paintSky(st){
 function nextChangeLine(){
  if(!HOURLY||!W)return null;
  var now=new Date(),si=-1,i;
- for(i=0;i<HOURLY.time.length;i++){if(new Date(HOURLY.time[i])>now){si=i;break;}}
+ si=Clock.hourIndex();  /* ★ بتوقيت المدينة لا الجهاز */
  if(si<0)return null;
  var lim=Math.min(si+12,HOURLY.time.length),t0=W.temperature_2m;
  for(i=si;i<lim;i++){var pr=HOURLY.precipitation_probability[i]||0;
@@ -2166,7 +2351,7 @@ function computePressure(){
  PRESS=W.pressure_msl;
  if(!HOURLY||!HOURLY.pressure_msl)return;
  var now=new Date(),si=-1,i;
- for(i=0;i<HOURLY.time.length;i++){if(new Date(HOURLY.time[i])>now){si=i;break;}}
+ si=Clock.hourIndex();  /* ★ بتوقيت المدينة لا الجهاز */
  if(si<3)return;
  var past=HOURLY.pressure_msl[si-3];
  if(past==null)return;
@@ -2353,7 +2538,7 @@ function computeStability(){
  /* ج) تقلّب الحالة خلال ١٢ ساعة */
  if(HOURLY&&HOURLY.weather_code){
  var now=new Date(),si=-1,i;
- for(i=0;i<HOURLY.time.length;i++){if(new Date(HOURLY.time[i])>now){si=i;break;}}
+ si=Clock.hourIndex();  /* ★ بتوقيت المدينة لا الجهاز */
  if(si>=0){var codes={},n=0;
  for(i=si;i<Math.min(si+12,HOURLY.time.length);i++){codes[HOURLY.weather_code[i]]=1;n++;}
  var uniq=Object.keys(codes).length;
@@ -2415,7 +2600,7 @@ function walkTarget(){
 function nafafBrief(){
  if(!W||!HOURLY)return null;
  var out=[],now=new Date(),si=-1,i;
- for(i=0;i<HOURLY.time.length;i++){if(new Date(HOURLY.time[i])>now){si=i;break;}}
+ si=Clock.hourIndex();  /* ★ بتوقيت المدينة لا الجهاز */
  if(si<0)return null;
  var lim=Math.min(si+14,HOURLY.time.length);
 
@@ -2442,7 +2627,7 @@ function nafafBrief(){
  if(HOURLY.apparent_temperature&&SUNSET){
  var ssH=new Date(SUNSET).getHours(),bestScore=1e9,bh=null;
  for(i=si;i<lim;i++){
- var hh=new Date(HOURLY.time[i]).getHours();
+ var hh=Clock.isoHour(HOURLY.time[i]);
  if(hh<15||hh>23)continue;
  var pr=HOURLY.precipitation_probability?(HOURLY.precipitation_probability[i]||0):0;
  /* ★ الهدف يتبع مناخ الموقع لا رقمًا عالميًا ثابتًا:
@@ -2533,14 +2718,21 @@ function nafafContext(){
 function peakAhead(key,hours){
  if(!HOURLY||!HOURLY[key])return null;
  var now=new Date(),si=-1,i;
- for(i=0;i<HOURLY.time.length;i++){if(new Date(HOURLY.time[i])>now){si=i;break;}}
+ si=Clock.hourIndex();  /* ★ بتوقيت المدينة لا الجهاز */
  if(si<0)return null;
  var mx=-1e9,mt=null;
  for(i=si;i<Math.min(si+(hours||12),HOURLY.time.length);i++){
  var v=HOURLY[key][i];if(v!=null&&v>mx){mx=v;mt=HOURLY.time[i];}}
  return mt?{v:mx,t:mt}:null;
 }
-function hhmm(iso){var d=new Date(iso);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+/* ★ يقرأ الوقت من نص ISO مباشرة — Open-Meteo يعيده بتوقيت المدينة،
+   وتحويله بـnew Date() كان يزيحه لتوقيت جهاز المستخدم */
+function hhmm(iso){
+ var m=String(iso).match(/T(\d{2}:\d{2})/);
+ if(m)return m[1];
+ var d=new Date(iso);
+ return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
 function hh00(iso){var d=new Date(iso);return String(d.getHours()).padStart(2,'0')+':00';}
 
 /* محرّك الإجابة — يفهم النية ويجيب من السياق الكامل */
@@ -3386,7 +3578,7 @@ function tlData(off){
  if(off<=0)return {temp:W.temperature_2m,code:W.weather_code,wind:W.wind_speed_10m,
  hum:W.relative_humidity_2m,feels:W.apparent_temperature,pr:0,time:new Date(),live:true};
  var now=new Date(),si=-1,i;
- for(i=0;i<HOURLY.time.length;i++){if(new Date(HOURLY.time[i])>now){si=i;break;}}
+ si=Clock.hourIndex();  /* ★ بتوقيت المدينة لا الجهاز */
  if(si<0)return null;
  var idx=Math.min(si+off-1,HOURLY.time.length-1);
  return {temp:HOURLY.temperature_2m[idx],code:HOURLY.weather_code[idx],
@@ -4124,7 +4316,16 @@ var WORLD_SPOTS={
    ============================================================ */
 var GEO=null;   /* {city, district, admin1, admin2, country, cc, tz} */
 
+/* ★ مسافة بالكيلومترات بين نقطتين */
+function geoKm(a1,o1,a2,o2){
+ var R=6371,dLa=(a2-a1)*Math.PI/180,dLo=(o2-o1)*Math.PI/180;
+ var x=Math.sin(dLa/2)*Math.sin(dLa/2)+
+  Math.cos(a1*Math.PI/180)*Math.cos(a2*Math.PI/180)*Math.sin(dLo/2)*Math.sin(dLo/2);
+ return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
 function geoResolve(lat,lon,cb){
+ /* ★ لا نطلب عكس الترميز إن لم يتحرك المستخدم أكثر من ٣ كم */
+ if(GEO&&GEO.lat!=null&&geoKm(GEO.lat,GEO.lon,lat,lon)<3){cb(GEO);return;}
  var lang=(LANG==='en')?'en':'ar';
  fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+lat+
    '&longitude='+lon+'&localityLanguage='+lang)
@@ -4203,26 +4404,62 @@ function activeSpots(){
  /* خارجها: شبكة ديناميكية حول الموقع */
  return ringSpots(CUR.lat,CUR.lon);
 }
-/* يولّد حلقات نقاط حول الموقع — ١٠ و٣٠ و٦٠ كم */
+/* ★ شبكة المطر حولك — نقاط بأسماء المناطق الحقيقية لا الاتجاهات
+   ⚠️ هذه نقاط نموذجية لا محطات رصد — التسمية والشارة توضّحان ذلك. */
+var RING_NAMES={}, RING_DONE={};   /* ذاكرة أسماء المناطق: "lat,lon" -> اسم */
+
 function ringSpots(lat,lon){
- var out=[{n:pick('موقعك','موقعك','Your spot'),en:'You',lat:lat,lon:lon,r:'',d:0}];
- var rings=[{km:10,n:8},{km:30,n:8},{km:60,n:8}];
  var L=LI();
- var dirs=[pick('شمال','شمال','N'),pick('شمال شرق','شمال شرق','NE'),pick('شرق','شرق','E'),
-  pick('جنوب شرق','جنوب شرق','SE'),pick('جنوب','جنوب','S'),pick('جنوب غرب','جنوب غرب','SW'),
-  pick('غرب','غرب','W'),pick('شمال غرب','شمال غرب','NW')];
+ var out=[{n:pick('موقعك','موقعك','Your spot'),en:'You',lat:lat,lon:lon,r:'',d:0}];
+ var rings=[{km:12,n:6},{km:35,n:8},{km:70,n:8}];
  for(var r=0;r<rings.length;r++){
   var km=rings[r].km;
   for(var i=0;i<rings[r].n;i++){
    var ang=(i/rings[r].n)*2*Math.PI;
-   /* درجة العرض ≈ ١١١ كم · وخط الطول يتقلص بجيب تمام العرض */
    var dLat=(km/111)*Math.cos(ang);
    var dLon=(km/(111*Math.max(0.2,Math.cos(lat*Math.PI/180))))*Math.sin(ang);
-   out.push({n:dirs[i]+' '+km+(L===2?'km':'كم'),en:dirs[i]+' '+km+'km',
-     lat:+(lat+dLat).toFixed(3),lon:+(lon+dLon).toFixed(3),r:'',d:km});
+   var pLat=+(lat+dLat).toFixed(3), pLon=+(lon+dLon).toFixed(3);
+   var key=pLat+','+pLon;
+   /* الاسم يُجلب لاحقًا؛ مؤقتًا المسافة فقط */
+   out.push({n:RING_NAMES[key]||(km+(L===2?' km':' كم')),
+     en:RING_NAMES[key]||(km+' km'),
+     lat:pLat,lon:pLon,r:'',d:km,gkey:key});
   }
  }
  return out;
+}
+
+/* يجلب أسماء المناطق للنقاط دفعة واحدة ثم يعيد الرسم */
+var RING_NAMING=false;
+function ringNameLookup(spots,done){
+ if(RING_NAMING)return;
+ var need=[];
+ for(var i=0;i<spots.length;i++){
+  var sp=spots[i];
+  if(sp.gkey&&!RING_NAMES[sp.gkey])need.push(sp);
+ }
+ if(!need.length){done&&done();return;}
+ RING_NAMING=true;
+ var lang=(LANG==='en')?'en':'ar',left=need.length;
+ need.forEach(function(sp){
+  fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+sp.lat+
+    '&longitude='+sp.lon+'&localityLanguage='+lang)
+  .then(function(r){return r.ok?r.json():null;})
+  .then(function(dd){
+   if(dd){
+    var adm=(dd.localityInfo&&dd.localityInfo.administrative)||[];
+    var lvl={};
+    for(var k=0;k<adm.length;k++)if(adm[k].adminLevel!=null)lvl[adm[k].adminLevel]=adm[k].name;
+    var nm=dd.locality||dd.city||lvl[8]||lvl[7]||lvl[6]||dd.principalSubdivision||'';
+    if(nm)RING_NAMES[sp.gkey]=nm;
+   }
+  })
+  .catch(function(){})
+  .then(function(){
+   left--;
+   if(left<=0){RING_NAMING=false;done&&done();}
+  });
+ });
 }
 function activeCountryName(){
  var c=countryOf(CUR.lat,CUR.lon);
@@ -4243,6 +4480,18 @@ function watchLoad(force){
  if(!SPOTS){WATCH={wet:[],soon:[],none:true};if(TAB==='now')renderNow();return;}
  WATCH_LOADING=true;
  WATCH_ACTIVE=SPOTS;
+ /* ★ أسماء المناطق تُجلب مرة واحدة فقط لكل موقع — بلا إعادة تحميل المرصد */
+ if(SPOTS.length&&SPOTS[1]&&SPOTS[1].gkey&&!RING_DONE[locKey()]){
+  RING_DONE[locKey()]=1;
+  ringNameLookup(SPOTS,function(){
+   /* حدّث الأسماء بالبيانات الموجودة دون إعادة جلب */
+   if(WATCH_ACTIVE)for(var q=0;q<WATCH_ACTIVE.length;q++){
+    var sq=WATCH_ACTIVE[q];
+    if(sq.gkey&&RING_NAMES[sq.gkey]){sq.n=RING_NAMES[sq.gkey];sq.en=RING_NAMES[sq.gkey];}
+   }
+   if(TAB==='now')renderNow();
+  });
+ }
  var lats=SPOTS.map(function(c){return c.lat;}).join(',');
  var lons=SPOTS.map(function(c){return c.lon;}).join(',');
  /* ثلاثة نماذج مستقلة — الاختلاف بينها معلومة لا عيب */
@@ -4743,18 +4992,77 @@ function rotWire(){
  ============================================================ */
 var CFG={rotateSec:4,rotateSlides:null,tabOrder:null,features:{}};
 
+/* ★ الإعداد الحيّ من البوابة — يغيّر التطبيق بلا لمس الكود */
+var APPCFG=null;
 function cfgLoad(){
  if(!PUSH_URL)return;
+ /* المعاينة: البوابة تفتح التطبيق برابط ?preview=1 لترى المسودة */
+ var isPrev=/[?&]preview=1/.test(location.search);
+ var url=PUSH_URL+(isPrev?'/cfg/live':'/cfg/live');
+ fetch(url).then(function(r){return r.json();})
+ .then(function(c){
+  if(!c)return;
+  APPCFG=c;
+  applyAppCfg(c);
+ }).catch(function(){});
+ /* الإعدادات القديمة تبقى للتوافق */
  fetch(PUSH_URL+'/config').then(function(r){return r.json();})
  .then(function(c){
- if(!c)return;
- var oldTabs=JSON.stringify(CFG.tabOrder);
- CFG=Object.assign(CFG,c);
- /* أعد تشغيل الدوران بالتوقيت الجديد */
- if(typeof rotStart==='function'&&TAB==='now'){rotStop();rotStart();}
- /* أعد بناء التبويبات لو تغيّر ترتيبها */
- if(JSON.stringify(CFG.tabOrder)!==oldTabs&&typeof buildTabs==='function')buildTabs();
+  if(!c)return;
+  var oldTabs=JSON.stringify(CFG.tabOrder);
+  CFG=Object.assign(CFG,c);
+  if(typeof rotStart==='function'&&TAB==='now'){rotStop();rotStart();}
+  if(JSON.stringify(CFG.tabOrder)!==oldTabs&&typeof buildTabs==='function')buildTabs();
  }).catch(function(){});
+}
+
+/* ★ يطبّق إعداد البوابة على التطبيق فعليًا */
+function applyAppCfg(c){
+ if(!c)return;
+ /* ١ · ترتيب التبويبات وإظهارها */
+ if(c.navigation&&c.navigation.length){
+  var nav=c.navigation.slice().sort(function(a,b){return (a.order||99)-(b.order||99);});
+  var order=[],labels={};
+  for(var i=0;i<nav.length;i++){
+   if(nav[i].enabled===false)continue;
+   order.push(nav[i].id);
+   if(nav[i].label)labels[nav[i].id]=nav[i];
+  }
+  if(order.length){
+   CFG.tabOrder=order;
+   NAV_LABELS=labels;
+   if(typeof buildTabs==='function')buildTabs();
+  }
+ }
+ /* ٢ · ترتيب مكوّنات الصفحة الرئيسية */
+ if(c.blocks&&c.blocks.now){
+  BLOCK_ORDER=c.blocks.now.slice().sort(function(a,b){return (a.order||99)-(b.order||99);});
+ }
+ /* ٣ · الميزات */
+ if(c.features)FEATURES=c.features;
+ /* ٤ · السمة — لو البوابة فرضتها */
+ if(c.theme&&c.theme.mode&&c.theme.allowUserChange===false){
+  THEME=c.theme.mode;applyTheme();
+ }
+ /* ٥ · إعدادات الواجهة */
+ if(c.ui){
+  if(c.ui.rotateSec)CFG.rotateSec=c.ui.rotateSec;
+  if(c.ui.rotateSlides!==undefined)CFG.rotateSlides=c.ui.rotateSlides;
+ }
+ if(TAB==='now'&&typeof renderNow==='function')renderNow();
+}
+/* هل الميزة مفعّلة من البوابة؟ */
+var FEATURES=null, NAV_LABELS=null, BLOCK_ORDER=null;
+function feat(name){
+ if(!FEATURES)return true;               /* الافتراضي: مفعّلة */
+ return FEATURES[name]!==false;
+}
+/* هل المكوّن ظاهر؟ */
+function blockOn(id){
+ if(!BLOCK_ORDER)return true;
+ for(var i=0;i<BLOCK_ORDER.length;i++)
+  if(BLOCK_ORDER[i].id===id)return BLOCK_ORDER[i].enabled!==false;
+ return true;
 }
 
 /* معرّف زائر مجهول — يُولَّد مرة ويبقى محليًا */
@@ -5509,6 +5817,98 @@ function renderOnboard(){
  var pv=$("obPriv");if(pv)pv.onclick=function(){openDoc('privacy');};
 }
 
+/* ============================================================
+   ★ التفاعل الفيزيائي — لمس محسوس واستجابة حيّة
+   ============================================================ */
+/* موجة تنتشر من نقطة إصبعك بالضبط */
+function attachRipples(){
+ if(applyMotion&&!applyMotion().scenery)return;
+ var sel='.card,.tab,.lbtn,.lbtn2,.shbtn,.mbtn,.ob,.stat,.hitem,.actBtn,.pgSide';
+ var els=document.querySelectorAll(sel),i;
+ for(i=0;i<els.length;i++){
+  var el=els[i];
+  if(el.__rip)continue;
+  el.__rip=1;
+  if(!/rippleHost/.test(el.className))el.className+=' rippleHost';
+  el.addEventListener('pointerdown',function(ev){
+   try{
+    var r=this.getBoundingClientRect();
+    var sp=document.createElement('span');
+    sp.className='rip';
+    var size=Math.max(r.width,r.height)*2.1;
+    sp.style.width=sp.style.height=size+'px';
+    sp.style.left=(ev.clientX-r.left)+'px';
+    sp.style.top=(ev.clientY-r.top)+'px';
+    this.appendChild(sp);
+    setTimeout(function(){if(sp.parentNode)sp.parentNode.removeChild(sp);},640);
+    /* اهتزاز خفيف — إحساس مادي */
+    if(navigator.vibrate)navigator.vibrate(8);
+   }catch(e){}
+  },{passive:true});
+ }
+}
+
+/* ★ ظهور البطاقات تدريجيًا أثناء التمرير */
+var REVEAL_OBS=null;
+function attachReveal(){
+ if(!window.IntersectionObserver)return;
+ if(applyMotion&&!applyMotion().scenery)return;
+ if(!REVEAL_OBS){
+  REVEAL_OBS=new IntersectionObserver(function(entries){
+   for(var i=0;i<entries.length;i++){
+    if(entries[i].isIntersecting){
+     entries[i].target.className+=' revealed';
+     REVEAL_OBS.unobserve(entries[i].target);
+    }
+   }
+  },{threshold:0.08,rootMargin:'0px 0px -6% 0px'});
+ }
+ var els=document.querySelectorAll('.card,.smartV,.drow,.corrCard,.pill');
+ for(var i=0;i<els.length;i++){
+  if(els[i].__rev)continue;
+  els[i].__rev=1;
+  REVEAL_OBS.observe(els[i]);
+ }
+}
+
+/* ★ سحب لأسفل للتحديث — إيماءة طبيعية */
+var PULL_Y=0,PULLING=false;
+function attachPullRefresh(){
+ var ind=document.getElementById('pullInd');
+ if(!ind){
+  ind=document.createElement('div');
+  ind.id='pullInd';ind.className='pullInd';
+  ind.innerHTML='<span class="pi-ring"></span>';
+  document.body.appendChild(ind);
+ }
+ document.addEventListener('touchstart',function(e){
+  if(window.scrollY>4)return;
+  PULL_Y=e.touches[0].clientY;PULLING=true;
+ },{passive:true});
+ document.addEventListener('touchmove',function(e){
+  if(!PULLING)return;
+  var dy=e.touches[0].clientY-PULL_Y;
+  if(dy>0&&window.scrollY<=0){
+   var d=Math.min(84,dy*0.5);
+   ind.style.transform='translateX(-50%) translateY('+d+'px)';
+   ind.style.opacity=Math.min(1,d/56);
+   ind.className='pullInd'+(d>=56?' ready':'');
+  }
+ },{passive:true});
+ document.addEventListener('touchend',function(){
+  if(!PULLING)return;
+  PULLING=false;
+  var ready=/ready/.test(ind.className);
+  ind.style.transform='translateX(-50%) translateY(0)';
+  ind.style.opacity='0';ind.className='pullInd';
+  if(ready){
+   if(navigator.vibrate)navigator.vibrate([10,30,10]);
+   fetchAll();
+   toast(pick('نحدّث لك الأرقام…','جارٍ التحديث…','Refreshing…'));
+  }
+ },{passive:true});
+}
+
 /* ============ عرض: الآن ============ */
 function stat(k,v,cls){return '<div class="stat"><div class="k">'+k+'</div><div class="v '+(cls||'')+'">'+v+'</div></div>';}
 function renderNow(){
@@ -5526,10 +5926,10 @@ function renderNow(){
  var tod=IS_GOLDEN?pick('الساعة الذهبية','الساعة الذهبية','Golden hour'):(IS_NIGHT?pick('ليلًا','ليلًا','Night'):'');
  var nx=nextChangeLine();
  var h='';
- /* ★ الترتيب: مرصد الأمطار ← الحرارة ← السما الآن */
- var nc=newsCard(); if(nc)h+='<div class="fadeIn d1">'+nc+'</div>';
- var pc2=pillCard(); if(pc2)h+='<div class="fadeIn d1" id="pillHost">'+pc2+'</div>';
- var wc=watchCard(); if(wc)h+='<div class="fadeIn d1">'+wc+'</div>';
+ /* ★ الترتيب من البوابة — blockOn تتحكم في الإظهار */
+ var nc=blockOn('news')?newsCard():''; if(nc)h+='<div class="fadeIn d1">'+nc+'</div>';
+ var pc2=blockOn('reports')?pillCard():''; if(pc2)h+='<div class="fadeIn d1" id="pillHost">'+pc2+'</div>';
+ var wc=blockOn('watch')?watchCard():''; if(wc)h+='<div class="fadeIn d1">'+wc+'</div>';
  var lf=liveFeedCard();
  var brf=briefCard();
  /* ★ رقم الحرارة الكبير أولًا ثم الأيقونة صغيرة أسفله */
@@ -5540,6 +5940,15 @@ function renderNow(){
   /* أيقونات صغيرة مرسومة مباشرة — لا اعتماد على مفاتيح غير موجودة */
   var icWind='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 14h14a3 3 0 1 1-3 3"/><path d="M3 11h7"/></svg>';
   var icDrop='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3s6 7 6 11a6 6 0 1 1-12 0c0-4 6-11 6-11z"/></svg>';
+  /* ★ شريط علوي: توقيت الموقع ومدى اليوم — خارج الحلقة بلا تداخل */
+  h+='<div class="pgTop">'+
+   '<span class="pgTimeBox" id="pgClock">'+clockText()+'</span>'+
+   '<span class="pgRangeBox">'+
+    '<span class="pgLo">'+tconv(PG_MIN)+'°</span>'+
+    '<span class="pgSep"></span>'+
+    '<span class="pgHi">'+tconv(PG_MAX)+'°</span>'+
+   '</span>'+
+  '</div>';
   h+='<div class="pgStage">'+
    '<div class="pgSide"><span class="pgS-ic">'+icWind+'</span>'+
     '<span class="pgS-v">'+wconv(W.wind_speed_10m)+'</span>'+
@@ -5574,7 +5983,7 @@ function renderNow(){
  }
  h+='</div>';
  if(HOURLY){var sh='',i,now=new Date(),si=-1;
- for(i=0;i<HOURLY.time.length;i++){if(new Date(HOURLY.time[i])>now){si=i;break;}}
+ si=Clock.hourIndex();  /* ★ بتوقيت المدينة لا الجهاز */
  if(si>=0){for(i=si;i<Math.min(si+6,HOURLY.time.length);i++){var hh=new Date(HOURLY.time[i]);
  sh+='<div class="h6"><div class="hh">'+String(hh.getHours()).padStart(2,"0")+':00</div>'+
  IC[iconForCode(HOURLY.weather_code[i],hourIsNight(HOURLY.time[i]))]+
@@ -7574,15 +7983,23 @@ function orderedTabs(){
  for(i=0;i<CFG.tabOrder.length;i++)
  for(j=0;j<TABS.length;j++)
  if(TABS[j].k===CFG.tabOrder[i]){out.push(TABS[j]);break;}
- /* أضف أي تبويب لم يُذكر في الترتيب */
- for(j=0;j<TABS.length;j++){
- var found=false;
- for(i=0;i<out.length;i++)if(out[i].k===TABS[j].k){found=true;break;}
- if(!found)out.push(TABS[j]);
+ /* ★ حين تأتي القائمة من البوابة تكون كاملة ونهائية —
+    فالتبويب غير المذكور مخفيّ عمدًا لا منسيّ */
+ if(!NAV_LABELS){
+  for(j=0;j<TABS.length;j++){
+   var found=false;
+   for(i=0;i<out.length;i++)if(out[i].k===TABS[j].k){found=true;break;}
+   if(!found)out.push(TABS[j]);
+  }
  }
- return out;
+ return out.length?out:TABS;
 }
-function buildTabs(){var h="",i,L=LI(),TABS_=orderedTabs();
+function buildTabs(){
+ /* ★ تسميات البوابة تتقدّم على الافتراضية */
+ if(NAV_LABELS)for(var nk=0;nk<TABS.length;nk++){
+  var nl=NAV_LABELS[TABS[nk].k];
+  if(nl&&nl.label)TABS[nk].t=[nl.label,nl.label,nl.en||nl.label];
+ }var h="",i,L=LI(),TABS_=orderedTabs();
  for(i=0;i<TABS_.length;i++)h+='<button class="tab'+(TAB===TABS_[i].k?' on':'')+'" data-t="'+TABS_[i].k+'">'+TABS_[i].t[L]+'</button>';
  $("tabs").innerHTML=h;
  var b=$("tabs").getElementsByTagName("button"),j;
@@ -7944,7 +8361,9 @@ document.addEventListener('visibilitychange',function(){
  }
 })();
 applyTheme();
-touchStreak();applyAll();pushSync();maybeAskPush();sendHeartbeat();newsLoad();cfgLoad();pingVisit();authLoad();reportsLoad();corrRefresh();
+touchStreak();applyAll();
+attachPullRefresh();
+setTimeout(function(){attachRipples();attachReveal();},600);pushSync();maybeAskPush();sendHeartbeat();newsLoad();cfgLoad();pingVisit();authLoad();reportsLoad();corrRefresh();
 
 /* ★ الإقلاع: موقعك الجغرافي الحقيقي هو الأصل — لا مدينة افتراضية
  ⚠️ لا نعرض الرستاق ولا أي مدينة من القائمة إلا إن رُفض إذن الموقع تمامًا. */

@@ -1,933 +1,1440 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>بوابة نفاف — لوحة التحكم</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#0e1420" />
+<title>Nafaf Control — مركز قيادة نفاف</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:"Segoe UI","Helvetica Neue",Tahoma,Arial,sans-serif;color:#fff;
- background:linear-gradient(180deg,#0d1a33 0%,#16294a 50%,#1e3560 100%);
- background-attachment:fixed;min-height:100vh;padding:16px 14px 40px}
-.wrap{max-width:640px;margin:0 auto}
-.top{text-align:center;padding:10px 0 18px}
-.top h1{font-size:22px;font-weight:800;letter-spacing:1px}
-.top p{font-size:11.5px;color:rgba(255,255,255,.55);font-weight:600;margin-top:4px}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:"Segoe UI","Helvetica Neue",Tahoma,Arial,sans-serif;
+  background:#0e1420;color:#e8eef7;overflow-x:hidden}
 
-/* بوابة الدخول */
-.gate{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);
- border-radius:20px;padding:24px 20px;text-align:center;margin-top:30px}
-.gate h2{font-size:16px;font-weight:800;margin-bottom:6px}
-.gate p{font-size:12px;color:rgba(255,255,255,.6);font-weight:600;margin-bottom:16px;line-height:1.7}
-.inp{width:100%;background:rgba(255,255,255,.95);border:0;border-radius:14px;color:#1b2c47;
- font-family:inherit;font-size:16px;font-weight:700;padding:14px;outline:none;text-align:center;
- letter-spacing:2px}
-.btn{width:100%;border:0;border-radius:14px;padding:14px;font-family:inherit;
- font-size:14px;font-weight:800;margin-top:10px;cursor:pointer}
-.btn.gold{background:#e6b45e;color:#3a2405}
-.btn.ghost{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.2);color:#fff}
-.btn.red{background:rgba(220,90,90,.9);color:#fff}
-.btn:active{transform:scale(.98)}
+/* ═══════ تسجيل الدخول ═══════ */
+#login{position:fixed;inset:0;z-index:100;display:flex;align-items:center;
+  justify-content:center;padding:22px;
+  background:linear-gradient(160deg,#0e1420,#141d2e)}
+#login.gone{display:none}
+.loginCard{width:100%;max-width:360px;background:#18212f;
+  border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:30px 24px;text-align:center}
+.lgLogo{font-size:26px;font-weight:800;letter-spacing:3px;margin-bottom:5px}
+.lgSub{font-size:12px;color:#8b98ab;margin-bottom:22px}
+.inp{width:100%;background:#0e1420;border:1px solid rgba(255,255,255,.14);
+  border-radius:13px;color:#fff;font-family:inherit;font-size:15px;
+  padding:13px 15px;outline:none;text-align:center;letter-spacing:2px}
+.inp:focus{border-color:#e6b45e}
 
-.hide{display:none}
+/* ═══════ الهيكل ═══════ */
+#app{display:none;min-height:100vh}
+#app.on{display:block}
+.topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;
+  padding:12px 16px;background:rgba(14,20,32,.94);backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(255,255,255,.08)}
+.burger{width:38px;height:38px;border-radius:11px;border:1px solid rgba(255,255,255,.13);
+  background:rgba(255,255,255,.06);color:#fff;font-size:16px;cursor:pointer;flex:0 0 auto}
+.brand{font-size:15px;font-weight:800;letter-spacing:1px}
+.brand small{display:block;font-size:9.5px;font-weight:600;color:#8b98ab;letter-spacing:0}
+.searchWrap{flex:1 1 auto;max-width:340px;position:relative}
+.searchInp{width:100%;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.11);border-radius:11px;color:#fff;
+  font-family:inherit;font-size:12.5px;padding:9px 34px 9px 12px;outline:none}
+.searchInp:focus{border-color:#e6b45e;background:rgba(255,255,255,.09)}
+.searchIco{position:absolute;top:50%;transform:translateY(-50%);inset-inline-end:11px;
+  color:#8b98ab;font-size:13px;pointer-events:none}
+.searchRes{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:50;
+  background:#18212f;border:1px solid rgba(255,255,255,.13);border-radius:13px;
+  overflow:hidden;display:none;box-shadow:0 14px 40px rgba(0,0,0,.5)}
+.searchRes.on{display:block}
+.srItem{padding:11px 14px;font-size:12.5px;cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:9px}
+.srItem:last-child{border-bottom:0}
+.srItem:hover{background:rgba(230,180,94,.12)}
+.srItem small{margin-inline-start:auto;color:#8b98ab;font-size:10px}
+.hstat{margin-inline-start:auto;display:flex;align-items:center;gap:7px;
+  font-size:11px;font-weight:700;color:#7fe39a;flex:0 0 auto}
+.hstat i{width:7px;height:7px;border-radius:50%;background:currentColor;
+  font-style:normal;animation:blink 2.4s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
 
-/* التبويبات */
-.tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
-.tab{flex:0 0 auto;font-size:12.5px;font-weight:700;color:rgba(255,255,255,.75);
- background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
- border-radius:99px;padding:9px 16px;cursor:pointer;white-space:nowrap}
-.tab.on{background:#fff;color:#12203c;border-color:#fff}
+/* ═══════ القائمة الجانبية ═══════ */
+.layout{display:flex;align-items:flex-start}
+.side{position:fixed;top:63px;bottom:0;inset-inline-start:0;width:236px;z-index:35;
+  background:#121a28;border-inline-end:1px solid rgba(255,255,255,.07);
+  overflow-y:auto;padding:12px 0 30px;
+  transition:transform .26s cubic-bezier(.3,0,.2,1)}
+.side.closed{transform:translateX(100%)}
+html[dir=rtl] .side.closed{transform:translateX(100%)}
+.navGrp{font-size:9.5px;font-weight:800;color:#6b7789;letter-spacing:.08em;
+  padding:14px 18px 6px}
+.navItem{display:flex;align-items:center;gap:10px;padding:10px 18px;
+  font-size:12.5px;font-weight:700;color:#b6c2d3;cursor:pointer;
+  border-inline-start:3px solid transparent;transition:background .16s,color .16s}
+.navItem:hover{background:rgba(255,255,255,.04);color:#fff}
+.navItem.on{background:rgba(230,180,94,.12);color:#e6b45e;
+  border-inline-start-color:#e6b45e}
+.navItem .ni{width:19px;text-align:center;font-size:14px;flex:0 0 auto}
+.navItem .nb{margin-inline-start:auto;font-size:9.5px;font-weight:800;
+  background:rgba(255,143,143,.2);color:#ff9b9b;border-radius:99px;padding:2px 7px}
+.scrim{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.55);
+  opacity:0;visibility:hidden;transition:opacity .24s,visibility .24s}
+.scrim.on{opacity:1;visibility:visible}
 
-.card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
- border-radius:18px;padding:15px 16px;margin-bottom:12px}
-.card h3{font-size:13.5px;font-weight:800;margin-bottom:10px;color:#e6b45e}
-.card h3 small{display:block;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.5);
- margin-top:3px;line-height:1.6}
+/* ═══════ المحتوى ═══════ */
+.main{flex:1 1 auto;padding:18px 16px 60px;min-width:0;
+  transition:padding-inline-start .26s}
+@media(min-width:900px){
+  .side{transform:none!important}
+  .main{padding-inline-start:252px}
+  .scrim{display:none}
+  .burger{display:none}
+}
+.pageHead{margin-bottom:16px}
+.pageTitle{font-size:20px;font-weight:800;margin-bottom:3px}
+.pageSub{font-size:12px;color:#8b98ab;line-height:1.7}
+.sec{display:none}
+.sec.on{display:block;animation:fadeUp .34s cubic-bezier(.2,.9,.3,1)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}}
 
-/* صفوف المعلومات */
-.row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
- padding:9px 0;border-top:1px solid rgba(255,255,255,.08)}
-.row:first-of-type{border-top:0}
-.row .k{font-size:11.5px;font-weight:700;color:rgba(255,255,255,.65);flex:0 0 auto}
-.row .v{font-size:12px;font-weight:600;text-align:left;direction:ltr;
- word-break:break-all;flex:1 1 auto;color:#fff}
-.row .v a{color:#9fd4f5;text-decoration:none}
-.copy{flex:0 0 auto;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
- color:#fff;font-size:10px;font-weight:700;border-radius:8px;padding:4px 9px;cursor:pointer}
+.card{background:#18212f;border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;padding:16px;margin-bottom:12px}
+.card h3{font-size:13.5px;font-weight:800;margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h3 small{font-weight:600;font-size:10.5px;color:#8b98ab}
+.note{font-size:11.5px;color:#8b98ab;line-height:1.8}
 
-.secret{background:rgba(220,90,90,.12);border:1px solid rgba(220,90,90,.35);
- border-radius:12px;padding:11px 13px;font-size:11px;font-weight:600;
- color:#ffb3b3;line-height:1.75;margin-top:8px}
+.btn{border:0;border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;
+  padding:11px 18px;cursor:pointer;transition:transform .13s,opacity .18s}
+.btn:active{transform:scale(.96)}
+.btn.gold{background:#e6b45e;color:#2c1f08}
+.btn.ghost{background:rgba(255,255,255,.07);color:#e8eef7;
+  border:1px solid rgba(255,255,255,.13)}
+.btn.red{background:rgba(220,90,90,.18);color:#ff9b9b;
+  border:1px solid rgba(255,143,143,.35)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
 
-/* نموذج الأخبار */
-.lbl{font-size:11.5px;font-weight:700;color:rgba(255,255,255,.7);margin:12px 0 6px;display:block}
-.fld{width:100%;background:rgba(255,255,255,.95);border:0;border-radius:12px;color:#1b2c47;
- font-family:inherit;font-size:14px;font-weight:600;padding:12px 13px;outline:none}
-textarea.fld{min-height:80px;resize:vertical;line-height:1.7}
-.kinds{display:flex;gap:7px;flex-wrap:wrap;margin-top:2px}
-.kind{flex:1 1 auto;min-width:70px;text-align:center;font-size:12px;font-weight:700;
- border-radius:12px;padding:11px 8px;cursor:pointer;border:1px solid}
-.kind.k-urgent{background:rgba(220,90,90,.14);border-color:rgba(220,90,90,.4);color:#ff9b9b}
-.kind.k-alert{background:rgba(255,209,102,.14);border-color:rgba(255,209,102,.4);color:#ffd166}
-.kind.k-info{background:rgba(159,212,245,.14);border-color:rgba(159,212,245,.4);color:#9fd4f5}
-.kind.k-good{background:rgba(127,227,154,.14);border-color:rgba(127,227,154,.4);color:#7fe39a}
-.kind.sel{outline:2px solid #fff;outline-offset:1px}
-.opts{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
-.opt{font-size:11.5px;font-weight:700;color:#fff;background:rgba(255,255,255,.08);
- border:1px solid rgba(255,255,255,.18);border-radius:99px;padding:8px 14px;cursor:pointer}
-.opt.sel{background:#e6b45e;color:#3a2405;border-color:#e6b45e}
+/* بطاقات الإحصاء */
+.kpiGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#18212f;border:1px solid rgba(255,255,255,.08);
+  border-radius:15px;padding:14px}
+.kpi .kv{font-size:26px;font-weight:800;line-height:1.1}
+.kpi .kk{font-size:11px;color:#8b98ab;font-weight:700;margin-top:3px}
+.kpi .kd{font-size:10px;margin-top:5px;font-weight:700}
+.up{color:#7fe39a}.down{color:#ff9b9b}
 
-/* المعاينة */
-.prev{border-radius:14px;padding:13px 15px;margin-top:12px;border:1px solid}
-.prev.k-urgent{background:linear-gradient(135deg,rgba(220,90,90,.2),rgba(255,255,255,.04));border-color:rgba(220,90,90,.5)}
-.prev.k-alert{background:linear-gradient(135deg,rgba(255,209,102,.18),rgba(255,255,255,.04));border-color:rgba(255,209,102,.45)}
-.prev.k-info{background:linear-gradient(135deg,rgba(159,212,245,.18),rgba(255,255,255,.04));border-color:rgba(159,212,245,.45)}
-.prev.k-good{background:linear-gradient(135deg,rgba(127,227,154,.18),rgba(255,255,255,.04));border-color:rgba(127,227,154,.45)}
-.prev .pt{font-size:10.5px;font-weight:800;margin-bottom:6px;opacity:.85}
-.prev .ph{font-size:14.5px;font-weight:800;line-height:1.5}
-.prev .pb{font-size:12.5px;font-weight:600;line-height:1.8;color:rgba(255,255,255,.88);margin-top:5px}
+/* سحب وإفلات */
+.dragList{display:flex;flex-direction:column;gap:6px}
+.dragItem{display:flex;align-items:center;gap:10px;padding:11px 13px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;cursor:grab;user-select:none;
+  transition:background .16s,transform .12s,border-color .16s}
+.dragItem:active{cursor:grabbing}
+.dragItem.dragging{opacity:.4;border-style:dashed}
+.dragItem.over{border-color:#e6b45e;background:rgba(230,180,94,.1)}
+.dragItem.off{opacity:.42}
+.dg-h{color:#5d6a7d;font-size:15px;flex:0 0 auto;cursor:grab}
+.dg-ic{font-size:15px;flex:0 0 auto}
+.dg-nm{flex:1 1 auto;font-size:12.5px;font-weight:700}
+.dg-act{display:flex;gap:5px;flex:0 0 auto}
+.iconBtn{width:29px;height:29px;border-radius:9px;border:0;
+  background:rgba(255,255,255,.07);color:#e8eef7;font-size:12px;cursor:pointer}
+.iconBtn:active{transform:scale(.9)}
+.dragItem.off .eyeBtn{background:rgba(220,90,90,.2);color:#ff9b9b}
 
-/* الحالة الحية */
-.live{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
- background:rgba(127,227,154,.12);border:1px solid rgba(127,227,154,.35);
- border-radius:12px;padding:11px 13px;color:#7fe39a;margin-bottom:10px}
-.dot{width:8px;height:8px;border-radius:50%;background:#7fe39a;flex:0 0 auto;
- animation:p 2s ease-in-out infinite}
-@keyframes p{0%,100%{opacity:1}50%{opacity:.4}}
+/* مفاتيح */
+.rowSw{display:flex;align-items:center;gap:11px;padding:11px 2px;
+  border-bottom:1px solid rgba(255,255,255,.06);font-size:12.5px;font-weight:700}
+.rowSw:last-child{border-bottom:0}
+.rowSw .rd{font-size:10.5px;color:#8b98ab;font-weight:600;margin-top:2px}
+.sw{margin-inline-start:auto;width:44px;height:24px;border-radius:99px;
+  background:rgba(255,255,255,.13);position:relative;cursor:pointer;
+  transition:background .2s;flex:0 0 auto}
+.sw:after{content:"";position:absolute;top:2.5px;inset-inline-start:2.5px;
+  width:19px;height:19px;border-radius:50%;background:#fff;transition:transform .22s}
+.sw.on{background:#7fe39a}
+.sw.on:after{transform:translateX(-20px)}
 
-.stat{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:4px}
-.st{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
- border-radius:14px;padding:12px;text-align:center}
-.st .n{font-size:22px;font-weight:800;color:#e6b45e}
-.st .l{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.6);margin-top:2px}
+/* شريط المسودة */
+.draftBar{position:sticky;top:63px;z-index:25;
+  background:#18212f;border:1px solid rgba(255,255,255,.1);
+  border-radius:14px;padding:12px 14px;margin-bottom:14px;
+  display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.stPill{font-size:11px;font-weight:800;border-radius:99px;padding:5px 12px;
+  background:rgba(255,255,255,.08);color:#8b98ab}
+.stPill.dirty{background:rgba(255,209,102,.18);color:#ffd166}
+.draftBar .acts{margin-inline-start:auto;display:flex;gap:6px;flex-wrap:wrap}
+.draftBar .btn{padding:8px 14px;font-size:12px}
 
-.toast{position:fixed;left:14px;right:14px;bottom:20px;z-index:99;
- background:rgba(18,32,60,.97);border:1px solid rgba(255,255,255,.22);border-radius:16px;
- padding:14px 16px;font-size:13px;font-weight:700;text-align:center;line-height:1.7;
- box-shadow:0 12px 34px rgba(0,0,0,.5);opacity:0;transform:translateY(14px);
- pointer-events:none;transition:opacity .28s,transform .28s}
-.toast.on{opacity:1;transform:translateY(0)}
-.toast.err{border-color:rgba(255,143,143,.5);background:rgba(60,22,28,.97)}
+/* حقول */
+.lbl{display:block;font-size:11px;font-weight:800;color:#8b98ab;margin:12px 0 6px}
+.fld{width:100%;background:#0e1420;border:1px solid rgba(255,255,255,.12);
+  border-radius:11px;color:#fff;font-family:inherit;font-size:13px;
+  padding:11px 13px;outline:none}
+.fld:focus{border-color:#e6b45e}
+textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{font-size:12px;font-weight:700;border-radius:99px;padding:8px 15px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  color:#b6c2d3;cursor:pointer;transition:all .16s}
+.opt.sel{background:#e6b45e;color:#2c1f08;border-color:#e6b45e;font-weight:800}
 
-.note{font-size:11px;color:rgba(255,255,255,.55);font-weight:600;line-height:1.8;margin-top:10px}
-.warn{background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.3);
- border-radius:12px;padding:11px 13px;font-size:11px;font-weight:600;
- color:#ffd166;line-height:1.75;margin-top:10px}
+/* صحة النظام */
+.hRow{display:flex;align-items:center;gap:10px;padding:10px 2px;
+  border-bottom:1px solid rgba(255,255,255,.06);font-size:12.5px;font-weight:700}
+.hRow:last-child{border-bottom:0}
+.hDot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.hOk{background:#7fe39a}.hWarn{background:#ffd166}.hBad{background:#ff8f8f}
+.hRow .ht{margin-inline-start:auto;font-size:10.5px;color:#8b98ab;font-weight:600}
+
+/* المختبر */
+.simGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px}
+.simOut{background:#0e1420;border:1px solid rgba(255,255,255,.1);
+  border-radius:13px;padding:14px;margin-top:12px;font-size:13px;line-height:1.9}
+.simOut b{color:#e6b45e}
+.rng{width:100%;-webkit-appearance:none;appearance:none;height:5px;border-radius:99px;
+  background:rgba(255,255,255,.14);outline:none}
+.rng::-webkit-slider-thumb{-webkit-appearance:none;width:19px;height:19px;
+  border-radius:50%;background:#e6b45e;cursor:pointer}
+.rngV{font-size:15px;font-weight:800;color:#e6b45e}
+
+/* الجداول */
+.tRow{display:flex;align-items:center;gap:9px;padding:10px 2px;
+  border-bottom:1px solid rgba(255,255,255,.06);font-size:12px}
+.tRow:last-child{border-bottom:0}
+.tag{font-size:9.5px;font-weight:800;border-radius:99px;padding:2px 8px}
+.tOk{background:rgba(127,227,154,.17);color:#7fe39a}
+.tWarn{background:rgba(255,209,102,.17);color:#ffd166}
+.tOff{background:rgba(255,255,255,.09);color:#8b98ab}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);
+  background:#e6b45e;color:#2c1f08;font-size:13px;font-weight:800;
+  padding:12px 20px;border-radius:14px;z-index:200;opacity:0;
+  transition:transform .3s cubic-bezier(.2,.9,.3,1),opacity .3s;max-width:90vw;text-align:center}
+.toast.on{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.err{background:#ff8f8f;color:#3d0d0d}
+.empty{text-align:center;padding:26px 12px;color:#6b7789;font-size:12.5px;line-height:1.8}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <h1>بوابة نفاف</h1>
-    <p>المحطة الواحدة — كل ما يخص التطبيق</p>
+
+<!-- ═══════ تسجيل الدخول ═══════ -->
+<div id="login">
+  <div class="loginCard">
+    <div class="lgLogo">NAFAF</div>
+    <div class="lgSub">مركز قيادة نفاف</div>
+    <input class="inp" id="pass" type="password" placeholder="رمز الدخول" />
+    <button class="btn gold" id="loginBtn" style="width:100%;margin-top:14px">دخول</button>
+  </div>
+</div>
+
+<!-- ═══════ التطبيق ═══════ -->
+<div id="app">
+
+  <div class="topbar">
+    <button class="burger" id="burger">☰</button>
+    <div class="brand">نفاف<small>مركز القيادة</small></div>
+    <div class="searchWrap">
+      <input class="searchInp" id="gsearch" placeholder="ماذا تريد أن تعدّل؟" />
+      <span class="searchIco">🔎</span>
+      <div class="searchRes" id="gres"></div>
+    </div>
+    <span class="hstat" id="hstat"><i></i>يعمل</span>
   </div>
 
-  <!-- بوابة الدخول -->
-  <div class="gate" id="gate">
-    <h2>الدخول</h2>
-    <p>أدخل رمز التحكم للوصول إلى لوحة نفاف</p>
-    <input class="inp" id="pass" type="password" inputmode="numeric" placeholder="••••••••" />
-    <button class="btn gold" id="loginBtn">دخول</button>
-  </div>
+  <div class="scrim" id="scrim"></div>
 
-  <!-- اللوحة -->
-  <div class="hide" id="panel">
-    <div class="tabs">
-      <span class="tab on" data-t="news">📢 الأخبار</span>
-      <span class="tab" data-t="links">🔗 الروابط</span>
-      <span class="tab" data-t="keys">🔑 المفاتيح</span>
-      <span class="tab" data-t="services">🌐 الخدمات</span>
-      <span class="tab" data-t="files">📁 الملفات</span>
-      <span class="tab" data-t="control">🎛️ التحكم</span>
-      <span class="tab" data-t="reports">👁 الرصدات</span>
-      <span class="tab" data-t="feedback">✉ الملاحظات</span>
-      <span class="tab" data-t="visitors">📊 الزوار</span>
-      <span class="tab" data-t="settings">⚙️ الإعدادات</span>
-    </div>
+  <div class="layout">
+    <nav class="side closed" id="side">
+      <div class="navGrp">الرئيسية</div>
+      <div class="navItem on" data-p="dash"><span class="ni">▣</span>لوحة القيادة</div>
 
-    <!-- ═══════ الأخبار ═══════ -->
-    <div id="p-news">
-      <div id="liveNews"></div>
+      <div class="navGrp">التطبيق</div>
+      <div class="navItem" data-p="tabs"><span class="ni">🧭</span>التبويبات</div>
+      <div class="navItem" data-p="blocks"><span class="ni">🧩</span>المكوّنات</div>
+      <div class="navItem" data-p="features"><span class="ni">⚡</span>الميزات</div>
+      <div class="navItem" data-p="theme"><span class="ni">🎨</span>المظهر</div>
 
-      <div class="card">
-        <h3>نشر خبر جديد
-          <small>يظهر فورًا في الصفحة الرئيسية لكل من يفتح نفاف</small>
-        </h3>
+      <div class="navGrp">عقل نفاف</div>
+      <div class="navItem" data-p="rules"><span class="ni">🎯</span>القواعد الذكية</div>
+      <div class="navItem" data-p="sources"><span class="ni">📡</span>مصادر الطقس</div>
 
-        <span class="lbl">نوع الخبر</span>
-        <div class="kinds" id="kinds">
-          <span class="kind k-urgent" data-k="urgent">عاجل</span>
-          <span class="kind k-alert" data-k="alert">تنبيه</span>
-          <span class="kind k-info sel" data-k="info">معلومة</span>
-          <span class="kind k-good" data-k="good">بشارة</span>
+      <div class="navGrp">التواصل</div>
+      <div class="navItem" data-p="news"><span class="ni">📢</span>الأخبار العاجلة</div>
+      <div class="navItem" data-p="reports"><span class="ni">👁</span>الرصدات<span class="nb" id="badgeRep" style="display:none">0</span></div>
+      <div class="navItem" data-p="corr"><span class="ni">🎖</span>المراسلون<span class="nb" id="badgeCorr" style="display:none">0</span></div>
+      <div class="navItem" data-p="feedback"><span class="ni">✉</span>الملاحظات<span class="nb" id="badgeFb" style="display:none">0</span></div>
+
+      <div class="navGrp">المختبر</div>
+      <div class="navItem" data-p="sim"><span class="ni">🧪</span>محاكاة الطقس</div>
+      <div class="navItem" data-p="inspect"><span class="ni">🌡</span>فاحص البيانات</div>
+
+      <div class="navGrp">النظام</div>
+      <div class="navItem" data-p="analytics"><span class="ni">📊</span>الإحصاءات</div>
+      <div class="navItem" data-p="health"><span class="ni">🩺</span>صحة النظام</div>
+      <div class="navItem" data-p="versions"><span class="ni">🕒</span>الإصدارات</div>
+      <div class="navItem" data-p="settings"><span class="ni">⚙</span>الإعدادات</div>
+    </nav>
+
+    <main class="main">
+
+      <!-- شريط المسودة — يظهر في صفحات البناء -->
+      <div class="draftBar" id="draftBar" style="display:none">
+        <span class="stPill" id="stPill">لا تغييرات</span>
+        <span class="acts">
+          <button class="btn ghost" id="bPreview">👁 معاينة</button>
+          <button class="btn ghost" id="bDiscard">↺ تجاهل</button>
+          <button class="btn gold" id="bPublish">🚀 نشر</button>
+        </span>
+      </div>
+
+      <!-- ▣ لوحة القيادة -->
+      <section class="sec on" data-s="dash">
+        <div class="pageHead">
+          <div class="pageTitle">لوحة القيادة</div>
+          <div class="pageSub">نظرة سريعة على حالة نفاف الآن</div>
         </div>
-
-        <span class="lbl">العنوان (إلزامي)</span>
-        <input class="fld" id="nTitle" maxlength="120" placeholder="مثال: تجمّعات مائية على طريق نزوى" />
-
-        <span class="lbl">التفاصيل (اختياري — اتركه فارغًا لعرض العنوان فقط)</span>
-        <textarea class="fld" id="nBody" maxlength="400" placeholder="تفاصيل إضافية تظهر تحت العنوان…"></textarea>
-
-        <span class="lbl">مدة العرض</span>
-        <div class="opts" id="hours">
-          <span class="opt" data-h="3">٣ ساعات</span>
-          <span class="opt" data-h="6">٦ ساعات</span>
-          <span class="opt" data-h="12">١٢ ساعة</span>
-          <span class="opt" data-h="24">يوم كامل</span>
-          <span class="opt sel" data-h="0">حتى أوقفه</span>
+        <div class="kpiGrid" id="dashKpi"></div>
+        <div class="card">
+          <h3>إجراءات سريعة</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:7px">
+            <button class="btn ghost" data-go="tabs">🧭 ترتيب التبويبات</button>
+            <button class="btn ghost" data-go="news">📢 نشر خبر</button>
+            <button class="btn ghost" data-go="reports">👁 مراجعة الرصدات</button>
+            <button class="btn ghost" data-go="sim">🧪 محاكاة</button>
+          </div>
         </div>
-
-        <span class="lbl">إشعار للأجهزة</span>
-        <div class="opts" id="notify">
-          <span class="opt sel" data-n="0">بدون إشعار</span>
-          <span class="opt" data-n="1">أرسل إشعارًا أيضًا</span>
+        <div class="card">
+          <h3>آخر التغييرات</h3>
+          <div id="dashLog"><div class="empty">لا تغييرات مسجّلة بعد.</div></div>
         </div>
+      </section>
 
-        <div id="preview"></div>
-        <button class="btn gold" id="pubBtn">نشر الخبر</button>
-        <div class="warn">
-          ⚠️ التزم بالخط الذي بنينا عليه نفاف: <b>وصف لا تحذير رسمي</b>.
-          «تجمّعات مائية على الطريق» ✅ — «أخلوا المنطقة» ❌ (اختصاص الجهات الرسمية وحدها).
+      <!-- 🧭 التبويبات -->
+      <section class="sec" data-s="tabs">
+        <div class="pageHead">
+          <div class="pageTitle">التبويبات</div>
+          <div class="pageSub">اسحب لإعادة الترتيب · اضغط العين للإخفاء · القلم لإعادة التسمية</div>
         </div>
-      </div>
+        <div class="card"><div id="navList"></div></div>
+      </section>
 
-      <div class="card">
-        <h3>الحالة الحية</h3>
-        <div class="stat" id="stats"></div>
-        <button class="btn ghost" id="refreshBtn" style="margin-top:12px">تحديث الحالة</button>
-      </div>
-    </div>
-
-    <!-- ═══════ الروابط ═══════ -->
-    <div id="p-links" class="hide">
-      <div class="card">
-        <h3>روابط الإنتاج
-          <small>الروابط الحيّة التي يعمل عليها نفاف الآن</small>
-        </h3>
-        <div class="row"><span class="k">التطبيق</span>
-          <span class="v"><a href="https://alhutar0.github.io/Nafaf/" target="_blank">alhutar0.github.io/Nafaf/</a></span>
-          <button class="copy" data-c="https://alhutar0.github.io/Nafaf/">نسخ</button></div>
-        <div class="row"><span class="k">الخادم</span>
-          <span class="v"><a href="https://nafa-push.alhutar0.workers.dev" target="_blank">nafa-push.alhutar0.workers.dev</a></span>
-          <button class="copy" data-c="https://nafa-push.alhutar0.workers.dev">نسخ</button></div>
-        <div class="row"><span class="k">المستودع</span>
-          <span class="v"><a href="https://github.com/alhutar0/Nafaf" target="_blank">github.com/alhutar0/Nafaf</a></span>
-          <button class="copy" data-c="https://github.com/alhutar0/Nafaf">نسخ</button></div>
-        <div class="row"><span class="k">Cloudflare</span>
-          <span class="v"><a href="https://dash.cloudflare.com" target="_blank">dash.cloudflare.com</a></span>
-          <button class="copy" data-c="https://dash.cloudflare.com">نسخ</button></div>
-      </div>
-
-      <div class="card">
-        <h3>نقاط الخادم (API)
-          <small>ما يستدعيه التطبيق واللوحة من الخادم</small>
-        </h3>
-        <div class="row"><span class="k">/news</span><span class="v">قراءة الخبر الحالي</span></div>
-        <div class="row"><span class="k">/news/publish</span><span class="v">نشر خبر (محمي)</span></div>
-        <div class="row"><span class="k">/news/stop</span><span class="v">إيقاف الخبر (محمي)</span></div>
-        <div class="row"><span class="k">/subscribe</span><span class="v">تسجيل جهاز للإشعارات</span></div>
-        <div class="row"><span class="k">/heartbeat</span><span class="v">نبض السلسلة</span></div>
-        <div class="row"><span class="k">/vapid</span><span class="v">المفتاح العام</span></div>
-        <div class="row"><span class="k">/state</span><span class="v">حالة المطر الحالية</span></div>
-        <div class="row"><span class="k">/admin/stats</span><span class="v">إحصاءات (محمي)</span></div>
-      </div>
-    </div>
-
-    <!-- ═══════ المفاتيح ═══════ -->
-    <div id="p-keys" class="hide">
-      <div class="card">
-        <h3>مفاتيح VAPID
-          <small>تُثبت هوية خادمك للمتصفحات عند إرسال الإشعارات</small>
-        </h3>
-        <div class="row"><span class="k">العام</span>
-          <span class="v" style="font-size:10px">BF_eeXmsa5AZoAMZwl6in3UbJT7eDiXaI576Kp6M4jrxb8fg5DKXBZhi4O89lV4VBcQLxb8feOzMKpxFTWAuszI</span>
-          <button class="copy" data-c="BF_eeXmsa5AZoAMZwl6in3UbJT7eDiXaI576Kp6M4jrxb8fg5DKXBZhi4O89lV4VBcQLxb8feOzMKpxFTWAuszI">نسخ</button></div>
-        <div class="secret">
-          🔒 <b>المفتاح الخاص</b> محفوظ مشفّرًا في Cloudflare باسم <code>VAPID_PRIVATE_KEY</code>
-          ولا يظهر هنا عمدًا. لعرضه أو تغييره: لوحة Cloudflare ← nafa-push ← Settings ← Variables and Secrets.
+      <!-- 🧩 المكوّنات -->
+      <section class="sec" data-s="blocks">
+        <div class="pageHead">
+          <div class="pageTitle">مكوّنات الصفحة الرئيسية</div>
+          <div class="pageSub">رتّب بطاقات صفحة «الآن» أو أخفِ ما لا تريده</div>
         </div>
-      </div>
+        <div class="card"><div id="blockList"></div></div>
+      </section>
 
-      <div class="card">
-        <h3>قاعدة البيانات</h3>
-        <div class="row"><span class="k">اسم الربط</span><span class="v">NAFAF_KV</span></div>
-        <div class="row"><span class="k">القاعدة</span><span class="v">nafaf-subscribers</span></div>
-        <div class="row"><span class="k">الجدولة</span><span class="v">*/10 * * * * (كل ١٠ دقائق)</span></div>
-      </div>
-    </div>
-
-    <!-- ═══════ الخدمات ═══════ -->
-    <div id="p-services" class="hide">
-      <div class="card">
-        <h3>مصادر البيانات
-          <small>كل خدمة خارجية يعتمد عليها نفاف وقيود ترخيصها</small>
-        </h3>
-        <div class="row"><span class="k">Open-Meteo</span>
-          <span class="v">الطقس · الأرشيف · البحر · جودة الهواء<br>
-          <small style="color:rgba(255,255,255,.5)">CC-BY 4.0 · بلا مفتاح · مجاني</small></span></div>
-        <div class="row"><span class="k">NASA GIBS</span>
-          <span class="v">صور الأقمار · كشف الغبار<br>
-          <small style="color:rgba(255,255,255,.5)">مفتوح · التضمين مسموح صراحةً</small></span></div>
-        <div class="row"><span class="k">NASA IMERG</span>
-          <span class="v">رصد المطر الساتلي<br>
-          <small style="color:rgba(255,255,255,.5)">مفتوح · تأخير ٤ ساعات</small></span></div>
-        <div class="row"><span class="k">RainViewer</span>
-          <span class="v">سحب حيّة · رادار<br>
-          <small style="color:#ffd166">⚠️ الإسناد إلزامي · راسلهم قبل الاستخدام التجاري</small></span></div>
-        <div class="row"><span class="k">LibreWXR</span>
-          <span class="v">رادار بديل<br>
-          <small style="color:rgba(255,255,255,.5)">CC-BY-4.0 · الأنظف ترخيصًا</small></span></div>
-        <div class="row"><span class="k">NCSI عُمان</span>
-          <span class="v">المعدّلات المناخية الرسمية<br>
-          <small style="color:rgba(255,255,255,.5)">١١ محطة · ٢٠٢١–٢٠٢٥</small></span></div>
-        <div class="warn">
-          ⛔ <b>ممنوع نهائيًا:</b> Windy (iframe محظور في التطبيقات) ·
-          كشط المواقع الرسمية · الكاميرات الحيّة.
+      <!-- ⚡ الميزات -->
+      <section class="sec" data-s="features">
+        <div class="pageHead">
+          <div class="pageTitle">الميزات</div>
+          <div class="pageSub">شغّل أو أطفئ أي ميزة بلا حذف كود</div>
         </div>
-      </div>
-    </div>
+        <div class="card"><div id="featList"></div></div>
+      </section>
 
-    <!-- ═══════ الملفات ═══════ -->
-    <div id="p-files" class="hide">
-      <div class="card">
-        <h3>ملفات التطبيق
-          <small>يجب أن تكون الثلاثة معًا في نفس المجلد على GitHub</small>
-        </h3>
-        <div class="row"><span class="k">index.html</span><span class="v">التطبيق كاملًا (~٢٩٠ KB)</span></div>
-        <div class="row"><span class="k">sw.js</span><span class="v">عامل الخدمة — الإشعارات والعمل أوفلاين</span></div>
-        <div class="row"><span class="k">manifest.json</span><span class="v">بيانات التثبيت والأيقونة</span></div>
-        <div class="note">
-          ⚠️ حذف <b>sw.js</b> أو نسيان رفعه يعطّل الإشعارات والتثبيت بالكامل — وهذا ما حدث فعلًا من قبل.
+      <!-- 🎨 المظهر -->
+      <section class="sec" data-s="theme">
+        <div class="pageHead">
+          <div class="pageTitle">المظهر</div>
+          <div class="pageSub">السمة الافتراضية وحرية المستخدم في تغييرها</div>
         </div>
-      </div>
-      <div class="card">
-        <h3>ملفات الخادم</h3>
-        <div class="row"><span class="k">push.js</span><span class="v">كود Worker — يُلصق في محرّر Cloudflare</span></div>
-        <div class="note">
-          طريقة التحديث: Cloudflare ← nafa-push ← Edit code ← تحديد الكل ← لصق الجديد ← Deploy.
+        <div class="card">
+          <h3>السمة الافتراضية</h3>
+          <div class="opts" id="thOpts">
+            <span class="opt" data-th="dark">🌙 ليلي هادئ</span>
+            <span class="opt" data-th="mid">🌫 رمادي دافئ</span>
+            <span class="opt" data-th="light">☀️ نهاري فاتح</span>
+          </div>
+          <div class="rowSw" style="margin-top:14px">
+            <span>السماح للمستخدم بتغيير السمة<div class="rd">لو أطفأته يُفرض اختيارك على الجميع</div></span>
+            <span class="sw on" id="swThUser"></span>
+          </div>
         </div>
-      </div>
-    </div>
-
-
-    <!-- ═══════ التحكم في التطبيق ═══════ -->
-    <div id="p-control" class="hide">
-      <div class="card">
-        <h3>البطاقة الدوّارة
-          <small>تظهر في الصفحة الرئيسية وتتبدّل تلقائيًا</small>
-        </h3>
-        <span class="lbl">مدة عرض كل شريحة</span>
-        <div class="opts" id="rotSec">
-          <span class="opt" data-s="2">٢ ثانية</span>
-          <span class="opt" data-s="3">٣ ثوانٍ</span>
-          <span class="opt sel" data-s="4">٤ ثوانٍ</span>
-          <span class="opt" data-s="6">٦ ثوانٍ</span>
-          <span class="opt" data-s="8">٨ ثوانٍ</span>
-          <span class="opt" data-s="12">١٢ ثانية</span>
+        <div class="card">
+          <h3>البطاقة الدوّارة</h3>
+          <span class="lbl">مدة عرض كل شريحة</span>
+          <div class="opts" id="rotOpts">
+            <span class="opt" data-rot="3">٣ ثوانٍ</span>
+            <span class="opt" data-rot="4">٤ ثوانٍ</span>
+            <span class="opt" data-rot="6">٦ ثوانٍ</span>
+            <span class="opt" data-rot="9">٩ ثوانٍ</span>
+          </div>
         </div>
+      </section>
 
-        <span class="lbl">الشرائح المعروضة (اختر ما تريد إظهاره)</span>
-        <div class="opts" id="rotSlides">
-          <span class="opt sel" data-k="anomaly">المعدّل الرسمي</span>
-          <span class="opt sel" data-k="brief">موجز نفاف</span>
-          <span class="opt sel" data-k="astro">سماء الليلة</span>
-          <span class="opt sel" data-k="onday">في مثل هذا اليوم</span>
-          <span class="opt sel" data-k="story">قصة اليوم</span>
-          <span class="opt sel" data-k="star">الدرور والنجوم</span>
-          <span class="opt sel" data-k="models">اتفاق النماذج</span>
-          <span class="opt sel" data-k="stab">استقرار السماء</span>
-          <span class="opt sel" data-k="smell">رائحة الجو</span>
+      <!-- 🎯 القواعد الذكية -->
+      <section class="sec" data-s="rules">
+        <div class="pageHead">
+          <div class="pageTitle">القواعد الذكية</div>
+          <div class="pageSub">إذا تحقّق شرط جوي — نفّذ إجراءً تلقائيًا</div>
         </div>
-        <div class="note">اضغط لتفعيل أو تعطيل — المفعّل ذهبي. لو عطّلت الكل تعود كلها تلقائيًا.</div>
-      </div>
-
-      <div class="card">
-        <h3>ترتيب التبويبات
-          <small>اسحب بالأزرار لتغيير ترتيب ظهورها في التطبيق</small>
-        </h3>
-        <div id="tabOrder"></div>
-        <div class="note">التبويب الأول هو ما يفتح عليه التطبيق.</div>
-      </div>
-
-      <button class="btn gold" id="saveCfgBtn">حفظ إعدادات التطبيق</button>
-      <div class="note">التغييرات تصل لكل مستخدم خلال ثوانٍ من فتحه للتطبيق.</div>
-    </div>
-
-
-    <!-- ═══════ الرصدات والمراسلون ═══════ -->
-    <div id="p-reports" class="hide">
-      <div class="card">
-        <h3>إعدادات الرصد
-          <small>تتحكم في مدة بقاء الرصد ونافذة الإجماع</small>
-        </h3>
-        <span class="lbl">مدة صلاحية الرصد</span>
-        <div class="opts" id="repTTL">
-          <span class="opt" data-v="1">دقيقة</span>
-          <span class="opt" data-v="5">٥ دقائق</span>
-          <span class="opt" data-v="15">١٥ دقيقة</span>
-          <span class="opt sel" data-v="30">٣٠ دقيقة</span>
-          <span class="opt" data-v="60">ساعة</span>
+        <div class="card">
+          <h3>قاعدة جديدة</h3>
+          <span class="lbl">إذا كان</span>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <select class="fld" id="rMetric" style="flex:1 1 130px">
+              <option value="rain">احتمال المطر %</option>
+              <option value="wind">سرعة الرياح كم/س</option>
+              <option value="temp">الحرارة °</option>
+              <option value="hum">الرطوبة %</option>
+              <option value="dust">الغبار</option>
+            </select>
+            <select class="fld" id="rOp" style="flex:0 0 88px">
+              <option value="gt">أكبر من</option>
+              <option value="lt">أقل من</option>
+            </select>
+            <input class="fld" id="rVal" type="number" value="60" style="flex:0 0 88px" />
+          </div>
+          <span class="lbl">عندها</span>
+          <div class="opts" id="rAct">
+            <span class="opt sel" data-act="card">أظهر بطاقة</span>
+            <span class="opt" data-act="notify">أرسل إشعارًا</span>
+            <span class="opt" data-act="top">ارفع الرصد للأعلى</span>
+          </div>
+          <span class="lbl">النص المعروض</span>
+          <input class="fld" id="rText" placeholder="نفاف يشوف المطر قريب منك…" />
+          <button class="btn gold" id="bAddRule" style="width:100%;margin-top:12px">إضافة القاعدة</button>
         </div>
-        <span class="lbl">نافذة الإجماع (٣ أشخاص فأكثر)</span>
-        <div class="opts" id="repCons">
-          <span class="opt" data-v="30">نصف ساعة</span>
-          <span class="opt" data-v="45">٤٥ دقيقة</span>
-          <span class="opt sel" data-v="60">ساعة</span>
+        <div class="card">
+          <h3>القواعد الفعّالة</h3>
+          <div id="ruleList"></div>
         </div>
-        <span class="lbl">الرصد الفردي</span>
-        <div class="opts" id="repAuto">
-          <span class="opt sel" data-v="0">يحتاج موافقتي</span>
-          <span class="opt" data-v="1">ينشر تلقائيًا</span>
+      </section>
+
+      <!-- 📡 المصادر -->
+      <section class="sec" data-s="sources">
+        <div class="pageHead">
+          <div class="pageTitle">مصادر الطقس</div>
+          <div class="pageSub">فعّل أو عطّل أي مصدر — ورتّب أولوياته</div>
         </div>
-        <button class="btn gold" id="saveRepCfg" style="margin-top:12px">حفظ إعدادات الرصد</button>
-      </div>
+        <div class="card"><div id="srcList"></div></div>
+      </section>
 
-      <div class="card">
-        <h3>طلبات المراسلين</h3>
-        <div id="corrList"></div>
-      </div>
-
-      <div class="card">
-        <h3>الرصدات الواردة
-          <small>الإحداثيات للتدقيق فقط — لا تُعرض للمستخدمين</small>
-        </h3>
-        <div id="repList"></div>
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <button class="btn ghost" id="repRefresh" style="flex:1;margin:0">تحديث</button>
-          <button class="btn ghost" id="repClearOld" style="flex:1;margin:0">🗑 حذف المنتهية</button>
+      <!-- 📢 الأخبار -->
+      <section class="sec" data-s="news">
+        <div class="pageHead">
+          <div class="pageTitle">الأخبار العاجلة</div>
+          <div class="pageSub">تظهر أعلى الصفحة الرئيسية لكل المستخدمين</div>
         </div>
-      </div>
-    </div>
-
-    <!-- ═══════ الملاحظات ═══════ -->
-    <div id="p-feedback" class="hide">
-      <div class="card">
-        <h3>ملاحظات المستخدمين<small>تصل مباشرة من التطبيق</small></h3>
-        <div id="fbList"></div>
-        <button class="btn ghost" id="fbRefresh" style="margin-top:10px">تحديث</button>
-      </div>
-    </div>
-
-    <!-- ═══════ الزوار ═══════ -->
-    <div id="p-visitors" class="hide">
-      <div class="card">
-        <h3>الآن مباشر</h3>
-        <div class="stat" id="vLive"></div>
-        <button class="btn ghost" id="vRefresh" style="margin-top:12px">تحديث</button>
-      </div>
-      <div class="card">
-        <h3>آخر ١٤ يومًا
-          <small>الفريد = أشخاص مختلفون · الفتحات = مرات الفتح الكلية</small>
-        </h3>
-        <div id="vDays"></div>
-      </div>
-    </div>
-
-    <!-- ═══════ الإعدادات ═══════ -->
-    <div id="p-settings" class="hide">
-      <div class="card">
-        <h3>تغيير رمز التحكم
-          <small>يُخزَّن في قاعدة البيانات ويتقدّم على الرمز الأصلي</small>
-        </h3>
-        <span class="lbl">الرمز الجديد (٦ خانات فأكثر)</span>
-        <input class="fld" id="newPass" type="text" placeholder="رمز جديد قوي" />
-        <button class="btn gold" id="passBtn">حفظ الرمز الجديد</button>
-        <div class="warn">
-          ⚠️ الرمز الحالي رقم هاتف — <b>قابل للتخمين</b>. غيّره إلى رقم لا صلة له بمعلوماتك الشخصية.
+        <div class="card">
+          <h3>نشر خبر</h3>
+          <span class="lbl">النوع</span>
+          <div class="opts" id="nKind">
+            <span class="opt sel" data-k="info">🔵 معلومة</span>
+            <span class="opt" data-k="good">🟢 خبر طيب</span>
+            <span class="opt" data-k="alert">🟡 تنبيه</span>
+            <span class="opt" data-k="urgent">🔴 عاجل</span>
+          </div>
+          <span class="lbl">العنوان</span>
+          <input class="fld" id="nTitle" maxlength="90" placeholder="أمطار متوقعة على شمال الباطنة" />
+          <span class="lbl">التفاصيل (اختياري)</span>
+          <textarea class="fld" id="nBody" maxlength="400" placeholder="وصف لا تحذير — نفاف ليس جهة إنذار رسمية."></textarea>
+          <span class="lbl">المدة</span>
+          <div class="opts" id="nHours">
+            <span class="opt" data-h="1">ساعة</span>
+            <span class="opt sel" data-h="3">٣ ساعات</span>
+            <span class="opt" data-h="6">٦ ساعات</span>
+            <span class="opt" data-h="12">١٢ ساعة</span>
+            <span class="opt" data-h="0">حتى الإيقاف</span>
+          </div>
+          <div style="display:flex;gap:7px;margin-top:14px">
+            <button class="btn gold" id="bPubNews" style="flex:1">نشر الخبر</button>
+            <button class="btn red" id="bStopNews">إيقاف</button>
+          </div>
+          <div class="note" style="margin-top:10px">
+            ⚠️ صف الحالة ولا تُصدر تحذيرات — التحذير من اختصاص الجهات الرسمية.
+          </div>
         </div>
-      </div>
-      <div class="card">
-        <h3>الخروج</h3>
-        <button class="btn red" id="logoutBtn">تسجيل الخروج</button>
-      </div>
-    </div>
+        <div class="card">
+          <h3>الخبر المنشور الآن</h3>
+          <div id="curNews"><div class="empty">لا خبر منشور.</div></div>
+        </div>
+      </section>
+
+      <!-- 👁 الرصدات -->
+      <section class="sec" data-s="reports">
+        <div class="pageHead">
+          <div class="pageTitle">الرصدات الواردة</div>
+          <div class="pageSub">الإحداثيات للتدقيق فقط — لا تُعرض للمستخدمين</div>
+        </div>
+        <div class="card">
+          <h3>إعدادات الرصد</h3>
+          <span class="lbl">مدة صلاحية الرصد بعد الموافقة</span>
+          <div class="opts" id="repTTL">
+            <span class="opt" data-v="5">٥ د</span><span class="opt" data-v="15">١٥ د</span>
+            <span class="opt sel" data-v="30">٣٠ د</span><span class="opt" data-v="60">ساعة</span>
+          </div>
+          <span class="lbl">نافذة الإجماع (٣ أشخاص فأكثر)</span>
+          <div class="opts" id="repCons">
+            <span class="opt" data-v="30">نصف ساعة</span>
+            <span class="opt sel" data-v="60">ساعة</span>
+          </div>
+          <div class="rowSw" style="margin-top:12px">
+            <span>نشر الرصد الفردي تلقائيًا<div class="rd">بلا مراجعة منك</div></span>
+            <span class="sw" id="swAutoSolo"></span>
+          </div>
+          <button class="btn gold" id="bSaveRep" style="width:100%;margin-top:12px">حفظ</button>
+        </div>
+        <div class="card">
+          <h3>الوارد<small id="repCount"></small></h3>
+          <div id="repList"><div class="empty">لا رصدات.</div></div>
+          <div style="display:flex;gap:7px;margin-top:10px">
+            <button class="btn ghost" id="bRepRef" style="flex:1">تحديث</button>
+            <button class="btn ghost" id="bRepClean" style="flex:1">🗑 حذف المنتهية</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 🎖 المراسلون -->
+      <section class="sec" data-s="corr">
+        <div class="pageHead">
+          <div class="pageTitle">المراسلون</div>
+          <div class="pageSub">اعتمد أو ألغِ صلاحية المراسلين</div>
+        </div>
+        <div class="card"><div id="corrList"><div class="empty">لا طلبات.</div></div></div>
+      </section>
+
+      <!-- ✉ الملاحظات -->
+      <section class="sec" data-s="feedback">
+        <div class="pageHead">
+          <div class="pageTitle">ملاحظات المستخدمين</div>
+          <div class="pageSub">تصل مباشرة من داخل التطبيق</div>
+        </div>
+        <div class="card"><div id="fbList"><div class="empty">لا ملاحظات.</div></div></div>
+      </section>
+
+      <!-- 🧪 المحاكاة -->
+      <section class="sec" data-s="sim">
+        <div class="pageHead">
+          <div class="pageTitle">مختبر نفاف</div>
+          <div class="pageSub">جرّب أي حالة جوية وشاهد ماذا سيقول نفاف قبل أن تحدث</div>
+        </div>
+        <div class="card">
+          <h3>الحالة الافتراضية</h3>
+          <div class="simGrid">
+            <div><span class="lbl">الحرارة <b class="rngV" id="vTemp">38°</b></span>
+              <input class="rng" id="sTemp" type="range" min="-10" max="52" value="38" /></div>
+            <div><span class="lbl">الرطوبة <b class="rngV" id="vHum">60%</b></span>
+              <input class="rng" id="sHum" type="range" min="5" max="100" value="60" /></div>
+            <div><span class="lbl">الرياح <b class="rngV" id="vWind">15</b></span>
+              <input class="rng" id="sWind" type="range" min="0" max="90" value="15" /></div>
+            <div><span class="lbl">احتمال المطر <b class="rngV" id="vRain">10%</b></span>
+              <input class="rng" id="sRain" type="range" min="0" max="100" value="10" /></div>
+          </div>
+          <button class="btn gold" id="bRunSim" style="width:100%;margin-top:14px">▶ تشغيل المحاكاة</button>
+          <div class="simOut" id="simOut">
+            <div class="empty" style="padding:8px">اضبط القيم ثم شغّل المحاكاة.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 🌡 فاحص البيانات -->
+      <section class="sec" data-s="inspect">
+        <div class="pageHead">
+          <div class="pageTitle">فاحص البيانات</div>
+          <div class="pageSub">اعرف من أين جاء أي رقم — حين يقول مستخدم «الرقم غلط»</div>
+        </div>
+        <div class="card">
+          <span class="lbl">ابحث عن موقع</span>
+          <div style="display:flex;gap:7px">
+            <input class="fld" id="inspQ" placeholder="مسقط" style="flex:1" />
+            <button class="btn gold" id="bInsp">فحص</button>
+          </div>
+          <div id="inspOut"></div>
+        </div>
+      </section>
+
+      <!-- 📊 الإحصاءات -->
+      <section class="sec" data-s="analytics">
+        <div class="pageHead">
+          <div class="pageTitle">الإحصاءات</div>
+          <div class="pageSub">الزوار والاستخدام</div>
+        </div>
+        <div class="kpiGrid" id="anKpi"></div>
+        <div class="card">
+          <h3>آخر ١٤ يومًا</h3>
+          <div id="anChart"></div>
+        </div>
+      </section>
+
+      <!-- 🩺 صحة النظام -->
+      <section class="sec" data-s="health">
+        <div class="pageHead">
+          <div class="pageTitle">صحة النظام</div>
+          <div class="pageSub">حالة كل خدمة يعتمد عليها نفاف</div>
+        </div>
+        <div class="card">
+          <h3>الخدمات</h3>
+          <div id="healthList"><div class="empty">جارٍ الفحص…</div></div>
+          <button class="btn ghost" id="bHealth" style="width:100%;margin-top:12px">إعادة الفحص</button>
+        </div>
+      </section>
+
+      <!-- 🕒 الإصدارات -->
+      <section class="sec" data-s="versions">
+        <div class="pageHead">
+          <div class="pageTitle">سجل الإصدارات</div>
+          <div class="pageSub">ارجع لأي نسخة سابقة بضغطة واحدة</div>
+        </div>
+        <div class="card"><div id="verList"><div class="empty">لا إصدارات.</div></div></div>
+      </section>
+
+      <!-- ⚙ الإعدادات -->
+      <section class="sec" data-s="settings">
+        <div class="pageHead">
+          <div class="pageTitle">إعدادات النظام</div>
+          <div class="pageSub">الروابط وكلمة المرور</div>
+        </div>
+        <div class="card">
+          <h3>الروابط</h3>
+          <div id="linkList"></div>
+        </div>
+        <div class="card">
+          <h3>تغيير رمز الدخول</h3>
+          <input class="fld" id="np1" type="password" placeholder="الرمز الجديد" />
+          <input class="fld" id="np2" type="password" placeholder="تأكيد الرمز" style="margin-top:8px" />
+          <button class="btn gold" id="bChPass" style="width:100%;margin-top:12px">حفظ الرمز</button>
+        </div>
+        <div class="card">
+          <button class="btn red" id="bLogout" style="width:100%">تسجيل الخروج</button>
+        </div>
+      </section>
+
+    </main>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
-
 <script>
 var API='https://nafa-push.alhutar0.workers.dev';
-var PASS='';
-var KIND='info', HOURS=0, NOTIFY=0;
+var PASS='', DRAFT=null, DIRTY=false, PAGE='dash';
 
 function $(i){return document.getElementById(i);}
-function toast(m,err){
- var t=$('toast');t.innerHTML=m;t.className='toast on'+(err?' err':'');
- clearTimeout(window._tt);window._tt=setTimeout(function(){t.className='toast';},err?6000:3200);
-}
 function api(path,body){
- return fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},
-  body:JSON.stringify(Object.assign({pass:PASS},body||{}))}).then(function(r){return r.json();});
+  return fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(Object.assign({pass:PASS},body||{}))})
+    .then(function(r){return r.json();})
+    .catch(function(){return {error:'network'};});
 }
+function get(path){
+  return fetch(API+path).then(function(r){return r.json();})
+    .catch(function(){return {error:'network'};});
+}
+var tT=null;
+function toast(m,err){
+  var t=$('toast'); t.innerHTML=m; t.className='toast on'+(err?' err':'');
+  clearTimeout(tT); tT=setTimeout(function(){t.className='toast'+(err?' err':'');},2800);
+}
+function esc(s){return String(s==null?'':s).replace(/[<>&]/g,function(c){
+  return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];});}
 
-/* ===== الدخول ===== */
+/* ═══════ الدخول ═══════ */
 $('loginBtn').onclick=function(){
- var v=$('pass').value.trim();
- if(!v){toast('أدخل الرمز',true);return;}
- PASS=v;
- api('/admin/stats').then(function(r){
-  if(r.error){toast('رمز غير صحيح',true);PASS='';return;}
-  try{sessionStorage.setItem('nafaf_pass',v);}catch(e){}
-  $('gate').className='gate hide';
-  $('panel').className='';
-  showStats(r);
-  loadNews();
-  cfgLoad();
-  loadVisitors();
-  loadCorr();
-  loadReports();
-  loadFeedback();
- }).catch(function(){toast('تعذّر الاتصال بالخادم',true);});
-};
-$('pass').onkeydown=function(e){if(e.key==='Enter')$('loginBtn').click();};
-
-/* استعادة الجلسة */
-try{
- var saved=sessionStorage.getItem('nafaf_pass');
- if(saved){$('pass').value=saved;setTimeout(function(){$('loginBtn').click();},100);}
-}catch(e){}
-
-/* ===== التبويبات ===== */
-var tabs=document.querySelectorAll('.tab');
-for(var i=0;i<tabs.length;i++){
- tabs[i].onclick=function(){
-  var t=this.getAttribute('data-t');
-  for(var j=0;j<tabs.length;j++)tabs[j].className='tab';
-  this.className='tab on';
-  ['news','links','keys','services','files','control','reports','feedback','visitors','settings'].forEach(function(k){
-   $('p-'+k).className=(k===t)?'':'hide';
+  var v=$('pass').value.trim();
+  if(!v){toast('أدخل الرمز',true);return;}
+  var b=this; b.innerHTML='جارٍ…'; PASS=v;
+  api('/admin/stats').then(function(r){
+    b.innerHTML='دخول';
+    if(r.error){toast('رمز غير صحيح',true);PASS='';return;}
+    $('login').className='gone'; $('app').className='on';
+    bootAll();
   });
- };
-}
-
-/* ===== اختيار النوع والمدة ===== */
-function wirePick(boxId,attr,cb){
- var box=$(boxId),items=box.children,k;
- for(k=0;k<items.length;k++){
-  items[k].onclick=function(){
-   for(var m=0;m<items.length;m++)items[m].className=items[m].className.replace(' sel','');
-   this.className+=' sel';
-   cb(this.getAttribute(attr));
-  };
- }
-}
-wirePick('kinds','data-k',function(v){KIND=v;renderPreview();});
-wirePick('hours','data-h',function(v){HOURS=parseInt(v,10);});
-wirePick('notify','data-n',function(v){NOTIFY=parseInt(v,10);});
-
-/* ===== المعاينة الحيّة ===== */
-var KIND_LABEL={urgent:'عاجل',alert:'تنبيه',info:'معلومة',good:'بشارة'};
-function renderPreview(){
- var t=$('nTitle').value.trim(), b=$('nBody').value.trim();
- if(!t){$('preview').innerHTML='';return;}
- $('preview').innerHTML='<div class="prev k-'+KIND+'">'+
-  '<div class="pt">'+KIND_LABEL[KIND]+' — معاينة كما سيراها المستخدم</div>'+
-  '<div class="ph">'+t+'</div>'+
-  (b?'<div class="pb">'+b+'</div>':'')+'</div>';
-}
-$('nTitle').oninput=renderPreview;
-$('nBody').oninput=renderPreview;
-
-/* ===== النشر ===== */
-$('pubBtn').onclick=function(){
- var t=$('nTitle').value.trim();
- if(!t){toast('العنوان إلزامي',true);return;}
- var btn=this;btn.innerHTML='جارٍ النشر…';
- api('/news/publish',{kind:KIND,title:t,body:$('nBody').value.trim(),
-  hours:HOURS||null,notify:NOTIFY===1}).then(function(r){
-  btn.innerHTML='نشر الخبر';
-  if(r.error){toast('فشل النشر: '+r.error,true);return;}
-  toast('تم النشر'+(r.pushed?' — أُرسل إشعار لـ'+r.pushed+' جهاز':''));
-  $('nTitle').value='';$('nBody').value='';renderPreview();
-  loadNews();
- }).catch(function(){btn.innerHTML='نشر الخبر';toast('تعذّر الاتصال',true);});
 };
+$('pass').addEventListener('keydown',function(e){if(e.key==='Enter')$('loginBtn').click();});
 
-/* ===== الخبر الحالي ===== */
-function loadNews(){
- fetch(API+'/news').then(function(r){return r.json();}).then(function(n){
-  if(!n||!n.active){$('liveNews').innerHTML='';return;}
-  var age=Math.round((Date.now()-n.ts)/60000);
-  var exp=n.expires?('ينتهي بعد '+Math.max(0,Math.round((n.expires-Date.now())/60000))+' دقيقة'):'يبقى حتى توقفه';
-  $('liveNews').innerHTML='<div class="card">'+
-   '<div class="live"><span class="dot"></span>خبر منشور الآن</div>'+
-   '<div class="prev k-'+n.kind+'"><div class="pt">'+KIND_LABEL[n.kind]+' · منذ '+age+' دقيقة · '+exp+'</div>'+
-   '<div class="ph">'+n.title+'</div>'+(n.body?'<div class="pb">'+n.body+'</div>':'')+'</div>'+
-   '<button class="btn red" id="stopBtn" style="margin-top:12px">إيقاف الخبر فورًا</button></div>';
-  $('stopBtn').onclick=function(){
-   this.innerHTML='جارٍ…';
-   api('/news/stop').then(function(r){
-    if(r.error){toast('فشل الإيقاف',true);return;}
-    toast('أُوقف الخبر');loadNews();
-   });
-  };
- }).catch(function(){});
+/* ═══════ التنقّل ═══════ */
+function openSide(on){
+  $('side').className='side'+(on?'':' closed');
+  $('scrim').className='scrim'+(on?' on':'');
 }
+$('burger').onclick=function(){openSide($('side').className.indexOf('closed')>=0);};
+$('scrim').onclick=function(){openSide(false);};
 
-/* ===== الإحصاءات ===== */
-function showStats(r){
- $('stats').innerHTML=
-  '<div class="st"><div class="n">'+(r.subscribers||0)+'</div><div class="l">مشترك بالإشعارات</div></div>'+
-  '<div class="st"><div class="n">'+(r.activeUsers||0)+'</div><div class="l">مستخدم نشط</div></div>'+
-  '<div class="st"><div class="n">'+((r.rain&&r.rain.n)||0)+'</div><div class="l">منطقة تمطر الآن</div></div>'+
-  '<div class="st"><div class="n">'+(r.news&&r.news.active?'نعم':'لا')+'</div><div class="l">خبر منشور</div></div>';
-}
-$('refreshBtn').onclick=function(){
- var b=this;b.innerHTML='جارٍ…';
- api('/admin/stats').then(function(r){
-  b.innerHTML='تحديث الحالة';
-  if(r.error){toast('انتهت الجلسة',true);return;}
-  showStats(r);loadNews();toast('حُدّثت الحالة');
- });
-};
-
-/* ===== تغيير الرمز ===== */
-$('passBtn').onclick=function(){
- var np=$('newPass').value.trim();
- if(np.length<6){toast('الرمز قصير — ٦ خانات على الأقل',true);return;}
- api('/admin/pass',{newPass:np}).then(function(r){
-  if(r.error){toast('فشل: '+r.error,true);return;}
-  PASS=np;
-  try{sessionStorage.setItem('nafaf_pass',np);}catch(e){}
-  $('newPass').value='';
-  toast('تم تغيير الرمز بنجاح');
- });
-};
-
-/* ===== النسخ ===== */
-document.addEventListener('click',function(e){
- if(e.target.className==='copy'){
-  var v=e.target.getAttribute('data-c');
-  try{
-   navigator.clipboard.writeText(v).then(function(){toast('نُسخ');});
-  }catch(err){toast('تعذّر النسخ',true);}
- }
-});
-
-
-/* ═══════ التحكم في التطبيق ═══════ */
-var CFG={rotateSec:4,rotateSlides:null,tabOrder:null};
-var TAB_LIST=[
- {k:'now',n:'الآن'},{k:'life',n:'يومك'},{k:'fc',n:'التوقعات'},
- {k:'live',n:'الرصد المباشر'},{k:'world',n:'نافذة العالم'},{k:'src',n:'المصادر'}
-];
-var TAB_ORDER=TAB_LIST.map(function(t){return t.k;});
-
-function cfgLoad(){
- fetch(API+'/config').then(function(r){return r.json();}).then(function(c){
-  if(!c)return;
-  CFG=Object.assign(CFG,c);
-  /* الثواني */
-  var secs=$('rotSec').children,i;
-  for(i=0;i<secs.length;i++){
-   secs[i].className='opt'+(parseInt(secs[i].getAttribute('data-s'),10)===CFG.rotateSec?' sel':'');
-  }
-  /* الشرائح */
-  if(CFG.rotateSlides&&CFG.rotateSlides.length){
-   var sl=$('rotSlides').children;
-   for(i=0;i<sl.length;i++){
-    var k=sl[i].getAttribute('data-k');
-    sl[i].className='opt'+(CFG.rotateSlides.indexOf(k)>=0?' sel':'');
-   }
-  }
-  /* التبويبات */
-  if(CFG.tabOrder&&CFG.tabOrder.length)TAB_ORDER=CFG.tabOrder.slice();
-  renderTabOrder();
-  repCfgApply(c);
- }).catch(function(){renderTabOrder();});
-}
-
-function renderTabOrder(){
- var h='',i;
- for(i=0;i<TAB_ORDER.length;i++){
-  var k=TAB_ORDER[i],nm=k;
-  for(var j=0;j<TAB_LIST.length;j++)if(TAB_LIST[j].k===k)nm=TAB_LIST[j].n;
-  h+='<div class="row" style="align-items:center">'+
-   '<span class="k" style="flex:1 1 auto;color:#fff;font-size:13px">'+(i+1)+'. '+nm+'</span>'+
-   '<button class="copy" data-up="'+i+'">▲</button>'+
-   '<button class="copy" data-dn="'+i+'">▼</button></div>';
- }
- $('tabOrder').innerHTML=h;
- var btns=$('tabOrder').querySelectorAll('button');
- for(var b=0;b<btns.length;b++){
-  btns[b].onclick=function(){
-   var u=this.getAttribute('data-up'),dn=this.getAttribute('data-dn');
-   if(u!==null&&u!==undefined&&this.hasAttribute('data-up')){
-    var iu=parseInt(u,10);
-    if(iu>0){var t=TAB_ORDER[iu-1];TAB_ORDER[iu-1]=TAB_ORDER[iu];TAB_ORDER[iu]=t;}
-   } else if(this.hasAttribute('data-dn')){
-    var id=parseInt(dn,10);
-    if(id<TAB_ORDER.length-1){var t2=TAB_ORDER[id+1];TAB_ORDER[id+1]=TAB_ORDER[id];TAB_ORDER[id]=t2;}
-   }
-   renderTabOrder();
-  };
- }
-}
-
-/* اختيار الثواني */
-(function(){
- var secs=$('rotSec').children,i;
- for(i=0;i<secs.length;i++){
-  secs[i].onclick=function(){
-   for(var m=0;m<secs.length;m++)secs[m].className='opt';
-   this.className='opt sel';
-   CFG.rotateSec=parseInt(this.getAttribute('data-s'),10);
-  };
- }
-})();
-
-/* تفعيل/تعطيل الشرائح */
-(function(){
- var sl=$('rotSlides').children,i;
- for(i=0;i<sl.length;i++){
-  sl[i].onclick=function(){
-   this.className=(this.className.indexOf('sel')>=0)?'opt':'opt sel';
-  };
- }
-})();
-
-$('saveCfgBtn').onclick=function(){
- var btn=this;btn.innerHTML='جارٍ الحفظ…';
- var slides=[],sl=$('rotSlides').children,i;
- for(i=0;i<sl.length;i++)if(sl[i].className.indexOf('sel')>=0)slides.push(sl[i].getAttribute('data-k'));
- api('/config/save',{rotateSec:CFG.rotateSec,
-  rotateSlides:slides.length?slides:null,tabOrder:TAB_ORDER}).then(function(r){
-  btn.innerHTML='حفظ إعدادات التطبيق';
-  if(r.error){toast('فشل الحفظ: '+r.error,true);return;}
-  toast('حُفظت الإعدادات — ستصل للمستخدمين خلال ثوانٍ');
- }).catch(function(){btn.innerHTML='حفظ إعدادات التطبيق';toast('تعذّر الاتصال',true);});
-};
-
-
-/* ═══════ الرصدات والمراسلون ═══════ */
-var KIND_AR={clear:'صحو',clouds:'غيوم',rain:'مطر',dust:'غبار',humid:'رطوبة',cold:'برد'};
-var REP_CFG={reportTTL:30,consensusWindow:60,autoPublishSolo:false};
-
-function repCfgApply(c){
- REP_CFG.reportTTL=c.reportTTL||30;
- REP_CFG.consensusWindow=c.consensusWindow||60;
- REP_CFG.autoPublishSolo=!!c.autoPublishSolo;
- [['repTTL','reportTTL'],['repCons','consensusWindow']].forEach(function(pair){
-  var box=$(pair[0]);if(!box)return;
-  var items=box.children;
+function goPage(p){
+  PAGE=p;
+  var items=document.querySelectorAll('.navItem');
   for(var i=0;i<items.length;i++)
-   items[i].className='opt'+(parseInt(items[i].getAttribute('data-v'),10)===REP_CFG[pair[1]]?' sel':'');
- });
- var au=$('repAuto');
- if(au)for(var j=0;j<au.children.length;j++)
-  au.children[j].className='opt'+((au.children[j].getAttribute('data-v')==='1')===REP_CFG.autoPublishSolo?' sel':'');
+    items[i].className='navItem'+(items[i].getAttribute('data-p')===p?' on':'');
+  var secs=document.querySelectorAll('.sec');
+  for(var j=0;j<secs.length;j++)
+    secs[j].className='sec'+(secs[j].getAttribute('data-s')===p?' on':'');
+  /* شريط المسودة يظهر في صفحات البناء فقط */
+  var buildPages=['tabs','blocks','features','theme','rules','sources'];
+  $('draftBar').style.display=(buildPages.indexOf(p)>=0)?'flex':'none';
+  if(window.innerWidth<900)openSide(false);
+  window.scrollTo(0,0);
+  /* تحميل عند الحاجة */
+  if(p==='reports'){loadReports();loadRepCfg();}
+  if(p==='corr')loadCorr();
+  if(p==='feedback')loadFeedback();
+  if(p==='news')loadNews();
+  if(p==='analytics')loadAnalytics();
+  if(p==='health')runHealth();
+  if(p==='versions')loadVersions();
+  if(p==='settings')loadLinks();
 }
-['repTTL','repCons','repAuto'].forEach(function(id){
- var box=$(id);if(!box)return;
- var items=box.children;
- for(var i=0;i<items.length;i++){
-  items[i].onclick=function(){
-   for(var m=0;m<items.length;m++)items[m].className='opt';
-   this.className='opt sel';
-   var v=parseInt(this.getAttribute('data-v'),10);
-   if(id==='repTTL')REP_CFG.reportTTL=v;
-   else if(id==='repCons')REP_CFG.consensusWindow=v;
-   else REP_CFG.autoPublishSolo=(v===1);
+var navs=document.querySelectorAll('.navItem');
+for(var n=0;n<navs.length;n++)
+  navs[n].onclick=function(){goPage(this.getAttribute('data-p'));};
+var gos=document.querySelectorAll('[data-go]');
+for(var g=0;g<gos.length;g++)
+  gos[g].onclick=function(){goPage(this.getAttribute('data-go'));};
+
+/* ═══════ البحث الشامل ═══════ */
+var SEARCH_MAP=[
+  {q:'تبويب ترتيب صفحات تنقل',p:'tabs',t:'🧭 التبويبات',d:'ترتيب وإخفاء'},
+  {q:'مكون بطاقة ترتيب رئيسية',p:'blocks',t:'🧩 المكوّنات',d:'صفحة الآن'},
+  {q:'ميزة تشغيل إطفاء',p:'features',t:'⚡ الميزات',d:'تشغيل وإطفاء'},
+  {q:'سمة لون مظهر ثيم',p:'theme',t:'🎨 المظهر',d:'السمة الافتراضية'},
+  {q:'قاعدة شرط مطر رياح تلقائي',p:'rules',t:'🎯 القواعد',d:'إذا-عندها'},
+  {q:'مصدر نموذج ecmwf gfs icon رادار',p:'sources',t:'📡 المصادر',d:'تفعيل وأولوية'},
+  {q:'خبر عاجل نشر تنبيه إعلان',p:'news',t:'📢 الأخبار',d:'نشر خبر'},
+  {q:'رصد مطر مستخدم موافقة',p:'reports',t:'👁 الرصدات',d:'مراجعة'},
+  {q:'مراسل اعتماد صلاحية',p:'corr',t:'🎖 المراسلون',d:'اعتماد'},
+  {q:'ملاحظة شكوى اقتراح',p:'feedback',t:'✉ الملاحظات',d:'من المستخدمين'},
+  {q:'محاكاة اختبار تجربة سيناريو',p:'sim',t:'🧪 المحاكاة',d:'جرّب حالة'},
+  {q:'بيانات رقم فحص موقع',p:'inspect',t:'🌡 الفاحص',d:'من أين الرقم'},
+  {q:'زوار إحصاء استخدام',p:'analytics',t:'📊 الإحصاءات',d:'الزوار'},
+  {q:'صحة خطأ خدمة حالة',p:'health',t:'🩺 الصحة',d:'حالة الخدمات'},
+  {q:'إصدار تراجع رجوع نسخة',p:'versions',t:'🕒 الإصدارات',d:'تراجع'},
+  {q:'رمز كلمة مرور رابط',p:'settings',t:'⚙ الإعدادات',d:'الروابط والرمز'}
+];
+$('gsearch').oninput=function(){
+  var v=this.value.trim();
+  var box=$('gres');
+  if(v.length<2){box.className='searchRes';return;}
+  var hits=SEARCH_MAP.filter(function(x){
+    return x.q.indexOf(v)>=0||x.t.indexOf(v)>=0;
+  }).slice(0,6);
+  if(!hits.length){box.className='searchRes';return;}
+  box.innerHTML=hits.map(function(x){
+    return '<div class="srItem" data-sp="'+x.p+'">'+x.t+'<small>'+x.d+'</small></div>';
+  }).join('');
+  box.className='searchRes on';
+  var its=box.querySelectorAll('[data-sp]');
+  for(var i=0;i<its.length;i++)its[i].onclick=function(){
+    goPage(this.getAttribute('data-sp'));
+    box.className='searchRes';$('gsearch').value='';
   };
- }
+};
+document.addEventListener('click',function(e){
+  if(!e.target.closest||!e.target.closest('.searchWrap'))$('gres').className='searchRes';
 });
-$('saveRepCfg').onclick=function(){
- var b=this;b.innerHTML='جارٍ…';
- api('/config/save',{rotateSec:CFG.rotateSec,rotateSlides:CFG.rotateSlides,
-  tabOrder:TAB_ORDER,reportTTL:REP_CFG.reportTTL,
-  consensusWindow:REP_CFG.consensusWindow,autoPublishSolo:REP_CFG.autoPublishSolo})
- .then(function(r){
-  b.innerHTML='حفظ إعدادات الرصد';
-  if(r.error){toast('فشل الحفظ',true);return;}
-  toast('حُفظت إعدادات الرصد');
- });
+
+/* ═══════ محرك الإعدادات ═══════ */
+function markDirty(){
+  DIRTY=true; updateDraft();
+  api('/cfg/draft/save',{cfg:DRAFT}).then(function(r){
+    if(r.error)toast('تعذّر حفظ المسودة',true);
+  });
+}
+function updateDraft(){
+  var el=$('stPill'); if(!el)return;
+  el.className='stPill'+(DIRTY?' dirty':'');
+  el.innerHTML=DIRTY?'● مسودة غير منشورة':'✓ منشور';
+}
+function loadCfg(){
+  api('/cfg/draft').then(function(r){
+    if(r.error){toast('تعذّر جلب الإعدادات',true);return;}
+    DRAFT=r.draft; DIRTY=!!r.hasChanges;
+    renderAll();
+  });
+}
+$('bPublish').onclick=function(){
+  if(!DIRTY){toast('لا تغييرات للنشر');return;}
+  if(!confirm('نشر التغييرات لكل المستخدمين؟'))return;
+  var b=this;b.innerHTML='جارٍ…';
+  api('/cfg/publish',{note:'تعديل من مركز القيادة'}).then(function(r){
+    b.innerHTML='🚀 نشر';
+    if(r.error){toast('فشل: '+r.error,true);return;}
+    DIRTY=false;updateDraft();loadVersions();
+    toast('نُشرت — ستصل المستخدمين خلال ثوانٍ');
+  });
+};
+$('bDiscard').onclick=function(){
+  if(!DIRTY){toast('لا مسودة');return;}
+  if(!confirm('تجاهل كل التغييرات غير المنشورة؟'))return;
+  api('/cfg/discard').then(function(){toast('أُلغيت المسودة');loadCfg();});
+};
+$('bPreview').onclick=function(){
+  window.open('index.html?preview=1&t='+Date.now(),'_blank');
 };
 
-function loadCorr(){
- api('/admin/correspondents').then(function(r){
-  if(r.error)return;
-  var h='';
-  if(r.pending&&r.pending.length){
-   h+='<div style="font-size:11px;font-weight:800;color:#ffd166;margin-bottom:8px">قيد المراجعة ('+r.pending.length+')</div>';
-   r.pending.forEach(function(a){
-    h+='<div class="row" style="flex-direction:column;align-items:stretch;gap:6px">'+
-     '<div style="font-size:13px;font-weight:800;color:#fff">'+a.name+' — '+a.wilaya+'</div>'+
-     '<div style="font-size:10.5px;color:rgba(255,255,255,.6)">'+(a.email||'')+
-      (a.contact?' · '+a.contact:'')+'</div>'+
-     (a.why?'<div style="font-size:11px;color:rgba(255,255,255,.75);line-height:1.7">'+a.why+'</div>':'')+
-     '<div style="display:flex;gap:7px;margin-top:4px">'+
-      '<button class="copy" style="flex:1;background:rgba(127,227,154,.2);border-color:rgba(127,227,154,.5)" data-ok="'+a.vid+'">اعتماد</button>'+
-      '<button class="copy" style="flex:1;background:rgba(220,90,90,.18);border-color:rgba(220,90,90,.45)" data-no="'+a.vid+'">رفض</button>'+
-     '</div></div>';
-   });
-  }
-  if(r.approved&&r.approved.length){
-   h+='<div style="font-size:11px;font-weight:800;color:#7fe39a;margin:12px 0 8px">معتمدون ('+r.approved.length+')</div>';
-   r.approved.forEach(function(a){
-    h+='<div class="row"><span class="k" style="flex:1;color:#fff;font-size:12.5px">'+a.name+' — '+a.wilaya+'</span>'+
-     '<button class="copy" style="background:rgba(220,90,90,.18);border-color:rgba(220,90,90,.45)" data-rv="'+a.vid+'">إلغاء</button></div>';
-   });
-  }
-  if(!h)h='<div class="note">لا طلبات ولا مراسلين حاليًا.</div>';
-  $('corrList').innerHTML=h;
-  var btns=$('corrList').querySelectorAll('button');
-  for(var i=0;i<btns.length;i++){
-   btns[i].onclick=function(){
-    var vid=this.getAttribute('data-ok')||this.getAttribute('data-no')||this.getAttribute('data-rv');
-    var dec=this.hasAttribute('data-ok')?'approve':(this.hasAttribute('data-rv')?'revoke':'reject');
-    this.innerHTML='…';
-    api('/admin/correspondent/decide',{vid:vid,decision:dec}).then(function(x){
-     toast(dec==='approve'?'اعتُمد المراسل':(dec==='revoke'?'أُلغي الاعتماد':'رُفض الطلب'));
-     loadCorr();
+/* ═══════ السحب والإفلات ═══════ */
+function dragList(hostId,items,onChange,opts){
+  opts=opts||{};
+  var host=$(hostId); if(!host)return;
+  if(!items||!items.length){host.innerHTML='<div class="empty">لا عناصر.</div>';return;}
+  host.className='dragList';
+  host.innerHTML=items.map(function(it,i){
+    return '<div class="dragItem'+(it.enabled===false?' off':'')+'" draggable="true" data-i="'+i+'">'+
+      '<span class="dg-h">☰</span>'+
+      (it.icon?'<span class="dg-ic">'+it.icon+'</span>':'')+
+      '<span class="dg-nm">'+esc(it.label||it.id)+'</span>'+
+      '<span class="dg-act">'+
+        (opts.rename?'<button class="iconBtn" data-ren="'+i+'">✏️</button>':'')+
+        '<button class="iconBtn eyeBtn" data-eye="'+i+'">'+(it.enabled===false?'✕':'👁')+'</button>'+
+      '</span></div>';
+  }).join('');
+
+  var dragged=null;
+  var nodes=host.querySelectorAll('.dragItem');
+  for(var k=0;k<nodes.length;k++){(function(el){
+    el.addEventListener('dragstart',function(e){
+      dragged=el; el.className+=' dragging';
+      try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text','x');}catch(x){}
     });
-   };
-  }
- });
-}
-
-function loadReports(){
- api('/admin/reports').then(function(r){
-  if(r.error)return;
-  var reps=r.reports||[];
-  if(!reps.length){$('repList').innerHTML='<div class="note">لا رصدات واردة.</div>';return;}
-  var h='';
-  reps.forEach(function(x){
-   var col=x.status==='approved'?'#7fe39a':(x.expired?'rgba(255,255,255,.4)':'#ffd166');
-   h+='<div class="row" style="flex-direction:column;align-items:stretch;gap:5px">'+
-    '<div style="display:flex;align-items:center;gap:8px">'+
-     (x.isCorr?'<span style="font-size:9px;font-weight:800;color:#3a2405;background:#e6b45e;border-radius:99px;padding:2px 7px">مراسل</span>':'')+
-     '<span style="font-size:13px;font-weight:800;color:'+col+'">'+(KIND_AR[x.kind]||x.kind)+'</span>'+
-     '<span style="font-size:11.5px;color:rgba(255,255,255,.8)">'+(x.wilaya||'—')+'</span>'+
-     '<span style="margin-inline-start:auto;font-size:9.5px;color:rgba(255,255,255,.45)">'+
-      new Date(x.ts).toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'})+'</span>'+
-    '</div>'+
-    (x.photo?'<img src="'+x.photo+'" style="width:100%;max-height:120px;object-fit:cover;border-radius:10px;margin:4px 0" />':'')+
-    (x.lat!=null?'<div style="font-size:9.5px;color:rgba(255,255,255,.45);direction:ltr;text-align:left">'+
-      x.lat+', '+x.lon+' · <a href="https://maps.google.com/?q='+x.lat+','+x.lon+'" target="_blank" style="color:#9fd4f5">خريطة</a></div>':'')+
-    '<div style="display:flex;gap:7px;margin-top:3px;align-items:center">'+
-     (x.status==='pending'&&!x.expired?
-      '<button class="copy" style="flex:1;background:rgba(127,227,154,.2);border-color:rgba(127,227,154,.5)" data-ra="'+x.id+'">نشر</button>':
-      '<span style="flex:1;font-size:10px;color:'+col+';font-weight:700">'+
-       (x.expired?'انتهت صلاحيته':(x.status==='approved'?'✓ منشور':''))+'</span>')+
-     /* ★ الحذف متاح دائمًا — حتى للمنشور والمنتهي */
-     (x.photo?'<button class="copy" style="flex:0 0 auto;background:rgba(159,212,245,.2);border-color:rgba(159,212,245,.5)" data-gp="'+x.id+'">📷 للمعرض</button>':'')+
-     '<button class="copy" style="flex:0 0 auto;background:rgba(220,90,90,.18);border-color:rgba(220,90,90,.45)" data-rr="'+x.id+'">🗑 حذف</button>'+
-    '</div>'+
-   '</div>';
-  });
-  $('repList').innerHTML=h;
-  var btns=$('repList').querySelectorAll('button');
-  for(var i=0;i<btns.length;i++){
-   btns[i].onclick=function(){
-    if(this.hasAttribute('data-gp')){
-     var gid=this.getAttribute('data-gp');this.innerHTML='…';
-     api('/admin/gallery/add',{id:gid}).then(function(r){
-      toast(r.error?('فشل: '+r.error):'أُضيفت للمعرض');loadReports();});
-     return;
-    }
-    var id=this.getAttribute('data-ra')||this.getAttribute('data-rr');
-    var dec=this.hasAttribute('data-ra')?'approve':'reject';
-    this.innerHTML='…';
-    api('/admin/report/decide',{id:id,decision:dec}).then(function(){
-     toast(dec==='approve'?'نُشر الرصد':'حُذف الرصد');
-     loadReports();
+    el.addEventListener('dragend',function(){
+      el.className=el.className.replace(/ dragging/g,'');
+      var all=host.querySelectorAll('.dragItem');
+      for(var q=0;q<all.length;q++)all[q].className=all[q].className.replace(/ over/g,'');
     });
-   };
-  }
- });
-}
-$('repRefresh').onclick=function(){loadReports();loadCorr();toast('حُدّثت');};
-/* ★ حذف كل الرصدات المنتهية دفعة واحدة */
-if($('repClearOld'))$('repClearOld').onclick=function(){
- var b=this;b.innerHTML='جارٍ…';
- api('/admin/reports').then(function(r){
-  var old=(r.reports||[]).filter(function(x){return x.expired;});
-  if(!old.length){b.innerHTML='🗑 حذف المنتهية';toast('لا رصدات منتهية');return;}
-  var done=0;
-  old.forEach(function(x){
-   api('/admin/report/decide',{id:x.id,decision:'reject'}).then(function(){
-    done++;
-    if(done===old.length){b.innerHTML='🗑 حذف المنتهية';toast('حُذفت '+done+' رصدة منتهية');loadReports();}
-   });
-  });
- });
-};
+    el.addEventListener('dragover',function(e){
+      e.preventDefault();
+      if(el!==dragged&&el.className.indexOf('over')<0)el.className+=' over';
+    });
+    el.addEventListener('dragleave',function(){
+      el.className=el.className.replace(/ over/g,'');
+    });
+    el.addEventListener('drop',function(e){
+      e.preventDefault();
+      if(!dragged||el===dragged)return;
+      var from=+dragged.getAttribute('data-i'), to=+el.getAttribute('data-i');
+      var mv=items.splice(from,1)[0];
+      items.splice(to,0,mv);
+      for(var z=0;z<items.length;z++)items[z].order=z+1;
+      onChange();
+    });
+  })(nodes[k]);}
 
-
-/* ═══════ ملاحظات المستخدمين ═══════ */
-var FB_KIND_AR={idea:'💡 اقتراح',bug:'🐞 مشكلة',complaint:'⚠ شكوى',other:'✉ أخرى'};
-function loadFeedback(){
- api('/admin/feedback').then(function(r){
-  if(r.error)return;
-  var items=r.items||[];
-  if(!items.length){$('fbList').innerHTML='<div class="note">لا ملاحظات واردة.</div>';return;}
-  var h='';
-  if(r.unread)h+='<div style="font-size:11px;font-weight:800;color:#ffd166;margin-bottom:10px">'+r.unread+' غير مقروءة</div>';
-  items.forEach(function(f){
-   h+='<div class="row" style="flex-direction:column;align-items:stretch;gap:6px;'+
-    (f.read?'opacity:.6':'')+'">'+
-    '<div style="display:flex;align-items:center;gap:8px">'+
-     '<span style="font-size:12px;font-weight:800;color:#e6b45e">'+(FB_KIND_AR[f.kind]||f.kind)+'</span>'+
-     '<span style="margin-inline-start:auto;font-size:9.5px;color:rgba(255,255,255,.45)">'+
-      new Date(f.ts).toLocaleString('ar',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+'</span>'+
-    '</div>'+
-    '<div style="font-size:12.5px;line-height:1.85;color:rgba(255,255,255,.9)">'+
-     f.text.replace(/</g,'&lt;')+'</div>'+
-    (f.contact?'<div style="font-size:10.5px;color:#9fd4f5;direction:ltr;text-align:left">'+
-      f.contact.replace(/</g,'&lt;')+'</div>':'')+
-    '<div style="display:flex;gap:7px;margin-top:3px">'+
-     (f.read?'':'<button class="copy" style="flex:1;background:rgba(127,227,154,.2);border-color:rgba(127,227,154,.5)" data-fr="'+f.id+'">✓ مقروءة</button>')+
-     '<button class="copy" style="flex:0 0 auto;background:rgba(220,90,90,.18);border-color:rgba(220,90,90,.45)" data-fd="'+f.id+'">🗑</button>'+
-    '</div></div>';
-  });
-  $('fbList').innerHTML=h;
-  var btns=$('fbList').querySelectorAll('button');
-  for(var i=0;i<btns.length;i++)btns[i].onclick=function(){
-   var id=this.getAttribute('data-fr')||this.getAttribute('data-fd');
-   var act=this.hasAttribute('data-fd')?'delete':'read';
-   this.innerHTML='…';
-   api('/admin/feedback/act',{id:id,act:act}).then(function(){
-    toast(act==='delete'?'حُذفت':'عُلّمت مقروءة');loadFeedback();});
+  var eyes=host.querySelectorAll('[data-eye]');
+  for(var m=0;m<eyes.length;m++)eyes[m].onclick=function(e){
+    e.stopPropagation();
+    var i=+this.getAttribute('data-eye');
+    items[i].enabled=(items[i].enabled===false);
+    onChange();
   };
- });
+  var rens=host.querySelectorAll('[data-ren]');
+  for(var p=0;p<rens.length;p++)rens[p].onclick=function(e){
+    e.stopPropagation();
+    var i=+this.getAttribute('data-ren');
+    var nv=prompt('الاسم الجديد:',items[i].label||items[i].id);
+    if(nv!==null&&nv.trim()){items[i].label=nv.trim();onChange();}
+  };
 }
-$('fbRefresh').onclick=function(){loadFeedback();toast('حُدّثت');};
-
-/* ═══════ الزوار ═══════ */
-function loadVisitors(){
- api('/admin/visitors').then(function(r){
-  if(r.error){toast('انتهت الجلسة',true);return;}
-  $('vLive').innerHTML=
-   '<div class="st"><div class="n">'+r.liveNow+'</div><div class="l">نشط الآن</div></div>'+
-   '<div class="st"><div class="n">'+r.total+'</div><div class="l">إجمالي الزوار</div></div>';
-  var h='',max=1,i;
-  for(i=0;i<r.days.length;i++)if(r.days[i].opens>max)max=r.days[i].opens;
-  for(i=0;i<r.days.length;i++){
-   var d=r.days[i],w=Math.round(d.opens/max*100);
-   var lbl=(i===0)?'اليوم':(i===1?'أمس':d.day.slice(5));
-   h+='<div style="margin-bottom:9px">'+
-    '<div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;margin-bottom:4px">'+
-     '<span style="color:rgba(255,255,255,.75)">'+lbl+'</span>'+
-     '<span style="color:#e6b45e">'+d.unique+' فريد · '+d.opens+' فتحة</span></div>'+
-    '<div style="height:6px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden">'+
-     '<div style="height:100%;width:'+w+'%;background:linear-gradient(90deg,#e6b45e,#7fe39a);border-radius:99px"></div>'+
-    '</div></div>';
-  }
-  $('vDays').innerHTML=h;
- }).catch(function(){toast('تعذّر جلب الإحصاءات',true);});
-}
-$('vRefresh').onclick=function(){loadVisitors();toast('حُدّثت');};
-
-/* ===== الخروج ===== */
-$('logoutBtn').onclick=function(){
- PASS='';
- try{sessionStorage.removeItem('nafaf_pass');}catch(e){}
- $('panel').className='hide';
- $('gate').className='gate';
- $('pass').value='';
- toast('خرجت من اللوحة');
+</script>
+<script>
+/* ═══════ عرض كل الصفحات ═══════ */
+var FEAT_NAMES={
+  pulseRing:['نبض نفاف','حلقة الحرارة التفاعلية'],
+  quakes:['أرشيف الزلازل','تبويب الزلازل التعليمي'],
+  gallery:['معرض أجواء نفاف','صور المراسلين'],
+  reporters:['نظام المراسلين','الرصد المجتمعي'],
+  worldWindow:['نافذة العالم','مدن العالم'],
+  activities:['أنشطة يومك','التسع دوائر'],
+  records:['الأرقام القياسية','سجلات موقعك'],
+  village:['خلفية القرية','مشهد القرية خلف الحرارة']
 };
+var SRC_NAMES={
+  openMeteo:['Open-Meteo','المصدر الأساسي للطقس'],
+  ecmwf:['ECMWF','النموذج الأوروبي'],
+  icon:['ICON','النموذج الألماني'],
+  gfs:['GFS','النموذج الأمريكي'],
+  rainviewer:['RainViewer','رادار الأمطار'],
+  gibs:['NASA GIBS','صور الأقمار الصناعية']
+};
+
+function renderAll(){
+  if(!DRAFT)return;
+  updateDraft();
+  /* التبويبات */
+  dragList('navList',DRAFT.navigation||[],function(){markDirty();renderAll();},{rename:true});
+  /* المكوّنات */
+  if(DRAFT.blocks&&DRAFT.blocks.now)
+    dragList('blockList',DRAFT.blocks.now,function(){markDirty();renderAll();},{rename:true});
+  /* الميزات */
+  var fs=DRAFT.features||{}, fh='';
+  for(var k in FEAT_NAMES){
+    var on=(fs[k]!==false);
+    fh+='<div class="rowSw"><span>'+FEAT_NAMES[k][0]+
+      '<div class="rd">'+FEAT_NAMES[k][1]+'</div></span>'+
+      '<span class="sw'+(on?' on':'')+'" data-feat="'+k+'"></span></div>';
+  }
+  $('featList').innerHTML=fh;
+  var sws=$('featList').querySelectorAll('[data-feat]');
+  for(var i=0;i<sws.length;i++)sws[i].onclick=function(){
+    var f=this.getAttribute('data-feat');
+    if(!DRAFT.features)DRAFT.features={};
+    DRAFT.features[f]=(DRAFT.features[f]===false);
+    markDirty();renderAll();
+  };
+  /* المظهر */
+  var th=(DRAFT.theme&&DRAFT.theme.mode)||'dark';
+  var tho=$('thOpts').children;
+  for(var t=0;t<tho.length;t++)
+    tho[t].className='opt'+(tho[t].getAttribute('data-th')===th?' sel':'');
+  $('swThUser').className='sw'+((DRAFT.theme&&DRAFT.theme.allowUserChange!==false)?' on':'');
+  var rs=(DRAFT.ui&&DRAFT.ui.rotateSec)||4;
+  var ro=$('rotOpts').children;
+  for(var r=0;r<ro.length;r++)
+    ro[r].className='opt'+(+ro[r].getAttribute('data-rot')===rs?' sel':'');
+  /* المصادر */
+  var srcs=DRAFT.sources||{}, sh='';
+  for(var s in SRC_NAMES){
+    var so=srcs[s]||{enabled:true};
+    sh+='<div class="rowSw"><span>'+SRC_NAMES[s][0]+
+      '<div class="rd">'+SRC_NAMES[s][1]+'</div></span>'+
+      '<span class="sw'+(so.enabled!==false?' on':'')+'" data-src="'+s+'"></span></div>';
+  }
+  $('srcList').innerHTML=sh;
+  var ss=$('srcList').querySelectorAll('[data-src]');
+  for(var q=0;q<ss.length;q++)ss[q].onclick=function(){
+    var k2=this.getAttribute('data-src');
+    if(!DRAFT.sources)DRAFT.sources={};
+    if(!DRAFT.sources[k2])DRAFT.sources[k2]={enabled:true};
+    DRAFT.sources[k2].enabled=(DRAFT.sources[k2].enabled===false);
+    markDirty();renderAll();
+  };
+  /* القواعد */
+  renderRules();
+}
+
+/* المظهر */
+var tho=$('thOpts').children;
+for(var i=0;i<tho.length;i++)tho[i].onclick=function(){
+  if(!DRAFT.theme)DRAFT.theme={};
+  DRAFT.theme.mode=this.getAttribute('data-th');
+  markDirty();renderAll();
+};
+$('swThUser').onclick=function(){
+  if(!DRAFT.theme)DRAFT.theme={};
+  DRAFT.theme.allowUserChange=(DRAFT.theme.allowUserChange===false);
+  markDirty();renderAll();
+};
+var roo=$('rotOpts').children;
+for(var j=0;j<roo.length;j++)roo[j].onclick=function(){
+  if(!DRAFT.ui)DRAFT.ui={};
+  DRAFT.ui.rotateSec=+this.getAttribute('data-rot');
+  markDirty();renderAll();
+};
+
+/* ═══════ القواعد الذكية ═══════ */
+var R_ACT='card';
+var ra=$('rAct').children;
+for(var a=0;a<ra.length;a++)ra[a].onclick=function(){
+  for(var z=0;z<ra.length;z++)ra[z].className='opt';
+  this.className='opt sel'; R_ACT=this.getAttribute('data-act');
+};
+var METRIC_AR={rain:'احتمال المطر',wind:'سرعة الرياح',temp:'الحرارة',hum:'الرطوبة',dust:'الغبار'};
+var ACT_AR={card:'إظهار بطاقة',notify:'إرسال إشعار',top:'رفع الرصد للأعلى'};
+$('bAddRule').onclick=function(){
+  var txt=$('rText').value.trim();
+  if(!txt){toast('اكتب النص المعروض',true);return;}
+  if(!DRAFT.rules)DRAFT.rules=[];
+  DRAFT.rules.push({
+    id:'r'+Date.now(),
+    metric:$('rMetric').value, op:$('rOp').value,
+    value:+$('rVal').value, action:R_ACT, text:txt, enabled:true
+  });
+  $('rText').value='';
+  markDirty();renderRules();
+  toast('أُضيفت القاعدة — اضغط نشر لتفعيلها');
+};
+function renderRules(){
+  var rs=(DRAFT&&DRAFT.rules)||[];
+  if(!rs.length){$('ruleList').innerHTML='<div class="empty">لا قواعد بعد.</div>';return;}
+  $('ruleList').innerHTML=rs.map(function(r,i){
+    return '<div class="tRow"><span class="tag '+(r.enabled!==false?'tOk':'tOff')+'">'+
+      (r.enabled!==false?'فعّالة':'موقوفة')+'</span>'+
+      '<span style="flex:1 1 auto;line-height:1.7">إذا <b>'+METRIC_AR[r.metric]+'</b> '+
+      (r.op==='gt'?'>':'<')+' <b>'+r.value+'</b> → '+ACT_AR[r.action]+
+      '<div style="color:#8b98ab;font-size:11px;margin-top:3px">'+esc(r.text)+'</div></span>'+
+      '<button class="iconBtn" data-rt="'+i+'">'+(r.enabled!==false?'⏸':'▶')+'</button>'+
+      '<button class="iconBtn" data-rd="'+i+'">🗑</button></div>';
+  }).join('');
+  var ts=$('ruleList').querySelectorAll('[data-rt]');
+  for(var t=0;t<ts.length;t++)ts[t].onclick=function(){
+    var i=+this.getAttribute('data-rt');
+    DRAFT.rules[i].enabled=(DRAFT.rules[i].enabled===false);
+    markDirty();renderRules();
+  };
+  var ds=$('ruleList').querySelectorAll('[data-rd]');
+  for(var d=0;d<ds.length;d++)ds[d].onclick=function(){
+    var i=+this.getAttribute('data-rd');
+    DRAFT.rules.splice(i,1);markDirty();renderRules();
+  };
+}
+
+/* ═══════ لوحة القيادة ═══════ */
+function loadDash(){
+  Promise.all([api('/admin/stats'),api('/admin/visitors'),api('/admin/reports'),
+    api('/admin/feedback'),api('/admin/correspondents')])
+  .then(function(res){
+    var st=res[0]||{}, vis=res[1]||{}, rep=res[2]||{}, fb=res[3]||{}, co=res[4]||{};
+    var pend=(rep.reports||[]).filter(function(x){return x.status==='pending'&&!x.expired;}).length;
+    var unread=fb.unread||0;
+    var cpend=(co.pending||[]).length;
+    $('dashKpi').innerHTML=
+      kpi(vis.live!=null?vis.live:'—','نشط الآن','')+
+      kpi(vis.today!=null?vis.today:'—','زوار اليوم','')+
+      kpi(pend,'رصدات تنتظر',pend?'up':'')+
+      kpi(cpend,'طلبات مراسلين',cpend?'up':'')+
+      kpi(unread,'ملاحظات جديدة',unread?'up':'')+
+      kpi(st.subscribers!=null?st.subscribers:'—','مشترك بالإشعارات','');
+    /* الشارات الجانبية */
+    badge('badgeRep',pend); badge('badgeCorr',cpend); badge('badgeFb',unread);
+  });
+}
+function kpi(v,k,cls){
+  return '<div class="kpi"><div class="kv">'+v+'</div><div class="kk">'+k+'</div></div>';
+}
+function badge(id,n){
+  var el=$(id); if(!el)return;
+  if(n>0){el.innerHTML=n;el.style.display='';}else el.style.display='none';
+}
+function loadVersions(){
+  api('/cfg/versions').then(function(r){
+    var vs=(r&&r.versions)||[];
+    if(!vs.length){
+      $('verList').innerHTML='<div class="empty">لا إصدارات سابقة.</div>';
+      $('dashLog').innerHTML='<div class="empty">لا تغييرات مسجّلة.</div>';
+      return;
+    }
+    var rows=vs.map(function(v){
+      return '<div class="tRow"><span>'+
+        new Date(v.ts).toLocaleString('ar',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+
+        '</span><span style="color:#8b98ab;flex:1 1 auto">'+esc(v.note||'')+'</span>'+
+        '<button class="iconBtn" data-rb="'+v.id+'">↩</button></div>';
+    }).join('');
+    $('verList').innerHTML=rows;
+    $('dashLog').innerHTML=vs.slice(0,4).map(function(v){
+      return '<div class="tRow"><span>'+
+        new Date(v.ts).toLocaleString('ar',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+
+        '</span><span style="color:#8b98ab">'+esc(v.note||'تغيير')+'</span></div>';
+    }).join('');
+    var bs=$('verList').querySelectorAll('[data-rb]');
+    for(var i=0;i<bs.length;i++)bs[i].onclick=function(){
+      if(!confirm('الرجوع لهذا الإصدار؟ سيُنشر فورًا.'))return;
+      var id=this.getAttribute('data-rb'); this.innerHTML='…';
+      api('/cfg/rollback',{id:id}).then(function(r){
+        if(r.error){toast('فشل: '+r.error,true);return;}
+        toast('رجعنا للإصدار السابق');loadCfg();loadVersions();
+      });
+    };
+  });
+}
+</script>
+<script>
+/* ═══════ الأخبار ═══════ */
+var N_KIND='info', N_HOURS=3;
+var nk=$('nKind').children;
+for(var i=0;i<nk.length;i++)nk[i].onclick=function(){
+  for(var z=0;z<nk.length;z++)nk[z].className='opt';
+  this.className='opt sel'; N_KIND=this.getAttribute('data-k');
+};
+var nh=$('nHours').children;
+for(var j=0;j<nh.length;j++)nh[j].onclick=function(){
+  for(var z=0;z<nh.length;z++)nh[z].className='opt';
+  this.className='opt sel'; N_HOURS=+this.getAttribute('data-h');
+};
+$('bPubNews').onclick=function(){
+  var t=$('nTitle').value.trim();
+  if(!t){toast('اكتب العنوان',true);return;}
+  var b=this;b.innerHTML='جارٍ…';
+  api('/news/publish',{kind:N_KIND,title:t,body:$('nBody').value.trim(),
+    hours:N_HOURS||null}).then(function(r){
+    b.innerHTML='نشر الخبر';
+    if(r.error){toast('فشل: '+r.error,true);return;}
+    toast('نُشر الخبر');$('nTitle').value='';$('nBody').value='';loadNews();
+  });
+};
+$('bStopNews').onclick=function(){
+  if(!confirm('إيقاف الخبر المنشور؟'))return;
+  api('/news/stop').then(function(){toast('أُوقف الخبر');loadNews();});
+};
+function loadNews(){
+  get('/news').then(function(r){
+    if(!r||!r.title){$('curNews').innerHTML='<div class="empty">لا خبر منشور.</div>';return;}
+    $('curNews').innerHTML='<div class="tRow"><span class="tag tOk">منشور</span>'+
+      '<span style="flex:1 1 auto"><b>'+esc(r.title)+'</b>'+
+      (r.body?'<div style="color:#8b98ab;font-size:11.5px;margin-top:3px">'+esc(r.body)+'</div>':'')+
+      '</span></div>';
+  });
+}
+
+/* ═══════ الرصدات ═══════ */
+var KIND_AR={clear:'صحو',clouds:'غيوم',rain:'مطر',dust:'غبار',humid:'رطوبة',cold:'برد'};
+function loadReports(){
+  api('/admin/reports').then(function(r){
+    var reps=(r&&r.reports)||[];
+    var pend=reps.filter(function(x){return x.status==='pending'&&!x.expired;}).length;
+    $('repCount').innerHTML=pend?(pend+' تنتظر المراجعة'):'';
+    badge('badgeRep',pend);
+    if(!reps.length){$('repList').innerHTML='<div class="empty">لا رصدات واردة.</div>';return;}
+    $('repList').innerHTML=reps.map(function(x){
+      var cls=x.expired?'tOff':(x.status==='approved'?'tOk':'tWarn');
+      var lbl=x.expired?'منتهٍ':(x.status==='approved'?'منشور':'ينتظر');
+      return '<div class="tRow" style="flex-wrap:wrap">'+
+        '<span class="tag '+cls+'">'+lbl+'</span>'+
+        (x.isCorr?'<span class="tag tOk">مراسل</span>':'')+
+        '<span style="font-weight:800">'+(KIND_AR[x.kind]||x.kind)+'</span>'+
+        '<span style="color:#8b98ab">'+esc(x.wilaya||'—')+'</span>'+
+        '<span style="margin-inline-start:auto;font-size:10px;color:#6b7789">'+
+          new Date(x.ts).toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'})+'</span>'+
+        (x.photo?'<img src="'+x.photo+'" style="width:100%;max-height:110px;object-fit:cover;border-radius:10px;margin-top:6px" />':'')+
+        (x.lat!=null?'<div style="width:100%;font-size:10px;color:#6b7789;direction:ltr;text-align:left">'+
+          x.lat+', '+x.lon+' · <a href="https://maps.google.com/?q='+x.lat+','+x.lon+
+          '" target="_blank" style="color:#9fd4f5">خريطة</a></div>':'')+
+        '<div style="width:100%;display:flex;gap:6px;margin-top:6px">'+
+          (x.status==='pending'&&!x.expired?'<button class="btn ghost" style="flex:1;padding:7px" data-ra="'+x.id+'">✓ نشر</button>':'')+
+          (x.photo?'<button class="btn ghost" style="padding:7px" data-gp="'+x.id+'">📷 للمعرض</button>':'')+
+          '<button class="btn red" style="padding:7px" data-rr="'+x.id+'">🗑</button>'+
+        '</div></div>';
+    }).join('');
+    wireRepBtns();
+  });
+}
+function wireRepBtns(){
+  var bs=$('repList').querySelectorAll('button');
+  for(var i=0;i<bs.length;i++)bs[i].onclick=function(){
+    var el=this;
+    if(el.hasAttribute('data-gp')){
+      el.innerHTML='…';
+      api('/admin/gallery/add',{id:el.getAttribute('data-gp')}).then(function(r){
+        toast(r.error?('فشل: '+r.error):'أُضيفت للمعرض');loadReports();});
+      return;
+    }
+    var id=el.getAttribute('data-ra')||el.getAttribute('data-rr');
+    var dec=el.hasAttribute('data-ra')?'approve':'reject';
+    el.innerHTML='…';
+    api('/admin/report/decide',{id:id,decision:dec}).then(function(){
+      toast(dec==='approve'?'نُشر الرصد':'حُذف');loadReports();});
+  };
+}
+$('bRepRef').onclick=function(){loadReports();toast('حُدّثت');};
+$('bRepClean').onclick=function(){
+  var b=this;b.innerHTML='جارٍ…';
+  api('/admin/reports').then(function(r){
+    var old=((r&&r.reports)||[]).filter(function(x){return x.expired;});
+    if(!old.length){b.innerHTML='🗑 حذف المنتهية';toast('لا رصدات منتهية');return;}
+    var done=0;
+    old.forEach(function(x){
+      api('/admin/report/decide',{id:x.id,decision:'reject'}).then(function(){
+        if(++done===old.length){b.innerHTML='🗑 حذف المنتهية';
+          toast('حُذفت '+done);loadReports();}
+      });
+    });
+  });
+};
+/* إعدادات الرصد */
+var REPC={reportTTL:30,consensusWindow:60,autoPublishSolo:false};
+function loadRepCfg(){
+  get('/config').then(function(c){
+    REPC.reportTTL=c.reportTTL||30;
+    REPC.consensusWindow=c.consensusWindow||60;
+    REPC.autoPublishSolo=!!c.autoPublishSolo;
+    paintRepCfg();
+  });
+}
+function paintRepCfg(){
+  [['repTTL','reportTTL'],['repCons','consensusWindow']].forEach(function(pr){
+    var box=$(pr[0]); if(!box)return;
+    for(var i=0;i<box.children.length;i++)
+      box.children[i].className='opt'+(+box.children[i].getAttribute('data-v')===REPC[pr[1]]?' sel':'');
+  });
+  $('swAutoSolo').className='sw'+(REPC.autoPublishSolo?' on':'');
+}
+['repTTL','repCons'].forEach(function(id){
+  var box=$(id); if(!box)return;
+  for(var i=0;i<box.children.length;i++)box.children[i].onclick=function(){
+    var v=+this.getAttribute('data-v');
+    if(id==='repTTL')REPC.reportTTL=v; else REPC.consensusWindow=v;
+    paintRepCfg();
+  };
+});
+$('swAutoSolo').onclick=function(){REPC.autoPublishSolo=!REPC.autoPublishSolo;paintRepCfg();};
+$('bSaveRep').onclick=function(){
+  var b=this;b.innerHTML='جارٍ…';
+  api('/config/save',REPC).then(function(r){
+    b.innerHTML='حفظ';
+    toast(r.error?'فشل الحفظ':'حُفظت إعدادات الرصد');
+  });
+};
+
+/* ═══════ المراسلون ═══════ */
+function loadCorr(){
+  api('/admin/correspondents').then(function(r){
+    if(r.error)return;
+    var p=(r.pending||[]), a=(r.approved||[]);
+    badge('badgeCorr',p.length);
+    var h='';
+    if(p.length){
+      h+='<div style="font-size:11px;font-weight:800;color:#ffd166;margin-bottom:8px">'+
+        p.length+' طلب ينتظر</div>';
+      h+=p.map(function(x){
+        return '<div class="tRow" style="flex-wrap:wrap">'+
+          '<span style="font-weight:800;width:100%">'+esc(x.name)+' — '+esc(x.wilaya||'')+'</span>'+
+          '<span style="color:#8b98ab;font-size:11px;width:100%">'+esc(x.email||'')+'</span>'+
+          (x.why?'<span style="color:#b6c2d3;font-size:11.5px;line-height:1.7;width:100%">'+esc(x.why)+'</span>':'')+
+          '<div style="width:100%;display:flex;gap:6px;margin-top:6px">'+
+          '<button class="btn ghost" style="flex:1;padding:7px" data-ok="'+x.vid+'">✓ اعتماد</button>'+
+          '<button class="btn red" style="flex:1;padding:7px" data-no="'+x.vid+'">رفض</button></div></div>';
+      }).join('');
+    }
+    if(a.length){
+      h+='<div style="font-size:11px;font-weight:800;color:#7fe39a;margin:14px 0 8px">'+
+        a.length+' معتمد</div>';
+      h+=a.map(function(x){
+        return '<div class="tRow"><span class="tag tOk">معتمد</span>'+
+          '<span style="flex:1 1 auto">'+esc(x.name)+' — '+esc(x.wilaya||'')+'</span>'+
+          '<button class="iconBtn" data-rv="'+x.vid+'">✕</button></div>';
+      }).join('');
+    }
+    $('corrList').innerHTML=h||'<div class="empty">لا طلبات ولا مراسلين.</div>';
+    var bs=$('corrList').querySelectorAll('button');
+    for(var i=0;i<bs.length;i++)bs[i].onclick=function(){
+      var vid=this.getAttribute('data-ok')||this.getAttribute('data-no')||this.getAttribute('data-rv');
+      var dec=this.hasAttribute('data-ok')?'approve':(this.hasAttribute('data-rv')?'revoke':'reject');
+      this.innerHTML='…';
+      api('/admin/correspondent/decide',{vid:vid,decision:dec}).then(function(){
+        toast(dec==='approve'?'اعتُمد':'تم');loadCorr();});
+    };
+  });
+}
+
+/* ═══════ الملاحظات ═══════ */
+var FB_AR={idea:'💡 اقتراح',bug:'🐞 مشكلة',complaint:'⚠ شكوى',other:'✉ أخرى'};
+function loadFeedback(){
+  api('/admin/feedback').then(function(r){
+    if(r.error)return;
+    var items=r.items||[];
+    badge('badgeFb',r.unread||0);
+    if(!items.length){$('fbList').innerHTML='<div class="empty">لا ملاحظات.</div>';return;}
+    $('fbList').innerHTML=items.map(function(f){
+      return '<div class="tRow" style="flex-wrap:wrap'+(f.read?';opacity:.55':'')+'">'+
+        '<span style="font-weight:800;color:#e6b45e">'+(FB_AR[f.kind]||f.kind)+'</span>'+
+        '<span style="margin-inline-start:auto;font-size:10px;color:#6b7789">'+
+          new Date(f.ts).toLocaleString('ar',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+'</span>'+
+        '<div style="width:100%;line-height:1.8;margin-top:5px">'+esc(f.text)+'</div>'+
+        (f.contact?'<div style="width:100%;color:#9fd4f5;font-size:11px;direction:ltr;text-align:left">'+esc(f.contact)+'</div>':'')+
+        '<div style="width:100%;display:flex;gap:6px;margin-top:6px">'+
+        (f.read?'':'<button class="btn ghost" style="flex:1;padding:7px" data-fr="'+f.id+'">✓ مقروءة</button>')+
+        '<button class="btn red" style="padding:7px" data-fd="'+f.id+'">🗑</button></div></div>';
+    }).join('');
+    var bs=$('fbList').querySelectorAll('button');
+    for(var i=0;i<bs.length;i++)bs[i].onclick=function(){
+      var id=this.getAttribute('data-fr')||this.getAttribute('data-fd');
+      var act=this.hasAttribute('data-fd')?'delete':'read';
+      this.innerHTML='…';
+      api('/admin/feedback/act',{id:id,act:act}).then(function(){loadFeedback();});
+    };
+  });
+}
+</script>
+<script>
+/* ═══════ المحاكاة ═══════ */
+['sTemp','sHum','sWind','sRain'].forEach(function(id){
+  var el=$(id); if(!el)return;
+  el.oninput=function(){
+    var v=this.value;
+    if(id==='sTemp')$('vTemp').innerHTML=v+'°';
+    if(id==='sHum')$('vHum').innerHTML=v+'%';
+    if(id==='sWind')$('vWind').innerHTML=v;
+    if(id==='sRain')$('vRain').innerHTML=v+'%';
+  };
+});
+$('bRunSim').onclick=function(){
+  var t=+$('sTemp').value, h=+$('sHum').value,
+      w=+$('sWind').value, r=+$('sRain').value;
+  /* نفس منطق التطبيق */
+  var state, desc;
+  if(r>=70){state='مطر';desc='المطر نازل عندك';}
+  else if(r>=40){state='أمطار محتملة';desc='فيه احتمال مطر قريب';}
+  else if(w>=45){state='رياح قوية';desc='الرياح نشطة اليوم';}
+  else if(t>=42){state='حر شديد';desc='الحر ثقيل — خفّف الحركة بالظهر';}
+  else if(t>=38&&h>=60){state='حر رطب';desc='الحرارة والرطوبة متكاتفين عليك';}
+  else if(t<=12){state='برد';desc='الجو بارد اليوم';}
+  else {state='صحو';desc='صحو لطيف';}
+  /* الإحساس */
+  var feel=t;
+  if(t>=27&&h>=40)feel=Math.round(t+(h-40)*0.12);
+  else if(t<=10&&w>=10)feel=Math.round(t-(w*0.12));
+  /* الأنشطة */
+  var acts=[];
+  acts.push(['غسيل السيارة', r>=40?'❌ أجّله — احتمال مطر':'✅ مناسب']);
+  acts.push(['نشر الغسيل', (r>=40||h>=80)?'❌ ما ينشف':'✅ ينشف زين']);
+  acts.push(['المشي', (t>=40||w>=40)?'❌ أجّله':'✅ مناسب']);
+  acts.push(['الكشتة', (w>=35||r>=50)?'❌ غير مناسب':'✅ ممتاز']);
+  /* القواعد */
+  var fired=[];
+  ((DRAFT&&DRAFT.rules)||[]).forEach(function(rl){
+    if(rl.enabled===false)return;
+    var val={rain:r,wind:w,temp:t,hum:h,dust:0}[rl.metric];
+    if(val==null)return;
+    var hit=(rl.op==='gt')?(val>rl.value):(val<rl.value);
+    if(hit)fired.push(rl);
+  });
+  var out='<div><b>الحالة:</b> '+state+'</div>'+
+    '<div><b>يقول نفاف:</b> '+desc+'</div>'+
+    '<div><b>الإحساس الحراري:</b> '+feel+'°</div>'+
+    '<div style="margin-top:9px"><b>الأنشطة:</b></div>'+
+    acts.map(function(a){return '<div style="font-size:12px;color:#b6c2d3">· '+a[0]+' — '+a[1]+'</div>';}).join('');
+  if(fired.length){
+    out+='<div style="margin-top:11px"><b>قواعد ستُفعَّل:</b></div>'+
+      fired.map(function(f){
+        return '<div style="font-size:12px;color:#ffd166">⚡ '+ACT_AR[f.action]+': '+esc(f.text)+'</div>';
+      }).join('');
+  } else {
+    out+='<div style="margin-top:11px;font-size:12px;color:#6b7789">لا قواعد تُفعَّل بهذي القيم.</div>';
+  }
+  $('simOut').innerHTML=out;
+};
+
+/* ═══════ فاحص البيانات ═══════ */
+$('bInsp').onclick=function(){
+  var q=$('inspQ').value.trim();
+  if(!q){toast('اكتب اسم موقع',true);return;}
+  var b=this;b.innerHTML='…';
+  $('inspOut').innerHTML='<div class="empty">جارٍ الجلب…</div>';
+  fetch('https://geocoding-api.open-meteo.com/v1/search?name='+
+    encodeURIComponent(q)+'&count=1&language=ar')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var c=(d.results||[])[0];
+    if(!c){b.innerHTML='فحص';$('inspOut').innerHTML='<div class="empty">لم نجد الموقع.</div>';return;}
+    return fetch('https://api.open-meteo.com/v1/forecast?latitude='+c.latitude+
+      '&longitude='+c.longitude+'&current=temperature_2m,relative_humidity_2m,'+
+      'apparent_temperature,wind_speed_10m,wind_gusts_10m,pressure_msl,precipitation'+
+      '&timezone=auto')
+      .then(function(r){return r.json();})
+      .then(function(w){
+        b.innerHTML='فحص';
+        var cu=w.current||{};
+        $('inspOut').innerHTML='<div class="simOut">'+
+          '<div><b>'+esc(c.name)+'</b> — '+esc(c.country||'')+'</div>'+
+          '<div style="direction:ltr;text-align:left;font-size:11.5px;color:#8b98ab">'+
+            c.latitude+', '+c.longitude+'</div>'+
+          '<div style="font-size:11.5px;color:#8b98ab">'+esc(w.timezone||'')+
+            ' (UTC'+(w.utc_offset_seconds>=0?'+':'')+(w.utc_offset_seconds/3600)+')</div>'+
+          '<div style="margin-top:9px">'+
+          row('الحرارة',cu.temperature_2m+'°')+
+          row('الإحساس',cu.apparent_temperature+'°')+
+          row('الرطوبة',cu.relative_humidity_2m+'%')+
+          row('الرياح',cu.wind_speed_10m+' كم/س')+
+          row('الهبّات',(cu.wind_gusts_10m||'—')+' كم/س')+
+          row('الضغط',cu.pressure_msl+' hPa')+
+          row('المطر',(cu.precipitation||0)+' ملم')+
+          '</div><div style="margin-top:9px;font-size:11px;color:#6b7789">'+
+          'المصدر: Open-Meteo · best_match</div></div>';
+      });
+  }).catch(function(){b.innerHTML='فحص';$('inspOut').innerHTML='<div class="empty">تعذّر الجلب.</div>';});
+};
+function row(k,v){
+  return '<div style="display:flex;gap:9px;font-size:12.5px;padding:3px 0">'+
+    '<span style="color:#8b98ab">'+k+'</span>'+
+    '<span style="margin-inline-start:auto;font-weight:800">'+v+'</span></div>';
+}
+
+/* ═══════ الإحصاءات ═══════ */
+function loadAnalytics(){
+  api('/admin/visitors').then(function(r){
+    if(r.error)return;
+    $('anKpi').innerHTML=
+      kpi(r.live!=null?r.live:'—','نشط الآن')+
+      kpi(r.today!=null?r.today:'—','اليوم')+
+      kpi(r.total!=null?r.total:'—','الإجمالي')+
+      kpi(r.opens!=null?r.opens:'—','مرات الفتح');
+    var days=r.days||[];
+    if(!days.length){$('anChart').innerHTML='<div class="empty">لا بيانات.</div>';return;}
+    var mx=Math.max.apply(null,days.map(function(d){return d.n||0;}))||1;
+    $('anChart').innerHTML=days.map(function(d){
+      var pct=Math.round((d.n||0)/mx*100);
+      return '<div style="display:flex;align-items:center;gap:9px;padding:4px 0;font-size:11px">'+
+        '<span style="color:#8b98ab;flex:0 0 62px">'+esc(d.d||'')+'</span>'+
+        '<span style="flex:1 1 auto;height:7px;border-radius:99px;background:rgba(255,255,255,.08)">'+
+        '<span style="display:block;height:100%;width:'+pct+'%;border-radius:99px;background:#e6b45e"></span></span>'+
+        '<span style="font-weight:800;flex:0 0 34px;text-align:end">'+(d.n||0)+'</span></div>';
+    }).join('');
+  });
+}
+
+/* ═══════ صحة النظام ═══════ */
+function runHealth(){
+  $('healthList').innerHTML='<div class="empty">جارٍ الفحص…</div>';
+  var checks=[
+    ['خادم نفاف', API+'/state'],
+    ['بيانات الطقس','https://api.open-meteo.com/v1/forecast?latitude=23.6&longitude=58.4&current=temperature_2m'],
+    ['البحث الجغرافي','https://geocoding-api.open-meteo.com/v1/search?name=muscat&count=1'],
+    ['عكس الترميز','https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=23.6&longitude=58.4&localityLanguage=ar']
+  ];
+  var res=[];
+  var done=0;
+  checks.forEach(function(c,i){
+    var t0=Date.now();
+    fetch(c[1]).then(function(r){
+      res[i]={n:c[0],ok:r.ok,ms:Date.now()-t0};
+    }).catch(function(){
+      res[i]={n:c[0],ok:false,ms:Date.now()-t0};
+    }).then(function(){
+      if(++done===checks.length)paintHealth(res);
+    });
+  });
+}
+function paintHealth(res){
+  $('healthList').innerHTML=res.map(function(r){
+    var cls=r.ok?(r.ms>2500?'hWarn':'hOk'):'hBad';
+    var txt=r.ok?(r.ms>2500?'بطيء':'سليم'):'فشل';
+    return '<div class="hRow"><span class="hDot '+cls+'"></span>'+
+      '<span>'+r.n+'</span><span class="ht">'+txt+' · '+r.ms+'ms</span></div>';
+  }).join('');
+  var bad=res.filter(function(r){return !r.ok;}).length;
+  var hs=$('hstat');
+  if(bad){hs.style.color='#ff9b9b';hs.innerHTML='<i></i>'+bad+' خلل';}
+  else {hs.style.color='#7fe39a';hs.innerHTML='<i></i>يعمل';}
+}
+$('bHealth').onclick=runHealth;
+
+/* ═══════ الإعدادات ═══════ */
+function loadLinks(){
+  var links=[
+    ['التطبيق','https://alhutar0.github.io/Nafaf/'],
+    ['مركز القيادة','https://alhutar0.github.io/Nafaf/portal.html'],
+    ['الخادم',API],
+    ['المستودع','https://github.com/alhutar0/Nafaf']
+  ];
+  $('linkList').innerHTML=links.map(function(l){
+    return '<div class="tRow"><span style="color:#8b98ab;flex:0 0 88px">'+l[0]+'</span>'+
+      '<a href="'+l[1]+'" target="_blank" style="color:#9fd4f5;flex:1 1 auto;'+
+      'word-break:break-all;font-size:11px;direction:ltr;text-align:left">'+l[1]+'</a></div>';
+  }).join('');
+}
+$('bChPass').onclick=function(){
+  var a=$('np1').value.trim(), b2=$('np2').value.trim();
+  if(a.length<6){toast('الرمز قصير — ٦ خانات فأكثر',true);return;}
+  if(a!==b2){toast('الرمزان غير متطابقين',true);return;}
+  var b=this;b.innerHTML='جارٍ…';
+  api('/admin/pass',{newPass:a}).then(function(r){
+    b.innerHTML='حفظ الرمز';
+    if(r.error){toast('فشل: '+r.error,true);return;}
+    PASS=a;$('np1').value='';$('np2').value='';
+    toast('حُفظ الرمز الجديد');
+  });
+};
+$('bLogout').onclick=function(){
+  if(!confirm('تسجيل الخروج؟'))return;
+  PASS='';$('app').className='';$('login').className='';$('pass').value='';
+};
+
+/* ═══════ الإقلاع ═══════ */
+function bootAll(){
+  loadCfg(); loadDash(); loadVersions();
+  runHealth();
+  setInterval(loadDash,60000);
+}
 </script>
 </body>
 </html>
