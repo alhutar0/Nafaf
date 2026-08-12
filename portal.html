@@ -213,6 +213,19 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
 .toast.on{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.err{background:#ff8f8f;color:#3d0d0d}
 .empty{text-align:center;padding:26px 12px;color:#6b7789;font-size:12.5px;line-height:1.8}
+
+    .galG{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+    .galIt{position:relative;border-radius:13px;overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);background:#0e1420}
+    .galIt img{width:100%;height:120px;object-fit:cover;display:block}
+    .gi-meta{padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+    .gi-w{font-size:12px;font-weight:800;color:#fff}
+    .gi-n{font-size:10.5px;font-weight:700;color:#e6b45e}
+    .gi-t{font-size:9.5px;color:#6b7789}
+    .gi-del{width:100%;border:0;border-top:1px solid rgba(255,255,255,.08);
+      background:rgba(220,90,90,.16);color:#ff9b9b;font-family:inherit;
+      font-size:11.5px;font-weight:800;padding:9px 0;cursor:pointer}
+    .gi-del:active{background:rgba(220,90,90,.3)}
 </style>
 </head>
 <body>
@@ -263,6 +276,7 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
       <div class="navGrp">التواصل</div>
       <div class="navItem" data-p="news"><span class="ni">📢</span>الأخبار العاجلة</div>
       <div class="navItem" data-p="reports"><span class="ni">👁</span>الرصدات<span class="nb" id="badgeRep" style="display:none">0</span></div>
+      <div class="navItem" data-p="gallery"><span class="ni">📷</span>معرض الأجواء<span class="nb" id="badgeGal" style="display:none">0</span></div>
       <div class="navItem" data-p="corr"><span class="ni">🎖</span>المراسلون<span class="nb" id="badgeCorr" style="display:none">0</span></div>
       <div class="navItem" data-p="feedback"><span class="ni">✉</span>الملاحظات<span class="nb" id="badgeFb" style="display:none">0</span></div>
 
@@ -540,6 +554,23 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
         </div>
       </section>
 
+
+      <!-- 📷 معرض الأجواء -->
+      <section class="sec" data-s="gallery">
+        <div class="pageHead">
+          <div class="pageTitle">معرض أجواء نفاف</div>
+          <div class="pageSub">كل صورة منشورة — احذف أي صورة فورًا متى شئت</div>
+        </div>
+        <div class="card">
+          <h3>الصور المنشورة<small id="galCount"></small></h3>
+          <div id="galGrid"></div>
+          <div style="display:flex;gap:7px;margin-top:12px">
+            <button class="btn ghost" id="bGalRef" style="flex:1">تحديث</button>
+            <button class="btn red" id="bGalClear" style="flex:1">🗑 إفراغ المعرض</button>
+          </div>
+        </div>
+      </section>
+
       <!-- 🎖 المراسلون -->
       <section class="sec" data-s="corr">
         <div class="pageHead">
@@ -720,7 +751,8 @@ function goPage(p){
   window.scrollTo(0,0);
   /* تحميل عند الحاجة */
   if(p==='reports'){loadReports();loadRepCfg();}
-  if(p==='corr')loadCorr();
+  if(p==='gallery')loadGallery();
+ if(p==='corr')loadCorr();
   if(p==='feedback')loadFeedback();
   if(p==='news')loadNews();
  if(p==='fusion')renderFusion();
@@ -1252,7 +1284,8 @@ function loadReports(){
           '" target="_blank" style="color:#9fd4f5">خريطة</a></div>':'')+
         '<div style="width:100%;display:flex;gap:6px;margin-top:6px">'+
           (x.status==='pending'&&!x.expired?'<button class="btn ghost" style="flex:1;padding:7px" data-ra="'+x.id+'">✓ نشر</button>':'')+
-          (x.photo?'<button class="btn ghost" style="padding:7px" data-gp="'+x.id+'">📷 للمعرض</button>':'')+
+          (x.photo?'<button class="btn ghost" style="padding:7px" data-gp="'+x.id+'">📷 للمعرض</button>'+
+          '<button class="btn red" style="padding:7px" data-gr="'+x.id+'">↩ سحب</button>':'')+
           '<button class="btn red" style="padding:7px" data-rr="'+x.id+'">🗑</button>'+
         '</div></div>';
     }).join('');
@@ -1267,6 +1300,13 @@ function wireRepBtns(){
       el.innerHTML='…';
       api('/admin/gallery/add',{id:el.getAttribute('data-gp')}).then(function(r){
         toast(r.error?('فشل: '+r.error):'أُضيفت للمعرض');loadReports();});
+      return;
+    }
+    /* ★ سحب الصورة من المعرض دون حذف الرصد */
+    if(el.hasAttribute('data-gr')){
+      el.innerHTML='…';
+      api('/admin/gallery/remove',{id:el.getAttribute('data-gr')}).then(function(r){
+        toast(r.error?('فشل: '+r.error):'سُحبت من المعرض');loadReports();});
       return;
     }
     var id=el.getAttribute('data-ra')||el.getAttribute('data-rr');
@@ -1324,6 +1364,63 @@ $('bSaveRep').onclick=function(){
     b.innerHTML='حفظ';
     toast(r.error?'فشل الحفظ':'حُفظت إعدادات الرصد');
   });
+};
+
+/* ═══════ معرض الأجواء ═══════ */
+function loadGallery(){
+ get('/gallery').then(function(r){
+  var ph=(r&&r.photos)||[];
+  badge('badgeGal',ph.length);
+  $('galCount').innerHTML=ph.length?(ph.length+' صورة'):'';
+  if(!ph.length){
+   $('galGrid').innerHTML='<div class="empty">لا صور منشورة.<br>'+
+    'اعتمد صورة من صفحة «الرصدات» لتظهر هنا.</div>';
+   return;
+  }
+  $('galGrid').innerHTML='<div class="galG">'+ph.map(function(g){
+   return '<div class="galIt">'+
+    '<img src="'+g.photo+'" alt="" />'+
+    '<div class="gi-meta">'+
+     '<span class="gi-w">'+esc(g.wilaya||'—')+'</span>'+
+     (g.name?'<span class="gi-n">'+esc(g.name)+'</span>':'')+
+     '<span class="gi-t">'+new Date(g.ts).toLocaleDateString('ar',
+       {month:'short',day:'numeric'})+'</span>'+
+    '</div>'+
+    '<button class="gi-del" data-gd="'+g.id+'">🗑 حذف</button>'+
+   '</div>';
+  }).join('')+'</div>';
+
+  var bs=$('galGrid').querySelectorAll('[data-gd]');
+  for(var i=0;i<bs.length;i++)bs[i].onclick=function(){
+   if(!confirm('حذف هذه الصورة من المعرض نهائيًا؟'))return;
+   var id=this.getAttribute('data-gd');
+   this.innerHTML='…';
+   api('/admin/gallery/remove',{id:id}).then(function(r){
+    if(r.error){toast('فشل الحذف: '+r.error,true);return;}
+    toast('حُذفت الصورة');
+    loadGallery();
+   });
+  };
+ });
+}
+$('bGalRef').onclick=function(){loadGallery();toast('حُدّث المعرض');};
+$('bGalClear').onclick=function(){
+ if(!confirm('حذف كل الصور من المعرض؟ لا يمكن التراجع.'))return;
+ var b=this;b.innerHTML='جارٍ…';
+ get('/gallery').then(function(r){
+  var ph=(r&&r.photos)||[];
+  if(!ph.length){b.innerHTML='🗑 إفراغ المعرض';toast('المعرض فارغ');return;}
+  var done=0;
+  ph.forEach(function(g){
+   api('/admin/gallery/remove',{id:g.id}).then(function(){
+    if(++done===ph.length){
+     b.innerHTML='🗑 إفراغ المعرض';
+     toast('حُذفت '+done+' صورة');
+     loadGallery();
+    }
+   });
+  });
+ });
 };
 
 /* ═══════ المراسلون ═══════ */

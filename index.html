@@ -5435,10 +5435,10 @@ function quakesLoad(force){
  });
  }
  QUAKES=out; QUAKES_TS=Date.now(); QUAKES_LOADING=false;
- if(TAB==='quake')renderQuakes();if(TAB==='gallery')renderGallery();
+ if(TAB==='quake')renderQuakes();if(TAB==='gallery'){galleryLoad(true);renderGallery();}
  }).catch(function(){
  QUAKES_LOADING=false; QUAKES=[];
- if(TAB==='quake')renderQuakes();if(TAB==='gallery')renderGallery();
+ if(TAB==='quake')renderQuakes();if(TAB==='gallery'){galleryLoad(true);renderGallery();}
  });
 }
 
@@ -8104,7 +8104,7 @@ function worldLoad(){
  lo:(it.daily&&it.daily.temperature_2m_min)?it.daily.temperature_2m_min[0]:null});
  }
  WORLD_LOADING=false;
- if(TAB==='world')renderWorld();if(TAB==='quake')renderQuakes();if(TAB==='gallery')renderGallery();
+ if(TAB==='world')renderWorld();if(TAB==='quake')renderQuakes();if(TAB==='gallery'){galleryLoad(true);renderGallery();}
  }).catch(function(){WORLD_LOADING=false;
  var b=$("worldBody");
  if(b)b.innerHTML='<div class="loading">'+pick('تعذّر جلب سما العالم.','تعذّر الجلب.','Could not load world skies.')+'</div>';});
@@ -8719,12 +8719,15 @@ function showGibsExtra(kind){
  ============================================================ */
 var GALLERY=null, GAL_LOADING=false;
 
+var GAL_TS=0;
 function galleryLoad(force){
  if(GAL_LOADING||!PUSH_URL)return;
- if(!force&&GALLERY)return;
+ /* ★ كان يخزّن المعرض للأبد — فتبقى الصورة المحذوفة ظاهرة.
+    الآن يُعاد الجلب بعد دقيقتين أو عند فتح التبويب. */
+ if(!force&&GALLERY&&(Date.now()-GAL_TS)<120000)return;
  GAL_LOADING=true;
  fetch(PUSH_URL+'/gallery').then(function(r){return r.json();})
- .then(function(d){GALLERY=(d&&d.photos)||[];GAL_LOADING=false;
+ .then(function(d){GALLERY=(d&&d.photos)||[];GAL_TS=Date.now();GAL_LOADING=false;
  if(TAB==='gallery')renderGallery();})
  .catch(function(){GAL_LOADING=false;GALLERY=[];
  if(TAB==='gallery')renderGallery();});
@@ -8833,7 +8836,7 @@ function buildTabs(){
 function showPanels(){var i;
  if(TAB!=='now'){cinemaStop();rotStop();pillStop();}
  for(i=0;i<TABS.length;i++){var el=$("p-"+TABS[i].k);if(el)el.className="panel"+(TAB===TABS[i].k?" on":"");}
- if(TAB==='now')renderNow();if(TAB==='life')renderLife();if(TAB==='fc')renderFc();if(TAB==='world')renderWorld();if(TAB==='quake')renderQuakes();if(TAB==='gallery')renderGallery();if(TAB==='live')renderLive();if(TAB==='src')renderSrc();}
+ if(TAB==='now')renderNow();if(TAB==='life')renderLife();if(TAB==='fc')renderFc();if(TAB==='world')renderWorld();if(TAB==='quake')renderQuakes();if(TAB==='gallery'){galleryLoad(true);renderGallery();}if(TAB==='live')renderLive();if(TAB==='src')renderSrc();}
 
 /* ============ الإعدادات ============ */
 function optBtn(label,on,attr){return '<button class="opt'+(on?' on':'')+'" '+attr+'>'+label+'</button>';}
