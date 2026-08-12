@@ -257,6 +257,8 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
       <div class="navGrp">عقل نفاف</div>
       <div class="navItem" data-p="rules"><span class="ni">🎯</span>القواعد الذكية</div>
       <div class="navItem" data-p="sources"><span class="ni">📡</span>مصادر الطقس</div>
+      <div class="navItem" data-p="fusion"><span class="ni">🧬</span>Rain Fusion</div>
+      <div class="navItem" data-p="licensing"><span class="ni">⚖️</span>التراخيص</div>
 
       <div class="navGrp">التواصل</div>
       <div class="navItem" data-p="news"><span class="ni">📢</span>الأخبار العاجلة</div>
@@ -412,6 +414,55 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
           <div class="pageSub">فعّل أو عطّل أي مصدر — ورتّب أولوياته</div>
         </div>
         <div class="card"><div id="srcList"></div></div>
+      </section>
+
+
+      <!-- 🧬 Rain Fusion -->
+      <section class="sec" data-s="fusion">
+        <div class="pageHead">
+          <div class="pageTitle">Rain Fusion</div>
+          <div class="pageSub">طبقة دمج مصادر المطر — تعمل بمعزل عن بيانات التطبيق</div>
+        </div>
+
+        <div class="card">
+          <h3>وضع التشغيل<small>لا تُفعّلها قبل مراقبتها</small></h3>
+          <div class="opts" id="fuMode">
+            <span class="opt sel" data-fm="shadow">🟡 Shadow — تعمل بصمت</span>
+            <span class="opt" data-fm="live">🟢 Live — تظهر للمستخدمين</span>
+          </div>
+          <div class="note" style="margin-top:11px">
+            في وضع Shadow تحسب الطبقة نتائجها وتسجّلها دون أن يراها أي مستخدم.
+            راقب سجل القرارات عدة أيام قبل التفعيل.
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>حماية البيانات<small>ما لا تستطيع هذه الطبقة فعله</small></h3>
+          <div id="guardList"></div>
+        </div>
+
+        <div class="card">
+          <h3>أوزان المصادر<small>تحتاج معايرة فعلية لا أرقامًا عشوائية</small></h3>
+          <div id="weightList"></div>
+        </div>
+
+        <div class="card">
+          <h3>سجل القرارات<small>لماذا أطلق نفاف هذا الحكم</small></h3>
+          <div id="fuLog"><div class="empty">لا قرارات مسجّلة بعد.</div></div>
+        </div>
+      </section>
+
+      <!-- ⚖️ التراخيص -->
+      <section class="sec" data-s="licensing">
+        <div class="pageHead">
+          <div class="pageTitle">التراخيص والامتثال</div>
+          <div class="pageSub">لكل مصدر ترخيصه وحدود استخدامه — تحقّق قبل أي نشر تجاري</div>
+        </div>
+        <div class="card"><div id="licList"></div></div>
+        <div class="card">
+          <h3>الإسنادات المطلوبة</h3>
+          <div id="attrList"></div>
+        </div>
       </section>
 
       <!-- 📢 الأخبار -->
@@ -672,6 +723,8 @@ function goPage(p){
   if(p==='corr')loadCorr();
   if(p==='feedback')loadFeedback();
   if(p==='news')loadNews();
+ if(p==='fusion')renderFusion();
+ if(p==='licensing')renderLicensing();
   if(p==='analytics')loadAnalytics();
   if(p==='health')runHealth();
   if(p==='versions')loadVersions();
@@ -901,6 +954,7 @@ function renderAll(){
   };
   /* القواعد */
   renderRules();
+  if(PAGE==='fusion')renderFusion();
 }
 
 /* المظهر */
@@ -1029,6 +1083,113 @@ function loadVersions(){
 }
 </script>
 <script>
+/* ═══════ Rain Fusion ═══════ */
+var GUARDS=[
+ ['بيانات الطقس الأساسية','protected'],
+ ['السجل التاريخي','protected'],
+ ['المواقع وأسماء المناطق','protected'],
+ ['التوقعات الحالية','protected'],
+ ['وحدات القياس','protected'],
+ ['طبقة Rain Fusion','isolated']
+];
+var SRC_W_NAMES={
+ radar:['الرصد القريب','مرصد الأمطار الحالي'],
+ satellite:['التقدير الفضائي','مشتق من السحب والرطوبة'],
+ models:['النماذج العالمية','ECMWF · GFS · ICON'],
+ local:['رصد المجتمع','الرصدات المعتمدة']
+};
+var LICENSES=[
+ {n:'ECMWF Open Data',lic:'CC-BY-4.0',com:'ok',redis:'ok',attr:'إلزامي',
+  st:'approved',note:'فُتح كامل الكتالوج في أكتوبر ٢٠٢٥ — يسمح بإعادة التوزيع والاستخدام التجاري مقابل الإسناد'},
+ {n:'NASA GPM / IMERG',lic:'بلا ترخيص مطلوب',com:'ok',redis:'ok',attr:'مطلوب',
+  st:'approved',note:'بيانات ناسا متاحة مجانًا بكل المستويات — يُمنع الإيحاء بتأييد ناسا لمنتج تجاري'},
+ {n:'NASA GIBS',lic:'بلا ترخيص مطلوب',com:'ok',redis:'ok',attr:'مطلوب',
+  st:'approved',note:'صور الأقمار الصناعية — نفس سياسة ناسا'},
+ {n:'USGS Earthquakes',lic:'نطاق عام',com:'ok',redis:'ok',attr:'مطلوب',
+  st:'approved',note:'بيانات حكومية أمريكية'},
+ {n:'Open-Meteo',lic:'CC-BY-4.0 (غير تجاري بالخطة المجانية)',com:'warn',redis:'warn',attr:'إلزامي',
+  st:'review',note:'⚠️ الخطة المجانية للاستخدام غير التجاري فقط — يلزم اشتراك مدفوع قبل أي تسويق'},
+ {n:'RainViewer',lic:'شروط خاصة',com:'no',redis:'no',attr:'إلزامي',
+  st:'blocked',note:'⛔ لا تنشره تجاريًا قبل الاتفاق معهم — قيود على النسخ والتوزيع'},
+ {n:'BigDataCloud',lic:'مجاني للعميل',com:'warn',redis:'warn',attr:'—',
+  st:'review',note:'عكس الترميز — راجع حدود الطلبات قبل التوسّع'}
+];
+
+function renderFusion(){
+ if(!DRAFT)return;
+ var fm=(DRAFT.fusion&&DRAFT.fusion.mode)||'shadow';
+ var fo=$('fuMode').children;
+ for(var i=0;i<fo.length;i++)
+  fo[i].className='opt'+(fo[i].getAttribute('data-fm')===fm?' sel':'');
+
+ $('guardList').innerHTML=GUARDS.map(function(g){
+  var ok=(g[1]==='protected');
+  return '<div class="hRow"><span class="hDot '+(ok?'hOk':'hWarn')+'"></span>'+
+   '<span>'+g[0]+'</span><span class="ht">'+
+   (ok?'🔒 محمية — لا تُمس':'🧪 معزولة — قابلة للإطفاء')+'</span></div>';
+ }).join('');
+
+ var ws=(DRAFT.fusion&&DRAFT.fusion.weights)||{radar:0.95,satellite:0.82,models:0.90,local:0.70};
+ var wh='';
+ for(var k in SRC_W_NAMES){
+  var v=ws[k]!=null?ws[k]:0.7;
+  wh+='<div style="padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06)">'+
+   '<div style="display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700">'+
+   '<span>'+SRC_W_NAMES[k][0]+'<div class="rd" style="font-size:10.5px;color:#8b98ab;font-weight:600">'+
+   SRC_W_NAMES[k][1]+'</div></span>'+
+   '<b class="rngV" style="margin-inline-start:auto" id="wv_'+k+'">'+v.toFixed(2)+'</b></div>'+
+   '<input class="rng" type="range" min="0" max="1" step="0.05" value="'+v+
+   '" data-w="'+k+'" style="margin-top:7px" /></div>';
+ }
+ $('weightList').innerHTML=wh;
+ var rs=$('weightList').querySelectorAll('[data-w]');
+ for(var r=0;r<rs.length;r++)rs[r].oninput=function(){
+  var k2=this.getAttribute('data-w'), v2=parseFloat(this.value);
+  $('wv_'+k2).innerHTML=v2.toFixed(2);
+  if(!DRAFT.fusion)DRAFT.fusion={mode:'shadow',weights:{}};
+  if(!DRAFT.fusion.weights)DRAFT.fusion.weights={};
+  DRAFT.fusion.weights[k2]=v2;
+  markDirty();
+ };
+}
+var fmo=$('fuMode').children;
+for(var f=0;f<fmo.length;f++)fmo[f].onclick=function(){
+ var m=this.getAttribute('data-fm');
+ if(m==='live'&&!confirm('تفعيل Rain Fusion للمستخدمين؟ تأكّد أنك راقبت سجل القرارات أولًا.'))return;
+ if(!DRAFT.fusion)DRAFT.fusion={weights:{}};
+ DRAFT.fusion.mode=m;
+ markDirty();renderFusion();
+};
+
+function renderLicensing(){
+ $('licList').innerHTML=LICENSES.map(function(l){
+  var stc={approved:'tOk',review:'tWarn',blocked:'tOff'}[l.st];
+  var stt={approved:'🟢 معتمد',review:'🟡 مراجعة',blocked:'⛔ ممنوع'}[l.st];
+  return '<div class="tRow" style="flex-wrap:wrap">'+
+   '<span class="tag '+stc+'">'+stt+'</span>'+
+   '<span style="font-weight:800;font-size:12.5px">'+l.n+'</span>'+
+   '<div style="width:100%;font-size:11px;color:#8b98ab;margin-top:4px">'+
+    'الترخيص: '+l.lic+'</div>'+
+   '<div style="width:100%;display:flex;gap:12px;font-size:11px;margin-top:3px">'+
+    '<span>تجاري: '+({ok:'✅',warn:'⚠️',no:'❌'}[l.com])+'</span>'+
+    '<span>إعادة توزيع: '+({ok:'✅',warn:'⚠️',no:'❌'}[l.redis])+'</span>'+
+    '<span>إسناد: '+l.attr+'</span></div>'+
+   '<div style="width:100%;font-size:11.5px;color:#b6c2d3;margin-top:5px;line-height:1.7">'+
+    l.note+'</div></div>';
+ }).join('');
+
+ $('attrList').innerHTML=
+  '<div class="tRow" style="flex-wrap:wrap"><span style="width:100%;font-weight:800">ECMWF</span>'+
+  '<span style="width:100%;font-size:11px;color:#8b98ab;direction:ltr;text-align:left;line-height:1.7">'+
+  'Adapted from ECMWF IFS Forecast Data, licensed under CC BY 4.0</span></div>'+
+  '<div class="tRow" style="flex-wrap:wrap"><span style="width:100%;font-weight:800">NASA</span>'+
+  '<span style="width:100%;font-size:11px;color:#8b98ab;direction:ltr;text-align:left;line-height:1.7">'+
+  'Data provided by NASA GPM / GIBS. NASA does not endorse this application.</span></div>'+
+  '<div class="tRow" style="flex-wrap:wrap"><span style="width:100%;font-weight:800">Open-Meteo</span>'+
+  '<span style="width:100%;font-size:11px;color:#8b98ab;direction:ltr;text-align:left;line-height:1.7">'+
+  'Weather data by Open-Meteo.com, CC BY 4.0</span></div>';
+}
+
 /* ═══════ الأخبار ═══════ */
 var N_KIND='info', N_HOURS=3;
 var nk=$('nKind').children;

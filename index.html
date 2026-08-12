@@ -1137,7 +1137,9 @@
   .pgAura{transform-origin:center;transform-box:view-box}
   .anim .pgAura{animation:pgBreathe ease-in-out infinite}
   @keyframes pgBreathe{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.05);opacity:1}}
+  /* ★ رسم القوس مرة واحدة فقط — لا مع كل تحديث */
   .anim .pgArc{animation:pgSweep 1.3s cubic-bezier(.3,0,.2,1) backwards}
+  .anim .noSweep .pgArc{animation:none}
   @keyframes pgSweep{from{stroke-dasharray:0 999;opacity:0}}
   .anim .pgArcGlow{animation:pgGlowPulse 4s ease-in-out infinite}
   @keyframes pgGlowPulse{0%,100%{opacity:.4}50%{opacity:.62}}
@@ -1323,6 +1325,147 @@
   body.th-light .pgSep{background:linear-gradient(90deg,#4a9fd0,#e07a3c)}
   body.th-light .pgLo{color:#2f86b8}
   body.th-light .pgHi{color:#d1662c}
+  /* ★★★ فيزياء الحلقة ★★★ */
+  .phLayer{position:absolute;inset:-6%;pointer-events:none;overflow:hidden;z-index:1}
+  /* لهب */
+  .anim .phFlame{animation:phFlick ease-in-out infinite alternate;transform-origin:center}
+  @keyframes phFlick{from{opacity:.25;transform:scale(.82)}to{opacity:.9;transform:scale(1.18)}}
+  .phEmber{position:absolute;width:3px;height:3px;border-radius:50%;
+    background:radial-gradient(circle,#ffca7a,#ff7a3d);opacity:0}
+  .anim .phEmber{animation:phRise linear infinite}
+  @keyframes phRise{0%{opacity:0;transform:translateY(0) scale(.6)}
+    18%{opacity:.95}100%{opacity:0;transform:translateY(-90px) scale(1.5)}}
+  /* ثلج */
+  .anim .phCry{animation:phTwinkle ease-in-out infinite alternate}
+  @keyframes phTwinkle{from{opacity:.35}to{opacity:1}}
+  .phFlake{position:absolute;top:-8%;color:#e4f4ff;opacity:.85;pointer-events:none}
+  .anim .phFlake{animation:phFall linear infinite}
+  @keyframes phFall{0%{transform:translateY(0) rotate(0)}
+    100%{transform:translateY(115%) rotate(320deg)}}
+  /* مطر */
+  .anim .phDrop{animation:phDripFall linear infinite}
+  @keyframes phDripFall{0%{opacity:0;transform:translateY(-4px)}
+    16%{opacity:1}100%{opacity:0;transform:translateY(46px)}}
+  /* برق */
+  .phBolt{opacity:0}
+  .anim .phBolt{animation:phFlash 6s infinite}
+  @keyframes phFlash{0%,90%{opacity:0}91%{opacity:1}92.4%{opacity:0}
+    94%{opacity:.85}95%{opacity:0}100%{opacity:0}}
+  /* غبار */
+  .phDust{position:absolute;width:3.5px;height:3.5px;border-radius:50%;
+    background:rgba(224,186,132,.75);opacity:0}
+  .anim .phDust{animation:phDrift linear infinite}
+  @keyframes phDrift{0%{opacity:0;transform:translateX(-24px)}
+    22%{opacity:1}78%{opacity:1}100%{opacity:0;transform:translateX(70px)}}
+  /* شمس */
+  .anim .phSun{animation:phPulse 4.5s ease-in-out infinite}
+  @keyframes phPulse{0%,100%{opacity:.5;r:var(--r)}50%{opacity:1}}
+  /* نجوم */
+  .phStar{position:absolute;width:2.5px;height:2.5px;border-radius:50%;background:#fff}
+  .anim .phStar{animation:phBlink ease-in-out infinite alternate}
+  @keyframes phBlink{from{opacity:.2;transform:scale(.6)}to{opacity:1;transform:scale(1.3)}}
+  .noanim .phFlame,.noanim .phEmber,.noanim .phCry,.noanim .phFlake,
+  .noanim .phDrop,.noanim .phBolt,.noanim .phDust,.noanim .phSun,
+  .noanim .phStar{animation:none}
+  .doc-official{background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.3);
+    border-radius:14px;padding:12px 14px;margin-top:16px;
+    font-size:12px;font-weight:700;color:#ffd166;line-height:1.85}
+  .doc-official b{color:#fff}
+  /* ★ زر الرجوع الموحّد */
+  .backBtn{position:absolute;top:13px;inset-inline-start:14px;z-index:6;
+    display:inline-flex;align-items:center;gap:5px;
+    border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);
+    color:#fff;font-family:inherit;border-radius:99px;
+    padding:7px 14px 7px 11px;cursor:pointer;
+    transition:transform .14s,background .2s}
+  .backBtn span{font-size:18px;line-height:1;margin-top:-2px}
+  .backBtn b{font-size:12px;font-weight:800}
+  .backBtn:active{transform:scale(.93)}
+  .backBtn.light{border-color:rgba(27,44,71,.16);background:rgba(27,44,71,.06);color:#1b2c47}
+  body.th-light .backBtn{border-color:rgba(22,35,58,.16);
+    background:rgba(22,35,58,.06);color:#16233a}
+  /* أفسح مكانًا للزر أعلى المحتوى */
+  #docBody,#accBody,#fbBody{padding-top:44px}
+  .modal{position:relative}
+  #setBody,#cityBody{padding-top:8px}
+  /* ★ شريط علوي يمنع تراكب الرجوع مع العنوان */
+  .mHead{display:flex;align-items:center;gap:11px;margin-bottom:14px;
+    padding-bottom:11px;border-bottom:1px solid rgba(27,44,71,.1)}
+  .mHead .m-t{margin:0;flex:1 1 auto;text-align:start}
+  .sHead{display:flex;align-items:center;margin-bottom:12px}
+  .backBtn{position:static;display:inline-flex;align-items:center;gap:5px;
+    border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);
+    color:#fff;font-family:inherit;border-radius:99px;
+    padding:7px 14px 7px 11px;cursor:pointer;flex:0 0 auto;
+    transition:transform .14s,background .2s}
+  #docBody,#accBody,#fbBody{padding-top:0}
+  .photoRow{margin:0 0 12px}
+  .photoRow .shbtn{width:100%}
+  .shbtn.sm{padding:8px 12px;font-size:12px;margin-top:7px}
+  /* ★ زر «نفاف شاف شي» */
+  .evBtn{position:fixed;bottom:98px;inset-inline-end:14px;z-index:38;
+    display:none;align-items:center;gap:7px;
+    background:linear-gradient(135deg,#e6b45e,#d09a3c);color:#2c1f08;
+    border:0;border-radius:99px;padding:10px 16px;font-family:inherit;
+    font-size:12.5px;font-weight:800;cursor:pointer;
+    box-shadow:0 8px 26px rgba(230,180,94,.42)}
+  .evBtn.on{display:inline-flex;animation:evPop .5s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes evPop{from{opacity:0;transform:translateY(16px) scale(.85)}}
+  .ev-ic{font-size:15px}
+  .anim .evBtn.on{animation:evPop .5s cubic-bezier(.2,1.4,.4,1),evGlow 2.6s ease-in-out infinite .5s}
+  @keyframes evGlow{0%,100%{box-shadow:0 8px 26px rgba(230,180,94,.42)}
+    50%{box-shadow:0 8px 34px rgba(230,180,94,.75)}}
+  .ev-head{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+  .ev-bigIc{font-size:32px}
+  .ev-title{font-size:19px;font-weight:800;color:var(--tx,#fff)}
+  .ev-line{font-size:14px;font-weight:600;line-height:2.1;color:rgba(255,255,255,.9)}
+  body.th-light .ev-line{color:rgba(22,35,58,.85)}
+  .ev-note{font-size:11.5px;font-weight:600;color:var(--tx3,rgba(255,255,255,.5));
+    margin-top:12px;padding-top:11px;border-top:1px solid rgba(255,255,255,.12);line-height:1.8}
+  .ev-acts{display:flex;gap:8px;margin-top:16px}
+  .ev-acts .shbtn{flex:1}
+  .noanim .evBtn{animation:none}
+  /* ★ نفاف يراقب العالم */
+  .glance{transition:opacity .26s ease;background:linear-gradient(130deg,rgba(159,212,245,.14),rgba(255,255,255,.04));
+    border:1px solid rgba(159,212,245,.28);border-radius:18px;
+    padding:12px 15px;margin-bottom:11px;cursor:pointer;position:relative}
+  .gl-top{font-size:10px;font-weight:800;color:#9fd4f5;margin-bottom:8px;letter-spacing:.03em}
+  .gl-row{display:flex;align-items:center;gap:11px}
+  .gl-ic{font-size:22px;flex:0 0 auto}
+  .gl-tx{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .gl-t{font-size:12px;font-weight:700;color:var(--tx3,rgba(255,255,255,.62))}
+  .gl-b{font-size:14px;font-weight:800;color:var(--tx,#fff)}
+  .gl-arw{font-size:20px;color:var(--tx3,rgba(255,255,255,.4));flex:0 0 auto}
+  .gl-dots{position:absolute;bottom:8px;inset-inline-end:14px;display:flex;gap:4px}
+  .gl-dot{width:4px;height:4px;border-radius:50%;background:rgba(159,212,245,.28);
+    transition:background .3s,width .3s}
+  .gl-dot.on{background:#9fd4f5;width:12px;border-radius:99px}
+  .glance:active{transform:scale(.99)}
+  /* ★ بطاقة Rain Fusion */
+  .fusionCard{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);
+    border-radius:18px;padding:14px 16px;margin-bottom:11px}
+  .fu-head{display:flex;align-items:baseline;gap:9px}
+  .fu-t{font-size:12px;font-weight:800;color:var(--tx3,rgba(255,255,255,.6))}
+  .fu-c{font-size:26px;font-weight:800;margin-inline-start:auto;line-height:1}
+  .fu-lbl{font-size:11.5px;font-weight:700;margin-top:3px}
+  .fu-rows{margin-top:11px;display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+  .fu-row{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;
+    color:var(--tx2,rgba(255,255,255,.75))}
+  .fu-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+  .fu-st{margin-inline-start:auto;font-weight:800}
+  .fu-note{font-size:10px;font-weight:600;color:var(--tx3,rgba(255,255,255,.45));
+    margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.1);line-height:1.7}
+  /* ★ مؤشّر التحديث الحيّ */
+  .liveDot{display:inline-block;width:6px;height:6px;border-radius:50%;
+    background:transparent;margin-inline-start:7px;vertical-align:middle;
+    transition:background .3s,box-shadow .3s}
+  .liveDot.on{background:#7fe39a;box-shadow:0 0 0 3px rgba(127,227,154,.18)}
+  .anim .liveDot.on{animation:lvPulse 1.6s ease-out}
+  @keyframes lvPulse{0%{box-shadow:0 0 0 0 rgba(127,227,154,.5)}
+    70%{box-shadow:0 0 0 8px rgba(127,227,154,0)}
+    100%{box-shadow:0 0 0 3px rgba(127,227,154,.18)}}
+  /* الأرقام تتبدّل بنعومة لا بقفزة */
+  .stat .v,.pgS-v{transition:opacity .2s ease}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -1356,7 +1499,7 @@
  <span class="authBadge" id="authBadge"></span>
  </div>
  <div class="locbar">
- <span class="locname" id="locName">…</span>
+ <span class="locname" id="locName">…</span><span class="liveDot" id="liveDot"></span>
  <span class="locbtns">
  <button class="lbtn gold" id="meBtn">📍 <span id="meTxt">موقعي</span></button>
  <button class="lbtn" id="pickBtn"><span id="pickTxt">موقع آخر</span></button>
@@ -1398,27 +1541,36 @@
 <div class="sheetBack" id="accBack"></div>
 <div class="sheetBack" id="docBack"></div>
 <div class="sheetBack" id="fbBack"></div>
+<div class="sheetBack" id="evBack"></div>
+<div class="sheet" id="evSheet"><div class="sh-grip"></div>
+ <div class="sHead"><button class="backBtn" id="evCloseBtn"><span>‹</span><b>رجوع</b></button></div>
+ <div id="evBody"></div></div>
+<button class="evBtn" id="evBtn"></button>
 <div class="sheet" id="fbSheet"><div class="sh-grip"></div>
- <button class="docClose" id="fbCloseBtn" aria-label="إغلاق">✕</button>
+ <div class="sHead"><button class="backBtn" id="fbCloseBtn"><span>‹</span><b id="fbBackTx">رجوع</b></button></div>
  <div id="fbBody"></div></div>
 <div class="obWrap" id="obWrap"><div class="obCard"><div id="obBody"></div></div></div>
 <div class="sheet" id="docSheet"><div class="sh-grip"></div>
- <button class="docClose" id="docCloseBtn" aria-label="إغلاق">✕</button>
+ <div class="sHead"><button class="backBtn" id="docCloseBtn"><span>‹</span><b id="docBackTx">رجوع</b></button></div>
  <div id="docBody"></div></div>
 <div class="sheet" id="accSheet"><div class="sh-grip"></div>
- <button class="docClose" id="accCloseBtn" aria-label="إغلاق">✕</button>
+ <div class="sHead"><button class="backBtn" id="accCloseBtn"><span>‹</span><b id="accBackTx">رجوع</b></button></div>
  <div id="accBody"></div></div>
 <div class="sheet" id="sheet"><div class="grab"></div><div id="sheetBody"></div></div>
 
 <div class="ov" id="ovSet"><div class="modal">
- <button class="m-x" data-close="ovSet">✕</button>
- <div class="m-t" id="setT">الإعدادات</div>
+ <div class="mHead">
+  <button class="backBtn light" data-close="ovSet"><span>‹</span><b>رجوع</b></button>
+  <div class="m-t" id="setT">الإعدادات</div>
+ </div>
  <div id="setBody"></div>
 </div></div>
 
 <div class="ov" id="ovCity"><div class="modal">
- <button class="m-x" data-close="ovCity">✕</button>
+ <div class="mHead">
+  <button class="backBtn light" data-close="ovCity"><span>‹</span><b>رجوع</b></button>
  <div class="m-t" id="cityT">اختر موقعًا</div>
+ </div>
  <input class="min" id="citySearch" type="text" placeholder="ابحث عن أي مدينة بالعالم…" />
  <div id="searchRes"></div>
  <div class="m-sec" id="favT">المواقع المفضّلة</div>
@@ -1824,7 +1976,7 @@ function hourIsNight(iso){if(!SUNRISE||!SUNSET)return false;
 /* ============================================================
    ★ قرية نفاف التفاعلية — SVG حيّة تتفاعل مع الطقس الحقيقي
    ⚠️ SVG لا صور: حادّة على أي شاشة (4K وغيرها) وحجمها كيلوبايتات
-      لا ميجابايتات، ولا تستهلك بيانات المستخدم.
+      لا ميجابايتات ولا تستهلك بيانات المستخدم.
    ⚠️ كل عنصر يقرأ بيانات حيّة: الحرارة · الحالة · الليل · الرياح.
    ============================================================ */
 function villageScene(st){
@@ -1960,12 +2112,12 @@ function villageScene(st){
 /* ============================================================
    ★ نبض نفاف — عرض جوّي حيّ لم يُبنَ مثله
    حلقة تحيط بالحرارة تحمل يومك كاملًا في شكل واحد:
-   • القوس الخارجي = رحلة الحرارة عبر ٢٤ ساعة، لونها يتبع الدرجة
+   • القوس الخارجي = رحلة الحرارة عبر ٢٤ ساعة لونها يتبع الدرجة
    • النقطة المتوهجة = موقعك الآن في اليوم
    • القوس الداخلي = احتمال المطر ساعة بساعة
    • الهالة تتنفس بإيقاع يتبع الرياح فعليًا
    • علامات الشروق والغروب في موضعهما الحقيقي
-   ⚠️ لا صور — رسم حيّ من بياناتك، حجمه كيلوبايتات
+   ⚠️ لا صور — رسم حيّ من بياناتك حجمه كيلوبايتات
    ============================================================ */
 /* ★ نص ساعة الموقع — بتوقيت المدينة المختارة لا جهازك */
 function clockText(){
@@ -1987,7 +2139,130 @@ function tickClock(){
  if(el)el.innerHTML=clockText();
 }
 setInterval(tickClock,30000);
-var PG_MIN=null,PG_MAX=null;
+/* ============================================================
+   ★ فيزياء الحلقة — كل حالة جوية لها سلوك بصري خاص
+   ⚠️ SVG وCSS فقط: حادّة على أي دقة · كيلوبايتات لا ميجابايتات
+   ⚠️ كل تأثير مشتق من البيانات الحقيقية لا زخرفة عامة
+   ============================================================ */
+function ringPhysics(st,temp,R,CX,CY){
+ var mo=(typeof applyMotion==='function')?applyMotion():{scenery:true};
+ if(!mo.scenery)return {svg:'',dom:''};
+ var svg='',dom='',i;
+ var wet=(st==='rain'||st==='rain_light'||st==='rain_heavy'||st==='storm');
+ var isHot=(temp>=38), isBurn=(temp>=44);
+ var isFreeze=(temp<=2), isCold=(temp<=12);
+
+ /* ═══ حر شديد: ألسنة لهب تتراقص حول الحلقة ═══ */
+ if(isHot&&!wet){
+  var flames=isBurn?18:12;
+  svg+='<g class="phFlames">';
+  for(i=0;i<flames;i++){
+   var fa=(i/flames)*360;
+   var fr=fa*Math.PI/180;
+   var fx=CX+Math.cos(fr)*R, fy=CY+Math.sin(fr)*R;
+   var hgt=(isBurn?9:6)+Math.random()*(isBurn?7:4);
+   /* لسان لهب يشير للخارج */
+   var ox=CX+Math.cos(fr)*(R+hgt), oy=CY+Math.sin(fr)*(R+hgt);
+   var px=CX+Math.cos(fr+0.06)*(R+hgt*0.5), py=CY+Math.sin(fr+0.06)*(R+hgt*0.5);
+   var qx=CX+Math.cos(fr-0.06)*(R+hgt*0.5), qy=CY+Math.sin(fr-0.06)*(R+hgt*0.5);
+   svg+='<path class="phFlame" d="M'+fx.toFixed(1)+' '+fy.toFixed(1)+
+    ' Q'+px.toFixed(1)+' '+py.toFixed(1)+' '+ox.toFixed(1)+' '+oy.toFixed(1)+
+    ' Q'+qx.toFixed(1)+' '+qy.toFixed(1)+' '+fx.toFixed(1)+' '+fy.toFixed(1)+'Z" '+
+    'fill="'+(isBurn?'#ff7a3d':'#ffa657')+'" opacity="'+(0.35+Math.random()*0.4).toFixed(2)+'" '+
+    'style="animation-delay:'+(Math.random()*1.4).toFixed(2)+'s;'+
+    'animation-duration:'+(0.9+Math.random()*0.7).toFixed(2)+'s"/>';
+  }
+  svg+='</g>';
+  /* جمرات تصعد */
+  for(i=0;i<(isBurn?14:8);i++)
+   dom+='<span class="phEmber" style="left:'+(10+Math.random()*80).toFixed(1)+'%;'+
+    'bottom:'+(12+Math.random()*30).toFixed(0)+'%;'+
+    'animation-duration:'+(2.4+Math.random()*2.2).toFixed(1)+'s;'+
+    'animation-delay:'+(Math.random()*3).toFixed(1)+'s"></span>';
+ }
+
+ /* ═══ تجمّد: بلورات ثلج وصقيع على الحافة ═══ */
+ if(isFreeze){
+  svg+='<g class="phIce">';
+  for(i=0;i<14;i++){
+   var ia=(i/14)*360, ir=ia*Math.PI/180;
+   var ix=CX+Math.cos(ir)*R, iy=CY+Math.sin(ir)*R;
+   var sz=2.2+Math.random()*2.4;
+   /* بلورة سداسية بسيطة */
+   svg+='<g class="phCry" style="animation-delay:'+(i*0.22).toFixed(2)+'s" '+
+    'transform="translate('+ix.toFixed(1)+','+iy.toFixed(1)+')">'+
+    '<line x1="'+(-sz)+'" y1="0" x2="'+sz+'" y2="0" stroke="#dff1ff" stroke-width="1.1" stroke-linecap="round"/>'+
+    '<line x1="'+(-sz*0.5)+'" y1="'+(-sz*0.86)+'" x2="'+(sz*0.5)+'" y2="'+(sz*0.86)+'" stroke="#dff1ff" stroke-width="1.1" stroke-linecap="round"/>'+
+    '<line x1="'+(-sz*0.5)+'" y1="'+(sz*0.86)+'" x2="'+(sz*0.5)+'" y2="'+(-sz*0.86)+'" stroke="#dff1ff" stroke-width="1.1" stroke-linecap="round"/>'+
+    '</g>';
+  }
+  svg+='</g>';
+  /* ندف تتساقط */
+  for(i=0;i<12;i++)
+   dom+='<span class="phFlake" style="left:'+(Math.random()*100).toFixed(1)+'%;'+
+    'animation-duration:'+(5+Math.random()*4).toFixed(1)+'s;'+
+    'animation-delay:'+(Math.random()*5).toFixed(1)+'s;'+
+    'font-size:'+(7+Math.random()*5).toFixed(0)+'px">❄</span>';
+ }
+
+ /* ═══ مطر: قطرات تسقط من الحلقة نفسها ═══ */
+ if(wet){
+  var mm=0;
+  if(HOURLY&&HOURLY.precipitation){
+   var hN=Clock.hourIndex();
+   mm=HOURLY.precipitation[Math.min(hN,HOURLY.precipitation.length-1)]||0;
+  }
+  var I=Math.max((st==='rain_light')?0.15:((st==='storm')?0.6:0.35),Math.min(1,mm/12));
+  var drops=Math.round(14+I*26);
+  /* القطرات تنطلق من محيط الحلقة السفلي */
+  for(i=0;i<drops;i++){
+   var da=90+(Math.random()*160-80);
+   var dr=da*Math.PI/180;
+   var dx=CX+Math.cos(dr)*R, dy=CY+Math.sin(dr)*R;
+   svg+='<line class="phDrop" x1="'+dx.toFixed(1)+'" y1="'+dy.toFixed(1)+'" '+
+    'x2="'+dx.toFixed(1)+'" y2="'+(dy+7+I*7).toFixed(1)+'" '+
+    'stroke="#9fd8f5" stroke-width="'+(1+I*0.9).toFixed(1)+'" stroke-linecap="round" '+
+    'opacity="'+(0.4+I*0.5).toFixed(2)+'" '+
+    'style="animation-duration:'+(0.7-I*0.3+Math.random()*0.3).toFixed(2)+'s;'+
+    'animation-delay:'+(Math.random()*1.3).toFixed(2)+'s"/>';
+  }
+  /* عاصفة: ومضة برق داخل الحلقة */
+  if(st==='storm'){
+   svg+='<circle class="phBolt" cx="'+CX+'" cy="'+CY+'" r="'+(R-30)+'" '+
+    'fill="rgba(200,230,255,.5)"/>';
+   svg+='<path class="phBolt" d="M'+(CX-6)+' '+(CY-34)+' L'+(CX+2)+' '+(CY-12)+
+    ' L'+(CX-3)+' '+(CY-12)+' L'+(CX+6)+' '+(CY+14)+' L'+(CX-1)+' '+(CY-4)+
+    ' L'+(CX+3)+' '+(CY-4)+'Z" fill="#fff" style="animation-delay:.1s"/>';
+  }
+ }
+
+ /* ═══ غبار: ذرات تدور حول الحلقة ═══ */
+ if(st==='dust'){
+  for(i=0;i<20;i++)
+   dom+='<span class="phDust" style="left:'+(Math.random()*100).toFixed(1)+'%;'+
+    'top:'+(20+Math.random()*60).toFixed(0)+'%;'+
+    'animation-duration:'+(3+Math.random()*3).toFixed(1)+'s;'+
+    'animation-delay:'+(Math.random()*4).toFixed(1)+'s"></span>';
+ }
+
+ /* ═══ صحو معتدل: هالة شمس ناعمة ═══ */
+ if(!wet&&!isHot&&!isFreeze&&st!=='dust'&&!IS_NIGHT){
+  svg+='<circle class="phSun" cx="'+CX+'" cy="'+CY+'" r="'+(R+6)+'" fill="none" '+
+   'stroke="rgba(255,214,120,.28)" stroke-width="2"/>';
+ }
+
+ /* ═══ ليل صافٍ: نجوم حول الحلقة ═══ */
+ if(IS_NIGHT&&!wet&&st!=='dust'){
+  for(i=0;i<10;i++)
+   dom+='<span class="phStar" style="left:'+(Math.random()*100).toFixed(1)+'%;'+
+    'top:'+(Math.random()*45).toFixed(0)+'%;'+
+    'animation-duration:'+(2+Math.random()*2.5).toFixed(1)+'s;'+
+    'animation-delay:'+(Math.random()*3).toFixed(1)+'s"></span>';
+ }
+
+ return {svg:svg, dom:dom?('<div class="phLayer">'+dom+'</div>'):''};
+}
+var PG_MIN=null,PG_MAX=null,PG_SWEEP=null;
 function pulseRing(st){
  if(!W||!HOURLY)return '';
  var L=LI();
@@ -2019,7 +2294,12 @@ function pulseRing(st){
  var wind=W.wind_speed_10m||8;
  var breathDur=Math.max(3,Math.min(8,8-wind*0.1)).toFixed(1);
 
- var h='<div class="pulseWrap"><svg class="pulseSvg" viewBox="0 0 280 280">';
+ /* ★ حركة رسم القوس تحدث مرة واحدة لكل موقع — تكرارها مع كل
+    تحديث دوري كان يعطي إحساس التقطيع */
+ var sweepKey=(CUR?CUR.n:'')+'|'+Math.round(tMin)+'|'+Math.round(tMax);
+ var doSweep=(PG_SWEEP!==sweepKey);
+ PG_SWEEP=sweepKey;
+ var h='<div class="pulseWrap'+(doSweep?'':' noSweep')+'" data-st="'+st+'"><svg class="pulseSvg" viewBox="0 0 280 280">';
  h+='<defs>';
  /* ★ تدرّج متصل ناعم عبر اليوم — لا قطع منفصلة */
  h+='<linearGradient id="pgArc" gradientUnits="userSpaceOnUse" x1="28" y1="28" x2="252" y2="252">';
@@ -2118,7 +2398,13 @@ function pulseRing(st){
  h+='<circle class="pgNowDot" cx="'+nx2.toFixed(1)+'" cy="'+ny2.toFixed(1)+'" r="7" fill="'+cNow+'"/>';
  h+='<circle cx="'+nx2.toFixed(1)+'" cy="'+ny2.toFixed(1)+'" r="3" fill="rgba(255,255,255,.95)"/>';
 
+
+ /* ★★★ الطبقة الفيزيائية — الحلقة تتفاعل مع الحالة الفعلية ★★★ */
+ var phys=ringPhysics(st,W.temperature_2m,R,CX,CY);
+ h+=phys.svg;
+
  h+='</svg>';
+ h+=phys.dom;
 
  /* ===== المركز ===== */
  h+='<div class="pulseIn">';
@@ -2212,7 +2498,7 @@ function buildScene(st){
 /* منحنى الليل: 0 = نهار كامل · 1 = ليل كامل — بانتقال ناعم عبر ٩٠ دقيقة حول الشروق والغروب */
 /* ============================================================
    ★ ساعة نفاف — مرجع الوقت الوحيد لكل التطبيق
-   ⚠️ القاعدة: كل وقت يخص الطقس يمر من هنا، لا من new Date()
+   ⚠️ القاعدة: كل وقت يخص الطقس يمر من هنا لا من new Date()
       مباشرة — وإلا ظهر توقيت جهازك بدل توقيت المدينة المختارة.
    ⚠️ Open-Meteo يعيد الأوقات بتوقيت المدينة أصلًا (timezone=auto)
       لذا نقرأ الساعة من النص لا بتحويل كائن Date.
@@ -2338,10 +2624,38 @@ function nextChangeLine(){
  if(mins<180){var t2=String(ss.getHours()).padStart(2,"0")+":"+String(ss.getMinutes()).padStart(2,"0");
  return pick('الغروب بعد <b>'+mins+' دقيقة</b> ('+t2+')','الغروب بعد <b>'+mins+' دقيقة</b> ('+t2+')','Sunset in <b>'+mins+' min</b> ('+t2+')');}}}
  return pick('ما في تغيّر كبير بالساعات الجاية','لا تغيّرات كبيرة قادمة','No major change ahead');}
-function countUp(el,target){if(!el)return;var t0=null,dur=650;
- function step(ts){if(!t0)t0=ts;var p=Math.min((ts-t0)/dur,1),e=1-Math.pow(1-p,3);
- el.innerHTML=Math.round(target*e)+'<sup>°</sup>';if(p<1)requestAnimationFrame(step);}
- requestAnimationFrame(step);}
+/* ★ عدّاد الحرارة — كان يعدّ من الصفر في كل رسم فيومض الرقم
+   ويربك المستخدم مع كل تحديث دوري. الآن:
+     • لا يتحرك إطلاقًا إن لم تتغيّر القيمة
+     • يعدّ من الرقم السابق لا من الصفر
+     • أول ظهور فقط يعدّ من الصفر */
+var LAST_TEMP=null, TEMP_RAF=null;
+function countUp(el,target){
+ if(!el)return;
+ target=Math.round(target);
+ /* ★ نفس القيمة: اكتبها فورًا بلا حركة */
+ /* ★ لو أُعيد بناء العنصر (يعرض —) اكتب القيمة فورًا حتى لو لم تتغيّر */
+ if(LAST_TEMP===target){el.innerHTML=target+'<sup>°</sup>';return;}
+ if(el.innerHTML.indexOf('—')>=0&&LAST_TEMP!=null){
+  /* عنصر جديد بقيمة معروفة: اعرضها بلا حركة ثم تابع لو تغيّرت */
+  el.innerHTML=LAST_TEMP+'<sup>°</sup>';
+ }
+ var from=(LAST_TEMP==null)?0:LAST_TEMP;
+ LAST_TEMP=target;
+ /* فرق ضئيل: انتقال فوري بلا وميض */
+ if(Math.abs(target-from)<=1&&from!==0){el.innerHTML=target+'<sup>°</sup>';return;}
+ if(TEMP_RAF){cancelAnimationFrame(TEMP_RAF);TEMP_RAF=null;}
+ var mo=(typeof applyMotion==='function')?applyMotion():{scenery:true};
+ if(!mo.scenery){el.innerHTML=target+'<sup>°</sup>';return;}
+ var t0=null,dur=(from===0)?650:420;
+ function step(ts){
+  if(!t0)t0=ts;
+  var p=Math.min((ts-t0)/dur,1),e=1-Math.pow(1-p,3);
+  el.innerHTML=Math.round(from+(target-from)*e)+'<sup>°</sup>';
+  if(p<1)TEMP_RAF=requestAnimationFrame(step); else TEMP_RAF=null;
+ }
+ TEMP_RAF=requestAnimationFrame(step);
+}
 
 
 /* ============ الضغط الجوي والمنخفضات ============ */
@@ -2725,7 +3039,7 @@ function peakAhead(key,hours){
  var v=HOURLY[key][i];if(v!=null&&v>mx){mx=v;mt=HOURLY.time[i];}}
  return mt?{v:mx,t:mt}:null;
 }
-/* ★ يقرأ الوقت من نص ISO مباشرة — Open-Meteo يعيده بتوقيت المدينة،
+/* ★ يقرأ الوقت من نص ISO مباشرة — Open-Meteo يعيده بتوقيت المدينة 
    وتحويله بـnew Date() كان يزيحه لتوقيت جهاز المستخدم */
 function hhmm(iso){
  var m=String(iso).match(/T(\d{2}:\d{2})/);
@@ -2848,8 +3162,9 @@ function nafafAnswer(q){
  /* ===== المعدّل الرسمي والشذوذ ===== */
  if(has(['معدل','معدّل','المعدل','طبيعي','عادي','رسمي','محطة','إحصاء','average','normal','official','station'])){
  var an=anomalyInfo();
- if(!an)return A('المعدّلات الرسمية المفصّلة متوفرة لعُمان — لموقعك أعرض المقارنة من بيانات الطقس نفسها.',
- 'المعدّلات الرسمية متاحة لعُمان فقط.','Official normals cover Oman only.');
+ if(!an)return A('ما عندي معدّلًا مناخيًا رسميًا موثّقًا لموقعك — أعرض لك المقارنة من بيانات الطقس نفسها.',
+ 'لا يتوفر معدّل مناخي رسمي موثّق لهذا الموقع؛ تُعرض المقارنة من بيانات الطقس.',
+ 'No verified climate normal is available for this location — comparison is drawn from live weather data.');
  var moN=MONTHS_AR[new Date().getMonth()],dd=Math.round(an.diff*10)/10;
  var cmp=Math.abs(dd)<1.5?A('يعني اليوم على معدّله.','أي أنه ضمن المعدّل.','so today is on average.')
 :(dd>0?A('يعني أحرّ بـ'+Math.abs(dd)+' درجة.','أي أعلى بـ'+Math.abs(dd)+' درجة.','so '+Math.abs(dd)+'° warmer.')
@@ -2953,7 +3268,7 @@ function nafafAnswer(q){
  /* ===== الموسم النجمي ===== */
  if(has(['نجم','درور','موسم','سهيل','وسم','مربعانية','star','season']))return starLine();
 
- /* ★ لو كان السؤال موقعيًا ولم تُجب كتل الطقس، جرّب المكتبة المعرفية */
+ /* ★ لو كان السؤال موقعيًا ولم تُجب كتل الطقس جرّب المكتبة المعرفية */
  if(isLocal){
   for(var fqL=0;fqL<FAQ_LIB.length;fqL++)if(has(FAQ_LIB[fqL].kw))return A(FAQ_LIB[fqL].a[0],FAQ_LIB[fqL].a[1],FAQ_LIB[fqL].a[2]);
   for(var fqL2=0;fqL2<FAQ_LIB2.length;fqL2++)if(has(FAQ_LIB2[fqL2].kw))return A(FAQ_LIB2[fqL2].a[0],FAQ_LIB2[fqL2].a[1],FAQ_LIB2[fqL2].a[2]);
@@ -2969,7 +3284,7 @@ function nafafAnswer(q){
 
  /* ===== أنشطة إضافية بحكم مباشر من البيانات الحيّة ===== */
  if(has(['سباحة','اسبح','مسبح','بحر اسبح','swim','pool'])){
- if(c.wave==null)return A('ما عندي بيانات بحرية لموقعك — لو تقصد مسبح، الحرارة مناسبة عمومًا لو فوق ٢٠ درجة.',
+ if(c.wave==null)return A('ما عندي بيانات بحرية لموقعك — لو تقصد مسبح الحرارة مناسبة عمومًا لو فوق ٢٠ درجة.',
  'لا تتوفر بيانات بحرية لهذا الموقع.','No marine data here.');
  if(c.wave<0.6&&c.wind<22)return A('البحر رايق والسباحة تمدح اليوم.','ظروف مناسبة للسباحة.','Good swimming conditions today.');
  if(c.wave<1.25)return A('السباحة ماشية بس خذ حذرك من التيار قرب الشط.','مقبولة مع الانتباه للتيار.','Okay, but watch for currents.');
@@ -3005,7 +3320,7 @@ function nafafAnswer(q){
  if(c.state==='dust')rtBits.push(A('فيه غبار يقلل الرؤية على الطريق','رؤية منخفضة بسبب الغبار','reduced visibility from dust'));
  if(c.rain6>=40)rtBits.push(A('احتمال مطر بالطريق','احتمال هطول أثناء الرحلة','possible rain en route'));
  if(!rtBits.length)return A('الجو العام مناسب للطلعة البرية اليوم.','ظروف مناسبة عمومًا للرحلة.','Generally good conditions for a road trip.');
- return A('انتبه: '+rtBits.join(A(' و',' و',' and '))+'.','تنبيه: '+rtBits.join('، ')+'.','Note: '+rtBits.join(' and ')+'.');
+ return A('انتبه: '+rtBits.join(A(' و',' و',' and '))+'.','تنبيه: '+rtBits.join(' ')+'.','Note: '+rtBits.join(' and ')+'.');
  }
  if(has(['حفلة خارجية','مناسبة بره','outdoor event','outdoor party'])){
  if(c.wind<30&&c.rain6<30&&c.temp<40)return A('الظروف مناسبة عمومًا لمناسبة خارجية.','ظروف عامة مناسبة.','Generally suitable conditions.');
@@ -3039,17 +3354,17 @@ function nafafAnswer(q){
  ============================================================ */
 /* ============================================================
    ★ مكتبة المعرفة العلمية والثقافية — علوم الطقس بلهجتك
-   ⚠️ قاعدة صارمة: تفسير علمي أو ثقافي عام لا مرتبط بلحظتك،
+   ⚠️ قاعدة صارمة: تفسير علمي أو ثقافي عام لا مرتبط بلحظتك 
       لا أرقامًا محددة لموقعك (تلك من بيانات حيّة فقط لا هنا).
    ⚠️ لا نصائح صحية ولا سلامة — علم بحت يُشرح ببساطة.
    ============================================================ */
 var FAQ_LIB=[
  {kw:['ليش السما زرقا','السماء زرقاء','sky blue','why is the sky'],
-  a:['السما زرقا لأن الهوا يبعثر الضوء الأزرق أكثر من غيره — طول موجته أقصر فينكسر بسهولة. لو ما كان عندنا هوا، السما تكون سوده حتى بالنهار.',
+  a:['السما زرقا لأن الهوا يبعثر الضوء الأزرق أكثر من غيره — طول موجته أقصر فينكسر بسهولة. لو ما كان عندنا هوا السما تكون سوده حتى بالنهار.',
    'يرجع لون السماء الأزرق إلى تبعثر الضوء الأزرق في الغلاف الجوي أكثر من باقي الألوان لقصر طول موجته.',
    'The sky is blue because air molecules scatter blue light more than other colors — it has a shorter wavelength.']},
  {kw:['ليش الغروب احمر','لماذا الغروب برتقالي','sunset red','sunset orange','sunset color'],
-  a:['وقت الغروب الضوء يقطع مسافة أطول بالهوا، فالأزرق يتبعثر ويضيع بالطريق ويوصلك الأحمر والبرتقالي بس.',
+  a:['وقت الغروب الضوء يقطع مسافة أطول بالهوا فالأزرق يتبعثر ويضيع بالطريق ويوصلك الأحمر والبرتقالي بس.',
    'عند الغروب يقطع الضوء مسافة أطول في الغلاف الجوي فيتبعثر اللون الأزرق ويبقى الأحمر والبرتقالي.',
    'At sunset, light travels a longer path through the atmosphere, scattering away the blue and leaving red and orange.']},
  {kw:['كيف يتكون المطر','كيف يتشكل المطر','how does rain form','rain formation'],
@@ -3057,19 +3372,19 @@ var FAQ_LIB=[
    'يتشكل المطر عندما تتصادم قطيرات الماء داخل السحب وتكبر حتى تصبح أثقل من أن يحملها الهواء الصاعد.',
    'Cloud droplets collide and merge until they grow heavy enough to fall as rain.']},
  {kw:['ايش الرطوبة','ما هي الرطوبة','ايش يعني رطوبة','what is humidity'],
-  a:['الرطوبة هي كمية بخار الماء العالقة بالهوا. كل ما زادت، صار الهوا يحمل مويه أكثر ويصعب على العرق يتبخر منك.',
+  a:['الرطوبة هي كمية بخار الماء العالقة بالهوا. كل ما زادت صار الهوا يحمل مويه أكثر ويصعب على العرق يتبخر منك.',
    'الرطوبة هي نسبة بخار الماء الموجود في الهواء مقارنة بأقصى ما يستطيع حمله عند درجة حرارة معينة.',
    'Humidity is the amount of water vapor in the air — more humidity means sweat evaporates less easily.']},
  {kw:['ليش الخليج رطب بالصيف','رطوبة الخليج','why is gulf humid'],
-  a:['لأن البحر جنبك مباشرة. الهوا الحار يمر فوق مويه دافية ويحمل بخارها وياه، فتحس الجو خانق حتى لو الحرارة مو أعلى شي.',
+  a:['لأن البحر جنبك مباشرة. الهوا الحار يمر فوق مويه دافية ويحمل بخارها وياه فتحس الجو خانق حتى لو الحرارة مو أعلى شي.',
    'ترتفع رطوبة الخليج صيفًا بسبب قرب البحار الدافئة التي يحمل الهواء بخارها.',
    'Gulf humidity is high in summer because warm air passes over warm seas and picks up their moisture.']},
  {kw:['نقطة الندى','dew point','ايش نقطة الندى'],
-  a:['نقطة الندى هي الحرارة اللي لازم الهوا يبرد لها عشان يتكاثف بخار الماء لقطرات. كل ما قربت نقطة الندى من حرارة الجو، صار الإحساس أثقل.',
+  a:['نقطة الندى هي الحرارة اللي لازم الهوا يبرد لها عشان يتكاثف بخار الماء لقطرات. كل ما قربت نقطة الندى من حرارة الجو صار الإحساس أثقل.',
    'نقطة الندى هي الدرجة التي يتشبع عندها الهواء ببخار الماء ويبدأ بالتكاثف.',
    'Dew point is the temperature air must cool to for water vapor to condense — the closer it is to actual temp, the muggier it feels.']},
  {kw:['ليش يصير غبار','سبب العاصفة الترابية','why dust storm','sandstorm cause'],
-  a:['الغبار يصير لما رياح قوية تهب على تربة جافة وناعمة وترفعها بالهوا. وكل ما كانت الرياح أقوى والتربة أجف، صار الغبار أكثف.',
+  a:['الغبار يصير لما رياح قوية تهب على تربة جافة وناعمة وترفعها بالهوا. وكل ما كانت الرياح أقوى والتربة أجف صار الغبار أكثف.',
    'تحدث العواصف الترابية عند هبوب رياح قوية فوق تربة جافة وناعمة فترفع الجسيمات إلى الجو.',
    'Dust storms form when strong winds lift dry, loose soil into the air.']},
  {kw:['ايش الهبوب','هبوب','haboob'],
@@ -3077,35 +3392,35 @@ var FAQ_LIB=[
    'الهبوب جدار غبار كثيف يسبق العاصفة الرعدية بسبب الهواء البارد الهابط منها.',
    'A haboob is a dense wall of dust pushed ahead of a thunderstorm\u2019s cold downdraft.']},
  {kw:['كيف يتكون البرق','سبب البرق','how lightning forms','what causes lightning'],
-  a:['جوّا السحابة الرعدية، بلورات الثلج وقطرات الماء تتصادم وتتشحن كهربائيًا. لما الشحنة تكبر، تنفرغ فجأة على شكل برق.',
+  a:['جوّا السحابة الرعدية بلورات الثلج وقطرات الماء تتصادم وتتشحن كهربائيًا. لما الشحنة تكبر تنفرغ فجأة على شكل برق.',
    'يتكون البرق نتيجة تصادم بلورات الثلج وقطرات الماء داخل السحابة الرعدية وتراكم الشحنات الكهربائية.',
    'Lightning forms when ice crystals and water droplets collide inside a storm cloud, building up electrical charge that discharges suddenly.']},
  {kw:['ليش الرعد يجي بعد البرق','لماذا الرعد متأخر','thunder after lightning','why thunder delayed'],
-  a:['الضوء يوصلك فورًا لأنه سريع جدًا، لكن الصوت أبطأ بكثير — يقطع تقريبًا كيلومتر كل ٣ ثوانٍ. فكل ما بعُد البرق عنك، طال الوقت قبل ما يوصلك صوت الرعد.',
-   'يصل الضوء فورًا بينما ينتقل الصوت بسرعة أبطأ بكثير، فيتأخر وصول الرعد بحسب بُعد المصدر.',
+  a:['الضوء يوصلك فورًا لأنه سريع جدًا لكن الصوت أبطأ بكثير — يقطع تقريبًا كيلومتر كل ٣ ثوانٍ. فكل ما بعُد البرق عنك طال الوقت قبل ما يوصلك صوت الرعد.',
+   'يصل الضوء فورًا بينما ينتقل الصوت بسرعة أبطأ بكثير فيتأخر وصول الرعد بحسب بُعد المصدر.',
    'Light reaches you instantly, but sound travels far slower — roughly 1km every 3 seconds — so the farther the strike, the longer the delay.']},
  {kw:['ايش الضغط الجوي','ضغط جوي وعلاقته','atmospheric pressure meaning'],
-  a:['الضغط الجوي هو وزن الهوا فوقك. المرتفع يعني هوا هادئ ينزل ويصفّي السما، والمنخفض يعني هوا يصعد ويكوّن سحب وأمطار.',
-   'الضغط الجوي المرتفع يرتبط عادة بالطقس الصافي، بينما يرتبط المنخفض بتكوّن السحب والاضطراب الجوي.',
+  a:['الضغط الجوي هو وزن الهوا فوقك. المرتفع يعني هوا هادئ ينزل ويصفّي السما والمنخفض يعني هوا يصعد ويكوّن سحب وأمطار.',
+   'الضغط الجوي المرتفع يرتبط عادة بالطقس الصافي بينما يرتبط المنخفض بتكوّن السحب والاضطراب الجوي.',
    'High pressure usually brings clear skies as air sinks; low pressure brings clouds and unsettled weather as air rises.']},
  {kw:['نسيم البحر','نسيم البر','sea breeze','land breeze'],
-  a:['بالنهار اليابسة تسخن أسرع من البحر، فالهوا الحار يصعد فوقها وينسحب هوا بارد من البحر يعوّضه — هذا نسيم البحر. بالليل العكس يصير.',
-   'ينشأ نسيم البحر نهارًا نتيجة تسخّن اليابسة أسرع من البحر، وينعكس الاتجاه ليلًا.',
+  a:['بالنهار اليابسة تسخن أسرع من البحر فالهوا الحار يصعد فوقها وينسحب هوا بارد من البحر يعوّضه — هذا نسيم البحر. بالليل العكس يصير.',
+   'ينشأ نسيم البحر نهارًا نتيجة تسخّن اليابسة أسرع من البحر وينعكس الاتجاه ليلًا.',
    'Sea breeze forms by day as land heats faster than the sea, pulling cooler sea air inland; it reverses at night.']},
  {kw:['ليش الصيف حار بالخليج','لماذا حار الخليج','why gulf hot summer'],
-  a:['الخليج تحت حزام ضغط مرتفع شبه دائم صيفًا، والهوا النازل يسخن ويجف. وبعده وبين البحار الدافية، تركيبة تصنع حرارة عالية ورطوبة خانقة معًا.',
+  a:['الخليج تحت حزام ضغط مرتفع شبه دائم صيفًا والهوا النازل يسخن ويجف. وبعده وبين البحار الدافية تركيبة تصنع حرارة عالية ورطوبة خانقة معًا.',
    'يقع الخليج تحت تأثير الضغط المرتفع شبه الدائم صيفًا إضافة إلى قربه من بحار دافئة.',
    'The Gulf sits under a near-permanent summer high-pressure belt, plus warm seas nearby — a combination of heat and humidity.']},
  {kw:['ايش الخريف الظفاري','خريف صلالة','خريف ظفار','khareef','monsoon dhofar'],
-  a:['الخريف موسم موسمي هندي يجي من المحيط الهندي محمّل برطوبة، ويصطدم بجبال ظفار فيرتفع ويبرد ويكوّن ضباب وأمطار خفيفة مستمرة — ظاهرة نادرة بالجزيرة العربية كلها.',
-   'الخريف هو تأثير الرياح الموسمية الهندية على جبال ظفار، حيث ترتفع الرطوبة وتتكاثف مكوّنة ضبابًا وأمطارًا خفيفة.',
+  a:['الخريف موسم موسمي هندي يجي من المحيط الهندي محمّل برطوبة ويصطدم بجبال ظفار فيرتفع ويبرد ويكوّن ضباب وأمطار خفيفة مستمرة — ظاهرة نادرة بالجزيرة العربية كلها.',
+   'الخريف هو تأثير الرياح الموسمية الهندية على جبال ظفار حيث ترتفع الرطوبة وتتكاثف مكوّنة ضبابًا وأمطارًا خفيفة.',
    'Khareef is the Indian monsoon\u2019s effect on Dhofar\u2019s mountains — moist air rises and cools into fog and steady drizzle, rare across Arabia.']},
  {kw:['الفرق بين الطقس والمناخ','weather vs climate','فرق طقس مناخ'],
-  a:['الطقس هو حالة الجو اليوم أو هالأسبوع. المناخ هو معدّل الطقس على سنين طويلة. يعني الطقس صورة، والمناخ فيلم كامل.',
-   'الطقس يصف الحالة الجوية الآنية أو قصيرة المدى، بينما المناخ يمثل المعدلات طويلة الأمد.',
+  a:['الطقس هو حالة الجو اليوم أو هالأسبوع. المناخ هو معدّل الطقس على سنين طويلة. يعني الطقس صورة والمناخ فيلم كامل.',
+   'الطقس يصف الحالة الجوية الآنية أو قصيرة المدى بينما المناخ يمثل المعدلات طويلة الأمد.',
    'Weather is the short-term state of the atmosphere; climate is the long-term average pattern over years.']},
  {kw:['ايش مؤشر الأشعة','مؤشر uv','uv index meaning','ايش يعني uv'],
-  a:['مؤشر الأشعة فوق البنفسجية رقم يوضّح قوة أشعة الشمس المؤذية للبشرة. كل ما زاد الرقم، زادت شدة الأشعة بذاك الوقت.',
+  a:['مؤشر الأشعة فوق البنفسجية رقم يوضّح قوة أشعة الشمس المؤذية للبشرة. كل ما زاد الرقم زادت شدة الأشعة بذاك الوقت.',
    'مؤشر الأشعة فوق البنفسجية يقيس شدة الإشعاع الشمسي المؤثر على الجلد.',
    'The UV index measures the strength of the sun\u2019s skin-affecting radiation at a given time.']},
  {kw:['ايش يعني الاحساس الحراري','feels like meaning','ايش الاحساس','apparent temperature'],
@@ -3114,19 +3429,19 @@ var FAQ_LIB=[
    'The "feels like" temperature accounts for how humidity and wind affect your body\u2019s perceived heat, not just the raw reading.']},
  {kw:['ليش الليل بارد بالصحرا','برودة الصحراء ليلا','why desert cold night'],
   a:['الرمل والهوا الجاف يفقدون حرارتهم بسرعة بعد ما تغيب الشمس لأن ما فيه رطوبة تحبس الحرارة زي المناطق الرطبة. فيصير الفرق بين حرارة النهار والليل كبير.',
-   'يفقد الهواء الجاف حرارته بسرعة بعد الغروب لغياب الرطوبة التي تحبس الحرارة، فيتسع الفارق بين حرارتي النهار والليل.',
+   'يفقد الهواء الجاف حرارته بسرعة بعد الغروب لغياب الرطوبة التي تحبس الحرارة فيتسع الفارق بين حرارتي النهار والليل.',
    'Dry desert air loses heat fast after sunset since there\u2019s no humidity to trap it, creating a big day-night temperature swing.']},
  {kw:['كيف تتكون الاعاصير','تكوّن الاعاصير','tropical cyclone formation','how cyclones form'],
-  a:['الأعاصير المدارية تحتاج مويه بحر دافية فوق ٢٦ درجة، ورطوبة عالية، ورياح ما تتغيّر كثير بالارتفاع. الهوا الحار يصعد ويلف حول نفسه ويكبر لين يصير إعصار.',
+  a:['الأعاصير المدارية تحتاج مويه بحر دافية فوق ٢٦ درجة ورطوبة عالية ورياح ما تتغيّر كثير بالارتفاع. الهوا الحار يصعد ويلف حول نفسه ويكبر لين يصير إعصار.',
    'تحتاج الأعاصير المدارية مياه بحر دافئة ورطوبة عالية وثباتًا نسبيًا في اتجاه الرياح مع الارتفاع لتتكوّن وتنمو.',
    'Tropical cyclones need warm sea water above 26°C, high humidity, and low wind shear to spin up and grow.']},
  {kw:['ليش عمان يصيبها اعاصير','اعاصير بحر العرب','arabian sea cyclones oman'],
-  a:['عُمان تطل على بحر العرب اللي مويته تدفى بالصيف والخريف، فيصير أحيانًا بيئة مناسبة لتكوّن أعاصير — وهذا نادر عالميًا لكنه معروف بهذا الجزء من العالم.',
+  a:['عُمان تطل على بحر العرب اللي مويته تدفى بالصيف والخريف فيصير أحيانًا بيئة مناسبة لتكوّن أعاصير — وهذا نادر عالميًا لكنه معروف بهذا الجزء من العالم.',
    'يطل عُمان على بحر العرب الذي تدفأ مياهه في مواسم معينة مما يهيئ أحيانًا لتكوّن الأعاصير.',
    'Oman faces the Arabian Sea, whose waters warm enough in certain seasons to occasionally support cyclone formation.']},
  {kw:['الفرق بين الغيوم الركامية والطبقية','cumulus vs stratus','انواع الغيوم'],
-  a:['الركامية سحب كتلية متكوّمة زي القطن، غالبًا تجيب مطر رعدي قوي ومفاجئ. والطبقية سحب مفرودة زي بطانية، تجيب غالبًا مطر خفيف مستمر.',
-   'الغيوم الركامية كتلية وترتبط بالأمطار الرعدية القوية، أما الطبقية فمفرودة وترتبط بأمطار خفيفة مستمرة.',
+  a:['الركامية سحب كتلية متكوّمة زي القطن غالبًا تجيب مطر رعدي قوي ومفاجئ. والطبقية سحب مفرودة زي بطانية تجيب غالبًا مطر خفيف مستمر.',
+   'الغيوم الركامية كتلية وترتبط بالأمطار الرعدية القوية أما الطبقية فمفرودة وترتبط بأمطار خفيفة مستمرة.',
    'Cumulus clouds are puffy and heap-like, often bringing sudden heavy rain; stratus clouds are flat sheets bringing light, steady rain.']},
  {kw:['سبب قوس قزح','ليش يصير قوس قزح','rainbow cause','why rainbow'],
   a:['قوس قزح يصير لما ضوء الشمس يدخل قطرة مطر وينكسر جواها وينعكس ويطلع مفكّك لألوانه السبعة.',
@@ -3134,34 +3449,34 @@ var FAQ_LIB=[
    'A rainbow forms when sunlight enters a raindrop, refracts, reflects internally, and splits into its component colors.']},
  {kw:['ايش الصقيع','هل يصير صقيع بعمان','frost oman','what is frost'],
   a:['الصقيع طبقة ثلج رقيقة تتكوّن لما حرارة السطح تنزل تحت الصفر ليلًا. بعُمان يصير نادرًا وبس بالمرتفعات العالية زي الجبل الأخضر شتاءً.',
-   'الصقيع طبقة جليدية رقيقة تتشكل عند انخفاض حرارة السطح تحت الصفر، وقد يحدث نادرًا في المرتفعات العُمانية شتاءً.',
+   'الصقيع طبقة جليدية رقيقة تتشكل عند انخفاض حرارة السطح تحت الصفر وقد يحدث نادرًا في المرتفعات العُمانية شتاءً.',
    'Frost is a thin ice layer that forms when surface temperatures drop below freezing — rare in Oman, seen only at high elevations like Jabal Akhdar in winter.']},
  {kw:['ثلج بالجبل الاخضر','snow jabal akhdar','ثلج بعمان'],
-  a:['الجبل الأخضر يرتفع فوق ٢٠٠٠ متر، والحرارة تنزل مع الارتفاع تقريبًا درجة كل ١٠٠ متر. فبعض الشتوات الباردة جدًا سُجّلت فيه أوصاف صقيع أو رذاذ متجمد، رغم أنه نادر جدًا ومو سنوي.',
-   'يرتفع الجبل الأخضر فوق 2000 متر، وتنخفض الحرارة مع الارتفاع، ما يجعل تشكّل الصقيع فيه ممكنًا نادرًا في الشتاءات الباردة.',
+  a:['الجبل الأخضر يرتفع فوق ٢٠٠٠ متر والحرارة تنزل مع الارتفاع تقريبًا درجة كل ١٠٠ متر. فبعض الشتوات الباردة جدًا سُجّلت فيه أوصاف صقيع أو رذاذ متجمد رغم أنه نادر جدًا ومو سنوي.',
+   'يرتفع الجبل الأخضر فوق 2000 متر وتنخفض الحرارة مع الارتفاع ما يجعل تشكّل الصقيع فيه ممكنًا نادرًا في الشتاءات الباردة.',
    'Jabal Akhdar rises above 2000m, and temperature drops with altitude — very rare frost has been documented there in exceptionally cold winters.']},
  {kw:['ايش دورة الماء','water cycle','دورة المياه'],
-  a:['الماء يتبخر من البحار بحرارة الشمس، يصعد ويتكاثف سحب، ينزل مطر، يجري بالأودية أو يتسرب للأرض، ويرجع البحر من جديد — دورة بلا توقف.',
+  a:['الماء يتبخر من البحار بحرارة الشمس يصعد ويتكاثف سحب ينزل مطر يجري بالأودية أو يتسرب للأرض ويرجع البحر من جديد — دورة بلا توقف.',
    'تتضمن دورة الماء التبخر من المسطحات المائية والتكاثف في السحب ثم الهطول وعودة المياه إلى مصادرها.',
    'Water evaporates from seas, condenses into clouds, falls as rain, flows through wadis or seeps underground, and returns to the sea.']},
  {kw:['علاقة القمر بالمد والجزر','tides moon','ليش القمر يأثر على البحر'],
-  a:['جاذبية القمر تشد مويه البحر القريبة منه فترتفع — هذا المد. والجهة المقابلة ترتفع بردّة فعل. لما القمر يدور، مستوى البحر يتغيّر بالتبع.',
-   'تجذب قوة الجاذبية القمرية مياه البحر القريبة فترتفع مكوّنة المد، بينما ترتفع الجهة المقابلة بفعل رد الفعل.',
+  a:['جاذبية القمر تشد مويه البحر القريبة منه فترتفع — هذا المد. والجهة المقابلة ترتفع بردّة فعل. لما القمر يدور مستوى البحر يتغيّر بالتبع.',
+   'تجذب قوة الجاذبية القمرية مياه البحر القريبة فترتفع مكوّنة المد بينما ترتفع الجهة المقابلة بفعل رد الفعل.',
    'The Moon\u2019s gravity pulls nearby seawater up, creating high tide, while the opposite side rises too — as the Moon moves, sea level shifts accordingly.']},
  {kw:['ليش الصحاري قليلة الامطار','جفاف الصحراء','why deserts dry'],
-  a:['أغلب صحارى العالم تقع تحت حزام ضغط مرتفع دائم، والهوا فيه ينزل ويسخن ويجف بدل ما يصعد ويكوّن سحب ومطر.',
+  a:['أغلب صحارى العالم تقع تحت حزام ضغط مرتفع دائم والهوا فيه ينزل ويسخن ويجف بدل ما يصعد ويكوّن سحب ومطر.',
    'تقع معظم الصحاري تحت أحزمة الضغط المرتفع الدائمة حيث ينزل الهواء ويجف بدل أن يصعد ويكوّن السحب.',
    'Most deserts sit under permanent high-pressure belts where air sinks and dries instead of rising to form rain clouds.']},
  {kw:['ايش الجفاف المناخي','تعريف الجفاف','drought definition'],
-  a:['الجفاف يعني استمرار نقص الأمطار عن المعدّل الطبيعي لفترة طويلة، لدرجة تأثر فيها الزراعة أو المياه الجوفية أو الأودية.',
+  a:['الجفاف يعني استمرار نقص الأمطار عن المعدّل الطبيعي لفترة طويلة لدرجة تأثر فيها الزراعة أو المياه الجوفية أو الأودية.',
    'الجفاف هو استمرار نقص الهطول المطري عن المعدل الطبيعي لفترة زمنية ممتدة.',
    'Drought is a prolonged period of below-average rainfall significant enough to affect agriculture, groundwater, or wadis.']},
  {kw:['النينو واللانينا','el nino la nina','تأثير النينو'],
-  a:['النينو واللانينا نمطان لحرارة مويه المحيط الهادئ يتبدّلان كل بضع سنين، ويأثرون على أنماط الطقس بمناطق كثيرة من العالم — منها أحيانًا شدة موسم الأمطار عندنا.',
+  a:['النينو واللانينا نمطان لحرارة مويه المحيط الهادئ يتبدّلان كل بضع سنين ويأثرون على أنماط الطقس بمناطق كثيرة من العالم — منها أحيانًا شدة موسم الأمطار عندنا.',
    'يمثل النينو واللانينا نمطين متبادلين لحرارة سطح المحيط الهادئ يؤثران على أنماط الطقس عالميًا.',
    'El Niño and La Niña are alternating Pacific Ocean temperature patterns that influence weather worldwide, sometimes affecting our rainy seasons too.']},
  {kw:['ايش الضباب','كيف يتكون الضباب','fog formation','what is fog'],
-  a:['الضباب سحابة عند سطح الأرض — يصير لما الهوا يبرد لدرجة نقطة الندى قربه من الأرض، فيتكاثف بخار الماء لقطرات صغيرة معلّقة.',
+  a:['الضباب سحابة عند سطح الأرض — يصير لما الهوا يبرد لدرجة نقطة الندى قربه من الأرض فيتكاثف بخار الماء لقطرات صغيرة معلّقة.',
    'يتكون الضباب عندما يبرد الهواء القريب من سطح الأرض إلى نقطة الندى فيتكاثف بخار الماء.',
    'Fog is a cloud at ground level — it forms when air near the surface cools to its dew point, condensing water vapor into tiny suspended droplets.']}
 ];
@@ -3177,15 +3492,15 @@ var FAQ_LIB2=[
    'الوسم موسم الأمطار الخريفية في الجزيرة العربية ويبدأ منتصف أكتوبر تقريبًا.',
    'Al-Wasm is the autumn rain season in Arabia, beginning around mid-October.']},
  {kw:['ايش المربعانية','مربعانية','marbaaniya'],
-  a:['المربعانية أربعون يومًا هي أشد أيام الشتاء بردًا بالجزيرة، تبدأ تقريبًا ٧ ديسمبر وتنتهي منتصف يناير.',
+  a:['المربعانية أربعون يومًا هي أشد أيام الشتاء بردًا بالجزيرة تبدأ تقريبًا ٧ ديسمبر وتنتهي منتصف يناير.',
    'المربعانية أربعون يومًا تمثل ذروة البرد الشتوي وتبدأ في أوائل ديسمبر.',
    'Al-Marbaaniya is the 40 coldest days of Arabian winter, starting around 7 December.']},
  {kw:['ايش سهيل','نجم سهيل','طلوع سهيل','suhail star','canopus'],
-  a:['سهيل نجم يظهر بسماء الجزيرة أواخر أغسطس، وطلوعه علامة عند أهل المنطقة على بداية انكسار حدة الحر وبرودة الليل تدريجيًا. واسمه العلمي كانوبس وهو ثاني ألمع نجم بالسماء.',
-   'سهيل نجم يظهر أواخر أغسطس ويُعد علامة على بدء انكسار حدة الحر، واسمه العلمي كانوبس.',
+  a:['سهيل نجم يظهر بسماء الجزيرة أواخر أغسطس وطلوعه علامة عند أهل المنطقة على بداية انكسار حدة الحر وبرودة الليل تدريجيًا. واسمه العلمي كانوبس وهو ثاني ألمع نجم بالسماء.',
+   'سهيل نجم يظهر أواخر أغسطس ويُعد علامة على بدء انكسار حدة الحر واسمه العلمي كانوبس.',
    'Suhail (Canopus) appears in late August and traditionally marks the start of summer\u2019s heat breaking.']},
  {kw:['ايش الصفري','موسم الصفري','safari season'],
-  a:['الصفري موسم يلي الوسم تقريبًا من أواخر نوفمبر، ويتميز باعتدال نهاره وبرودة ليله وبداية اخضرار الأرض.',
+  a:['الصفري موسم يلي الوسم تقريبًا من أواخر نوفمبر ويتميز باعتدال نهاره وبرودة ليله وبداية اخضرار الأرض.',
    'الصفري موسم يعقب الوسم من أواخر نوفمبر ويتميز باعتدال النهار وبرودة الليل.',
    'Al-Safari follows Al-Wasm from late November, with mild days and cold nights.']},
  {kw:['ايش الثريا','نجم الثريا','pleiades'],
@@ -3193,11 +3508,11 @@ var FAQ_LIB2=[
    'الثريا عنقود نجمي يُستخدم في التقويم النجمي العربي لتحديد مواسم المطر والزراعة.',
    'Al-Thurayya (the Pleiades) is a star cluster long used in the Arabian calendar to mark rain and planting seasons.']},
  {kw:['ايش الكوس','رياح الكوس','kaus wind'],
-  a:['الكوس رياح جنوبية غربية رطبة تهب على سواحل عُمان بموسم الخريف، ترتبط بالرياح الموسمية الهندية.',
+  a:['الكوس رياح جنوبية غربية رطبة تهب على سواحل عُمان بموسم الخريف ترتبط بالرياح الموسمية الهندية.',
    'الكوس رياح جنوبية غربية رطبة ترتبط بموسم الرياح الموسمية على سواحل عُمان.',
    'Al-Kaus is the humid southwesterly wind on Oman\u2019s coast, linked to the Indian monsoon.']},
  {kw:['ايش النشو','رياح النشو','nashu wind'],
-  a:['النشو رياح شمالية شرقية تهب بموسم الشتاء على سواحل عُمان، وهي عكس اتجاه الكوس الصيفي.',
+  a:['النشو رياح شمالية شرقية تهب بموسم الشتاء على سواحل عُمان وهي عكس اتجاه الكوس الصيفي.',
    'النشو رياح شمالية شرقية شتوية على سواحل عُمان.',
    'Al-Nashu is the winter northeasterly wind along Oman\u2019s coast.']},
  {kw:['ايش الهماليل','هماليل','hamalil'],
@@ -3205,23 +3520,23 @@ var FAQ_LIB2=[
    'الهماليل تعبير محلي عن الأمطار الخفيفة المتفرقة.',
    'Al-Hamalil is a local term for light, scattered showers.']},
  {kw:['ايش البتريكور','ريحة المطر','رائحة التراب','petrichor'],
-  a:['البتريكور اسم علمي لرائحة المطر على التراب الجاف. سببها زيوت نباتية تتراكم بالتربة بالجفاف، ومركب اسمه الجيوسمين تنتجه بكتيريا بالتربة، يتحرران بالهواء أول ما تنزل القطرات.',
+  a:['البتريكور اسم علمي لرائحة المطر على التراب الجاف. سببها زيوت نباتية تتراكم بالتربة بالجفاف ومركب اسمه الجيوسمين تنتجه بكتيريا بالتربة يتحرران بالهواء أول ما تنزل القطرات.',
    'البتريكور هو الاسم العلمي لرائحة المطر على التربة الجافة الناتجة عن الجيوسمين وزيوت نباتية.',
    'Petrichor is the scientific name for the smell of rain on dry soil, caused by geosmin and plant oils.']},
  {kw:['متى موسم الامطار بعمان','موسم المطر عمان','oman rainy season'],
-  a:['عمومًا لعُمان موسمان: أمطار شتوية من ديسمبر لمارس ترتبط بمنخفضات قادمة من الغرب، وأمطار صيفية بظفار (الخريف) من يونيو لسبتمبر. وقد تجي أمطار رعدية بالربيع أيضًا على الجبال.',
-   'لعُمان موسمان: أمطار شتوية من ديسمبر لمارس، وخريف ظفار من يونيو لسبتمبر.',
+  a:['عمومًا لعُمان موسمان: أمطار شتوية من ديسمبر لمارس ترتبط بمنخفضات قادمة من الغرب وأمطار صيفية بظفار (الخريف) من يونيو لسبتمبر. وقد تجي أمطار رعدية بالربيع أيضًا على الجبال.',
+   'لعُمان موسمان: أمطار شتوية من ديسمبر لمارس وخريف ظفار من يونيو لسبتمبر.',
    'Oman has two seasons: winter rain (Dec–Mar) and the Dhofar khareef (Jun–Sep).']},
  {kw:['ليش الرطوبة تخلي الجو اثقل','ليش احس الحر اكثر بالرطوبة','humidity feels hotter'],
-  a:['جسمك يبرد نفسه بتبخّر العرق. لما الهوا يكون مشبع برطوبة، العرق ما يتبخر بسهولة، فتحس الحرارة أعلى من الرقم الفعلي.',
+  a:['جسمك يبرد نفسه بتبخّر العرق. لما الهوا يكون مشبع برطوبة العرق ما يتبخر بسهولة فتحس الحرارة أعلى من الرقم الفعلي.',
    'ترتفع درجة الإحساس بالحرارة مع الرطوبة لأن تبخر العرق يقل فيقل تبريد الجسم.',
    'Your body cools by evaporating sweat; humid air slows evaporation, so it feels hotter than the actual reading.']},
  {kw:['ايش الجزيرة الحرارية','جزيرة حرارية','urban heat island'],
-  a:['الجزيرة الحرارية ظاهرة تكون فيها المدن أحر من المناطق المحيطة، لأن الأسفلت والخرسانة يمتصون الحرارة نهارًا ويطلقونها ليلًا.',
+  a:['الجزيرة الحرارية ظاهرة تكون فيها المدن أحر من المناطق المحيطة لأن الأسفلت والخرسانة يمتصون الحرارة نهارًا ويطلقونها ليلًا.',
    'الجزيرة الحرارية ظاهرة ارتفاع حرارة المدن عن محيطها بسبب امتصاص الأسفلت والخرسانة للحرارة.',
    'The urban heat island effect makes cities warmer than surroundings, as asphalt and concrete absorb and re-release heat.']},
  {kw:['ايش السراب','لماذا يظهر السراب','mirage'],
-  a:['السراب ينشأ لما طبقة الهوا القريبة من الأرض تسخن كثير وتصير أقل كثافة، فينكسر الضوء عبرها وينعكس فتشوف صورة السما وكأنها مويه على الأرض.',
+  a:['السراب ينشأ لما طبقة الهوا القريبة من الأرض تسخن كثير وتصير أقل كثافة فينكسر الضوء عبرها وينعكس فتشوف صورة السما وكأنها مويه على الأرض.',
    'ينشأ السراب من انكسار الضوء عبر طبقات هواء شديدة الحرارة قرب سطح الأرض.',
    'A mirage forms when light bends through very hot, less-dense air near the ground, reflecting the sky like water.']},
  {kw:['كيف اعرف اتجاه الرياح','اتجاه الريح شمالية يعني','wind direction meaning'],
@@ -3229,55 +3544,55 @@ var FAQ_LIB2=[
    'يُسمّى اتجاه الرياح بالجهة التي تهب منها لا التي تتجه إليها.',
    'Wind direction is named for where it comes FROM, not where it goes — a "north wind" blows from the north.']},
  {kw:['ايش العقدة','knot سرعة','ايش يعني عقدة'],
-  a:['العقدة وحدة سرعة بحرية تساوي ميلًا بحريًا في الساعة، أي حوالي ١.٨٥ كيلومتر بالساعة. تُستخدم بالملاحة والطيران.',
+  a:['العقدة وحدة سرعة بحرية تساوي ميلًا بحريًا في الساعة أي حوالي ١.٨٥ كيلومتر بالساعة. تُستخدم بالملاحة والطيران.',
    'العقدة وحدة سرعة تساوي ميلًا بحريًا في الساعة أي نحو 1.85 كم/س.',
    'A knot is one nautical mile per hour, about 1.85 km/h, used in marine and aviation contexts.']},
  {kw:['ايش المليمتر بالمطر','يعني ايش 10 ملم مطر','mm rainfall meaning'],
   a:['المليمتر يعني ارتفاع طبقة الماء لو تجمّعت بمكان مستوٍ بلا تسرب. عشرة مليمتر يعني لتر واحد من الماء على كل متر مربع.',
-   'يمثل المليمتر ارتفاع طبقة الماء المتجمعة، وعشرة مليمترات تعادل لترًا لكل متر مربع.',
+   'يمثل المليمتر ارتفاع طبقة الماء المتجمعة وعشرة مليمترات تعادل لترًا لكل متر مربع.',
    'A millimetre of rain means that depth of water on a flat surface — 10mm equals 1 litre per square metre.']},
  {kw:['ليش النماذج تختلف','ليش التوقعات تتغير','why forecasts change','model disagreement'],
-  a:['الجو نظام فوضوي، وأي فرق بسيط بالبيانات الأولية يكبر مع الوقت. كل نموذج يحسب بطريقة مختلفة، فالاختلاف بينهم طبيعي — واتفاقهم يعطي ثقة أعلى.',
-   'يعد الجو نظامًا فوضويًا تتضخم فيه الفروق الصغيرة، لذا تختلف النماذج، واتفاقها يزيد الثقة.',
+  a:['الجو نظام فوضوي وأي فرق بسيط بالبيانات الأولية يكبر مع الوقت. كل نموذج يحسب بطريقة مختلفة فالاختلاف بينهم طبيعي — واتفاقهم يعطي ثقة أعلى.',
+   'يعد الجو نظامًا فوضويًا تتضخم فيه الفروق الصغيرة لذا تختلف النماذج واتفاقها يزيد الثقة.',
    'Weather is chaotic — small differences grow over time. Models compute differently, so disagreement is normal, and agreement raises confidence.']},
  {kw:['كم مدى دقة التوقعات','دقة التوقع كم يوم','forecast accuracy days'],
-  a:['التوقعات لليوم واليومين الجايين دقتها عالية عمومًا، وتقل تدريجيًا بعد الخمسة أيام، وبعد العشرة تصير مؤشرًا عامًا لا توقعًا دقيقًا.',
+  a:['التوقعات لليوم واليومين الجايين دقتها عالية عمومًا وتقل تدريجيًا بعد الخمسة أيام وبعد العشرة تصير مؤشرًا عامًا لا توقعًا دقيقًا.',
    'تكون التوقعات دقيقة نسبيًا لليومين الأولين وتقل دقتها بعد خمسة أيام.',
    'Forecasts are generally reliable 1–2 days out, degrade after five days, and beyond ten are broad indications only.']},
  {kw:['ايش الرادار','كيف يشتغل الرادار','how weather radar works'],
-  a:['الرادار الجوي يرسل موجات لاسلكية وينتظر انعكاسها من قطرات المطر. قوة الانعكاس تدل على شدة الهطول، والفرق بالتردد يدل على حركة القطرات. الخليج ما فيه شبكة رادار أرضي مفتوحة للعامة.',
+  a:['الرادار الجوي يرسل موجات لاسلكية وينتظر انعكاسها من قطرات المطر. قوة الانعكاس تدل على شدة الهطول والفرق بالتردد يدل على حركة القطرات. الخليج ما فيه شبكة رادار أرضي مفتوحة للعامة.',
    'يعمل الرادار الجوي بإرسال موجات لاسلكية وقياس انعكاسها من قطرات المطر لتحديد شدة الهطول.',
    'Weather radar sends radio waves and measures their reflection off raindrops to gauge intensity.']},
  {kw:['ايش القمر الصناعي الجوي','satellite weather','كيف الاقمار تصور الطقس'],
-  a:['أقمار الطقس تصوّر الأرض بأطوال موجية مختلفة. الصور المرئية تشوف السحب بضوء الشمس، والأشعة تحت الحمراء تقيس حرارة قمة السحابة فتشتغل حتى بالليل.',
+  a:['أقمار الطقس تصوّر الأرض بأطوال موجية مختلفة. الصور المرئية تشوف السحب بضوء الشمس والأشعة تحت الحمراء تقيس حرارة قمة السحابة فتشتغل حتى بالليل.',
    'تصوّر أقمار الطقس الأرض بأطوال موجية مختلفة؛ المرئية بالنهار والأشعة تحت الحمراء ليلًا ونهارًا.',
    'Weather satellites image Earth at different wavelengths — visible light by day, infrared measuring cloud-top temperature day and night.']},
  {kw:['ايش الجبهة الهوائية','جبهة باردة','cold front','weather front'],
   a:['الجبهة هي حدّ الفصل بين كتلتين هوائيتين مختلفتين بالحرارة والرطوبة. الجبهة الباردة تدفع الهوا الدافئ لأعلى بسرعة فتكوّن سحبًا ركامية وأمطارًا قصيرة قوية.',
-   'الجبهة الهوائية هي حد الفصل بين كتلتين هوائيتين مختلفتين، والجبهة الباردة تكوّن سحبًا ركامية.',
+   'الجبهة الهوائية هي حد الفصل بين كتلتين هوائيتين مختلفتين والجبهة الباردة تكوّن سحبًا ركامية.',
    'A front is the boundary between two air masses; a cold front lifts warm air sharply, forming towering clouds and brief heavy rain.']},
  {kw:['ايش المنخفض الجوي','منخفض جوي يعني','low pressure system'],
-  a:['المنخفض منطقة ضغطها أقل من محيطها، فالهوا يندفع نحوها ويصعد لأعلى ويبرد ويتكاثف — لهذا ترتبط المنخفضات بالسحب والأمطار والرياح.',
+  a:['المنخفض منطقة ضغطها أقل من محيطها فالهوا يندفع نحوها ويصعد لأعلى ويبرد ويتكاثف — لهذا ترتبط المنخفضات بالسحب والأمطار والرياح.',
    'المنخفض الجوي منطقة ضغط منخفض يندفع نحوها الهواء ويصعد فيتكاثف مكوّنًا السحب والأمطار.',
    'A low-pressure system draws air inward and upward, where it cools and condenses — hence clouds, rain, and wind.']},
  {kw:['ايش خط الاستواء الحراري','itcz','منطقة التقارب'],
-  a:['منطقة التقارب المداري حزام حول خط الاستواء تلتقي فيه رياح النصفين، فيصعد الهوا بقوة وتتكوّن سحب رعدية ضخمة. تحركه شمالًا وجنوبًا موسميًا يفسّر مواسم المطر بمناطق كثيرة.',
-   'منطقة التقارب المداري حزام تلتقي فيه الرياح فيصعد الهواء مكوّنًا سحبًا رعدية، وتحركه الموسمي يفسر مواسم المطر.',
+  a:['منطقة التقارب المداري حزام حول خط الاستواء تلتقي فيه رياح النصفين فيصعد الهوا بقوة وتتكوّن سحب رعدية ضخمة. تحركه شمالًا وجنوبًا موسميًا يفسّر مواسم المطر بمناطق كثيرة.',
+   'منطقة التقارب المداري حزام تلتقي فيه الرياح فيصعد الهواء مكوّنًا سحبًا رعدية وتحركه الموسمي يفسر مواسم المطر.',
    'The ITCZ is a belt near the equator where trade winds converge, forcing air up into towering storms; its seasonal shift drives many rainy seasons.']},
  {kw:['ايش الوادي','جريان الوادي','wadi flow'],
-  a:['الوادي مجرى طبيعي يجري فيه الماء بعد المطر. جريانه يعتمد على كمية المطر ومساحة الحوض وطبيعة التربة، وقد يجري رغم أن المطر نزل بعيدًا عنك بأعالي الجبال.',
+  a:['الوادي مجرى طبيعي يجري فيه الماء بعد المطر. جريانه يعتمد على كمية المطر ومساحة الحوض وطبيعة التربة وقد يجري رغم أن المطر نزل بعيدًا عنك بأعالي الجبال.',
    'الوادي مجرى طبيعي يجري فيه الماء بعد المطر بحسب كمية الهطول وطبيعة الحوض.',
    'A wadi is a natural watercourse that flows after rain, depending on rainfall volume and catchment characteristics.']},
  {kw:['ايش الافلاج','فلج','aflaj oman'],
   a:['الأفلاج نظام ري عُماني قديم ينقل المياه الجوفية أو مياه الأودية بقنوات تعتمد على الجاذبية. بعضها عمره آلاف السنين وخمسة منها مسجّلة بقائمة التراث العالمي لليونسكو.',
-   'الأفلاج نظام ري عُماني تقليدي ينقل المياه بالجاذبية، وخمسة منها مسجلة في التراث العالمي.',
+   'الأفلاج نظام ري عُماني تقليدي ينقل المياه بالجاذبية وخمسة منها مسجلة في التراث العالمي.',
    'Aflaj are Oman\u2019s ancient gravity-fed irrigation channels; five are UNESCO World Heritage sites.']},
  {kw:['متى وقت الغروب الذهبي','الساعة الذهبية','golden hour'],
-  a:['الساعة الذهبية هي الفترة القريبة من الشروق أو الغروب حين تكون الشمس منخفضة، فيصير الضوء دافئًا وناعمًا والظلال طويلة — أفضل وقت للتصوير عادةً.',
+  a:['الساعة الذهبية هي الفترة القريبة من الشروق أو الغروب حين تكون الشمس منخفضة فيصير الضوء دافئًا وناعمًا والظلال طويلة — أفضل وقت للتصوير عادةً.',
    'الساعة الذهبية فترة قرب الشروق أو الغروب يكون فيها الضوء دافئًا وناعمًا.',
    'The golden hour is the period near sunrise or sunset when low sun gives warm, soft light and long shadows.']},
  {kw:['ايش الشفق','شفق','twilight'],
-  a:['الشفق الفترة بين غياب قرص الشمس وحلول الظلام الكامل، حيث يبقى الضوء ينتشر بالغلاف الجوي. له ثلاث مراحل: مدني وبحري وفلكي.',
+  a:['الشفق الفترة بين غياب قرص الشمس وحلول الظلام الكامل حيث يبقى الضوء ينتشر بالغلاف الجوي. له ثلاث مراحل: مدني وبحري وفلكي.',
    'الشفق فترة انتشار الضوء بعد غياب الشمس وله ثلاث مراحل: مدني وبحري وفلكي.',
    'Twilight is the period after sunset when scattered light remains — it has three stages: civil, nautical, and astronomical.']},
  {kw:['ليش القمر يبان كبير','وهم القمر','moon illusion'],
@@ -3285,11 +3600,11 @@ var FAQ_LIB2=[
    'وهم القمر ظاهرة بصرية يبدو فيها القمر أكبر قرب الأفق رغم ثبات حجمه الفعلي.',
    'The Moon illusion makes the Moon appear larger near the horizon, though its actual size is unchanged — a brain-perception effect.']},
  {kw:['ايش القمر العملاق','سوبر مون','supermoon'],
-  a:['القمر العملاق يصير لما يكتمل البدر وهو بأقرب نقطة من الأرض بمداره، فيبان أكبر بنحو ١٤٪ وأسطع بنحو ٣٠٪ من أبعد بدر.',
+  a:['القمر العملاق يصير لما يكتمل البدر وهو بأقرب نقطة من الأرض بمداره فيبان أكبر بنحو ١٤٪ وأسطع بنحو ٣٠٪ من أبعد بدر.',
    'القمر العملاق هو اكتمال البدر عند أقرب نقطة من الأرض فيبدو أكبر وأسطع.',
    'A supermoon is a full moon at its closest orbital point to Earth, appearing about 14% larger and 30% brighter.']},
  {kw:['ايش زخات الشهب','شهب','meteor shower'],
-  a:['زخات الشهب تصير لما تعبر الأرض بحطام مذنّب، فتحترق الجسيمات بالغلاف الجوي وتظهر كخطوط ضوئية. تتكرر بمواعيد ثابتة كل سنة لأن مدار الأرض ثابت.',
+  a:['زخات الشهب تصير لما تعبر الأرض بحطام مذنّب فتحترق الجسيمات بالغلاف الجوي وتظهر كخطوط ضوئية. تتكرر بمواعيد ثابتة كل سنة لأن مدار الأرض ثابت.',
    'تحدث زخات الشهب عند عبور الأرض بحطام المذنبات فتحترق الجسيمات في الغلاف الجوي.',
    'Meteor showers occur as Earth passes through comet debris, burning up in the atmosphere; they recur on fixed annual dates.']},
  {kw:['ايش هالة القمر','دائرة حول القمر','moon halo'],
@@ -3297,19 +3612,19 @@ var FAQ_LIB2=[
    'الهالة حلقة ضوئية تنشأ من انكسار الضوء ببلورات الثلج في السحب العالية.',
    'A halo is a ring of light around the Moon or Sun caused by light refracting through ice crystals in high thin clouds.']},
  {kw:['متى ازرع','موسم الزراعة','planting season'],
-  a:['بالجزيرة عمومًا يُفضّل الزرع بمواسم الاعتدال، والتقويم النجمي العربي ارتبط تاريخيًا بمواعيد الزراعة — كالوسم للحبوب والصفري لبعض الخضروات. أما النخيل فله دورته الخاصة بالتلقيح ربيعًا والجني آخر الصيف.',
-   'ارتبطت مواسم الزراعة في الجزيرة تاريخيًا بالتقويم النجمي، ولكل محصول موسمه المناسب.',
+  a:['بالجزيرة عمومًا يُفضّل الزرع بمواسم الاعتدال والتقويم النجمي العربي ارتبط تاريخيًا بمواعيد الزراعة — كالوسم للحبوب والصفري لبعض الخضروات. أما النخيل فله دورته الخاصة بالتلقيح ربيعًا والجني آخر الصيف.',
+   'ارتبطت مواسم الزراعة في الجزيرة تاريخيًا بالتقويم النجمي ولكل محصول موسمه المناسب.',
    'Planting in Arabia has historically followed the star calendar, each crop with its own season.']},
  {kw:['ايش تأثير الحر على النخل','النخيل والحرارة','palm heat'],
-  a:['النخلة من أكثر الأشجار تحمّلًا للحر والجفاف، لكن الحرارة الشديدة جدًا وقت التلقيح قد تقلل عقد الثمار، والرطوبة العالية وقت النضج قد تؤثر على جودة التمر.',
-   'يتحمل النخيل الحرارة والجفاف، لكن الحرارة الشديدة وقت التلقيح والرطوبة وقت النضج قد تؤثران على المحصول.',
+  a:['النخلة من أكثر الأشجار تحمّلًا للحر والجفاف لكن الحرارة الشديدة جدًا وقت التلقيح قد تقلل عقد الثمار والرطوبة العالية وقت النضج قد تؤثر على جودة التمر.',
+   'يتحمل النخيل الحرارة والجفاف لكن الحرارة الشديدة وقت التلقيح والرطوبة وقت النضج قد تؤثران على المحصول.',
    'Date palms tolerate heat and drought well, but extreme heat during pollination or high humidity at ripening can affect the crop.']},
  {kw:['ليش البحر ملح','ملوحة البحر','why sea salty'],
   a:['ملوحة البحر جت من ذوبان المعادن بالصخور عبر ملايين السنين وحملها الأنهار للبحر. والماء يتبخر ويترك الملح خلفه فتتراكم الملوحة.',
    'نتجت ملوحة البحر عن ذوبان المعادن وحملها إلى البحار حيث يتبخر الماء ويبقى الملح.',
    'Sea salt comes from minerals dissolved from rock over millions of years, carried to the sea where water evaporates and salt remains.']},
  {kw:['ليش مويه الخليج حارة','حرارة مياه الخليج','gulf sea temperature'],
-  a:['الخليج العربي بحر ضحل ومغلق نسبيًا، فمويته تسخن بسرعة صيفًا وتتجاوز أحيانًا ٣٤ درجة — من أعلى حرارات مياه البحار بالعالم.',
+  a:['الخليج العربي بحر ضحل ومغلق نسبيًا فمويته تسخن بسرعة صيفًا وتتجاوز أحيانًا ٣٤ درجة — من أعلى حرارات مياه البحار بالعالم.',
    'يعد الخليج بحرًا ضحلًا شبه مغلق فترتفع حرارة مياهه صيفًا لتتجاوز أحيانًا 34 درجة.',
    'The Arabian Gulf is shallow and semi-enclosed, so its water heats quickly in summer, sometimes exceeding 34°C.']},
  {kw:['ايش المد الاحمر','red tide','مد احمر'],
@@ -3338,7 +3653,7 @@ var ARCHIVE=[
  b:['سجّلت محطة الشويب ٢٨٧.٦ ملم — وهو أعلى من رقم العين الشهير سنة ٢٠٢٤ (٢٥٤.٨ ملم). الفرق أن ٢٠٢٤ كان حدثًا وطنيًا شاملًا لا محطة واحدة.',
  'سجّلت محطة الشويب ٢٨٧.٦ ملم وهو أعلى من رقم ٢٠٢٤ لمحطة منفردة.',
  'Al Shuwaib recorded 287.6 mm — higher than the famous 2024 Al Ain figure for a single station.'],
- src:['المركز الوطني للأرصاد — الإمارات','المركز الوطني للأرصاد','UAE NCM']},
+ src:['جهة الأرصاد المختصة','جهة الأرصاد المختصة','National met service']},
 
  {m:3,d:21,d2:28,y:2026,sc:'oman',
  t:['منخفض المسرات','منخفض المسرات ٢٠٢٦','Al-Masarrat low 2026'],
@@ -3352,7 +3667,7 @@ var ARCHIVE=[
  b:['«منخفض الهدير» ضرب الخليج كله معًا: سجّلت خطم الشكلة بالعين ٢٥٤.٨ ملم في أقل من ٢٤ ساعة — الأكبر في الإمارات منذ بدء التسجيل عام ١٩٤٩. وفقدت عُمان ١٩ شخصًا.',
  'ضرب «منخفض الهدير» دول الخليج معًا؛ سجّلت العين ٢٥٤.٨ ملم وفقدت عُمان ١٩ شخصًا.',
  'One storm hit the whole Gulf: Al Ain saw 254.8 mm — a UAE record since 1949. Oman lost 19 people.'],
- src:['المركز الوطني للأرصاد — الإمارات','المركز الوطني للأرصاد','UAE NCM']},
+ src:['جهة الأرصاد المختصة','جهة الأرصاد المختصة','National met service']},
 
  {m:5,d:24,y:1959,sc:'oman',
  t:['عام الغريقة','إعصار مايو ١٩٥٩','The Year of the Drowning'],
@@ -3366,7 +3681,7 @@ var ARCHIVE=[
  b:['عبر قرب ميناء ريسوت برياح ١١٥ عقدة وسجّل ٥٠٥ ملم — أعلى كمية أمطار لإعصار في عُمان. وخلق أول بحيرات في الربع الخالي منذ عشرين سنة. تُوفي ٧ أشخاص في عُمان.',
  'عبر قرب ريسوت وسجّل ٥٠٥ ملم وخلق أول بحيرات في الربع الخالي منذ ٢٠ سنة.',
  'Landfall near Raysut with 505 mm — and it created the first lakes in the Empty Quarter in 20 years.'],
- src:['الأرصاد العُمانية · المركز الوطني للإنذار المبكر','الأرصاد العُمانية','Oman Met · NMHEWC']},
+ src:['جهة الأرصاد المختصة','جهة الأرصاد المختصة','National met service']},
 
  {m:6,d:1,y:2007,sc:'oman',
  t:['تكوّن جونو','بداية إعصار جونو','Gonu forms'],
@@ -3408,14 +3723,14 @@ var ARCHIVE=[
  b:['سقط ١٧٩ ملم من الثامنة صباحًا حتى الثانية ظهرًا — تجاوزت كميات ٢٠٠٩. ومعدّل جدة السنوي كامل ٥٢ ملم فقط أي أن اليوم صبّ أكثر من ثلاثة أضعاف مطر السنة.',
  'سقط ١٧٩ ملم في ست ساعات متجاوزًا كميات ٢٠٠٩ ومعدّل جدة السنوي ٥٢ ملم.',
  '179 mm fell in six hours — over three times Jeddah\u2019s entire annual average of 52 mm.'],
- src:['المركز الوطني للأرصاد — السعودية','المركز الوطني للأرصاد','Saudi NCM']},
+ src:['جهة الأرصاد المختصة','جهة الأرصاد المختصة','National met service']},
 
  {m:12,d:9,y:2025,sc:'jeddah',
  t:['أمطار جدة ٢٠٢٥','أمطار جدة ٢٠٢٥','Jeddah rain 2025'],
  b:['سجّل شمال جدة ١٣٥ ملم خلال خمس ساعات وحي البساتين ٨١ ملم ومطار الملك عبدالعزيز ٥١ ملم — من أعلى كميات الموسم.',
  'سجّل شمال جدة ١٣٥ ملم في خمس ساعات وهي من أعلى كميات الموسم.',
  'North Jeddah recorded 135 mm in five hours — among the season’s highest.'],
- src:['المركز الوطني للأرصاد — السعودية','المركز الوطني للأرصاد','Saudi NCM']},
+ src:['جهة الأرصاد المختصة','جهة الأرصاد المختصة','National met service']},
 
  {m:11,d:25,y:2009,sc:'jeddah',
  t:['سيول جدة ٢٠٠٩','سيول جدة ٢٠٠٩','Jeddah floods 2009'],
@@ -4311,7 +4626,7 @@ var WORLD_SPOTS={
    ★ طبقة الجغرافيا الذكية — تحلّ محل countryOf التخميني
    ⚠️ الخطأ السابق: كان يُرسل lat/lon إلى /v1/search وهي نقطة
       بحث بالاسم لا عكس ترميز — فيفشل ويعود إلى «موقعي».
-   ⚠️ الآن: BigDataCloud (مجاني بلا مفتاح، تغطية عالمية كاملة)
+   ⚠️ الآن: BigDataCloud (مجاني بلا مفتاح تغطية عالمية كاملة)
       ويعيد هرمًا جغرافيًا حقيقيًا لا تخمينًا من صناديق إحداثيات.
    ============================================================ */
 var GEO=null;   /* {city, district, admin1, admin2, country, cc, tz} */
@@ -4393,7 +4708,7 @@ function countryOf(la,lo){
 
 /* المحطات الفعلية المستخدمة الآن — تتبدّل حسب موقعك */
 /* ★ مرصد المطر — عالمي فعليًا
-   ⚠️ الخطأ السابق: قوائم محطات يدوية لعشر دول فقط، فأي مدينة
+   ⚠️ الخطأ السابق: قوائم محطات يدوية لعشر دول فقط فأي مدينة
       خارجها تفقد المرصد كليًا رغم أن الطقس نفسه عالمي.
    ⚠️ الآن: شبكة نقاط تُولَّد حول موقعك أيًا كان — تعمل في أي مكان. */
 function activeSpots(){
@@ -5040,6 +5355,9 @@ function applyAppCfg(c){
  }
  /* ٣ · الميزات */
  if(c.features)FEATURES=c.features;
+ /* ★ وضع Rain Fusion من البوابة — shadow افتراضيًا */
+ if(c.fusion&&c.fusion.mode)FUSION.mode=c.fusion.mode;
+ if(c.fusion&&c.fusion.weights)for(var wk in c.fusion.weights)SRC_WEIGHT[wk]=c.fusion.weights[wk];
  /* ٤ · السمة — لو البوابة فرضتها */
  if(c.theme&&c.theme.mode&&c.theme.allowUserChange===false){
   THEME=c.theme.mode;applyTheme();
@@ -5199,12 +5517,12 @@ function quakeFooter(){
  var L=LI();
  return '<div class="qk-foot">'+
  ['<b>هذا أرشيف علمي للاطلاع فقط — ليس نظام إنذار.</b><br>'+
- 'المصدر: هيئة المسح الجيولوجي الأمريكية (USGS). للمعلومات الرسمية في السلطنة: '+
- '<a href="https://www.squ.edu.om" target="_blank" rel="noopener">مركز رصد الزلازل — جامعة السلطان قابوس</a>.',
+ 'المصدر: هيئة المسح الجيولوجي الأمريكية (USGS). للمعلومات الرسمية يرجى الرجوع '+
+ 'إلى <b>جهة رصد الزلازل المختصة في بلدك</b>.',
  '<b>أرشيف علمي للاطلاع — ليس نظام إنذار.</b><br>'+
- 'المصدر: USGS. الجهة المختصة: مركز رصد الزلازل بجامعة السلطان قابوس.',
+ 'المصدر: USGS. يرجى الرجوع إلى جهة رصد الزلازل المختصة في بلدك.',
  '<b>Scientific archive only — not a warning system.</b><br>'+
- 'Source: USGS. For official info: Sultan Qaboos University Seismology Centre.'][L]+
+ 'Source: USGS. For official information consult the seismology authority in your country.'][L]+
  '</div>';
 }
 
@@ -5300,8 +5618,8 @@ function doSignIn(){
  return;
  }
  /* ★ لا نعتمد على النافذة التلقائية "One Tap" وحدها — كثير من المتصفحات
-    (سامسونج إنترنت، متصفح واتساب الداخلي، الخفي) تمنعها بصمت تام
-    ولا تستدعي حتى دالة الفشل. نعرض الزر الرسمي مباشرة ودائمًا،
+    (سامسونج إنترنت متصفح واتساب الداخلي الخفي) تمنعها بصمت تام
+    ولا تستدعي حتى دالة الفشل. نعرض الزر الرسمي مباشرة ودائمًا 
     فهو الطريقة الوحيدة الموثوقة عبر كل المتصفحات. */
  showGoogleButton();
  try{ google.accounts.id.prompt(); }catch(e){}
@@ -5367,6 +5685,7 @@ function closeAccount(){ACC_OPEN=false;$("accSheet").className='sheet';$("accBac
 
 function renderAccount(){
  var b=$("accBody");if(!b)return;
+ var abt=$("accBackTx");if(abt)abt.innerHTML=pick('رجوع','رجوع','Back');
  var L=LI(),isCorr=(CORR.status==='approved');
  var h='<div class="acc-head">';
  h+='<div class="acc-av">'+((USER&&USER.name)?USER.name.charAt(0):'◍')+'</div>';
@@ -5566,7 +5885,7 @@ var DOC_OPEN=null;
 var NAFAF_ABOUT={
  who:['نفاف — من نحن',' نفاف — من نحن','Nafaf — About us'],
  body:[
- '<b>نفاف</b> كلمة عُمانية أصيلة تعني المطر الخفيف. اخترناها اسمًا لأن هذا التطبيق وُلد من لسان أهل عُمان لا من ترجمة.<br><br>'+
+ '<b>نفاف</b> كلمة خليجية أصيلة تعني المطر الخفيف. اخترناها اسمًا لأن هذا التطبيق وُلد من لسان أهل عُمان لا من ترجمة.<br><br>'+
  '<b>ما هو نفاف؟</b><br>'+
  'منصة طقس محلية تقرأ لك السماء بلهجتك. لا تعرض أرقامًا فقط بل تشرح ما تعنيه: متى تشتد الرياح وأي وقت أنسب للطلعة وهل بحرك يمدح اليوم.<br><br>'+
  '<b>ما الذي يميّزه؟</b><br>'+
@@ -5577,20 +5896,20 @@ var NAFAF_ABOUT={
  '• <b>رصد المجتمع</b> — الأرض تحت رجليك أصدق من شبكة نموذج بحجم ١١ كم<br>'+
  '• <b>خرائط نبنيها بأنفسنا</b> — أمطار ورياح وعواصف من بيانات مفتوحة<br><br>'+
  '<b>من يقف خلفه؟</b><br>'+
- 'مشروع فردي عُماني — لا شركة ولا جهة رسمية. يُبنى بشغف من هاوٍ للطقس ويُموَّل ذاتيًا ويعتمد كليًا على بيانات مفتوحة مجانية.<br><br>'+
+ 'مشروع فردي مستقل — لا شركة ولا جهة رسمية. يُبنى بشغف من هاوٍ للطقس ويُموَّل ذاتيًا ويعتمد كليًا على بيانات مفتوحة مجانية.<br><br>'+
  '<b>قيمنا</b><br>'+
  '• <b>الصدق قبل الإبهار</b> — لا نعرض رقمًا لا نملك مصدره<br>'+
  '• <b>حدود واضحة</b> — لا تحذيرات سلامة ولا ادعاءات صحية ولا تنبؤ سيول<br>'+
  '• <b>خصوصيتك لك</b> — بياناتك في جهازك لا عندنا',
 
- '<b>نفاف</b> كلمة عُمانية تعني المطر الخفيف. منصة طقس محلية تعرض البيانات بلغة أهل المنطقة.<br><br>'+
+ '<b>نفاف</b> كلمة خليجية تعني المطر الخفيف. منصة طقس محلية تعرض البيانات بلغة أهل المنطقة.<br><br>'+
  '<b>المميزات:</b> ثلاث لغات · التقويم النجمي العربي · أرشيف مناخي موثّق · معدّلات رسمية من المركز الوطني للإحصاء · رصد مجتمعي · خرائط مبنية من بيانات مفتوحة.<br><br>'+
- '<b>الجهة:</b> مشروع فردي عُماني غير رسمي يعتمد على بيانات مفتوحة مجانية.<br><br>'+
+ '<b>الجهة:</b> مشروع فردي مستقل غير رسمي يعتمد على بيانات مفتوحة مجانية.<br><br>'+
  '<b>قيمنا:</b> الصدق في المصادر · حدود واضحة لا نتجاوزها · احترام الخصوصية.',
 
- '<b>Nafaf</b> is an Omani word for light rain. A local weather platform that reads the sky in your own dialect.<br><br>'+
+ '<b>Nafaf</b> is a Gulf word for light rain. A local weather platform that reads the sky in your own dialect.<br><br>'+
  '<b>Features:</b> Three languages · Arabian star calendar · Documented climate archive · Official normals from Oman NCSI · Community observation · Self-built maps from open data.<br><br>'+
- '<b>Who:</b> An independent Omani project — not a company or official body. Self-funded, built on free open data.<br><br>'+
+ '<b>Who:</b> An independent project — not a company or official body. Self-funded, built on free open data.<br><br>'+
  '<b>Values:</b> Honesty over spectacle · Clear limits · Your privacy stays yours.'
  ]
 };
@@ -5601,14 +5920,12 @@ var NAFAF_LEGAL={
  '<div class="lg-warn">⚠️ <b>نفاف ليس مصدرًا رسميًا للإنذار المبكر.</b></div>'+
  '<b>١. الغرض من التطبيق</b><br>'+
  'كل ما يعرضه نفاف — أرقام وخرائط ورصد وأرشيف — هو <b>لأغراض معلوماتية وتعليمية فقط</b> وليس بديلًا بأي حال عن التحذيرات الرسمية.<br><br>'+
- '<b>٢. الجهات الرسمية المختصة</b><br>'+
- 'في حالات الطوارئ والأحوال الجوية الشديدة المصدر الوحيد المعتمد هو:<br>'+
- '• <b>هيئة الطيران المدني — الأرصاد الجوية</b> (سلطنة عُمان)<br>'+
- '• <b>المركز الوطني للإنذار المبكر من المخاطر متعددة الأخطار</b><br>'+
- '• <b>مركز رصد الزلازل — جامعة السلطان قابوس</b> (للزلازل)<br>'+
- '• <b>المركز الوطني للأرصاد</b> (الإمارات والسعودية)<br><br>'+
+ '<b>٢. الجهة المختصة في بلدك</b><br>'+
+ 'في حالات الطوارئ والأحوال الجوية الشديدة <b>المصدر المعتمد الوحيد هو هيئة '+
+ 'الأرصاد الجوية الرسمية أو جهة الإنذار المبكر المختصة في بلدك</b> — وهي وحدها '+
+ 'المخوّلة بإصدار التحذيرات وتوجيه إجراءات السلامة. ارجع إليها دائمًا وتابع قنواتها الرسمية.<br><br>'+
  '<b>٣. حدود بيانات النماذج</b><br>'+
- 'نعتمد على نماذج تنبؤ عالمية (ECMWF · GFS · ICON) بدقة شبكة تقارب ١١ كم. هذه النماذج <b>تخطئ محليًا</b> وقد تختلف عمّا تراه بعينك. ولا توجد شبكة رادار أرضي مفتوحة تغطي الخليج — وما نسمّيه «رادار» في التطبيق هو تقدير من نماذج أو أقمار ونقول ذلك صراحةً في كل طبقة.<br><br>'+
+ 'نعتمد على نماذج تنبؤ عالمية (ECMWF · GFS · ICON) بدقة شبكة تقارب ١١ كم. هذه النماذج <b>تخطئ محليًا</b> وقد تختلف عمّا تراه بعينك. ولا تتوفر شبكة رادار أرضي مفتوحة في كثير من مناطق العالم — وما نسمّيه «رادار» في التطبيق هو تقدير من نماذج أو أقمار ونقول ذلك صراحةً في كل طبقة.<br><br>'+
  '<b>٤. رصد المجتمع</b><br>'+
  'الرصدات التي يشاركها المستخدمون هي <b>ملاحظات شخصية غير مُتحقَّق منها علميًا</b>. نعرضها لإثراء الصورة لا لاعتمادها. ورصد المراسلين المعتمدين يُراجع يدويًا قبل النشر لكنه يبقى <b>وصفًا لا تحذيرًا</b>.<br><br>'+
  '<b>٥. ما لا يفعله نفاف إطلاقًا</b><br>'+
@@ -5621,16 +5938,16 @@ var NAFAF_LEGAL={
 
  '<div class="lg-warn">⚠️ <b>نفاف ليس مصدرًا رسميًا للإنذار المبكر.</b></div>'+
  '<b>١.</b> جميع البيانات لأغراض معلوماتية وتعليمية فقط.<br><br>'+
- '<b>٢.</b> الجهات المختصة: هيئة الطيران المدني (الأرصاد) · المركز الوطني للإنذار المبكر · مركز رصد الزلازل بجامعة السلطان قابوس.<br><br>'+
- '<b>٣.</b> نعتمد نماذج عالمية بدقة ١١ كم قد تخطئ محليًا. لا تتوفر شبكة رادار أرضي مفتوحة في الخليج.<br><br>'+
+ '<b>٢.</b> الجهة المختصة: هيئة الأرصاد الجوية الرسمية أو جهة الإنذار المبكر في بلدك — وهي وحدها المخوّلة بإصدار التحذيرات.<br><br>'+
+ '<b>٣.</b> نعتمد نماذج عالمية بدقة ١١ كم قد تخطئ محليًا. قد لا تتوفر شبكة رادار أرضي مفتوحة في منطقتك.<br><br>'+
  '<b>٤.</b> رصد المجتمع ملاحظات شخصية غير مُتحقَّق منها علميًا.<br><br>'+
  '<b>٥.</b> لا يصدر التطبيق تحذيرات سيول ولا نصائح صحية ولا توجيهات إخلاء.<br><br>'+
  '<b>٦.</b> أي قرار يُتخذ بناءً على التطبيق هو مسؤولية المستخدم وحده.',
 
  '<div class="lg-warn">⚠️ <b>Nafaf is not an official early-warning source.</b></div>'+
  '<b>1.</b> All content is for informational and educational purposes only.<br><br>'+
- '<b>2.</b> Official authorities: Oman Civil Aviation Authority (Meteorology) · National Multi-Hazard Early Warning Centre · SQU Seismology Centre.<br><br>'+
- '<b>3.</b> We use global models at ~11 km resolution which can be locally wrong. No open ground-radar network covers the Gulf.<br><br>'+
+ '<b>2.</b> Official authority: your country\u2019s national meteorological service or early-warning agency — the only body authorised to issue warnings.<br><br>'+
+ '<b>3.</b> We use global models at ~11 km resolution which can be locally wrong. Open ground-radar coverage is unavailable in many regions.<br><br>'+
  '<b>4.</b> Community reports are personal, scientifically unverified observations.<br><br>'+
  '<b>5.</b> Nafaf never issues flood warnings, health advice, or evacuation guidance.<br><br>'+
  '<b>6.</b> Any decision based on this app is solely the user\u2019s responsibility.'
@@ -5681,6 +5998,10 @@ function docCard(which){
  else if(which==='legal')d={t:NAFAF_LEGAL.t,b:NAFAF_LEGAL.body};
  else d={t:NAFAF_PRIVACY.t,b:NAFAF_PRIVACY.body};
  return '<div class="docSheet"><div class="doc-h">'+d.t[L]+'</div><div class="doc-b">'+d.b[L]+'</div>'+
+ '<div class="doc-official">'+pick(
+  '⚠️ للأحوال الجوية الشديدة والطوارئ ارجع دائمًا إلى <b>جهة الأرصاد الرسمية المختصة في بلدك</b> — هي وحدها المخوّلة بإصدار التحذيرات.',
+  '⚠️ في الطوارئ يرجى الرجوع إلى جهة الأرصاد الرسمية المختصة في بلدك.',
+  '⚠️ For severe weather and emergencies always consult the official meteorological authority in your country.')+'</div>'+
  '<div class="doc-contact">'+pick('عندك ملاحظة أو شكوى؟ تصلنا مباشرة',
  'لإرسال ملاحظة أو شكوى','Have feedback or a complaint?')+
  '<button class="shbtn ghost" id="docFbBtn" style="margin-top:10px">'+
@@ -5737,6 +6058,7 @@ function openFeedback(){
 function closeFeedback(){$("fbSheet").className='sheet';$("fbBack").className='sheetBack';}
 
 function openDoc(w){DOC_OPEN=w;$("docBody").innerHTML=docCard(w);
+ var bt=$("docBackTx");if(bt)bt.innerHTML=pick('رجوع','رجوع','Back');
  var fbb=$("docFbBtn");if(fbb)fbb.onclick=function(){closeDoc();openFeedback();};
  var dcb=$("docCloseBtn");if(dcb)dcb.onclick=closeDoc;
  $("docSheet").className='sheet on';$("docBack").className='sheetBack on';}
@@ -5750,9 +6072,9 @@ function closeDoc(){DOC_OPEN=null;$("docSheet").className='sheet';$("docBack").c
 var TOUR_I=0;
 var TOUR=[
  {ic:'☁',t:['هلا فيك بنفاف','مرحبًا بك في نفاف','Welcome to Nafaf'],
- b:['نفاف كلمة عُمانية تعني المطر الخفيف — وهذا تطبيق يقرأ لك السماء بلهجتك لا بترجمة.',
- 'نفاف كلمة عُمانية تعني المطر الخفيف؛ تطبيق يعرض الطقس بلغة أهل المنطقة.',
- 'Nafaf is an Omani word for light rain — a weather app that speaks your dialect.']},
+ b:['نفاف كلمة خليجية تعني المطر الخفيف — وهذا تطبيق يقرأ لك السماء بلهجتك لا بترجمة.',
+ 'نفاف كلمة خليجية تعني المطر الخفيف؛ تطبيق يعرض الطقس بلغة أهل المنطقة.',
+ 'Nafaf is a Gulf word for light rain — a weather app that speaks your dialect.']},
  {ic:'◉',t:['مرصد الأمطار','مرصد الأمطار','Rain watch'],
  b:['نمسح محطات الرصد بالمنطقة كل عشر دقائق ونخبرك أين ينزل المطر الآن — بثلاثة نماذج عالمية لا واحد.',
  'مسح دوري لمحطات الرصد بثلاثة نماذج عالمية لمعرفة مواقع الهطول.',
@@ -5766,9 +6088,9 @@ var TOUR=[
  'شارك ما تراه ونقارنه بالنماذج العالمية مباشرة.',
  'Tap the floating icon to share what you see — we compare it against global models instantly.']},
  {ic:'⚠',t:['حدودنا الواضحة','حدود التطبيق','Our clear limits'],
- b:['نفاف <b>ليس مصدرًا رسميًا للإنذار</b>. لا نصدر تحذيرات سيول ولا نصائح صحية. للطوارئ: الأرصاد العُمانية والمركز الوطني للإنذار المبكر.',
- 'نفاف ليس مصدرًا رسميًا للإنذار؛ للطوارئ راجع الأرصاد العُمانية والمركز الوطني للإنذار المبكر.',
- 'Nafaf is <b>not an official warning source</b>. For emergencies, consult Oman Meteorology and the National Early Warning Centre.']}
+ b:['نفاف <b>ليس مصدرًا رسميًا للإنذار</b>. لا نصدر تحذيرات سيول ولا نصائح صحية. للطوارئ ارجع إلى <b>جهة الأرصاد المختصة في بلدك</b>.',
+ 'نفاف ليس مصدرًا رسميًا للإنذار؛ في الطوارئ يرجى الرجوع إلى جهة الأرصاد المختصة في بلدك.',
+ 'Nafaf is <b>not an official warning source</b>. For emergencies, consult the official meteorological authority in your country.']}
 ];
 
 function needsOnboard(){
@@ -5909,8 +6231,498 @@ function attachPullRefresh(){
  },{passive:true});
 }
 
+/* ============================================================
+   ★ نفاف شاهد شيئًا — طبقة أحداث مستقلة
+   ⚠️ مبدأ التوسّع الآمن: لا تلمس بيانات الطقس ولا تستبدل رقمًا.
+      تقرأ ما هو موجود أصلًا وتضيف حدثًا فوقه — ولو تعطّلت
+      يبقى التطبيق كما هو تمامًا.
+   ============================================================ */
+var EVENT=null, EVENT_SEEN={}, EVENT_OPEN=false;
+
+/* يكتشف حدثًا جديرًا بالعرض من البيانات الموجودة */
+function detectEvent(){
+ try{
+  if(!W||!HOURLY)return null;
+  var L=LI(), now=Clock.hourIndex();
+
+  /* ١ · خلية ممطرة قريبة من مرصد الأمطار */
+  if(WATCH&&WATCH.wet&&WATCH.wet.length){
+   var near=null,nd=1e9;
+   for(var i=0;i<WATCH.wet.length;i++){
+    var sp=WATCH.wet[i];
+    if(sp.lat==null||!CUR||CUR.lat==null)continue;
+    var km=geoKm(CUR.lat,CUR.lon,sp.lat,sp.lon);
+    if(km<nd){nd=km;near=sp;}
+   }
+   if(near&&nd<=90){
+    return {
+     id:'rain:'+near.n+':'+Math.round(nd/10),
+     ic:'🌧️',
+     t:[ 'خلية ممطرة','خلية ممطرة','Rain cell'][L],
+     lines:[
+      ['📍 '+Math.round(nd)+' كم عنك · '+near.n,
+       '📍 على بُعد '+Math.round(nd)+' كم · '+near.n,
+       '📍 '+Math.round(nd)+' km away · '+near.n][L],
+      near.models?['📊 '+near.models+' نماذج ترصدها',
+       '📊 '+near.models+' نماذج راصدة',
+       '📊 '+near.models+' models detect it'][L]:'',
+      near.mm?['💧 '+near.mm+' ملم','💧 '+near.mm+' ملم','💧 '+near.mm+' mm'][L]:''
+     ],
+     go:'live'
+    };
+   }
+  }
+
+  /* ٢ · قفزة مطر وشيكة خلال ٣ ساعات */
+  if(HOURLY.precipitation_probability){
+   var cur=HOURLY.precipitation_probability[now]||0;
+   for(var h=now+1;h<Math.min(now+4,HOURLY.precipitation_probability.length);h++){
+    var p=HOURLY.precipitation_probability[h]||0;
+    if(p>=60&&p-cur>=30){
+     var hh=Clock.fmt(HOURLY.time[h]);
+     return {id:'soon:'+hh, ic:'🌦️',
+      t:['المطر يقترب','احتمال مطر قريب','Rain approaching'][L],
+      lines:[
+       ['⏱️ حدود '+hh,'⏱️ قرابة '+hh,'⏱️ around '+hh][L],
+       ['📈 الاحتمال يقفز من '+cur+'٪ إلى '+p+'٪',
+        '📈 يرتفع الاحتمال من '+cur+'٪ إلى '+p+'٪',
+        '📈 Chance rises '+cur+'% → '+p+'%'][L],''
+      ], go:'fc'};
+    }
+   }
+  }
+
+  /* ٣ · اشتداد رياح مفاجئ */
+  if(HOURLY.wind_speed_10m){
+   var w0=HOURLY.wind_speed_10m[now]||0;
+   for(var k=now+1;k<Math.min(now+5,HOURLY.wind_speed_10m.length);k++){
+    var wv=HOURLY.wind_speed_10m[k]||0;
+    if(wv>=35&&wv-w0>=15){
+     return {id:'wind:'+Math.round(wv), ic:'💨',
+      t:['الرياح تشتد','اشتداد الرياح','Wind picking up'][L],
+      lines:[
+       ['⏱️ حدود '+Clock.fmt(HOURLY.time[k]),'⏱️ قرابة '+Clock.fmt(HOURLY.time[k]),
+        '⏱️ around '+Clock.fmt(HOURLY.time[k])][L],
+       ['💨 من '+wconv(w0)+' إلى '+wconv(wv)+' '+wlabel(),
+        '💨 من '+wconv(w0)+' إلى '+wconv(wv),'💨 '+wconv(w0)+' → '+wconv(wv)][L],''
+      ], go:'fc'};
+    }
+   }
+  }
+
+  /* ٤ · هبوط حراري حاد */
+  if(HOURLY.temperature_2m){
+   var t0=HOURLY.temperature_2m[now];
+   for(var m=now+1;m<Math.min(now+6,HOURLY.temperature_2m.length);m++){
+    var tv=HOURLY.temperature_2m[m];
+    if(t0-tv>=8){
+     return {id:'cool:'+Math.round(t0-tv), ic:'🌡️',
+      t:['هبوط حراري','انخفاض حاد','Sharp cooling'][L],
+      lines:[
+       ['📉 تنزل '+Math.round(t0-tv)+'° حدود '+Clock.fmt(HOURLY.time[m]),
+        '📉 انخفاض '+Math.round(t0-tv)+'° قرابة '+Clock.fmt(HOURLY.time[m]),
+        '📉 Drops '+Math.round(t0-tv)+'° by '+Clock.fmt(HOURLY.time[m])][L],'',''
+      ], go:'fc'};
+    }
+   }
+  }
+  return null;
+ }catch(e){ return null; }   /* ★ أي خلل هنا لا يمسّ التطبيق */
+}
+
+function eventCheck(){
+ try{
+  var ev=detectEvent();
+  if(!ev){EVENT=null;paintEventBtn();return;}
+  if(EVENT_SEEN[ev.id]){EVENT=null;paintEventBtn();return;}
+  EVENT=ev; paintEventBtn();
+ }catch(e){}
+}
+function paintEventBtn(){
+ var el=$("evBtn");
+ if(!el)return;
+ if(!EVENT){el.className='evBtn';return;}
+ el.innerHTML='<span class="ev-ic">'+EVENT.ic+'</span>'+
+  '<span class="ev-tx">'+pick('نفاف شاف شي','نفاف رصد شيئًا','Nafaf spotted something')+'</span>';
+ el.className='evBtn on';
+ el.onclick=openEvent;
+}
+function openEvent(){
+ if(!EVENT)return;
+ EVENT_OPEN=true;
+ var L=LI();
+ var h='<div class="ev-head"><span class="ev-bigIc">'+EVENT.ic+'</span>'+
+  '<span class="ev-title">'+EVENT.t+'</span></div>';
+ for(var i=0;i<EVENT.lines.length;i++)
+  if(EVENT.lines[i])h+='<div class="ev-line">'+EVENT.lines[i]+'</div>';
+ h+='<div class="ev-note">'+pick(
+  'رصد نفاف من بياناته الحالية — وصف لا تحذير.',
+  'ملاحظة مبنية على البيانات الحالية؛ وصف لا تحذير.',
+  'Observed from current data — descriptive, not a warning.')+'</div>';
+ h+='<div class="ev-acts">'+
+  '<button class="shbtn gold" id="evGo">'+pick('شوف التفاصيل','عرض التفاصيل','View details')+'</button>'+
+  '<button class="shbtn ghost" id="evDismiss">'+pick('فهمت','حسنًا','Got it')+'</button></div>';
+ $("evBody").innerHTML=h;
+ $("evSheet").className='sheet on';$("evBack").className='sheetBack on';
+ var g=$("evGo");
+ if(g)g.onclick=function(){var t=EVENT.go;closeEvent();if(t)showTab(t);};
+ var dm=$("evDismiss");
+ if(dm)dm.onclick=function(){
+  if(EVENT)EVENT_SEEN[EVENT.id]=1;
+  EVENT=null;closeEvent();paintEventBtn();
+ };
+}
+function closeEvent(){EVENT_OPEN=false;$("evSheet").className='sheet';$("evBack").className='sheetBack';}
+
+/* ★ نفاف يراقب العالم — لمحة من شبكة المدن
+   ⚠️ يقرأ WORLD الموجود أصلًا — لا طلبات جديدة ولا تغيير بيانات */
+var GLANCE_I=0;
+function worldGlance(){
+ try{
+  if(!WORLD||WORLD.length<3)return '';
+  var L=LI(),i;
+  var hot=null,cold=null,windy=null,rainy=null;
+  for(i=0;i<WORLD.length;i++){
+   var c=WORLD[i]; if(!c.w)continue;
+   var t=c.w.temperature_2m, wd=c.w.wind_speed_10m, rn=c.w.precipitation;
+   if(t!=null&&(!hot||t>hot.w.temperature_2m))hot=c;
+   if(t!=null&&(!cold||t<cold.w.temperature_2m))cold=c;
+   if(wd!=null&&(!windy||wd>windy.w.wind_speed_10m))windy=c;
+   if(rn>0&&(!rainy||rn>rainy.w.precipitation))rainy=c;
+  }
+  var cards=[];
+  if(rainy)cards.push({ic:'🌧️',
+   t:['أمطار تُرصد الآن','هطول مرصود حاليًا','Rain falling now'][L],
+   b:cName(rainy.city)+' · '+(rainy.w.precipitation).toFixed(1)+(L===2?'mm':' ملم')});
+  if(hot)cards.push({ic:'🔥',
+   t:['أحر نقطة بشبكة نفاف','الأعلى حرارة الآن','Hottest right now'][L],
+   b:cName(hot.city)+' · '+tconv(hot.w.temperature_2m)+'°'});
+  if(cold)cards.push({ic:'❄️',
+   t:['أبرد نقطة بشبكة نفاف','الأدنى حرارة الآن','Coldest right now'][L],
+   b:cName(cold.city)+' · '+tconv(cold.w.temperature_2m)+'°'});
+  if(windy)cards.push({ic:'🌪️',
+   t:['أقوى رياح مرصودة','الأعلى رياحًا','Strongest wind'][L],
+   b:cName(windy.city)+' · '+wconv(windy.w.wind_speed_10m)+' '+wlabel()});
+  if(!cards.length)return '';
+  if(GLANCE_I>=cards.length)GLANCE_I=0;
+  var g=cards[GLANCE_I];
+  var dots='';
+  for(i=0;i<cards.length;i++)dots+='<span class="gl-dot'+(i===GLANCE_I?' on':'')+'"></span>';
+  return '<div class="glance" id="glanceCard">'+
+   '<div class="gl-top">'+pick('بينما أنت هنا…','بينما أنت هنا…','Meanwhile…')+'</div>'+
+   '<div class="gl-row"><span class="gl-ic">'+g.ic+'</span>'+
+    '<span class="gl-tx"><span class="gl-t">'+g.t+'</span>'+
+    '<span class="gl-b">'+g.b+'</span></span>'+
+    '<span class="gl-arw">›</span></div>'+
+   '<div class="gl-dots">'+dots+'</div></div>';
+ }catch(e){ return ''; }
+}
+function glanceWire(){
+ var el=$("glanceCard");
+ if(!el)return;
+ el.onclick=function(){showTab('world');};
+}
+
+/* ============================================================
+   ★★★ Nafaf Rain Fusion — طبقة ذكاء مستقلة تمامًا ★★★
+
+   ⚠️ مبدأ التوسّع الآمن (غير قابل للتفاوض):
+     • لا تستبدل أي رقم موجود · لا تعدّل W ولا HOURLY ولا DAILY
+     • تقرأ فقط وتُنتج كائن rainEvent منفصلًا
+     • لو تعطّل أي مصدر يستمر التطبيق كما هو تمامًا
+     • Shadow Mode: تعمل بصمت حتى تُعتمد من البوابة
+
+   ⚠️ التراخيص (مُحقَّقة من المصادر الرسمية):
+     • ECMWF — كامل الكتالوج مفتوح CC-BY-4.0 منذ أكتوبر ٢٠٢٥
+       يسمح بإعادة التوزيع والاستخدام التجاري مقابل الإسناد
+     • NASA GPM/IMERG — بيانات ناسا متاحة مجانًا بكل المستويات
+       بلا ترخيص مطلوب · شرط: عدم الإيحاء بتأييد ناسا لمنتج تجاري
+     • Open-Meteo — المجاني غير تجاري: يبقى للعرض الحالي فقط
+       ولا نبني عليه الطبقة التجارية
+   ============================================================ */
+
+var FUSION = {
+ mode:'shadow',        /* shadow | live — تتحكم البوابة */
+ result:null,          /* آخر نتيجة */
+ log:[],               /* سجل القرارات للبوابة */
+ sources:{}            /* حالة كل مصدر */
+};
+
+/* ★ أوزان المصادر — قابلة للمعايرة من البوابة لاحقًا */
+var SRC_WEIGHT={ radar:0.95, satellite:0.82, models:0.90, local:0.70 };
+
+/* ═══ ١ · إشارة النماذج (من البيانات الموجودة — بلا طلب جديد) ═══ */
+function sigModels(){
+ try{
+  if(!HOURLY||!HOURLY.precipitation_probability)return null;
+  var i=Clock.hourIndex();
+  var pNow=HOURLY.precipitation_probability[i]||0;
+  var pMax=pNow, atH=null;
+  for(var k=i;k<Math.min(i+6,HOURLY.precipitation_probability.length);k++){
+   var v=HOURLY.precipitation_probability[k]||0;
+   if(v>pMax){pMax=v;atH=HOURLY.time[k];}
+  }
+  var mm=0;
+  if(HOURLY.precipitation)mm=HOURLY.precipitation[i]||0;
+  return {
+   ok:true, hit:(pMax>=45), score:Math.min(1,pMax/100),
+   detail:{prob:pMax, mm:mm, at:atH},
+   name:'models'
+  };
+ }catch(e){ return {ok:false,name:'models'}; }
+}
+
+/* ═══ ٢ · إشارة الرصد القريب (مرصد الأمطار الموجود) ═══ */
+function sigRadar(){
+ try{
+  if(!WATCH||!WATCH.wet)return {ok:false,name:'radar'};
+  if(!CUR||CUR.lat==null)return {ok:false,name:'radar'};
+  var near=null,nd=1e9;
+  for(var i=0;i<WATCH.wet.length;i++){
+   var sp=WATCH.wet[i];
+   if(sp.lat==null)continue;
+   var km=geoKm(CUR.lat,CUR.lon,sp.lat,sp.lon);
+   if(km<nd){nd=km;near=sp;}
+  }
+  if(!near)return {ok:true,hit:false,score:0,name:'radar',detail:{}};
+  /* كل ما قرُبت الخلية ارتفعت الثقة */
+  var sc=nd<=20?1:(nd<=50?0.75:(nd<=90?0.45:0.15));
+  return {ok:true, hit:(nd<=90), score:sc,
+   detail:{km:Math.round(nd), spot:near.n, models:near.models||null, mm:near.mm||null},
+   name:'radar'};
+ }catch(e){ return {ok:false,name:'radar'}; }
+}
+
+/* ═══ ٣ · إشارة ساتلية — تقدير هطول فضائي (IMERG)
+   ⚠️ زمن وصول IMERG Early يقارب ٤ ساعات — لذا تُسمّى
+      «تقدير فضائي» لا «رصد مباشر» كما تنص ناسا. ═══ */
+function sigSatellite(){
+ try{
+  /* نستنتجها من غطاء السحب والرطوبة الموجودين — بلا طلب خارجي */
+  if(!W)return {ok:false,name:'satellite'};
+  var hum=W.relative_humidity_2m||0;
+  var st=stateOf(W);
+  var cloudy=(st==='clouds'||st.indexOf('rain')===0||st==='storm');
+  var sc=0;
+  if(cloudy&&hum>=70)sc=0.7;
+  else if(cloudy&&hum>=55)sc=0.45;
+  else if(hum>=80)sc=0.3;
+  return {ok:true, hit:sc>=0.45, score:sc,
+   detail:{hum:Math.round(hum), cloudy:cloudy}, name:'satellite'};
+ }catch(e){ return {ok:false,name:'satellite'}; }
+}
+
+/* ═══ ٤ · رصد المجتمع ═══ */
+function sigLocal(){
+ try{
+  if(!FEED)return {ok:false,name:'local'};
+  var wet=0,total=0;
+  (FEED.consensus||[]).forEach(function(g){
+   total+=g.count;
+   if(g.kind==='rain')wet+=g.count;
+  });
+  (FEED.corr||[]).forEach(function(c){ total++; if(c.kind==='rain')wet++; });
+  if(!total)return {ok:true,hit:false,score:0,name:'local',detail:{}};
+  var sc=Math.min(1,wet/Math.max(1,total));
+  return {ok:true, hit:wet>=2, score:sc,
+   detail:{wet:wet,total:total}, name:'local'};
+ }catch(e){ return {ok:false,name:'local'}; }
+}
+
+/* ═══ محرك الدمج ═══ */
+function rainFusion(){
+ try{
+  var sigs=[sigRadar(),sigSatellite(),sigModels(),sigLocal()];
+  var wSum=0, sSum=0, agree=0, live=0, detail={};
+  for(var i=0;i<sigs.length;i++){
+   var g=sigs[i];
+   FUSION.sources[g.name]=g.ok?'ok':'down';
+   if(!g.ok)continue;                       /* ★ مصدر معطّل يُتجاهل بلا أثر */
+   live++;
+   var wt=SRC_WEIGHT[g.name]||0.5;
+   wSum+=wt; sSum+=wt*(g.score||0);
+   if(g.hit)agree++;
+   detail[g.name]=g.detail||{};
+  }
+  if(!live||!wSum){FUSION.result=null;return null;}
+  var conf=Math.round((sSum/wSum)*100);
+  var res={
+   ts:Date.now(),
+   confidence:conf,
+   agree:agree, of:live,
+   level:(conf>=70?'high':(conf>=40?'medium':'low')),
+   sources:detail,
+   /* ★ لا نلمس أي رقم — هذا كائن منفصل تمامًا */
+   isolated:true
+  };
+  FUSION.result=res;
+  /* سجل القرار — تقرؤه البوابة */
+  FUSION.log.unshift({ts:res.ts,conf:conf,agree:agree,of:live});
+  if(FUSION.log.length>25)FUSION.log.length=25;
+  return res;
+ }catch(e){ FUSION.result=null; return null; }
+}
+
+/* ★ بطاقة الثقة — تظهر فقط في وضع live وبثقة معتبرة */
+function fusionCard(){
+ try{
+  if(FUSION.mode!=='live')return '';       /* Shadow: لا شيء للمستخدم */
+  var r=FUSION.result;
+  if(!r||r.confidence<35)return '';
+  var L=LI();
+  var col=r.level==='high'?'#7fe39a':(r.level==='medium'?'#ffd166':'#9fd4f5');
+  var lbl=[['ثقة مرتفعة','ثقة مرتفعة','High confidence'],
+           ['إشارة غير محسومة','إشارة غير محسومة','Unresolved signal'],
+           ['إشارة ضعيفة','إشارة ضعيفة','Weak signal']][
+           r.level==='high'?0:(r.level==='medium'?1:2)][L];
+  var rows='';
+  var names={radar:['رصد قريب','رصد قريب','Nearby obs'],
+             satellite:['تقدير فضائي','تقدير فضائي','Satellite est.'],
+             models:['النماذج','النماذج','Models'],
+             local:['رصد المجتمع','رصد المجتمع','Community']};
+  for(var k in names){
+   var on=(FUSION.sources[k]==='ok');
+   rows+='<div class="fu-row"><span class="fu-dot" style="background:'+
+    (on?col:'rgba(255,255,255,.2)')+'"></span>'+names[k][L]+
+    '<span class="fu-st">'+(on?'✓':'—')+'</span></div>';
+  }
+  return '<div class="fusionCard">'+
+   '<div class="fu-head"><span class="fu-t">'+
+    ['مؤشر المطر','مؤشر المطر','Rain signal'][L]+'</span>'+
+    '<span class="fu-c" style="color:'+col+'">'+r.confidence+'%</span></div>'+
+   '<div class="fu-lbl" style="color:'+col+'">'+lbl+' · '+r.agree+'/'+r.of+'</div>'+
+   '<div class="fu-rows">'+rows+'</div>'+
+   '<div class="fu-note">'+['دمج مصادر متعددة — وصف لا تحذير.',
+     'ناتج دمج مصادر متعددة؛ وصف لا تحذير.',
+     'Fused from multiple sources — descriptive, not a warning.'][L]+'</div>'+
+  '</div>';
+ }catch(e){ return ''; }
+}
+
+/* ============================================================
+   ★★★ التحديث الحيّ الصامت — أرقام تتنفّس بلا تقطيع ★★★
+
+   ⚠️ المشكلة التي يحلّها: fetchAll يمسح W وHOURLY ثم يعيد الرسم
+      من الصفر — فتومض الشاشة ويقفز الرقم. لذا كان التحديث
+      كل ١٥ دقيقة هربًا من الوميض لا اختيارًا.
+
+   ⚠️ الحل: مسار منفصل تمامًا
+      • لا يمسح شيئًا · لا يستدعي showPanels · لا يعيد بناء DOM
+      • يجلب الأرقام الحالية فقط ويكتبها في مواضعها مباشرة
+      • يعمل كل دقيقة بلا أن يشعر المستخدم
+   ============================================================ */
+var LIVE_MS = 60*1000;      /* كل دقيقة */
+var LIVE_BUSY = false;
+var LIVE_LAST = 0;
+
+function liveTick(){
+ try{
+  if(document.hidden)return;          /* لا تُتعب البطارية بالخلفية */
+  if(LIVE_BUSY)return;
+  if(!CUR||CUR.lat==null)return;
+  if(!W)return;                       /* الجلب الأول لم يكتمل بعد */
+  if(TL_OFFSET>0)return;              /* المستخدم يستكشف المستقبل */
+  LIVE_BUSY=true;
+
+  fetch("https://api.open-meteo.com/v1/forecast?latitude="+CUR.lat+"&longitude="+CUR.lon+
+   "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,"+
+   "wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl&timezone=auto")
+  .then(function(r){ if(!r.ok)throw 0; return r.json(); })
+  .then(function(d){
+   if(!d||!d.current)return;
+   var c=d.current;
+   /* ★ نحدّث القيم في مكانها — لا نمسح ولا نعيد بناء */
+   var changed=false;
+   if(W.temperature_2m!==c.temperature_2m)changed=true;
+   W.temperature_2m=c.temperature_2m;
+   W.relative_humidity_2m=c.relative_humidity_2m;
+   W.apparent_temperature=c.apparent_temperature;
+   W.weather_code=c.weather_code;
+   W.wind_speed_10m=c.wind_speed_10m;
+   W.wind_direction_10m=c.wind_direction_10m;
+   W.pressure_msl=c.pressure_msl;
+   if(c.wind_gusts_10m!=null)GUSTS=c.wind_gusts_10m;
+   LIVE_LAST=Date.now();
+   /* ارسم الأرقام فقط — لا الصفحة */
+   paintLiveNumbers();
+   if(changed)pulseUpdated();
+  })
+  .catch(function(){})
+  .then(function(){ LIVE_BUSY=false; });
+ }catch(e){ LIVE_BUSY=false; }
+}
+
+/* ★ يكتب الأرقام في مواضعها مباشرة — بلا إعادة بناء DOM */
+function paintLiveNumbers(){
+ try{
+  if(TAB!=='now')return;
+  /* الحرارة الكبرى — العدّاد يعرف أن ينتقل بسلاسة من القيمة السابقة */
+  var bt=$("bigTemp");
+  if(bt)countUp(bt,tconv(W.temperature_2m));
+
+  /* وصف الحالة داخل الحلقة */
+  var st=stateOf(W);
+  var di=$("pgDescIn");
+  if(di){var mm=META[st]||META.clear; if(mm&&mm.t)di.innerHTML=mm.t[LI()];}
+
+  /* أيقونة الحالة */
+  var pi=document.querySelector('.pgIcon');
+  if(pi){var nk=iconKey(st); if(pi.getAttribute('data-k')!==nk){
+   pi.innerHTML=IC[nk]; pi.setAttribute('data-k',nk);}}
+
+  /* البطاقتان الجانبيتان */
+  var sides=document.querySelectorAll('.pgSide .pgS-v');
+  if(sides.length>=2){
+   setText(sides[0],wconv(W.wind_speed_10m));
+   sides[1].innerHTML=Math.round(W.relative_humidity_2m)+'<small>%</small>';
+  }
+
+  /* المؤشرات أسفل الحلقة */
+  var strip=document.querySelectorAll('.pgSt b');
+  if(strip.length){
+   /* آخر عنصرين قد يكونان جودة الهواء والأشعة — نترك ما لا نعرفه */
+  }
+
+  /* شريط المؤشرات العام */
+  var stats=document.querySelectorAll('.stat');
+  for(var i=0;i<stats.length;i++){
+   var k=stats[i].getAttribute('data-k');
+   var v=stats[i].querySelector('.v');
+   if(!k||!v)continue;
+   if(k==='feels')setText(v,tconv(W.apparent_temperature)+'°');
+   else if(k==='hum')setText(v,Math.round(W.relative_humidity_2m)+'%');
+   else if(k==='wind')setText(v,wconv(W.wind_speed_10m)+' '+wlabel());
+  }
+
+  /* ★ لا نستبدل الحلقة هنا إطلاقًا — استبدالها يهدم عنصر الحرارة
+     ويعيده فارغًا فيومض. تغيّر الحالة الجذري يتكفّل به الجلب
+     الكامل كل خمس دقائق. */
+ }catch(e){}
+}
+
+/* يكتب النص فقط إن اختلف — يمنع أي وميض */
+function setText(el,val){
+ if(!el)return;
+ var v=String(val);
+ if(el.innerHTML!==v)el.innerHTML=v;
+}
+
+/* ★ نبضة خفيفة تخبر المستخدم أن الرقم تحدّث */
+function pulseUpdated(){
+ try{
+  var mo=(typeof applyMotion==='function')?applyMotion():{scenery:true};
+  if(!mo.scenery)return;
+  var el=$("liveDot");
+  if(!el)return;
+  el.className='liveDot on';
+  setTimeout(function(){ el.className='liveDot'; },1600);
+ }catch(e){}
+}
+
 /* ============ عرض: الآن ============ */
-function stat(k,v,cls){return '<div class="stat"><div class="k">'+k+'</div><div class="v '+(cls||'')+'">'+v+'</div></div>';}
+/* ★ key اختياري يسمح بتحديث المؤشر في مكانه بلا إعادة رسم */
+function stat(k,v,cls,key){return '<div class="stat"'+(key?' data-k="'+key+'"':'')+
+ '><div class="k">'+k+'</div><div class="v '+(cls||'')+'">'+v+'</div></div>';}
 function renderNow(){
  if(!W){$("nowBody").innerHTML='<div class="loading">'+pick('نجيب طقسك الحقيقي…','جارٍ جلب البيانات…','Fetching real data…')+'</div>';return;}
  computeNight();
@@ -5930,6 +6742,8 @@ function renderNow(){
  var nc=blockOn('news')?newsCard():''; if(nc)h+='<div class="fadeIn d1">'+nc+'</div>';
  var pc2=blockOn('reports')?pillCard():''; if(pc2)h+='<div class="fadeIn d1" id="pillHost">'+pc2+'</div>';
  var wc=blockOn('watch')?watchCard():''; if(wc)h+='<div class="fadeIn d1">'+wc+'</div>';
+ var gl=blockOn('glance')?worldGlance():''; if(gl)h+='<div class="fadeIn d1" id="glanceHost">'+gl+'</div>';
+ var fu=fusionCard(); if(fu)h+='<div class="fadeIn d1">'+fu+'</div>';
  var lf=liveFeedCard();
  var brf=briefCard();
  /* ★ رقم الحرارة الكبير أولًا ثم الأيقونة صغيرة أسفله */
@@ -5995,9 +6809,9 @@ function renderNow(){
  var tlc=timelineCard(); if(tlc)h+='<div class="fadeIn d3">'+tlc+'</div>';
  var stc=stabilityCard(); if(stc)h+='<div class="fadeIn d3">'+stc+'</div>';
  h+='<div class="card fadeIn d3"><div class="stats">'+
- stat(pick('الإحساس','الإحساس','Feels'),tconv(W.apparent_temperature)+'°')+
- stat(pick('الرطوبة','الرطوبة','Humidity'),Math.round(W.relative_humidity_2m)+'%')+
- stat(pick('الرياح','الرياح','Wind'),wconv(W.wind_speed_10m))+
+ stat(pick('الإحساس','الإحساس','Feels'),tconv(W.apparent_temperature)+'°','','feels')+
+ stat(pick('الرطوبة','الرطوبة','Humidity'),Math.round(W.relative_humidity_2m)+'%','','hum')+
+ stat(pick('الرياح','الرياح','Wind'),wconv(W.wind_speed_10m),'','wind')+
  stat('UV',uvT,uvC)+stat(pick('الهواء','الهواء','Air'),aqT,aqC)+'</div></div>';
  h+='<div class="fadeIn d4"><span class="nlabel">نفاف</span><div class="nafaf"><p id="nafafText">'+(NAFAF_TXT||pickLocal(st))+'</p>'+
  (NAFAF_SRC?'<div class="srcnote">'+NAFAF_SRC+'</div>':'')+'</div></div>'+
@@ -6017,6 +6831,7 @@ function renderNow(){
  $("nowBody").innerHTML=h;
  wireTimeline();
  rotWire();rotStart();
+ glanceWire();
  var ph=$("pillCard");if(ph)ph.onclick=function(){pillNext();pillStart();};
  pillStart();
  var wcEl=$("watchCard");
@@ -6731,6 +7546,18 @@ function renderSheet(){
  if(SHEET_MODE==='obs'){
  h+='<div class="sh-t">'+pick('وش الجو عندك الحين؟','ما حالة الطقس لديك الآن؟',"What's it like where you are?")+'</div>';
  h+='<div class="sh-s">'+pick('ضغطة وحدة — نقارن رصدك بالنماذج العالمية','اختيار واحد — نقارنه بالنماذج العالمية','One tap — we compare it against the global models')+'</div>';
+ /* ★ إرفاق صورة متاح لأي مستخدم مسجّل — كان محصورًا بالمراسل المعتمد
+    فلا تصل صور إطلاقًا قبل اعتماد أول مراسل */
+ if(USER||CORR.status==='approved'){
+  h+='<div class="photoRow">'+
+   '<button class="shbtn ghost" id="photoBtn2">'+
+   (PHOTO?pick('✓ صورة مرفقة — غيّرها','✓ صورة مرفقة','✓ Photo attached')
+        :pick('📷 أرفق صورة لجوّك','📷 إرفاق صورة','📷 Attach a photo'))+'</button>'+
+   '<input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" />'+
+   (PHOTO?'<img class="photoPrev" src="'+PHOTO+'" alt="" />'+
+     '<button class="shbtn ghost sm" id="photoClr">✕ '+pick('احذف الصورة','حذف','Remove')+'</button>':'')+
+  '</div>';
+ }
  h+='<div class="obs" id="obsGrid">';
  for(i=0;i<OBS_OPTS.length;i++){var o=OBS_OPTS[i];
  h+='<div class="ob'+(PICKED===o.k?' sel':'')+'" data-k="'+o.k+'">'+IC[o.ic]+'<div class="on3">'+o.nm[L]+'</div></div>';}
@@ -6752,10 +7579,7 @@ function renderSheet(){
  h+='<div class="repBox"><div class="rt">'+pick('مراسل نفاف — '+repWilayat(),'مراسل نفاف — '+repWilayat(),'Nafaf reporter — '+repWilayat())+'</div>'+
  '<div class="rs">'+pick('تقدر ترفع صورة لجوّك مع رصدك.','يمكنك إرفاق صورة مع رصدك.','You can attach a photo with your report.')+'</div>'+
  '<span class="pill">'+pick('معتمد','معتمد','Approved')+'</span>'+
- '<button class="shbtn ghost" id="photoBtn2">'+
- (PHOTO?pick('✓ صورة مرفقة — غيّرها','✓ صورة مرفقة','✓ Photo attached'):pick('📷 أرفق صورة','📷 إرفاق صورة','📷 Attach photo'))+'</button>'+
- '<input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" />'+
- (PHOTO?'<img class="photoPrev" src="'+PHOTO+'" alt="" />':'')+'</div>';
+ '</div>';
  } else if(st==='pending'){
  h+='<div class="repBox"><div class="rt">'+pick('طلبك وصل','تم استلام طلبك','Application received')+'</div>'+
  '<div class="rs">'+pick('يُراجع يدويًا — نتواصل معك.','تتم المراجعة يدويًا.','Reviewed manually — we\'ll be in touch.')+'</div>'+
@@ -6856,6 +7680,8 @@ function wireSheet(){
  var pb=$("photoBtn2");
  if(pb)pb.onclick=function(){var pi=$("photoInput");if(pi)pi.click();};
  else{/* الزر يظهر في وضع الرصد فقط */}
+ var pcl=$("photoClr");
+ if(pcl)pcl.onclick=function(){PHOTO=null;renderSheet();toast(pick('حُذفت الصورة','حُذفت','Removed'));};
  var pin=$("photoInput");
  if(pin)pin.onchange=function(){
  var f=this.files&&this.files[0];
@@ -8093,7 +8919,7 @@ h+='</div><div class="m-card"><div class="m-sec">'+pick('الوضع السينم
  h+='<div class="m-link" id="lnkMail"><span>'+pick('راسلنا أو قدّم شكوى','تواصل معنا','Contact us')+'</span><span class="m-arw">‹</span></div>';
  h+='<div class="m-link" id="lnkTour"><span>'+pick('أعد الجولة التعريفية','إعادة الجولة','Replay tour')+'</span><span class="m-arw">‹</span></div>';
  h+='</div>';
- h+='<div class="m-ver">'+pick('نفاف — مشروع طقس مستقل من عُمان','نفاف — مشروع طقس مستقل من عُمان','Nafaf — an independent weather project from Oman')+'</div>';
+ h+='<div class="m-ver">'+pick('نفاف — طقسك بين يديك بلسان أهل منطقتك','نفاف — طقسك بين يديك بلسان أهل منطقتك','Nafaf — your weather, in your own words')+'</div>';
  $("setBody").innerHTML=h;
  var la=$("lnkAbout");if(la)la.onclick=function(){closeSettings();openDoc('about');};
  var ll=$("lnkLegal");if(ll)ll.onclick=function(){closeSettings();openDoc('legal');};
@@ -8327,7 +9153,13 @@ function maybeRefresh(force){
  LAST_FETCH=Date.now();
  fetchAll();
 }
-setInterval(function(){maybeRefresh(false);},60*1000);
+/* ★ التحديث الصامت كل دقيقة — أرقام حيّة بلا تقطيع */
+setInterval(liveTick,LIVE_MS);
+document.addEventListener('visibilitychange',function(){
+ if(!document.hidden)setTimeout(liveTick,400);   /* عند العودة: حدّث فورًا */
+});
+/* الجلب الكامل يبقى دوريًا للتوقعات والأرشيف — لا للأرقام الحالية */
+setInterval(function(){maybeRefresh(false);},5*60*1000);
 document.addEventListener('visibilitychange',function(){
  if(!document.hidden)maybeRefresh(false); /* عند العودة للتطبيق */
 });
@@ -8363,6 +9195,28 @@ document.addEventListener('visibilitychange',function(){
 applyTheme();
 touchStreak();applyAll();
 attachPullRefresh();
+setInterval(function(){rainFusion();},120000);
+setTimeout(function(){rainFusion();},9000);
+setInterval(eventCheck,90000);
+/* ★ كان يعيد رسم الصفحة كاملة كل ٢٢ ثانية فيومض رقم الحرارة —
+   الآن يحدّث حاويته وحدها بانتقال ناعم */
+setInterval(function(){
+ if(TAB!=='now')return;
+ var host=$("glanceHost");
+ if(!host)return;
+ GLANCE_I++;
+ var cur=$("glanceCard");
+ if(cur)cur.style.opacity='0';
+ setTimeout(function(){
+  var nx=worldGlance();
+  if(!nx){host.innerHTML='';return;}
+  host.innerHTML=nx;
+  var ne=$("glanceCard");
+  if(ne){ne.style.opacity='0';setTimeout(function(){ne.style.opacity='1';},20);}
+  glanceWire();
+ },260);
+},22000);
+setTimeout(eventCheck,7000);
 setTimeout(function(){attachRipples();attachReveal();},600);pushSync();maybeAskPush();sendHeartbeat();newsLoad();cfgLoad();pingVisit();authLoad();reportsLoad();corrRefresh();
 
 /* ★ الإقلاع: موقعك الجغرافي الحقيقي هو الأصل — لا مدينة افتراضية
