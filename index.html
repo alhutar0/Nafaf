@@ -1028,7 +1028,7 @@
  font-size:12px;font-weight:600;color:rgba(255,255,255,.75);line-height:1.8}
  /* ★ الترحيب الأول */
  .obWrap{position:fixed;inset:0;z-index:150;display:none;align-items:center;justify-content:center;
- padding:22px;background:rgba(6,12,24,.92);backdrop-filter:blur(6px);
+ padding:22px;background:rgba(6,12,24,.92);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
  transition:opacity .45s}
  .obWrap.on{display:flex}
  .obWrap.gone{opacity:0;pointer-events:none}
@@ -1069,9 +1069,12 @@
  margin:16px 0 8px;line-height:1.8}
  /* معرض الصور */
  .galGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
- .galItem{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:1;
- border:1px solid rgba(255,255,255,.16)}
- .galItem img{width:100%;height:100%;object-fit:cover;display:block}
+ .galItem{position:relative;border-radius:16px;overflow:hidden;
+ padding-top:100%;height:0;border:1px solid rgba(255,255,255,.16)}
+ .galItem img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block}
+ @supports (aspect-ratio:1){
+  .galItem{aspect-ratio:1;padding-top:0;height:auto}
+ }
  .gi-ov{position:absolute;left:0;right:0;bottom:0;padding:9px 11px;
  background:linear-gradient(to top,rgba(6,11,22,.9),rgba(6,11,22,0))}
  .gi-w{font-size:12.5px;font-weight:800;color:#fff}
@@ -1119,7 +1122,14 @@
   .hero{position:relative;padding:4px 0 2px!important;background:transparent!important;
     border:0!important;text-align:center}
   .pgStage{position:relative;display:flex;align-items:center;justify-content:center;gap:0}
-  .pulseWrap{position:relative;flex:1 1 auto;max-width:340px;aspect-ratio:1;margin:0 auto}
+  /* ★ احتياط iOS 14 وأقدم — aspect-ratio يحتاج Safari 15+
+     حشوة ١٠٠٪ تصنع مربعًا وتعمل منذ iOS 6 */
+  .pulseWrap{position:relative;flex:1 1 auto;max-width:340px;margin:0 auto;
+    width:100%;padding-top:100%;height:0}
+  .pulseWrap>*{position:absolute;top:0;left:0;right:0;bottom:0}
+  @supports (aspect-ratio:1){
+   .pulseWrap{aspect-ratio:1;padding-top:0;height:auto}
+  }
   .pulseSvg{width:100%;height:100%;display:block;overflow:visible}
   /* بطاقات جانبية صغيرة ونحيلة */
   .pgSide{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:1px;
@@ -1582,6 +1592,37 @@
     font-size:9.5px;font-weight:600;color:var(--tx3,rgba(255,255,255,.5))}
   .ds-tx b{font-size:12px;font-weight:800;color:var(--tx,#fff);
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* ============================================================
+     ★ احتياط iOS 14 وأقدم — gap في flexbox يحتاج Safari 14.5+
+     ⚠️ لا يمكن كشفه بـ@supports لأن Safari يدعم gap في grid
+        منذ الإصدار ١٢ — فيُرجع true خطأً.
+     ⚠️ الحيلة الموثوقة: -webkit-touch-callout يدعمه Safari وحده
+        و@supports not (aspect-ratio) يعزل iOS 14 وأقدم بدقة.
+     ============================================================ */
+  @supports (-webkit-touch-callout:none) and (not (aspect-ratio:1)){
+   /* المسافات الأفقية الشائعة */
+   .top>*+*,.locbar>*+*,.row>*+*,.mrow>*+*,.tl-head>*+*,
+   .wt-h>*+*,.wt-row>*+*,.an-h>*+*,.rt-head>*+*,.fd-row>*+*,
+   .pgClock>*+*,.pgRangeBox>*+*,.pgTimeBox>*+*,.ds-picks>*+*,
+   .tc-row>*+*,.ev-head>*+*,.gl-row>*+*,.mHead>*+*,
+   .pgTop>*+*,.pgStage>*+*,.stabRow>*+*,.installBar>*+*{
+    margin-inline-start:8px}
+   /* الأعمدة */
+   .vlgContent>*+*,.pulseIn>*+*,.pgSide>*+*,.ds-tx>*+*,
+   .dragList>*+*,.lgGroup>*+*{margin-top:6px}
+   /* الشبكات المرنة */
+   .m-row>*,.opts>*,.lg-grid>*{margin:0 6px 6px 0}
+   .obs>*,.actGrid>*{margin:0 4px 8px 0}
+  }
+  /* ★ الأجهزة الاقتصادية — أطفئ ما يُثقل المعالج */
+  .perfLow .phShimmer,.perfLow .phHeatGlow,.perfLow .phSpark,
+  .perfLow .phSand,.perfLow .phGust,.perfLow .phRays,
+  .perfLow .pgArcGlow{display:none}
+  .perfLow *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  .perfLow .phLayer *,.perfLow .phFlame{animation-duration:2s!important}
+  .perfMid .phShimmer,.perfMid .pgArcGlow{opacity:.5}
+  /* التمرير أنعم على الضعيف */
+  .perfLow .card,.perfLow .smartV{transition:none}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -1920,9 +1961,13 @@ function wlabel(){return WUNIT==='ms'?pick('م/ث','م/ث','m/s'):(WUNIT==='kn'?
 function applyMotion(){
  var reduced=false;try{reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
  var on=(MOTION==='full')&&!reduced;
- /* ★ لا نكتب className من الصفر — كان يمحو صنف السمة (th-*) */
+ /* ★ لا نكتب className من الصفر — كان يمحو صنفي السمة والأداء */
  var th=(THEME==='mid')?' th-mid':((THEME==='light')?' th-light':'');
- document.body.className=(on?'anim':'noanim')+th;
+ var pf='';
+ if(typeof PERF==='number'&&PERF!==null){
+  if(PERF<0.5)pf=' perfLow'; else if(PERF<0.8)pf=' perfMid';
+ }
+ document.body.className=(on?'anim':'noanim')+th+pf;
  return {anim:on,scenery:MOTION!=='off'};}
 function applyScale(){document.documentElement.style.fontSize=(16*TSCALE)+'px';}
 /* ★ سمات العرض — اختيار المستخدم */
@@ -2260,6 +2305,44 @@ setInterval(tickClock,30000);
    ⚠️ SVG وCSS فقط: حادّة على أي دقة · كيلوبايتات لا ميجابايتات
    ⚠️ كل تأثير مشتق من البيانات الحقيقية لا زخرفة عامة
    ============================================================ */
+/* ============================================================
+   ★ قياس قدرة الجهاز — لا نُثقل الهواتف الاقتصادية
+   ⚠️ المشكلة: العاصفة تُنتج ٧٤ عنصرًا متحركًا. على جهاز
+      بأربعة أنوية وذاكرة ٢ جيجا يعني تقطيعًا وسخونة.
+   ⚠️ الحل: نقيس الجهاز مرة ونضبط الكثافة تلقائيًا.
+   ============================================================ */
+var PERF=null;
+function devicePerf(){
+ if(PERF)return PERF;
+ var score=1;                     /* ١ = كامل · ٠.٦ = متوسط · ٠.35 = خفيف */
+ try{
+  var cores=navigator.hardwareConcurrency||4;
+  var mem=navigator.deviceMemory||4;      /* جيجابايت — كروم فقط */
+  var dpr=window.devicePixelRatio||1;
+  var w=Math.max(screen.width,screen.height)||800;
+
+  if(cores<=4)score-=0.25;
+  if(cores<=2)score-=0.15;
+  if(mem<=2)score-=0.3;
+  else if(mem<=4)score-=0.12;
+  if(dpr<2)score-=0.08;            /* شاشة منخفضة الكثافة = جهاز اقتصادي غالبًا */
+  if(w<=720)score-=0.1;
+
+  /* اتصال بطيء = جهاز أضعف عادةً */
+  var c=navigator.connection;
+  if(c&&c.effectiveType&&/2g/.test(c.effectiveType))score-=0.2;
+  if(c&&c.saveData)score-=0.25;    /* المستخدم طلب توفير البيانات */
+ }catch(e){}
+ PERF=Math.max(0.3,Math.min(1,score));
+ /* وسم الجسم ليستفيد CSS أيضًا */
+ try{
+  if(PERF<0.5)document.body.className+=' perfLow';
+  else if(PERF<0.8)document.body.className+=' perfMid';
+ }catch(e){}
+ return PERF;
+}
+/* يضبط أي عدد جسيمات حسب قدرة الجهاز */
+function pCount(n){ return Math.max(2,Math.round(n*devicePerf())); }
 function ringPhysics(st,temp,R,CX,CY){
  var mo=(typeof applyMotion==='function')?applyMotion():{scenery:true};
  if(!mo.scenery)return {svg:'',dom:''};
@@ -2281,7 +2364,7 @@ function ringPhysics(st,temp,R,CX,CY){
 
  /* ═══════════ 🔥 حر شديد ═══════════ */
  if(isHot&&!wet){
-  var flames=isBurn?26:16;
+  var flames=pCount(isBurn?26:16);
   /* حلقة لهب متصلة حول القوس */
   svg+='<g class="phFlames">';
   for(i=0;i<flames;i++){
@@ -2305,7 +2388,7 @@ function ringPhysics(st,temp,R,CX,CY){
   svg+='<circle class="phHeatGlow" cx="'+CX+'" cy="'+CY+'" r="'+(R-8)+'" fill="none" '+
    'stroke="'+(isBurn?'#ff5e2e':'#ff9d5c')+'" stroke-width="3" opacity=".3"/>';
   /* جمرات تصعد وتتلاشى */
-  var embers=isBurn?22:12;
+  var embers=pCount(isBurn?22:12);
   for(i=0;i<embers;i++)
    dom+='<span class="phEmber" style="left:'+(6+Math.random()*88).toFixed(1)+'%;'+
     'bottom:'+(8+Math.random()*35).toFixed(0)+'%;'+
@@ -2321,8 +2404,9 @@ function ringPhysics(st,temp,R,CX,CY){
  if(isSnow){
   /* بلورات على الحافة */
   svg+='<g class="phIce">';
-  for(i=0;i<18;i++){
-   var ir=(i/18)*2*Math.PI;
+  var cryN=pCount(18);
+  for(i=0;i<cryN;i++){
+   var ir=(i/cryN)*2*Math.PI;
    var ix=CX+Math.cos(ir)*R, iy=CY+Math.sin(ir)*R;
    var sz=2+Math.random()*2.6;
    svg+='<g class="phCry" style="animation-delay:'+(i*0.18).toFixed(2)+'s" '+
@@ -2339,7 +2423,8 @@ function ringPhysics(st,temp,R,CX,CY){
     'stroke="#dff1ff" stroke-width="9" opacity=".28" stroke-linecap="round" '+
     'stroke-dasharray="5 13"/>';
   /* ندف تتساقط وتتمايل */
-  for(i=0;i<22;i++)
+  var flakeN=pCount(22);
+  for(i=0;i<flakeN;i++)
    dom+='<span class="phFlake" style="left:'+(Math.random()*100).toFixed(1)+'%;'+
     'animation-duration:'+(4.5+Math.random()*4.5).toFixed(1)+'s;'+
     'animation-delay:'+(Math.random()*6).toFixed(1)+'s;'+
@@ -2350,7 +2435,7 @@ function ringPhysics(st,temp,R,CX,CY){
  /* ═══════════ 🌧️ مطر ═══════════ */
  if(wet){
   /* قطرات تنطلق من محيط الحلقة كله */
-  var drops=Math.round(20+I*38);
+  var drops=pCount(Math.round(20+I*38));
   for(i=0;i<drops;i++){
    var da=(Math.random()*360);
    var dr=da*Math.PI/180;
@@ -2368,7 +2453,7 @@ function ringPhysics(st,temp,R,CX,CY){
    'stroke="#bfe6ff" stroke-width="8" opacity="'+(0.12+I*0.2).toFixed(2)+'" '+
    'stroke-linecap="round" stroke-dasharray="18 26"/>';
   /* بِرَك ترتد أسفل الحلقة */
-  var pools=Math.round(4+I*9);
+  var pools=pCount(Math.round(4+I*9));
   for(i=0;i<pools;i++)
    dom+='<span class="phSplash" style="left:'+(12+Math.random()*76).toFixed(1)+'%;'+
     'bottom:'+(4+Math.random()*16).toFixed(0)+'%;'+
@@ -2398,7 +2483,8 @@ function ringPhysics(st,temp,R,CX,CY){
  /* ═══════════ 🌫️ غبار ═══════════ */
  if(st==='dust'){
   var dDur=Math.max(2.6,Math.min(9,180/Math.max(6,wind)));
-  for(i=0;i<28;i++)
+  var dustN=pCount(28);
+  for(i=0;i<dustN;i++)
    dom+='<span class="phDust" style="left:'+(Math.random()*100).toFixed(1)+'%;'+
     'top:'+(12+Math.random()*72).toFixed(0)+'%;'+
     'width:'+(2+Math.random()*3).toFixed(1)+'px;'+
@@ -2439,7 +2525,8 @@ function ringPhysics(st,temp,R,CX,CY){
 
  /* ═══════════ 🌙 ليل صافٍ ═══════════ */
  if(IS_NIGHT&&!wet&&st!=='dust'){
-  for(i=0;i<16;i++)
+  var starN=pCount(16);
+  for(i=0;i<starN;i++)
    dom+='<span class="phStar" style="left:'+(Math.random()*100).toFixed(1)+'%;'+
     'top:'+(Math.random()*55).toFixed(0)+'%;'+
     'width:'+(1.5+Math.random()*1.8).toFixed(1)+'px;'+
@@ -9636,6 +9723,7 @@ document.addEventListener('visibilitychange',function(){
  }
 })();
 applyTheme();
+devicePerf();
 touchStreak();applyAll();
 attachPullRefresh();
 /* Rain Fusion تبدأ متأخرة — ليست ضمن أول شاشة */
