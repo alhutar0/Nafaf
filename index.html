@@ -1630,6 +1630,17 @@
   .perfLow .card,.perfLow .smartV{transition:none}
   .ccFlag{display:inline-block;font-size:17px;line-height:1;
     margin-inline-end:7px;vertical-align:-2px}
+  .attrBox{background:var(--card,rgba(255,255,255,.06));
+    border:1px solid var(--cardBd,rgba(255,255,255,.12));
+    border-radius:16px;padding:12px 14px;margin-top:8px}
+  .atr{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:8px 0;
+    border-bottom:1px solid rgba(127,140,160,.12)}
+  .atr:last-child{border-bottom:0}
+  .atr b{font-size:12px;font-weight:800;color:var(--tx2,rgba(255,255,255,.8));
+    flex:0 0 auto;min-width:74px}
+  .atr a{font-size:12.5px;font-weight:700;color:#9fd4f5;text-decoration:none}
+  .atr small{width:100%;font-size:10px;font-weight:600;
+    color:var(--tx3,rgba(255,255,255,.45));line-height:1.6}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -4921,70 +4932,98 @@ function geoKm(a1,o1,a2,o2){
  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 function geoResolve(lat,lon,cb){
- /* ★ لا نطلب عكس الترميز إن لم يتحرك المستخدم أكثر من ٣ كم
-    ⚠️ GEO تُمسح عند تبديل المدينة فلا يمنع هذا الشرط الجلب */
- if(GEO&&GEO.lat!=null&&geoKm(GEO.lat,GEO.lon,lat,lon)<2){cb(GEO);return;}
+ /* ★ الذاكرة تُستخدم فقط لنفس البقعة تقريبًا */
+ if(GEO&&GEO.lat!=null&&geoKm(GEO.lat,GEO.lon,lat,lon)<1.5){cb(GEO);return;}
  var lang=(LANG==='en')?'en':'ar';
+
+ /* ═══════════════════════════════════════════════════════════
+    ★ عكس الترميز بمصدرين — الأدق أولًا
+    ⚠️ المشكلة: BigDataCloud لا يعرف القرى الصغيرة فيرجع اسم
+       الولاية. مستخدم في «سور المزاريع» يرى «ولاية شناص».
+    ⚠️ الحل: Nominatim يفهرس القرى والفرجان من OpenStreetMap
+       فيعطي اسم القرية بالضبط · وBigDataCloud احتياط.
+    ═══════════════════════════════════════════════════════════ */
+ nominatimResolve(lat,lon,lang,function(g){
+  if(g&&(g.village||g.city)){ cb(g); return; }
+  /* الاحتياط: BigDataCloud */
+  bdcResolve(lat,lon,lang,function(g2){
+   if(!g2){ cb(g||null); return; }
+   /* ادمج: خذ اسم القرية من نومناتم إن وُجد */
+   if(g&&g.village&&!g2.village)g2.village=g.village;
+   cb(g2);
+  });
+ });
+}
+
+/* ★ Nominatim — يفهرس القرى والفرجان (بيانات OpenStreetMap · ODbL) */
+function nominatimResolve(lat,lon,lang,cb){
+ var done=false;
+ var t=setTimeout(function(){ if(!done){done=true;cb(null);} },6000);
+ fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+lat+
+   '&lon='+lon+'&zoom=16&addressdetails=1&accept-language='+lang,
+   {headers:{'Accept':'application/json'}})
+ .then(function(r){ return r.ok?r.json():null; })
+ .then(function(d){
+  if(done)return; done=true; clearTimeout(t);
+  if(!d||!d.address){cb(null);return;}
+  var a=d.address;
+  /* ★ الترتيب من الأدق للأعم — هنا تُلتقط القرية */
+  var vill = a.hamlet||a.village||a.isolated_dwelling||a.farm||
+             a.neighbourhood||a.suburb||a.quarter||a.locality||'';
+  var city = a.town||a.city||a.municipality||a.city_district||'';
+  var d2   = a.county||a.state_district||'';
+  var a1   = a.state||a.region||a.province||'';
+  cb({
+   village:vill, city:city||vill,
+   locality:vill||city,
+   district:d2, admin1:a1, admin2:d2,
+   country:a.country||'',
+   cc:(a.country_code||'').toUpperCase(),
+   lat:lat, lon:lon, src:'osm'
+  });
+ })
+ .catch(function(){ if(!done){done=true;clearTimeout(t);cb(null);} });
+}
+
+/* ★ BigDataCloud — احتياط سريع وتغطية عالمية */
+function bdcResolve(lat,lon,lang,cb){
  fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+lat+
    '&longitude='+lon+'&localityLanguage='+lang)
- .then(function(r){return r.ok?r.json():null;})
+ .then(function(r){ return r.ok?r.json():null; })
  .then(function(d){
   if(!d){cb(null);return;}
-  /* استخرج الهرم الإداري من localityInfo */
   var adm=(d.localityInfo&&d.localityInfo.administrative)||[];
   var byLevel={};
-  for(var i=0;i<adm.length;i++){
-   var a=adm[i];
-   if(a.adminLevel!=null)byLevel[a.adminLevel]=a.name;
-  }
-  /* ★ أدق اسم متاح — نمسح المستويات من الأصغر للأكبر
-     BigDataCloud: كلما ارتفع adminLevel صغرت الوحدة الإدارية */
-  var finest='';
-  for(var lv=12;lv>=8;lv--){ if(byLevel[lv]){finest=byLevel[lv];break;} }
-  /* informative يحمل أحيانًا اسم القرية الفعلي */
-  var inf=(d.localityInfo&&d.localityInfo.informative)||[];
-  var infName='';
-  for(var q=0;q<inf.length;q++){
-   var it=inf[q];
-   if(!it||!it.name)continue;
-   var ds=(it.description||'').toLowerCase();
-   if(/village|hamlet|neighbourhood|neighborhood|suburb|locality/.test(ds)){infName=it.name;break;}
-  }
+  for(var i=0;i<adm.length;i++)
+   if(adm[i].adminLevel!=null)byLevel[adm[i].adminLevel]=adm[i].name;
   cb({
-   /* ★ الأدق أولًا: القرية/الحي (المستوى ١٠) ثم البلدة ثم المدينة
-      BigDataCloud يعطي مستويات إدارية متدرّجة — كلما ارتفع الرقم
-      صغرت الوحدة. نأخذ أصغر وحدة مسمّاة متاحة. */
-   /* ★ أدق ما يمكن: حيّ (١١) ← قرية (١٠) ← بلدة (٩) */
-   village:infName||finest||byLevel[11]||byLevel[10]||byLevel[9]||'',
-   finest:finest,
+   village:byLevel[11]||byLevel[10]||byLevel[9]||'',
    city:d.city||d.locality||'',
    locality:d.locality||'',
-   district:byLevel[8]||byLevel[7]||'',   /* الولاية/البلدية */
-   admin1:d.principalSubdivision||byLevel[4]||'',  /* المحافظة/الولاية الكبرى */
+   district:byLevel[8]||byLevel[7]||'',
+   admin1:d.principalSubdivision||byLevel[4]||'',
    admin2:byLevel[6]||'',
    country:d.countryName||'',
    cc:(d.countryCode||'').toUpperCase(),
    continent:d.continentCode||'',
-   lat:lat, lon:lon
+   lat:lat, lon:lon, src:'bdc'
   });
  })
- .catch(function(){cb(null);});
+ .catch(function(){ cb(null); });
 }
 
 /* اسم معروض هرمي: المكان · الولاية/المحافظة · الدولة */
 function geoLabel(g){
  if(!g)return null;
- /* ★ الأدق أولًا — «قرية الحوقين» أوضح من «الرستاق» */
- var main=g.village||g.finest||g.locality||g.city||g.district||g.admin1||g.country;
+ /* ★ الأدق أولًا: القرية ← البلدة ← المدينة ← الولاية */
+ var main = g.village || g.locality || g.city || g.district || g.admin1 || g.country;
  var mid=[];
- /* المدينة الأم إن كان الاسم قرية */
- if(g.city&&g.city!==main)mid.push(g.city);
- if(g.district&&g.district!==main&&mid.indexOf(g.district)<0)mid.push(g.district);
- else if(g.admin2&&g.admin2!==main&&mid.indexOf(g.admin2)<0)mid.push(g.admin2);
+ if(g.district&&g.district!==main)mid.push(g.district);
+ else if(g.city&&g.city!==main)mid.push(g.city);
  if(g.admin1&&g.admin1!==main&&mid.indexOf(g.admin1)<0)mid.push(g.admin1);
- if(mid.length>2)mid=mid.slice(0,2);   /* لا نطيل السطر */
- return {main:main,sub:mid.join(' · '),country:g.country,cc:g.cc};
+ return {main:main, sub:mid.join(' · '), country:g.country, cc:g.cc};
 }
+
 
 /* اكتشف الدولة من الإحداثيات
  ⚠️ الترتيب مهم: الدول الصغيرة أولًا لأن صناديق الدول الكبيرة تبتلعها */
@@ -7535,6 +7574,25 @@ function renderSrc(){
  h+='<div class="mrow"><span class="mn">'+m.d.nm+'<small>'+m.d.sub[L]+'</small></span>'+
  '<span class="mv">'+tconv(m.t)+'°'+(m.p!=null?' <small>'+m.p.toFixed(1)+'mm</small>':'')+'</span></div>';}
  if(MODEL_NOTE)h+=smart(pick('خلاصة نفاف','الخلاصة','Summary'),MODEL_NOTE);
+ /* ★ إسناد مصادر البيانات — التزام بشروط التراخيص */
+ h+='<div class="sec-t" style="margin-top:20px">'+
+  pick('إسناد المصادر','إسناد المصادر','Attribution')+'</div>';
+ h+='<div class="attrBox">'+
+  '<div class="atr"><b>'+pick('الطقس','الطقس','Weather')+'</b>'+
+   '<a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>'+
+   '<small>CC BY 4.0 · ECMWF · GFS · ICON</small></div>'+
+  '<div class="atr"><b>'+pick('أسماء الأماكن','أسماء الأماكن','Place names')+'</b>'+
+   '<a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'+
+   '<small>© '+pick('مساهمو OpenStreetMap · ODbL',
+     'مساهمو OpenStreetMap · ODbL','OpenStreetMap contributors · ODbL')+'</small></div>'+
+  '<div class="atr"><b>'+pick('صور الأقمار','صور الأقمار','Satellite')+'</b>'+
+   '<a href="https://earthdata.nasa.gov" target="_blank" rel="noopener">NASA GIBS</a>'+
+   '<small>'+pick('ناسا لا تؤيد هذا التطبيق','ناسا لا تؤيد هذا التطبيق',
+     'NASA does not endorse this app')+'</small></div>'+
+  '<div class="atr"><b>'+pick('الزلازل','الزلازل','Earthquakes')+'</b>'+
+   '<a href="https://earthquake.usgs.gov" target="_blank" rel="noopener">USGS</a>'+
+   '<small>'+pick('نطاق عام','نطاق عام','Public domain')+'</small></div>'+
+ '</div>';
  $("srcBody").innerHTML=h;}
 function fetchModels(lat,lon){
  var ids=MODEL_DEFS.map(function(m){return m.id;}).join(",");
