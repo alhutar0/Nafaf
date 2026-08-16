@@ -4921,8 +4921,9 @@ function geoKm(a1,o1,a2,o2){
  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 function geoResolve(lat,lon,cb){
- /* ★ لا نطلب عكس الترميز إن لم يتحرك المستخدم أكثر من ٣ كم */
- if(GEO&&GEO.lat!=null&&geoKm(GEO.lat,GEO.lon,lat,lon)<3){cb(GEO);return;}
+ /* ★ لا نطلب عكس الترميز إن لم يتحرك المستخدم أكثر من ٣ كم
+    ⚠️ GEO تُمسح عند تبديل المدينة فلا يمنع هذا الشرط الجلب */
+ if(GEO&&GEO.lat!=null&&geoKm(GEO.lat,GEO.lon,lat,lon)<2){cb(GEO);return;}
  var lang=(LANG==='en')?'en':'ar';
  fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+lat+
    '&longitude='+lon+'&localityLanguage='+lang)
@@ -4936,12 +4937,26 @@ function geoResolve(lat,lon,cb){
    var a=adm[i];
    if(a.adminLevel!=null)byLevel[a.adminLevel]=a.name;
   }
+  /* ★ أدق اسم متاح — نمسح المستويات من الأصغر للأكبر
+     BigDataCloud: كلما ارتفع adminLevel صغرت الوحدة الإدارية */
+  var finest='';
+  for(var lv=12;lv>=8;lv--){ if(byLevel[lv]){finest=byLevel[lv];break;} }
+  /* informative يحمل أحيانًا اسم القرية الفعلي */
+  var inf=(d.localityInfo&&d.localityInfo.informative)||[];
+  var infName='';
+  for(var q=0;q<inf.length;q++){
+   var it=inf[q];
+   if(!it||!it.name)continue;
+   var ds=(it.description||'').toLowerCase();
+   if(/village|hamlet|neighbourhood|neighborhood|suburb|locality/.test(ds)){infName=it.name;break;}
+  }
   cb({
    /* ★ الأدق أولًا: القرية/الحي (المستوى ١٠) ثم البلدة ثم المدينة
       BigDataCloud يعطي مستويات إدارية متدرّجة — كلما ارتفع الرقم
       صغرت الوحدة. نأخذ أصغر وحدة مسمّاة متاحة. */
    /* ★ أدق ما يمكن: حيّ (١١) ← قرية (١٠) ← بلدة (٩) */
-   village:byLevel[11]||byLevel[10]||byLevel[9]||'',
+   village:infName||finest||byLevel[11]||byLevel[10]||byLevel[9]||'',
+   finest:finest,
    city:d.city||d.locality||'',
    locality:d.locality||'',
    district:byLevel[8]||byLevel[7]||'',   /* الولاية/البلدية */
@@ -4960,7 +4975,7 @@ function geoResolve(lat,lon,cb){
 function geoLabel(g){
  if(!g)return null;
  /* ★ الأدق أولًا — «قرية الحوقين» أوضح من «الرستاق» */
- var main=g.village||g.locality||g.city||g.district||g.admin1||g.country;
+ var main=g.village||g.finest||g.locality||g.city||g.district||g.admin1||g.country;
  var mid=[];
  /* المدينة الأم إن كان الاسم قرية */
  if(g.city&&g.city!==main)mid.push(g.city);
@@ -9495,9 +9510,28 @@ function selectCity(i){CUR=CITIES[i];CUR.sub=CUR.sub||'';TL_OFFSET=0;WATCH=null;
 function selectGlobal(lat,lon,nm,co,sub){
  /* ★ الموقع تغيّر — حدّث اشتراك الإشعارات ليتبعك */
  setTimeout(function(){ try{ if(PUSH_ON&&typeof pushSync==='function')pushSync(); }catch(e){} },2500);
- CUR={n:nm,en:nm,lat:lat,lon:lon,c:co,cen:co,sub:sub||''};
+ CUR={n:nm,en:nm,lat:lat,lon:lon,c:co,cen:co,sub:sub||'',cc:''};
+ /* ★★ الخلل المُصلح: GEO كانت تبقى من الموقع السابق فيظل العلم
+    ثابتًا على دولتك الأولى مهما بدّلت المدينة. نمسحها ثم نعيد
+    عكس الترميز للموقع الجديد ليأتي بالقرية والعلم الصحيحين. */
+ GEO=null;
  TL_OFFSET=0;WATCH=null;WATCH_TS=0;feedLoad();stopAnim();rmClear();gClear();libreClear();LMAP=null;
- paintLocName();fetchAll();}
+ paintLocName();fetchAll();
+ /* اجلب التفاصيل الدقيقة للموقع الجديد */
+ if(typeof geoResolve==='function')geoResolve(lat,lon,function(g){
+  if(!g)return;
+  GEO=g;
+  var lb=geoLabel(g);
+  if(lb&&lb.main){
+   CUR.n=lb.main; CUR.en=lb.main;
+   CUR.sub=lb.sub||'';
+   if(lb.country){CUR.c=lb.country;CUR.cen=lb.country;}
+  }
+  /* ★ رمز الدولة يأتي من الخدمة نفسها — يعمل لكل دول العالم */
+  if(g.cc)CUR.cc=g.cc;
+  paintLocName();
+ });
+}
 /* ★ اسم الموقع الهرمي: المكان · الولاية/المحافظة · الدولة */
 /* ★ علم الدولة من رمزها — رموز Unicode الإقليمية
    ⚠️ لا صور ولا مكتبة: حرفان إقليميان يعرضهما النظام علمًا.
@@ -9516,8 +9550,18 @@ var CC_MAP={'عُمان':'OM','عمان':'OM','الإمارات':'AE','السع�
  'الكويت':'KW','البحرين':'BH','اليمن':'YE','الأردن':'JO','العراق':'IQ','مصر':'EG',
  'Oman':'OM','United Arab Emirates':'AE','Saudi Arabia':'SA','Qatar':'QA',
  'Kuwait':'KW','Bahrain':'BH','Yemen':'YE','Jordan':'JO','Iraq':'IQ','Egypt':'EG'};
+/* ★ رمز الدولة — الترتيب مهم:
+   ١ · ما حفظناه مع الموقع نفسه (يعمل عالميًا)
+   ٢ · ما جاء من عكس الترميز
+   ٣ · الخريطة اليدوية (احتياط للخليج)
+   ⚠️ الخلل السابق: كان يبدأ من GEO الذي يبقى من الموقع الأول
+      فيثبت العلم على دولتك مهما بدّلت المدينة. */
 function curCC(){
- if(GEO&&GEO.cc)return GEO.cc;
+ if(CUR&&CUR.cc)return CUR.cc;
+ if(GEO&&GEO.cc&&CUR&&GEO.lat!=null&&typeof geoKm==='function'){
+  /* لا نستخدم GEO إلا إن كانت فعلًا لهذا الموقع */
+  if(geoKm(GEO.lat,GEO.lon,CUR.lat,CUR.lon)<25)return GEO.cc;
+ }
  var c=(CUR&&(CUR.c||CUR.cen))||'';
  return CC_MAP[c]||'';
 }
@@ -9580,6 +9624,7 @@ function runCitySearch(v){
    }
    h+='<button class="sres" data-lat="'+r0.latitude+'" data-lon="'+r0.longitude+
     '" data-n="'+esc2(r0.name)+'" data-c="'+esc2(r0.country||"")+
+    '" data-cc="'+esc2(r0.country_code||"")+
     '" data-s="'+esc2(sub.replace(' · '+(r0.country||''),''))+'">'+
     '<span class="sr-main">'+esc2(r0.name)+'</span>'+
     (sub?'<span class="sr-sub">'+esc2(sub)+'</span>':'')+
@@ -9590,10 +9635,13 @@ function runCitySearch(v){
   var b=$("searchRes").getElementsByTagName("button"),j;
   for(j=0;j<b.length;j++)b[j].onclick=function(){
    $("ovCity").className="ov";$("citySearch").value="";$("searchRes").innerHTML="";
+   var cc0=this.getAttribute("data-cc")||'';
    selectGlobal(parseFloat(this.getAttribute("data-lat")),
     parseFloat(this.getAttribute("data-lon")),
     this.getAttribute("data-n"),this.getAttribute("data-c"),
     this.getAttribute("data-s")||'');
+   /* ★ رمز الدولة من نتيجة البحث — فوري بلا انتظار عكس الترميز */
+   if(cc0){CUR.cc=cc0.toUpperCase();paintLocName();}
   };
  })
  .catch(function(){

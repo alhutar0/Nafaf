@@ -274,6 +274,7 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
       <div class="navItem" data-p="licensing"><span class="ni">⚖️</span>التراخيص</div>
 
       <div class="navGrp">التواصل</div>
+      <div class="navItem" data-p="alerts"><span class="ni">🔔</span>التنبيهات</div>
       <div class="navItem" data-p="news"><span class="ni">📢</span>الأخبار العاجلة</div>
       <div class="navItem" data-p="reports"><span class="ni">👁</span>الرصدات<span class="nb" id="badgeRep" style="display:none">0</span></div>
       <div class="navItem" data-p="gallery"><span class="ni">📷</span>معرض الأجواء<span class="nb" id="badgeGal" style="display:none">0</span></div>
@@ -476,6 +477,56 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
         <div class="card">
           <h3>الإسنادات المطلوبة</h3>
           <div id="attrList"></div>
+        </div>
+      </section>
+
+
+      <!-- 🔔 التنبيهات -->
+      <section class="sec" data-s="alerts">
+        <div class="pageHead">
+          <div class="pageTitle">محرك التنبيهات</div>
+          <div class="pageSub">كل مستخدم يصله ما يخصّ موقعه هو — تتحكم أنت بالأنواع والحدود</div>
+        </div>
+
+        <div class="kpiGrid" id="alKpi"></div>
+
+        <div class="card">
+          <h3>التشغيل العام</h3>
+          <div class="rowSw">
+            <span>محرك التنبيهات<div class="rd">إطفاؤه يوقف كل التنبيهات التلقائية</div></span>
+            <span class="sw" id="swAlOn"></span>
+          </div>
+          <span class="lbl">أقصى تنبيهات لكل مستخدم يوميًا</span>
+          <div class="opts" id="alCap">
+            <span class="opt" data-v="3">٣</span><span class="opt" data-v="6">٦</span>
+            <span class="opt" data-v="10">١٠</span><span class="opt" data-v="20">٢٠</span>
+          </div>
+          <span class="lbl">ساعات الصمت (بتوقيت المستخدم)</span>
+          <div style="display:flex;gap:9px;align-items:center">
+            <span style="font-size:11.5px;color:#8b98ab">من</span>
+            <input class="fld" id="alQS" type="number" min="0" max="23" style="width:78px" />
+            <span style="font-size:11.5px;color:#8b98ab">إلى</span>
+            <input class="fld" id="alQE" type="number" min="0" max="23" style="width:78px" />
+          </div>
+          <button class="btn gold" id="bAlSave" style="width:100%;margin-top:14px">حفظ الإعدادات</button>
+        </div>
+
+        <div class="card">
+          <h3>أنواع التنبيهات<small>لكل نوع مفتاح وحدّ وسقف يومي</small></h3>
+          <div id="alTypes"></div>
+        </div>
+
+        <div class="card">
+          <h3>تنبيه يدوي فوري<small>يصل كل المشتركين مباشرة</small></h3>
+          <span class="lbl">العنوان</span>
+          <input class="fld" id="mTitle" maxlength="70" placeholder="🌧️ أمطار على شمال الباطنة" />
+          <span class="lbl">النص</span>
+          <textarea class="fld" id="mBody" maxlength="180"
+            placeholder="صف الحالة ولا تُصدر تحذيرًا."></textarea>
+          <button class="btn gold" id="bAlSend" style="width:100%;margin-top:12px">🔔 إرسال الآن</button>
+          <div class="note" style="margin-top:9px">
+            ⚠️ يتجاوز السقف اليومي وساعات الصمت — استخدمه للضرورة فقط.
+          </div>
         </div>
       </section>
 
@@ -754,7 +805,8 @@ function goPage(p){
   if(p==='gallery')loadGallery();
  if(p==='corr')loadCorr();
   if(p==='feedback')loadFeedback();
-  if(p==='news')loadNews();
+  if(p==='alerts')loadAlerts();
+ if(p==='news')loadNews();
  if(p==='fusion')renderFusion();
  if(p==='licensing')renderLicensing();
   if(p==='analytics')loadAnalytics();
@@ -1221,6 +1273,103 @@ function renderLicensing(){
   '<span style="width:100%;font-size:11px;color:#8b98ab;direction:ltr;text-align:left;line-height:1.7">'+
   'Weather data by Open-Meteo.com, CC BY 4.0</span></div>';
 }
+
+/* ═══════ محرك التنبيهات ═══════ */
+var ALC=null;
+var AL_ICON={rainStart:'🌧️',rainHeavy:'⛈️',rainStop:'🌤️',thunder:'⚡',
+ windSurge:'💨',dustRise:'🌫️',heatSpike:'🔥',coldDrop:'🌡️',
+ pressureFall:'📉',firstRain:'💧',nearbyRain:'🌦️',quake:'◎',streak:'🔥'};
+var AL_UNIT={rainStart:'ملم',rainHeavy:'ملم',windSurge:'كم/س',heatSpike:'°',
+ coldDrop:'°',pressureFall:'hPa',nearbyRain:'%',quake:'قوة',streak:'يوم'};
+
+function loadAlerts(){
+ api('/admin/alerts').then(function(r){
+  if(r.error){toast('تعذّر الجلب',true);return;}
+  ALC=r.cfg; renderAlerts();
+ });
+ api('/admin/alerts/stats').then(function(r){
+  if(r.error)return;
+  $('alKpi').innerHTML=
+   kpi(r.subscribers!=null?r.subscribers:'—','مشترك')+
+   kpi(r.withLocation!=null?r.withLocation:'—','بموقع محدّد')+
+   kpi(r.sentToday!=null?r.sentToday:'—','أُرسل اليوم')+
+   kpi(r.activeUsers!=null?r.activeUsers:'—','وصلهم تنبيه');
+ });
+}
+function renderAlerts(){
+ if(!ALC)return;
+ $('swAlOn').className='sw'+(ALC.enabled!==false?' on':'');
+ var co=$('alCap').children;
+ for(var i=0;i<co.length;i++)
+  co[i].className='opt'+(+co[i].getAttribute('data-v')===ALC.dailyCap?' sel':'');
+ $('alQS').value=ALC.quietStart!=null?ALC.quietStart:23;
+ $('alQE').value=ALC.quietEnd!=null?ALC.quietEnd:6;
+
+ var h='';
+ for(var k in ALC.types){
+  var t=ALC.types[k];
+  var unit=AL_UNIT[k]||'';
+  h+='<div style="padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06)">'+
+   '<div style="display:flex;align-items:center;gap:9px">'+
+    '<span style="font-size:16px">'+(AL_ICON[k]||'🔔')+'</span>'+
+    '<span style="font-size:12.5px;font-weight:800;flex:1 1 auto">'+esc(t.label||k)+'</span>'+
+    '<span class="sw'+(t.on?' on':'')+'" data-alt="'+k+'"></span>'+
+   '</div>'+
+   (t.on?'<div style="display:flex;gap:12px;margin-top:8px;padding-inline-start:26px">'+
+     (t.min!=null&&unit?'<label style="flex:1 1 auto;font-size:10.5px;color:#8b98ab">'+
+       'الحدّ ('+unit+')<input class="fld" type="number" data-almin="'+k+'" value="'+t.min+
+       '" style="margin-top:4px;padding:7px 10px;font-size:12px" /></label>':'')+
+     '<label style="flex:0 0 90px;font-size:10.5px;color:#8b98ab">'+
+      'سقف يومي<input class="fld" type="number" min="1" max="10" data-alcap="'+k+'" value="'+
+      (t.cap||2)+'" style="margin-top:4px;padding:7px 10px;font-size:12px" /></label>'+
+    '</div>':'')+
+  '</div>';
+ }
+ $('alTypes').innerHTML=h;
+
+ var sws=$('alTypes').querySelectorAll('[data-alt]');
+ for(var a=0;a<sws.length;a++)sws[a].onclick=function(){
+  var k2=this.getAttribute('data-alt');
+  ALC.types[k2].on=!ALC.types[k2].on;
+  renderAlerts();
+ };
+ var mins=$('alTypes').querySelectorAll('[data-almin]');
+ for(var m=0;m<mins.length;m++)mins[m].onchange=function(){
+  ALC.types[this.getAttribute('data-almin')].min=parseFloat(this.value)||0;
+ };
+ var caps=$('alTypes').querySelectorAll('[data-alcap]');
+ for(var c=0;c<caps.length;c++)caps[c].onchange=function(){
+  ALC.types[this.getAttribute('data-alcap')].cap=parseInt(this.value,10)||2;
+ };
+}
+$('swAlOn').onclick=function(){ if(!ALC)return; ALC.enabled=(ALC.enabled===false); renderAlerts(); };
+var alco=$('alCap').children;
+for(var q=0;q<alco.length;q++)alco[q].onclick=function(){
+ if(!ALC)return; ALC.dailyCap=+this.getAttribute('data-v'); renderAlerts();
+};
+$('bAlSave').onclick=function(){
+ if(!ALC)return;
+ ALC.quietStart=parseInt($('alQS').value,10)||0;
+ ALC.quietEnd=parseInt($('alQE').value,10)||0;
+ var b=this;b.innerHTML='جارٍ…';
+ api('/admin/alerts/save',{cfg:ALC}).then(function(r){
+  b.innerHTML='حفظ الإعدادات';
+  toast(r.error?'فشل الحفظ':'حُفظت إعدادات التنبيهات');
+ });
+};
+$('bAlSend').onclick=function(){
+ var t=$('mTitle').value.trim();
+ if(!t){toast('اكتب العنوان',true);return;}
+ if(!confirm('إرسال تنبيه فوري لكل المشتركين؟'))return;
+ var b=this;b.innerHTML='جارٍ الإرسال…';
+ api('/admin/alerts/send',{title:t,body:$('mBody').value.trim()}).then(function(r){
+  b.innerHTML='🔔 إرسال الآن';
+  if(r.error){toast('فشل: '+r.error,true);return;}
+  toast('أُرسل إلى '+(r.sent||0)+' مشترك');
+  $('mTitle').value='';$('mBody').value='';
+  loadAlerts();
+ });
+};
 
 /* ═══════ الأخبار ═══════ */
 var N_KIND='info', N_HOURS=3;
