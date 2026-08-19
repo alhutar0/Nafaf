@@ -1641,6 +1641,75 @@
   .atr a{font-size:12.5px;font-weight:700;color:#9fd4f5;text-decoration:none}
   .atr small{width:100%;font-size:10px;font-weight:600;
     color:var(--tx3,rgba(255,255,255,.45));line-height:1.6}
+  /* ★★★ نفاف الذكي — الأيقونة العائمة ★★★ */
+  .askFab{position:fixed;bottom:96px;left:12px;right:auto;z-index:37;
+    display:inline-flex;align-items:center;gap:7px;
+    background:linear-gradient(135deg,#e6b45e,#cf9a3a);color:#2c1f08;
+    border:0;border-radius:99px;padding:11px 16px;font-family:inherit;
+    font-size:12.5px;font-weight:800;cursor:pointer;
+    box-shadow:0 8px 24px rgba(230,180,94,.4);
+    transition:transform .18s cubic-bezier(.3,1.4,.5,1),box-shadow .25s}
+  .askFab:active{transform:scale(.9)}
+  .af-ic{font-size:16px;line-height:1}
+  .af-tx{white-space:nowrap;max-width:0;overflow:hidden;opacity:0;
+    transition:max-width .45s cubic-bezier(.3,.9,.4,1),opacity .35s}
+  .askFab.hint .af-tx{max-width:90px;opacity:1}
+  .anim .askFab{animation:afFloat 4.5s ease-in-out infinite}
+  @keyframes afFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .anim .askFab.hint{animation:afFloat 4.5s ease-in-out infinite,afGlow 1.4s ease-in-out 3}
+  @keyframes afGlow{0%,100%{box-shadow:0 8px 24px rgba(230,180,94,.4)}
+    50%{box-shadow:0 8px 34px rgba(230,180,94,.85)}}
+  /* لوحة المحادثة */
+  .askHead{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+  .ask-ic{font-size:20px}
+  .ask-t{font-size:17px;font-weight:800;color:var(--tx,#fff)}
+  body.th-light .ask-t{color:#1b2c47}
+  .askLog{max-height:44vh;overflow-y:auto;margin-bottom:12px;
+    display:flex;flex-direction:column;gap:9px;padding-inline-end:2px}
+  .askHint{font-size:12.5px;font-weight:600;color:var(--tx3,rgba(255,255,255,.5));line-height:1.9;
+    text-align:center;padding:14px 8px}
+  .askQ{align-self:flex-end;max-width:86%;background:#e6b45e;color:#2c1f08;
+    border-radius:15px 15px 5px 15px;padding:9px 13px;
+    font-size:13px;font-weight:700;line-height:1.7}
+  .askA{align-self:flex-start;max-width:92%;
+    background:rgba(255,255,255,.08);color:var(--tx,#e8eef7);
+    border:1px solid rgba(255,255,255,.13);border-radius:15px 15px 15px 5px;
+    padding:11px 14px;font-size:13px;font-weight:600;line-height:1.95}
+  body.th-light .askA{background:#f2f5fa;color:#22334d;border-color:rgba(27,44,71,.08)}
+  .askSrc{display:inline-block;margin-top:8px;font-size:9.5px;font-weight:800;
+    background:rgba(255,255,255,.12);color:var(--tx3,rgba(255,255,255,.6));
+    border-radius:99px;padding:3px 9px}
+  body.th-light .askSrc{background:rgba(27,44,71,.08);color:#5b6d87}
+  .askSrc.live{background:rgba(127,227,154,.2);color:#3d8a58}
+  .askLink{display:inline-block;margin-top:8px;margin-inline-start:7px;
+    font-size:10px;font-weight:800;color:#3d7fb5;text-decoration:none}
+  .askWait{display:flex;gap:5px;align-items:center;padding:14px}
+  .askDot{width:6px;height:6px;border-radius:50%;background:#9fb0c7}
+  .anim .askDot{animation:akBounce 1.2s ease-in-out infinite}
+  .anim .askDot:nth-child(2){animation-delay:.16s}
+  .anim .askDot:nth-child(3){animation-delay:.32s}
+  @keyframes akBounce{0%,60%,100%{transform:translateY(0);opacity:.45}
+    30%{transform:translateY(-5px);opacity:1}}
+  .askSugg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px}
+  .askChip{font-size:11.5px;font-weight:700;border-radius:99px;padding:7px 13px;
+    background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);
+    color:var(--tx2,rgba(255,255,255,.85));font-family:inherit;cursor:pointer;
+    transition:background .16s,transform .12s}
+  body.th-light .askChip{background:rgba(27,44,71,.06);
+    border-color:rgba(27,44,71,.1);color:#43566f}
+  .askChip:active{transform:scale(.94)}
+  .askBar{display:flex;gap:7px}
+  .askIn{flex:1 1 auto;background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.18);border-radius:14px;color:var(--tx,#fff);
+    font-family:inherit;font-size:14px;padding:12px 14px;outline:none}
+  body.th-light .askIn{background:#fff;border-color:rgba(27,44,71,.14);color:#1b2c47}
+  .askIn:focus{border-color:#e6b45e}
+  .askGo{flex:0 0 auto;width:46px;border:0;border-radius:14px;
+    background:#e6b45e;color:#2c1f08;font-size:19px;font-weight:800;cursor:pointer}
+  .askGo:active{transform:scale(.92)}
+  .askNote{font-size:10px;font-weight:600;color:var(--tx3,rgba(255,255,255,.42));line-height:1.7;
+    margin-top:11px;text-align:center}
+  .noanim .askFab,.noanim .askDot{animation:none}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -1721,6 +1790,12 @@
  <div class="sHead"><button class="backBtn" id="evCloseBtn"><span>‹</span><b>رجوع</b></button></div>
  <div id="evBody"></div></div>
 <button class="evBtn" id="evBtn"></button>
+<button class="askFab" id="askFab" aria-label="اسأل نفاف">
+ <span class="af-ic">💬</span><span class="af-tx">اسأل نفاف</span></button>
+<div class="sheetBack" id="askBack"></div>
+<div class="sheet" id="askSheet"><div class="sh-grip"></div>
+ <div class="sHead"><button class="backBtn" id="askCloseBtn"><span>‹</span><b>رجوع</b></button></div>
+ <div id="askBody"></div></div>
 <div class="sheet" id="fbSheet"><div class="sh-grip"></div>
  <div class="sHead"><button class="backBtn" id="fbCloseBtn"><span>‹</span><b id="fbBackTx">رجوع</b></button></div>
  <div id="fbBody"></div></div>
@@ -5415,6 +5490,219 @@ function yearMapCard(){
 
 
 /* ============================================================
+   ★★★ نفاف الذكي — مساعد عائم بمصادر معرفة حيّة ★★★
+   ثلاث طبقات متسلسلة:
+     ١ · طقسك الآن   → محرك الاستنتاج المحلي (فوري · بلا إنترنت)
+     ٢ · معرفة عامة  → مكتبة نفاف (٦٦ موضوعًا)
+     ٣ · أي سؤال آخر → ويكيبيديا + ويكيداتا (مجانيتان بلا مفتاح)
+   ⚠️ إن لم يجد جوابًا موثوقًا يقولها صراحةً — لا يخترع.
+   ⚠️ ترخيص ويكيبيديا CC BY-SA · الإسناد ظاهر مع كل جواب.
+   ============================================================ */
+var ASK_OPEN=false, ASK_BUSY=false, ASK_HIST=[];
+
+/* ═══ ويكيبيديا — ملخّص المقال ═══ */
+function wikiSearch(q,cb){
+ var lang=(LANG==='en')?'en':'ar';
+ var base='https://'+lang+'.wikipedia.org';
+ fetch(base+'/w/api.php?action=query&list=search&srsearch='+encodeURIComponent(q)+
+   '&srlimit=1&format=json&origin=*')
+ .then(function(r){return r.ok?r.json():null;})
+ .then(function(d){
+  var hit=d&&d.query&&d.query.search&&d.query.search[0];
+  if(!hit){cb(null);return;}
+  return fetch(base+'/api/rest_v1/page/summary/'+encodeURIComponent(hit.title))
+   .then(function(r){return r.ok?r.json():null;})
+   .then(function(sum){
+    if(!sum||!sum.extract){cb(null);return;}
+    cb({ text:sum.extract, title:sum.title,
+        url:(sum.content_urls&&sum.content_urls.desktop&&sum.content_urls.desktop.page)||
+            (base+'/wiki/'+encodeURIComponent(hit.title)),
+        src:'wikipedia' });
+   });
+ })
+ .catch(function(){cb(null);});
+}
+
+/* ═══ ويكيداتا — حقائق منظّمة عن مكان أو كيان ═══ */
+function wikidataFacts(q,cb){
+ var lang=(LANG==='en')?'en':'ar';
+ fetch('https://www.wikidata.org/w/api.php?action=wbsearchentities&search='+
+   encodeURIComponent(q)+'&language='+lang+'&uselang='+lang+
+   '&limit=1&format=json&origin=*')
+ .then(function(r){return r.ok?r.json():null;})
+ .then(function(d){
+  var it=d&&d.search&&d.search[0];
+  if(!it){cb(null);return;}
+  cb({ label:it.label||'', desc:it.description||'', id:it.id,
+       url:'https://www.wikidata.org/wiki/'+it.id, src:'wikidata' });
+ })
+ .catch(function(){cb(null);});
+}
+
+/* ═══ هل السؤال عن طقسك أنت؟ ═══ */
+function isLocalQ(q){
+ var t=' '+q+' ';
+ var kw=['عندي','عندنا','الحين','الحن','اليوم','بكرة','بكره','موقعي','هني','هنا',
+  'منطقتي','بمنطقتي','أطلع','اطلع','أغسل','اغسل','أنشر','انشر','أمشي','امشي','أشوي','اشوي',
+  'بيمطر','تمطر','الجو','حار','بارد','رطوبة','رياح','مطر','غبار','شمس','ليل',
+  'now','today','tomorrow','my area','outside','here'];
+ for(var i=0;i<kw.length;i++)if(t.indexOf(kw[i])>=0)return true;
+ return false;
+}
+
+/* ═══ المحرك الرئيسي — ثلاث طبقات ═══ */
+function askNafaf(q,cb){
+ q=String(q||'').replace(/^\s+|\s+$/g,'');
+ if(!q){cb(null);return;}
+ var L=LI();
+
+ /* ١ · طقسك الآن */
+ if(isLocalQ(q)&&W){
+  var a=nafafAnswer(q);
+  if(a&&a.length>10){
+   cb({text:a, src:'local',
+       badge:['من بياناتك الآن','من بياناتك الحالية','From your live data'][L]});
+   return;
+  }
+ }
+ /* ٢ · مكتبة نفاف — بمطابقة صريحة فقط
+    ⚠️ الخلل السابق: كانت تُقبل أي إجابة طويلة فتخطف أسئلة
+       عامة وتردّ عليها بحالة الطقس الحالية. */
+ var libHit=null;
+ (function(){
+  var t=' '+q.replace(/[؟?. ,!]/g,' ')+' ';
+  function has(kw){for(var i=0;i<kw.length;i++)if(t.indexOf(kw[i])>=0)return true;return false;}
+  var L1=(typeof FAQ_LIB!=='undefined')?FAQ_LIB:[];
+  var L2=(typeof FAQ_LIB2!=='undefined')?FAQ_LIB2:[];
+  var i;
+  for(i=0;i<L1.length;i++)if(has(L1[i].kw)){libHit=L1[i].a[L];return;}
+  for(i=0;i<L2.length;i++)if(has(L2[i].kw)){libHit=L2[i].a[L];return;}
+ })();
+ if(libHit){
+  cb({text:libHit, src:'lib',
+      badge:['من مكتبة نفاف','من مكتبة نفاف','Nafaf library'][L]});
+  return;
+ }
+ /* ٣ · المصادر الحيّة */
+ wikiSearch(q,function(w1){
+  if(w1){
+   cb({text:w1.text, src:'wikipedia', title:w1.title, url:w1.url,
+       badge:['ويكيبيديا','ويكيبيديا','Wikipedia'][L]});
+   return;
+  }
+  wikidataFacts(q,function(w2){
+   if(w2&&w2.desc){
+    cb({text:w2.label+' — '+w2.desc, src:'wikidata', url:w2.url,
+        badge:['ويكيداتا','ويكيداتا','Wikidata'][L]});
+    return;
+   }
+   /* ★ الصدق: لا نخترع */
+   cb({text:['ما لقيت جوابًا موثوقًا لهذا السؤال. جرّب صياغة ثانية أو اسألني عن طقسك.',
+     'لم أجد إجابة موثوقة؛ جرّب صياغة أخرى أو اسأل عن حالة الطقس.',
+     'No reliable answer found. Try rephrasing, or ask about your weather.'][L],
+     src:'none'});
+  });
+ });
+}
+
+/* ═══ الواجهة العائمة ═══ */
+function askOpen(){
+ ASK_OPEN=true;
+ $("askSheet").className='sheet on';
+ $("askBack").className='sheetBack on';
+ renderAsk();
+ setTimeout(function(){var i=$("askIn");if(i)i.focus();},350);
+ var b=$("askFab"); if(b)b.className='askFab';
+}
+function askClose(){
+ ASK_OPEN=false;
+ $("askSheet").className='sheet';
+ $("askBack").className='sheetBack';
+}
+function renderAsk(){
+ var L=LI();
+ var h='<div class="askHead"><span class="ask-ic">💬</span>'+
+  '<span class="ask-t">'+['اسأل نفاف','اسأل نفاف','Ask Nafaf'][L]+'</span></div>';
+ /* المحادثة */
+ h+='<div class="askLog" id="askLog">';
+ if(!ASK_HIST.length){
+  h+='<div class="askHint">'+['اسألني عن جوّك الحين أو عن أي شي بالطقس والفلك والجغرافيا.',
+   'اسألني عن حالة الطقس لديك أو عن أي موضوع علمي أو جغرافي.',
+   'Ask about your weather now, or anything about weather, astronomy and geography.'][L]+'</div>';
+ }
+ for(var i=0;i<ASK_HIST.length;i++){
+  var m=ASK_HIST[i];
+  if(m.q)h+='<div class="askQ">'+esc3(m.q)+'</div>';
+  if(m.a){
+   h+='<div class="askA">'+esc3(m.a.text)+
+    (m.a.badge?'<span class="askSrc'+(m.a.src==='local'?' live':'')+'">'+m.a.badge+'</span>':'')+
+    (m.a.url?'<a class="askLink" href="'+m.a.url+'" target="_blank" rel="noopener">'+
+      ['المصدر','المصدر','Source'][L]+' ↗</a>':'')+
+   '</div>';
+  }
+ }
+ if(ASK_BUSY)h+='<div class="askA askWait"><span class="askDot"></span>'+
+  '<span class="askDot"></span><span class="askDot"></span></div>';
+ h+='</div>';
+ /* اقتراحات سريعة */
+ var sugg=[
+  ['وش الجو الحين؟','ما حالة الطقس الآن؟','Weather now?'],
+  ['أغسل سيارتي؟','هل أغسل سيارتي؟','Wash my car?'],
+  ['أنشر غسيلي؟','هل أنشر الغسيل؟','Hang laundry?'],
+  ['متى أطلع أمشي؟','أنسب وقت للمشي؟','Best time to walk?'],
+  ['ايش الوسم؟','ما موسم الوسم؟','What is Al-Wasm?'],
+  ['كيف يتكون المطر؟','كيف يتكون المطر؟','How does rain form?']
+ ];
+ h+='<div class="askSugg">';
+ for(var j=0;j<sugg.length;j++)
+  h+='<button class="askChip" data-sq="'+esc3(sugg[j][L])+'">'+sugg[j][L]+'</button>';
+ h+='</div>';
+ /* حقل الإدخال */
+ h+='<div class="askBar">'+
+  '<input class="askIn" id="askIn" placeholder="'+
+   ['اكتب سؤالك…','اكتب سؤالك…','Type your question…'][L]+'" />'+
+  '<button class="askGo" id="askGo">↑</button></div>';
+ h+='<div class="askNote">'+['نفاف يجاوب من بياناتك ومن مصادر مفتوحة. ليس مصدر إنذار رسمي.',
+  'يجيب نفاف من بياناتك ومن مصادر مفتوحة؛ وليس مصدرًا رسميًا للإنذار.',
+  'Answers come from your data and open sources. Not an official warning source.'][L]+'</div>';
+ $("askBody").innerHTML=h;
+ wireAsk();
+ var lg=$("askLog"); if(lg)lg.scrollTop=lg.scrollHeight;
+}
+function esc3(x){return String(x==null?'':x).replace(/[<>&"]/g,function(c){
+ return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});}
+
+function askSend(q){
+ if(ASK_BUSY)return;
+ q=String(q||'').replace(/^\s+|\s+$/g,'');
+ if(!q)return;
+ ASK_HIST.push({q:q}); ASK_BUSY=true; renderAsk();
+ askNafaf(q,function(res){
+  ASK_BUSY=false;
+  if(res)ASK_HIST[ASK_HIST.length-1].a=res;
+  if(ASK_HIST.length>12)ASK_HIST=ASK_HIST.slice(-12);
+  renderAsk();
+ });
+}
+function wireAsk(){
+ var g=$("askGo");
+ if(g)g.onclick=function(){var i=$("askIn");if(i)askSend(i.value);};
+ var i=$("askIn");
+ if(i)i.onkeydown=function(e){if(e.key==='Enter')askSend(this.value);};
+ var ch=document.querySelectorAll('#askBody [data-sq]');
+ for(var k=0;k<ch.length;k++)ch[k].onclick=function(){askSend(this.getAttribute('data-sq'));};
+}
+/* ★ الأيقونة تنبض أحيانًا لتذكّر المستخدم أنها موجودة */
+function askPulse(){
+ try{
+  if(ASK_OPEN)return;
+  var b=$("askFab"); if(!b)return;
+  b.className='askFab hint';
+  setTimeout(function(){ if(!ASK_OPEN)b.className='askFab'; },5200);
+ }catch(e){}
+}
+
+/* ============================================================
  سؤال نفاف — عرض الجواب والأسئلة الجاهزة
  ⚠️ حُذفت هذه الكتلة سهوًا في تعديل سابق فتوقّف renderNow عندها
  ============================================================ */
@@ -7124,6 +7412,18 @@ function trustCard(){
  }catch(e){ return ''; }
 }
 
+/* ============================================================
+   ★★★ الشايب نفاف — شخصية التطبيق الرسمية ★★★
+   رجل عُماني مسن يمشي على طرف الشاشة ويتفاعل مع الطقس الحقيقي:
+     ☀️ حر     → يظلّل عينيه بيده
+     🌦️ مطر خفيف → يرفع يده فرحًا
+     🌧️ مطر قوي  → يفتح المظلة
+     ❄️ برد     → يتلفّع ويرتجف
+     💨 رياح    → يمسك كُمّته لئلا تطير
+     🌫️ غبار    → يغطي وجهه بطرف مصره
+   ⚠️ SVG خالص: كيلوبايتات لا ميجابايتات · حادّ على أي شاشة
+   ============================================================ */
+
 /* ============ عرض: الآن ============ */
 /* ★ key اختياري يسمح بتحديث المؤشر في مكانه بلا إعادة رسم */
 function stat(k,v,cls,key){return '<div class="stat"'+(key?' data-k="'+key+'"':'')+
@@ -7220,9 +7520,8 @@ function renderNow(){
  stat('UV',uvT,uvC)+stat(pick('الهواء','الهواء','Air'),aqT,aqC)+'</div></div>';
  h+='<div class="fadeIn d4"><span class="nlabel">نفاف</span><div class="nafaf"><p id="nafafText">'+(NAFAF_TXT||pickLocal(st))+'</p>'+
  (NAFAF_SRC?'<div class="srcnote">'+NAFAF_SRC+'</div>':'')+'</div></div>'+
- '<div class="askbox fadeIn d5"><input class="qin" id="qin" type="text" placeholder="'+pick('اكتب سؤالك لنفاف…','اكتب سؤالك…','Ask Nafaf…')+'" />'+
- '<button class="sendb" id="sendb">'+pick('اسأل','اسأل','Ask')+'</button></div>'+
- '<div class="ask-t fadeIn d5">'+pick('أو اختر سؤالًا جاهزًا:','أو اختر سؤالًا:','Or pick a question:')+'</div><div class="chips fadeIn d5" id="chips"></div>';
+ /* ★ صندوق السؤال انتقل للأيقونة العائمة — أوسع وأذكى */
+ '';
  h+='<div class="big2 fadeIn d6"><div class="b2"><div class="k">'+pick('ارتفاع الموج','ارتفاع الموج','Waves')+'</div>'+
  '<div class="v">'+((MARINE&&MARINE.wave_height!=null)?MARINE.wave_height.toFixed(1):'—')+'</div><div class="u">'+pick('متر','متر','m')+'</div></div>'+
  '<div class="b2"><div class="k">'+pick('الهبّات','الهبّات','Gusts')+'</div><div class="v">'+(GUSTS!=null?wconv(GUSTS):'—')+'</div><div class="u">'+wlabel()+'</div></div></div>';
@@ -7246,8 +7545,10 @@ function renderNow(){
  var sc=$("stabCard");
  if(sc)sc.onclick=function(){STAB_OPEN=!STAB_OPEN;renderNow();};
  countUp($("bigTemp"),tconv(W.temperature_2m));
- buildChips();$("sendb").onclick=doAsk;
- $("qin").onkeydown=function(e){if(e.key==="Enter")doAsk();};}
+ /* ★ صندوق السؤال القديم أُزيل — الأيقونة العائمة بديله */
+ var sb=$("sendb"); if(sb)sb.onclick=doAsk;
+ var qi=$("qin"); if(qi)qi.onkeydown=function(e){if(e.key==="Enter")doAsk();};
+ var ch=$("chips"); if(ch)buildChips();}
 
 /* ============ عرض: يومك ============ */
 
@@ -9729,7 +10030,10 @@ $("gearBtn").onclick=openSettings;
 /* ★ ربط كل مسارات الإغلاق — كانت غير مربوطة فتُحبس اللوحات مفتوحة */
 (function(){
  var pairs=[['accBack',closeAccount],['accCloseBtn',closeAccount],
-            ['docBack',closeDoc],['fbBack',closeFeedback],['fbCloseBtn',closeFeedback]];
+            ['docBack',closeDoc],['fbBack',closeFeedback],['fbCloseBtn',closeFeedback],
+            /* ★ نفاف الذكي */
+            ['askFab',askOpen],['askBack',askClose],['askCloseBtn',askClose],
+            ['evBack',closeEvent],['evCloseBtn',closeEvent]];
  for(var i=0;i<pairs.length;i++){
   var el=$(pairs[i][0]);
   if(el)el.onclick=pairs[i][1];
@@ -9886,6 +10190,14 @@ setTimeout(function(){
  rainFusion();
 },12000);
 setTimeout(function(){setInterval(eventCheck,90000);},10000);
+/* ★ تذكير لطيف بوجود المساعد */
+setTimeout(askPulse,14000);
+setInterval(askPulse,420000);
+/* ★ الشايب نفاف — ينتظر وصول الطقس ثم يطل
+   ⚠️ كان يُستدعى بعد ٦ ثوانٍ عمياء فيجدها بلا بيانات ويصمت */
+
+
+
 /* ★ كان يعيد رسم الصفحة كاملة كل ٢٢ ثانية فيومض رقم الحرارة —
    الآن يحدّث حاويته وحدها بانتقال ناعم */
 setInterval(function(){
