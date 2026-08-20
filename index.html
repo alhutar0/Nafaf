@@ -1653,7 +1653,6 @@
   .af-ic{font-size:16px;line-height:1}
   .af-tx{white-space:nowrap;max-width:0;overflow:hidden;opacity:0;
     transition:max-width .45s cubic-bezier(.3,.9,.4,1),opacity .35s}
-  .askFab.hint .af-tx{max-width:90px;opacity:1}
   .anim .askFab{animation:afFloat 4.5s ease-in-out infinite}
   @keyframes afFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
   .anim .askFab.hint{animation:afFloat 4.5s ease-in-out infinite,afGlow 1.4s ease-in-out 3}
@@ -1710,6 +1709,18 @@
   .askNote{font-size:10px;font-weight:600;color:var(--tx3,rgba(255,255,255,.42));line-height:1.7;
     margin-top:11px;text-align:center}
   .noanim .askFab,.noanim .askDot{animation:none}
+  /* ★ ألوان الأيقونة حسب الحالة */
+  .askFab.m-storm{background:linear-gradient(135deg,#8b9bc4,#5a6b96)}
+  .askFab.m-rain{background:linear-gradient(135deg,#7fc9e8,#4a94bd)}
+  .askFab.m-dust{background:linear-gradient(135deg,#e0ba84,#bf9355)}
+  .askFab.m-hot{background:linear-gradient(135deg,#ff9d5c,#e0672e);color:#fff}
+  .askFab.m-cold{background:linear-gradient(135deg,#9fd4f5,#5fa3d0)}
+  .askFab.m-wind{background:linear-gradient(135deg,#b8cde0,#7d9cb8)}
+  .askFab.m-night{background:linear-gradient(135deg,#7d8bc4,#4a5580);color:#fff}
+  .askFab.pop{animation:afPop .7s cubic-bezier(.2,1.6,.4,1)}
+  @keyframes afPop{0%{transform:scale(1)}35%{transform:scale(1.28) rotate(-9deg)}
+    65%{transform:scale(.94) rotate(5deg)}100%{transform:scale(1)}}
+  .askFab.hint .af-tx{max-width:180px;opacity:1}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -5501,45 +5512,132 @@ function yearMapCard(){
 var ASK_OPEN=false, ASK_BUSY=false, ASK_HIST=[];
 
 /* ═══ ويكيبيديا — ملخّص المقال ═══ */
+/* ═══════════════════════════════════════════════════════════
+   ★ استخراج نيّة السؤال — ما الذي يريده المستخدم فعلًا؟
+   ⚠️ الخلل السابق: كنا نبحث بالسؤال كاملًا ونأخذ أول نتيجة
+      فتخرج مقالات لا علاقة لها بالسؤال إطلاقًا.
+   ⚠️ الآن: نحذف كلمات الاستفهام · نستخرج الموضوع ·
+      نُرتّب النتائج بمدى مطابقتها · ونرفض الضعيفة بدل عرضها.
+   ═══════════════════════════════════════════════════════════ */
+var STOPW=['ما','ماهي','ماهو','ايش','إيش','وش','شنو','كيف','لماذا','ليش',
+ 'متى','اين','أين','وين','هل','من','هو','هي','عن','في','على','الى','إلى',
+ 'اخبرني','أخبرني','عرفني','اشرح','فسر','معلومات','معنى','يعني','تعريف','هذا','هذه',
+ 'what','is','are','the','a','an','who','how','why','when','where','tell','me','about','explain','of','do','does'];
+
+function extractTopic(q){
+ var t=String(q||'').replace(/[؟?！!. ,:;"']/g,' ');
+ var m=t.match(/(?:عن|حول|about)\s+(.{2,60})$/);
+ if(m)t=m[1];
+ var words=t.split(/\s+/).filter(function(w){
+  w=w.replace(/^\s+|\s+$/g,'');
+  if(!w||w.length<2)return false;
+  return STOPW.indexOf(w.toLowerCase())<0;
+ });
+ return words.join(' ').replace(/^\s+|\s+$/g,'');
+}
+
+/* درجة تطابق العنوان مع الموضوع */
+function matchScore(topic,title){
+ if(!topic||!title)return 0;
+ var a=String(topic).toLowerCase(), b=String(title).toLowerCase();
+ if(b===a)return 1;
+ if(b.indexOf(a)>=0||a.indexOf(b)>=0)return 0.85;
+ var aw=a.split(/\s+/).filter(function(x){return x.length>2;});
+ if(!aw.length)return 0;
+ var hit=0;
+ for(var i=0;i<aw.length;i++)if(b.indexOf(aw[i])>=0)hit++;
+ return hit/aw.length;
+}
+
+/* هل السؤال عن مكان؟ */
+function isPlaceQ(q){
+ var t=' '+q+' ';
+ var kw=['وين','أين','اين','موقع','مكان','تقع','يقع','مدينة','ولاية','قرية','محافظة','دولة',
+  'where','city','town','village','located'];
+ for(var i=0;i<kw.length;i++)if(t.indexOf(kw[i])>=0)return true;
+ return false;
+}
+
+/* ═══ OpenStreetMap — أسئلة الأماكن ═══ */
+function osmPlace(q,cb){
+ var topic=extractTopic(q)||q;
+ var lang=(LANG==='en')?'en':'ar';
+ fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&q='+
+   encodeURIComponent(topic)+'&limit=1&addressdetails=1&accept-language='+lang)
+ .then(function(r){return r.ok?r.json():null;})
+ .then(function(d){
+  var it=d&&d[0];
+  if(!it){cb(null);return;}
+  var a=it.address||{}, L=LI(), parts=[];
+  if(a.state)parts.push(a.state);
+  if(a.country)parts.push(a.country);
+  var km=null;
+  if(CUR&&CUR.lat!=null&&it.lat)
+   km=Math.round(geoKm(CUR.lat,CUR.lon,parseFloat(it.lat),parseFloat(it.lon)));
+  var txt=(it.name||topic)+(parts.length?' — '+parts.join(' · '):'');
+  if(km!=null)txt+=(L===2?' · '+km+' km from you':' · يبعد عنك '+km+' كم');
+  cb({text:txt, src:'osm',
+      url:'https://www.openstreetmap.org/?mlat='+it.lat+'&mlon='+it.lon+'#map=12/'+it.lat+'/'+it.lon});
+ })
+ .catch(function(){cb(null);});
+}
+
+/* ═══ ويكيبيديا — بحث مُدقَّق ═══ */
 function wikiSearch(q,cb){
  var lang=(LANG==='en')?'en':'ar';
  var base='https://'+lang+'.wikipedia.org';
- fetch(base+'/w/api.php?action=query&list=search&srsearch='+encodeURIComponent(q)+
-   '&srlimit=1&format=json&origin=*')
+ var topic=extractTopic(q)||q;
+ fetch(base+'/w/api.php?action=query&list=search&srsearch='+encodeURIComponent(topic)+
+   '&srlimit=6&srnamespace=0&format=json&origin=*')
  .then(function(r){return r.ok?r.json():null;})
  .then(function(d){
-  var hit=d&&d.query&&d.query.search&&d.query.search[0];
-  if(!hit){cb(null);return;}
-  return fetch(base+'/api/rest_v1/page/summary/'+encodeURIComponent(hit.title))
+  var list=(d&&d.query&&d.query.search)||[];
+  if(!list.length){cb(null);return;}
+  var best=null,bs=0;
+  for(var i=0;i<list.length;i++){
+   var sc=matchScore(topic,list[i].title)+(6-i)*0.02;
+   if(sc>bs){bs=sc;best=list[i];}
+  }
+  /* ★ رفض الضعيف بدل عرض جواب خاطئ */
+  if(!best||bs<0.35){cb(null);return;}
+  return fetch(base+'/api/rest_v1/page/summary/'+encodeURIComponent(best.title))
    .then(function(r){return r.ok?r.json():null;})
    .then(function(sum){
-    if(!sum||!sum.extract){cb(null);return;}
-    cb({ text:sum.extract, title:sum.title,
-        url:(sum.content_urls&&sum.content_urls.desktop&&sum.content_urls.desktop.page)||
-            (base+'/wiki/'+encodeURIComponent(hit.title)),
-        src:'wikipedia' });
+    if(!sum||!sum.extract||sum.type==='disambiguation'){cb(null);return;}
+    var txt=sum.extract;
+    if(txt.length>420)txt=txt.slice(0,400).replace(/\s\S*$/,'')+'…';
+    cb({ text:txt, title:sum.title, score:bs,
+         url:(sum.content_urls&&sum.content_urls.desktop&&sum.content_urls.desktop.page)||
+             (base+'/wiki/'+encodeURIComponent(best.title)),
+         thumb:(sum.thumbnail&&sum.thumbnail.source)||'', src:'wikipedia' });
    });
  })
  .catch(function(){cb(null);});
 }
 
-/* ═══ ويكيداتا — حقائق منظّمة عن مكان أو كيان ═══ */
+/* ═══ ويكيداتا — حقائق منظّمة ═══ */
 function wikidataFacts(q,cb){
  var lang=(LANG==='en')?'en':'ar';
+ var topic=extractTopic(q)||q;
  fetch('https://www.wikidata.org/w/api.php?action=wbsearchentities&search='+
-   encodeURIComponent(q)+'&language='+lang+'&uselang='+lang+
-   '&limit=1&format=json&origin=*')
+   encodeURIComponent(topic)+'&language='+lang+'&uselang='+lang+
+   '&limit=5&format=json&origin=*')
  .then(function(r){return r.ok?r.json():null;})
  .then(function(d){
-  var it=d&&d.search&&d.search[0];
-  if(!it){cb(null);return;}
-  cb({ label:it.label||'', desc:it.description||'', id:it.id,
-       url:'https://www.wikidata.org/wiki/'+it.id, src:'wikidata' });
+  var list=(d&&d.search)||[];
+  if(!list.length){cb(null);return;}
+  var best=null,bs=0;
+  for(var i=0;i<list.length;i++){
+   var sc=matchScore(topic,list[i].label||'')+(5-i)*0.02;
+   if(sc>bs){bs=sc;best=list[i];}
+  }
+  if(!best||bs<0.4||!best.description){cb(null);return;}
+  cb({ label:best.label||'', desc:best.description, id:best.id,
+       url:'https://www.wikidata.org/wiki/'+best.id, src:'wikidata' });
  })
  .catch(function(){cb(null);});
 }
 
-/* ═══ هل السؤال عن طقسك أنت؟ ═══ */
 function isLocalQ(q){
  var t=' '+q+' ';
  var kw=['عندي','عندنا','الحين','الحن','اليوم','بكرة','بكره','موقعي','هني','هنا',
@@ -5556,6 +5654,20 @@ function askNafaf(q,cb){
  if(!q){cb(null);return;}
  var L=LI();
 
+ /* ★ سؤال المكان يسبق كل شيء — «وين تقع صحار» ليس سؤالًا عن طقسك
+    ⚠️ كان isLocalQ يخطفه لأن فيه كلمة «تقع» تشبه أسئلة الموقع */
+ if(isPlaceQ(q)){
+  osmPlace(q,function(p0){
+   if(p0){
+    cb({text:p0.text, src:'osm', url:p0.url,
+        badge:['خرائط مفتوحة','خرائط مفتوحة','OpenStreetMap'][L]});
+    return;
+   }
+   wikiThenData(q,cb,L);
+  });
+  return;
+ }
+
  /* ١ · طقسك الآن */
  if(isLocalQ(q)&&W){
   var a=nafafAnswer(q);
@@ -5565,9 +5677,8 @@ function askNafaf(q,cb){
    return;
   }
  }
- /* ٢ · مكتبة نفاف — بمطابقة صريحة فقط
-    ⚠️ الخلل السابق: كانت تُقبل أي إجابة طويلة فتخطف أسئلة
-       عامة وتردّ عليها بحالة الطقس الحالية. */
+
+ /* ٢ · مكتبة نفاف — بمطابقة صريحة */
  var libHit=null;
  (function(){
   var t=' '+q.replace(/[؟?. ,!]/g,' ')+' ';
@@ -5583,23 +5694,28 @@ function askNafaf(q,cb){
       badge:['من مكتبة نفاف','من مكتبة نفاف','Nafaf library'][L]});
   return;
  }
- /* ٣ · المصادر الحيّة */
+
+ /* ٣ · ويكيبيديا ثم ويكيداتا */
+ wikiThenData(q,cb,L);
+}
+
+/* ★ ويكيبيديا ← ويكيداتا ← اعتراف صريح بعدم المعرفة */
+function wikiThenData(q,cb,L){
  wikiSearch(q,function(w1){
   if(w1){
-   cb({text:w1.text, src:'wikipedia', title:w1.title, url:w1.url,
+   cb({text:w1.text, src:'wikipedia', title:w1.title, url:w1.url, thumb:w1.thumb,
        badge:['ويكيبيديا','ويكيبيديا','Wikipedia'][L]});
    return;
   }
   wikidataFacts(q,function(w2){
-   if(w2&&w2.desc){
+   if(w2){
     cb({text:w2.label+' — '+w2.desc, src:'wikidata', url:w2.url,
         badge:['ويكيداتا','ويكيداتا','Wikidata'][L]});
     return;
    }
-   /* ★ الصدق: لا نخترع */
-   cb({text:['ما لقيت جوابًا موثوقًا لهذا السؤال. جرّب صياغة ثانية أو اسألني عن طقسك.',
-     'لم أجد إجابة موثوقة؛ جرّب صياغة أخرى أو اسأل عن حالة الطقس.',
-     'No reliable answer found. Try rephrasing, or ask about your weather.'][L],
+   cb({text:['ما لقيت جوابًا موثوقًا لهذا السؤال. جرّب صياغة أوضح أو اسألني عن طقسك.',
+     'لم أجد إجابة موثوقة؛ جرّب صياغة أوضح أو اسأل عن حالة الطقس.',
+     'No reliable answer found. Try a clearer phrasing, or ask about your weather.'][L],
      src:'none'});
   });
  });
@@ -5645,14 +5761,19 @@ function renderAsk(){
   '<span class="askDot"></span><span class="askDot"></span></div>';
  h+='</div>';
  /* اقتراحات سريعة */
- var sugg=[
+ var sugg=[];
+ /* ★ اقتراح يتبع حالة الطقس الآن */
+ var mood=askMood();
+ if(mood.q)sugg.push([mood.q,mood.q,mood.q]);
+ sugg=sugg.concat([
   ['وش الجو الحين؟','ما حالة الطقس الآن؟','Weather now?'],
   ['أغسل سيارتي؟','هل أغسل سيارتي؟','Wash my car?'],
   ['أنشر غسيلي؟','هل أنشر الغسيل؟','Hang laundry?'],
   ['متى أطلع أمشي؟','أنسب وقت للمشي؟','Best time to walk?'],
   ['ايش الوسم؟','ما موسم الوسم؟','What is Al-Wasm?'],
   ['كيف يتكون المطر؟','كيف يتكون المطر؟','How does rain form?']
- ];
+ ]);
+ if(sugg.length>7)sugg=sugg.slice(0,7);
  h+='<div class="askSugg">';
  for(var j=0;j<sugg.length;j++)
   h+='<button class="askChip" data-sq="'+esc3(sugg[j][L])+'">'+sugg[j][L]+'</button>';
@@ -5692,13 +5813,59 @@ function wireAsk(){
  var ch=document.querySelectorAll('#askBody [data-sq]');
  for(var k=0;k<ch.length;k++)ch[k].onclick=function(){askSend(this.getAttribute('data-sq'));};
 }
-/* ★ الأيقونة تنبض أحيانًا لتذكّر المستخدم أنها موجودة */
+/* ★★★ الأيقونة تتفاعل مع الطقس اللحظي ★★★
+   ترتدي وجه الحالة وتقترح السؤال المناسب لها */
+var ASK_FACE=null;
+function askMood(){
+ try{
+  if(!W)return {ic:'💬',cls:'',q:null};
+  var st=stateOf(W), t=W.temperature_2m, wd=W.wind_speed_10m||0, L=LI();
+  if(st==='storm')   return {ic:'⛈️',cls:'m-storm',
+    q:['وش أسوي بالعاصفة؟','ماذا أفعل أثناء العاصفة؟','What to do in a storm?'][L]};
+  if(st==='rain_heavy')return {ic:'🌧️',cls:'m-rain',
+    q:['المطر غزير — وش الوضع؟','ما شدة الهطول الآن؟','How heavy is the rain?'][L]};
+  if(st==='rain'||st==='rain_light')return {ic:'🌦️',cls:'m-rain',
+    q:['بيستمر المطر؟','هل يستمر الهطول؟','Will the rain continue?'][L]};
+  if(st==='dust')    return {ic:'😷',cls:'m-dust',
+    q:['الغبار متى يروح؟','متى ينحسر الغبار؟','When will the dust clear?'][L]};
+  if(t>=42)          return {ic:'🥵',cls:'m-hot',
+    q:['الحر شديد — متى يخف؟','متى تنخفض الحرارة؟','When does the heat ease?'][L]};
+  if(t<=10)          return {ic:'🥶',cls:'m-cold',
+    q:['البرد متى ينكسر؟','متى يعتدل الجو؟','When will it warm up?'][L]};
+  if(wd>=40)         return {ic:'💨',cls:'m-wind',
+    q:['الرياح متى تهدأ؟','متى تهدأ الرياح؟','When will winds calm?'][L]};
+  if(IS_NIGHT)       return {ic:'🌙',cls:'m-night',
+    q:['كيف بكرة؟','كيف طقس الغد؟','How is tomorrow?'][L]};
+  return {ic:'💬',cls:'',q:null};
+ }catch(e){ return {ic:'💬',cls:'',q:null}; }
+}
+function askFaceSync(){
+ try{
+  var b=$("askFab"); if(!b)return;
+  var m=askMood();
+  var ic=b.querySelector('.af-ic');
+  if(ic&&ic.innerHTML!==m.ic){
+   ic.innerHTML=m.ic;
+   /* ★ ارتداد لطيف عند تغيّر الحالة */
+   b.className='askFab pop'+(m.cls?' '+m.cls:'');
+   setTimeout(function(){ if(!ASK_OPEN)b.className='askFab'+(m.cls?' '+m.cls:''); },700);
+  } else if(m.cls&&b.className.indexOf(m.cls)<0){
+   b.className='askFab '+m.cls;
+  }
+  ASK_FACE=m;
+ }catch(e){}
+}
+/* ★ الأيقونة تنبض أحيانًا وتقترح سؤال اللحظة */
 function askPulse(){
  try{
   if(ASK_OPEN)return;
+  askFaceSync();
   var b=$("askFab"); if(!b)return;
-  b.className='askFab hint';
-  setTimeout(function(){ if(!ASK_OPEN)b.className='askFab'; },5200);
+  var tx=b.querySelector('.af-tx');
+  var m=ASK_FACE||askMood();
+  if(tx)tx.innerHTML=m.q||pick('اسأل نفاف','اسأل نفاف','Ask Nafaf');
+  b.className='askFab hint'+(m.cls?' '+m.cls:'');
+  setTimeout(function(){ if(!ASK_OPEN)b.className='askFab'+(m.cls?' '+m.cls:''); },5600);
  }catch(e){}
 }
 
@@ -10191,7 +10358,8 @@ setTimeout(function(){
 },12000);
 setTimeout(function(){setInterval(eventCheck,90000);},10000);
 /* ★ تذكير لطيف بوجود المساعد */
-setTimeout(askPulse,14000);
+setTimeout(function(){askFaceSync();askPulse();},9000);
+setInterval(askFaceSync,45000);
 setInterval(askPulse,420000);
 /* ★ الشايب نفاف — ينتظر وصول الطقس ثم يطل
    ⚠️ كان يُستدعى بعد ٦ ثوانٍ عمياء فيجدها بلا بيانات ويصمت */
