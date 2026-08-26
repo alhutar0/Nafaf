@@ -226,6 +226,16 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
       background:rgba(220,90,90,.16);color:#ff9b9b;font-family:inherit;
       font-size:11.5px;font-weight:800;padding:9px 0;cursor:pointer}
     .gi-del:active{background:rgba(220,90,90,.3)}
+
+    .featGrp{font-size:10px;font-weight:800;color:#e6b45e;letter-spacing:.05em;
+      margin:16px 0 6px;padding-bottom:6px;border-bottom:1px solid rgba(230,180,94,.2)}
+    .featGrp:first-child{margin-top:0}
+    .featGrp small{display:block;font-size:9.5px;font-weight:600;
+      color:#6b7789;letter-spacing:0;margin-top:2px}
+
+    .iconBtn:disabled{opacity:.25;cursor:not-allowed}
+    .dg-act{display:flex;gap:4px;flex:0 0 auto}
+    .dg-nm{font-size:12px}
 </style>
 </head>
 <body>
@@ -913,6 +923,8 @@ function dragList(hostId,items,onChange,opts){
       (it.icon?'<span class="dg-ic">'+it.icon+'</span>':'')+
       '<span class="dg-nm">'+esc(it.label||it.id)+'</span>'+
       '<span class="dg-act">'+
+        '<button class="iconBtn" data-up="'+i+'"'+(i===0?' disabled':'')+'>↑</button>'+
+        '<button class="iconBtn" data-dn="'+i+'"'+(i===items.length-1?' disabled':'')+'>↓</button>'+
         (opts.rename?'<button class="iconBtn" data-ren="'+i+'">✏️</button>':'')+
         '<button class="iconBtn eyeBtn" data-eye="'+i+'">'+(it.enabled===false?'✕':'👁')+'</button>'+
       '</span></div>';
@@ -948,6 +960,22 @@ function dragList(hostId,items,onChange,opts){
     });
   })(nodes[k]);}
 
+  /* ★ نقل لأعلى وأسفل — أسهل من السحب على الجوال */
+  function move(from,to){
+    if(to<0||to>=items.length)return;
+    var mv=items.splice(from,1)[0];
+    items.splice(to,0,mv);
+    for(var z=0;z<items.length;z++)items[z].order=z+1;
+    onChange();
+  }
+  var ups=host.querySelectorAll('[data-up]');
+  for(var u=0;u<ups.length;u++)ups[u].onclick=function(e){
+    e.stopPropagation(); var i=+this.getAttribute('data-up'); move(i,i-1);
+  };
+  var dns=host.querySelectorAll('[data-dn]');
+  for(var dd=0;dd<dns.length;dd++)dns[dd].onclick=function(e){
+    e.stopPropagation(); var i=+this.getAttribute('data-dn'); move(i,i+1);
+  };
   var eyes=host.querySelectorAll('[data-eye]');
   for(var m=0;m<eyes.length;m++)eyes[m].onclick=function(e){
     e.stopPropagation();
@@ -966,16 +994,34 @@ function dragList(hostId,items,onChange,opts){
 </script>
 <script>
 /* ═══════ عرض كل الصفحات ═══════ */
-var FEAT_NAMES={
-  pulseRing:['نبض نفاف','حلقة الحرارة التفاعلية'],
-  quakes:['أرشيف الزلازل','تبويب الزلازل التعليمي'],
-  gallery:['معرض أجواء نفاف','صور المراسلين'],
-  reporters:['نظام المراسلين','الرصد المجتمعي'],
-  worldWindow:['نافذة العالم','مدن العالم'],
-  activities:['أنشطة يومك','التسع دوائر'],
-  records:['الأرقام القياسية','سجلات موقعك'],
-  village:['خلفية القرية','مشهد القرية خلف الحرارة']
-};
+/* ★ الميزات مقسّمة لمجموعات — تحكّم دقيق بكل عنصر */
+var FEAT_GROUPS=[
+ {t:'الأزرار العائمة', d:'ما يظهر فوق الشاشة', items:{
+   askAssistant:['💬 اسأل نفاف','أيقونة المساعد الذكي'],
+   reporter:['📷 زر المراسل','إرسال رصد وصورة'],
+   eventAlert:['👁 نفاف شاف شي','تنبيه الأحداث الجوية']
+ }},
+ {t:'الشريط العلوي', d:'أدوات أعلى التطبيق', items:{
+   login:['🔑 تسجيل الدخول','أيقونة حساب جوجل'],
+   settings:['⚙ الإعدادات','زر الترس']
+ }},
+ {t:'الصفحة الرئيسية', d:'بطاقات صفحة «الآن»', items:{
+   pulseRing:['نبض نفاف','حلقة الحرارة التفاعلية'],
+   glance:['نفاف يراقب العالم','بطاقة المدن العالمية'],
+   fusion:['مؤشر Rain Fusion','بطاقة دمج المصادر']
+ }},
+ {t:'المحتوى', d:'أقسام وميزات', items:{
+   quakes:['أرشيف الزلازل','تبويب الزلازل التعليمي'],
+   gallery:['معرض أجواء نفاف','صور المراسلين'],
+   reporters:['نظام المراسلين','الرصد المجتمعي'],
+   worldWindow:['نافذة العالم','مدن العالم'],
+   activities:['أنشطة يومك','التسع دوائر'],
+   records:['الأرقام القياسية','سجلات موقعك']
+ }}
+];
+/* مسطّحة للتوافق */
+var FEAT_NAMES={};
+FEAT_GROUPS.forEach(function(g){for(var k in g.items)FEAT_NAMES[k]=g.items[k];});
 var SRC_NAMES={
   openMeteo:['Open-Meteo','المصدر الأساسي للطقس'],
   ecmwf:['ECMWF','النموذج الأوروبي'],
@@ -995,12 +1041,15 @@ function renderAll(){
     dragList('blockList',DRAFT.blocks.now,function(){markDirty();renderAll();},{rename:true});
   /* الميزات */
   var fs=DRAFT.features||{}, fh='';
-  for(var k in FEAT_NAMES){
-    var on=(fs[k]!==false);
-    fh+='<div class="rowSw"><span>'+FEAT_NAMES[k][0]+
-      '<div class="rd">'+FEAT_NAMES[k][1]+'</div></span>'+
-      '<span class="sw'+(on?' on':'')+'" data-feat="'+k+'"></span></div>';
-  }
+  FEAT_GROUPS.forEach(function(g){
+    fh+='<div class="featGrp">'+g.t+'<small>'+g.d+'</small></div>';
+    for(var k in g.items){
+      var on=(fs[k]!==false);
+      fh+='<div class="rowSw"><span>'+g.items[k][0]+
+        '<div class="rd">'+g.items[k][1]+'</div></span>'+
+        '<span class="sw'+(on?' on':'')+'" data-feat="'+k+'"></span></div>';
+    }
+  });
   $('featList').innerHTML=fh;
   var sws=$('featList').querySelectorAll('[data-feat]');
   for(var i=0;i<sws.length;i++)sws[i].onclick=function(){

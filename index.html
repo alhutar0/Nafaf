@@ -5914,7 +5914,7 @@ function answer(k){
  if(res[i].a.k===k){
  var src=(k==='sea'&&MARINE&&MARINE.wave_height!=null)
  ?pick('قريت بيانات الموج الحيّة','قرأتُ بيانات الموج','Read live wave data')
- :pick('قريت تحليل الساعات الجاية','قرأتُ تحليل الساعات القادمة','Read the coming hours');
+ :pick('قريت الساعات الجاية','قرأتُ الساعات القادمة','Read the coming hours');
  setNafaf(res[i].note,src);
  return;
  }
@@ -6177,6 +6177,7 @@ function applyAppCfg(c){
   if(c.ui.rotateSec)CFG.rotateSec=c.ui.rotateSec;
   if(c.ui.rotateSlides!==undefined)CFG.rotateSlides=c.ui.rotateSlides;
  }
+ applyVisibility();
  if(TAB==='now'&&typeof renderNow==='function')renderNow();
 }
 /* هل الميزة مفعّلة من البوابة؟ */
@@ -6185,6 +6186,27 @@ function feat(name){
  if(!FEATURES)return true;               /* الافتراضي: مفعّلة */
  return FEATURES[name]!==false;
 }
+/* ============================================================
+   ★ التحكم بظهور العناصر من البوابة
+   ⚠️ الأزرار العائمة والأدوات — تُخفى بلا حذف كود
+   ============================================================ */
+function applyVisibility(){
+ try{
+  var map=[
+   ['askFab',   'askAssistant'],   /* أيقونة اسأل نفاف */
+   ['fabBtn',   'reporter'],       /* أيقونة المراسل */
+   ['evBtn',    'eventAlert'],     /* نفاف شاف شي */
+   ['authBadge','login'],          /* تسجيل الدخول */
+   ['gearBtn',  'settings']        /* الإعدادات */
+  ];
+  for(var i=0;i<map.length;i++){
+   var el=$(map[i][0]);
+   if(!el)continue;
+   el.style.display = feat(map[i][1]) ? '' : 'none';
+  }
+ }catch(e){}
+}
+
 /* هل المكوّن ظاهر؟ */
 function blockOn(id){
  if(!BLOCK_ORDER)return true;
@@ -9862,7 +9884,7 @@ function layerGrid(){
 
 /* ============ التبويبات ============ */
 var TABS=[{k:'now',t:['الآن','الآن','Now']},{k:'life',t:['يومك','يومك','Your day']},
- {k:'fc',t:['تحليل النماذج','تحليل النماذج','Model analysis']},
+ {k:'fc',t:['الطقس القادم','الطقس القادم','Coming weather']},
  {k:'live',t:['الرصد المباشر','الرصد المباشر','Live radar']},
  {k:'world',t:['نافذة العالم','نافذة العالم','World']},
  {k:'gallery',t:['أجواء نفاف','معرض الأجواء','Skies']},
@@ -10444,6 +10466,7 @@ document.addEventListener('visibilitychange',function(){
 applyTheme();
 devicePerf();
 touchStreak();applyAll();
+setTimeout(applyVisibility,1500);
 attachPullRefresh();
 /* Rain Fusion تبدأ متأخرة — ليست ضمن أول شاشة */
 setTimeout(function(){
