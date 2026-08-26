@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <meta name="theme-color" content="#141c2b" />
 <link rel="manifest" id="mf" href="manifest.json" />
-<meta name="description" content="نفاف — طقسك بين يديك بلسان أهل منطقتك. بيانات جوية بثلاث لغات مع التقويم النجمي العربي وأرشيف مناخي موثّق." />
+<meta name="description" content="نفاف — مشروع ثقافي تعليمي يحفظ معرفة أهل الجزيرة بالسماء: التقويم النجمي والمواسم وعلوم الجو وأرشيف مناخي موثّق بثلاث لغات مع تحليل نماذج جوية مفتوحة." />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png" />
@@ -1721,6 +1721,16 @@
   @keyframes afPop{0%{transform:scale(1)}35%{transform:scale(1.28) rotate(-9deg)}
     65%{transform:scale(.94) rotate(5deg)}100%{transform:scale(1)}}
   .askFab.hint .af-tx{max-width:180px;opacity:1}
+  /* ★ بيان المصدر */
+  .srcBanner{display:flex;align-items:flex-start;gap:9px;
+    background:rgba(159,212,245,.09);border:1px solid rgba(159,212,245,.22);
+    border-radius:14px;padding:11px 13px;margin-bottom:14px}
+  .sb-ic{font-size:14px;color:#9fd4f5;flex:0 0 auto;line-height:1.5}
+  .sb-tx{font-size:11px;font-weight:600;line-height:1.85;color:var(--tx3,rgba(255,255,255,.62))}
+  .srcTag{font-size:9px;font-weight:800;letter-spacing:.03em;
+    background:rgba(255,255,255,.09);color:var(--tx3,rgba(255,255,255,.5));
+    border-radius:99px;padding:3px 9px;margin-inline-start:8px;vertical-align:2px}
+  body.th-light .srcTag{background:rgba(22,35,58,.07);color:rgba(22,35,58,.55)}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -5904,7 +5914,7 @@ function answer(k){
  if(res[i].a.k===k){
  var src=(k==='sea'&&MARINE&&MARINE.wave_height!=null)
  ?pick('قريت بيانات الموج الحيّة','قرأتُ بيانات الموج','Read live wave data')
- :pick('قريت توقعات الساعات الجاية','قرأتُ التوقعات القادمة','Read the coming hours');
+ :pick('قريت تحليل الساعات الجاية','قرأتُ تحليل الساعات القادمة','Read the coming hours');
  setNafaf(res[i].note,src);
  return;
  }
@@ -6687,14 +6697,19 @@ var NAFAF_ABOUT={
  body:[
  '<b>نفاف</b> كلمة خليجية أصيلة تعني المطر الخفيف. اخترناها اسمًا لأن هذا التطبيق وُلد من لسان أهل عُمان لا من ترجمة.<br><br>'+
  '<b>ما هو نفاف؟</b><br>'+
- 'منصة طقس محلية تقرأ لك السماء بلهجتك. لا تعرض أرقامًا فقط بل تشرح ما تعنيه: متى تشتد الرياح وأي وقت أنسب للطلعة وهل بحرك يمدح اليوم.<br><br>'+
+ 'مشروع <b>ثقافي تعليمي</b> يحفظ معرفة أهل الجزيرة بالسماء ويقدّمها بلسانهم: التقويم النجمي وأسماء المواسم والأرشيف المناخي وعلوم الجو. '+
+ 'ويعرض إلى جانب ذلك <b>تحليل نماذج جوية عالمية مفتوحة</b> ليضع المعرفة في سياق اليوم الذي تعيشه.<br><br>'+
+ '<b>ما ليس نفاف؟</b><br>'+
+ 'نفاف <b>ليس جهة أرصاد</b> ولا يُنتج بيانات أرصاد ولا يملك محطات رصد ولا رادارًا. '+
+ 'ولا يصدر تحذيرات ولا إنذارات ولا توجيهات سلامة. '+
+ 'والمصدر المعتمد الوحيد في الأحوال الجوية الشديدة هو <b>جهة الأرصاد الرسمية المختصة في بلدك</b>.<br><br>'+
  '<b>ما الذي يميّزه؟</b><br>'+
- '• <b>لهجة أهلك</b> — ثلاث لغات: محلية وفصحى وإنجليزية<br>'+
  '• <b>التقويم النجمي</b> — سهيل والوسم والمربعانية والدرور كما يعرفها أهل الجزيرة<br>'+
- '• <b>أرشيف موثّق</b> — من إعصار الباطنة ١٨٩٠ حتى منخفض المسرات ٢٠٢٦ بأرقام رسمية<br>'+
- '• <b>المعدّلات الرسمية</b> — من المركز الوطني للإحصاء والمعلومات إحدى عشرة محطة<br>'+
- '• <b>رصد المجتمع</b> — الأرض تحت رجليك أصدق من شبكة نموذج بحجم ١١ كم<br>'+
- '• <b>خرائط نبنيها بأنفسنا</b> — أمطار ورياح وعواصف من بيانات مفتوحة<br><br>'+
+ '• <b>مكتبة علمية</b> — ستة وستون موضوعًا عن الجو والفلك والمصطلحات المحلية<br>'+
+ '• <b>أرشيف موثّق</b> — من إعصار الباطنة ١٨٩٠ حتى منخفض المسرات ٢٠٢٦<br>'+
+ '• <b>لهجة أهلك</b> — ثلاث لغات: محلية وفصحى وإنجليزية<br>'+
+ '• <b>تحليل نماذج مفتوحة</b> — ECMWF وGFS وICON بتراخيص تسمح بالعرض<br>'+
+ '• <b>رصد المجتمع</b> — ما يراه الناس حولك بعيونهم<br><br>'+
  '<b>من يقف خلفه؟</b><br>'+
  'مشروع فردي مستقل — لا شركة ولا جهة رسمية. يُبنى بشغف من هاوٍ للطقس ويُموَّل ذاتيًا ويعتمد كليًا على بيانات مفتوحة مجانية.<br><br>'+
  '<b>قيمنا</b><br>'+
@@ -6702,13 +6717,15 @@ var NAFAF_ABOUT={
  '• <b>حدود واضحة</b> — لا تحذيرات سلامة ولا ادعاءات صحية ولا تنبؤ سيول<br>'+
  '• <b>خصوصيتك لك</b> — بياناتك في جهازك لا عندنا',
 
- '<b>نفاف</b> كلمة خليجية تعني المطر الخفيف. منصة طقس محلية تعرض البيانات بلغة أهل المنطقة.<br><br>'+
- '<b>المميزات:</b> ثلاث لغات · التقويم النجمي العربي · أرشيف مناخي موثّق · معدّلات رسمية من المركز الوطني للإحصاء · رصد مجتمعي · خرائط مبنية من بيانات مفتوحة.<br><br>'+
+ '<b>نفاف</b> كلمة خليجية تعني المطر الخفيف. مشروع <b>ثقافي تعليمي</b> يحفظ معرفة أهل الجزيرة بالسماء ويعرض معها تحليل نماذج جوية مفتوحة.<br><br>'+
+ '<b>ما ليس نفاف:</b> ليس جهة أرصاد ولا يُنتج بيانات أرصاد ولا يملك محطات رصد ولا يصدر تحذيرات. والمصدر المعتمد هو جهة الأرصاد الرسمية في بلدك.<br><br>'+
+ '<b>المميزات:</b> التقويم النجمي العربي · مكتبة علمية · أرشيف مناخي موثّق · ثلاث لغات · تحليل نماذج مفتوحة · رصد مجتمعي.<br><br>'+
  '<b>الجهة:</b> مشروع فردي مستقل غير رسمي يعتمد على بيانات مفتوحة مجانية.<br><br>'+
  '<b>قيمنا:</b> الصدق في المصادر · حدود واضحة لا نتجاوزها · احترام الخصوصية.',
 
- '<b>Nafaf</b> is a Gulf word for light rain. A local weather platform that reads the sky in your own dialect.<br><br>'+
- '<b>Features:</b> Three languages · Arabian star calendar · Documented climate archive · Official normals from Oman NCSI · Community observation · Self-built maps from open data.<br><br>'+
+ '<b>Nafaf</b> is a Gulf word for light rain. A <b>cultural and educational</b> project preserving Arabian sky knowledge, presented alongside analysis from open global weather models.<br><br>'+
+ '<b>What Nafaf is not:</b> Not a meteorological authority. It produces no meteorological data, owns no observation stations, and issues no warnings. The authoritative source is your national meteorological service.<br><br>'+
+ '<b>Features:</b> Arabian star calendar · Science library · Documented climate archive · Three languages · Open model analysis · Community observation.<br><br>'+
  '<b>Who:</b> An independent project — not a company or official body. Self-funded, built on free open data.<br><br>'+
  '<b>Values:</b> Honesty over spectacle · Clear limits · Your privacy stays yours.'
  ]
@@ -7992,10 +8009,28 @@ function renderLife(){
  var scb=$("stabCard");
  if(scb)scb.onclick=function(){STAB_OPEN=!STAB_OPEN;renderLife();};}
 
-/* ============ عرض: التوقعات ============ */
+/* ============ عرض: تحليل النماذج ============ */
+/* ============================================================
+   ★ بيان المصدر الثابت — يوضّح طبيعة نفاف القانونية
+   ⚠️ نفاف لا يُنتج بيانات أرصاد ولا يملك محطات رصد.
+      يعرض تحليل نماذج عالمية مفتوحة بتراخيص تسمح بذلك.
+   ============================================================ */
+function sourceBanner(){
+ var L=LI();
+ return '<div class="srcBanner">'+
+  '<span class="sb-ic">ⓘ</span>'+
+  '<span class="sb-tx">'+[
+   'نفاف ما ينتج بيانات أرصاد ولا يملك محطات رصد — يعرض تحليل نماذج عالمية مفتوحة. للأحوال الشديدة ارجع لجهة الأرصاد المختصة في بلدك.',
+   'لا يُنتج نفاف بيانات أرصاد ولا يملك محطات رصد؛ يعرض تحليل نماذج عالمية مفتوحة. وفي الأحوال الشديدة يُرجع إلى جهة الأرصاد المختصة في بلدك.',
+   'Nafaf does not produce meteorological data and owns no observation stations — it displays analysis from open global models. For severe weather, consult the official meteorological authority in your country.'
+  ][L]+'</span></div>';
+}
 function renderFc(){
  var h='',i,L=LI();
- h+='<div class="sec-t">'+pick('الساعات القادمة','الساعات القادمة','Next hours')+'</div><div class="hlist">';
+ /* ★ بيان المصدر — نفاف ناقل موثّق لا منتج بيانات */
+ h+=sourceBanner();
+ h+='<div class="sec-t">'+pick('الساعات القادمة','الساعات القادمة','Next hours')+
+   '<span class="srcTag">ECMWF · GFS · ICON</span></div><div class="hlist">';
  if(HOURLY){var now=new Date().getHours();
  for(i=0;i<12;i++){var idx=now+i;if(idx>=HOURLY.time.length)break;var hh=new Date(HOURLY.time[idx]);
  h+='<div class="hitem"><div class="h">'+hh.getHours()+':00</div>'+IC[iconForCode(HOURLY.weather_code[idx],hourIsNight(HOURLY.time[idx]))]+
@@ -9827,7 +9862,7 @@ function layerGrid(){
 
 /* ============ التبويبات ============ */
 var TABS=[{k:'now',t:['الآن','الآن','Now']},{k:'life',t:['يومك','يومك','Your day']},
- {k:'fc',t:['التوقعات','التوقعات','Forecast']},
+ {k:'fc',t:['تحليل النماذج','تحليل النماذج','Model analysis']},
  {k:'live',t:['الرصد المباشر','الرصد المباشر','Live radar']},
  {k:'world',t:['نافذة العالم','نافذة العالم','World']},
  {k:'gallery',t:['أجواء نفاف','معرض الأجواء','Skies']},
@@ -9867,6 +9902,60 @@ function showPanels(){var i;
 
 /* ============ الإعدادات ============ */
 function optBtn(label,on,attr){return '<button class="opt'+(on?' on':'')+'" '+attr+'>'+label+'</button>';}
+/* ============================================================
+   ★ حذف الحساب وكل البيانات — شرط إلزامي في Google Play
+   ⚠️ لا يكفي مسح المحلي: يجب حذف الحساب وبيانات الخادم أيضًا.
+   ============================================================ */
+function deleteEverything(){
+ var L=LI();
+ var msg=[
+  'راح نحذف نهائيًا:\n• سجلّك وأرقامك على هذا الجهاز\n• حسابك ورصداتك وصورك من خوادمنا\n\nما نقدر نرجّعها. متأكد؟',
+  'سيُحذف نهائيًا:\n• سجلك وبياناتك على هذا الجهاز\n• حسابك ورصداتك وصورك من خوادمنا\n\nلا يمكن التراجع. هل تريد المتابعة؟',
+  'This permanently deletes:\n• Your history and records on this device\n• Your account, reports and photos from our servers\n\nThis cannot be undone. Continue?'][L];
+ if(!confirm(msg))return;
+ var b=$("delBtn");
+ if(b){b.disabled=true;b.innerHTML=pick('جارٍ الحذف…','جارٍ الحذف…','Deleting…');}
+
+ function wipeLocal(){
+  try{
+   var keys=[];
+   for(var i=0;i<localStorage.length;i++){
+    var k=localStorage.key(i);
+    if(k&&k.indexOf('nafaf_')===0)keys.push(k);
+   }
+   for(var j=0;j<keys.length;j++)localStorage.removeItem(keys[j]);
+  }catch(e){}
+  try{ if(window.caches&&caches.keys)caches.keys().then(function(ns){
+   ns.forEach(function(n){caches.delete(n);}); }); }catch(e){}
+ }
+
+ /* ★ الخادم أولًا — ثم المحلي */
+ var vid=(typeof visitorId==='function')?visitorId():null;
+ if(PUSH_URL&&vid){
+  fetch(PUSH_URL+'/account/delete',{method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({vid:vid})})
+  .then(function(r){return r.json();})
+  .then(function(){ finishDelete(wipeLocal,L); })
+  .catch(function(){ finishDelete(wipeLocal,L); });
+ } else {
+  finishDelete(wipeLocal,L);
+ }
+}
+function finishDelete(wipeLocal,L){
+ /* ألغِ اشتراك الإشعارات */
+ try{
+  if(navigator.serviceWorker&&navigator.serviceWorker.ready)
+   navigator.serviceWorker.ready.then(function(reg){
+    return reg.pushManager.getSubscription();
+   }).then(function(sub){ if(sub)sub.unsubscribe(); }).catch(function(){});
+ }catch(e){}
+ wipeLocal();
+ alert(['انحذف كل شي. راح يفتح نفاف من جديد.',
+   'حُذفت جميع بياناتك. سيُعاد تشغيل التطبيق.',
+   'Everything was deleted. Nafaf will restart.'][L]);
+ setTimeout(function(){ location.reload(); },600);
+}
 function renderSettings(){
  var h='';
  /* ★ تعليمات التثبيت على iOS أولًا لأنها الأهم هناك */
@@ -9938,7 +10027,11 @@ h+='</div><div class="m-card"><div class="m-sec">'+pick('الوضع السينم
  for(i=0;i<CARDS.length;i++){var k=CARDS[i],nm=(names[k]||[k,k,k])[L];
  h+='<div class="ordrow"><span class="on2">'+nm+'</span>'+
  '<button class="ordbtn" data-dn="'+i+'">↓</button><button class="ordbtn" data-up="'+i+'">↑</button></div>';}
- h+='<button class="danger" id="delBtn">'+pick('حذف سجلّي وأرقامي','حذف بياناتي','Delete my data')+'</button>';
+ h+='<div class="m-hint">'+pick(
+  'يحذف كل شي يخصك: سجلّك المحلي وحسابك ورصداتك وصورك من خوادمنا نهائيًا.',
+  'يحذف جميع بياناتك: السجل المحلي والحساب والرصدات والصور من خوادمنا نهائيًا.',
+  'Deletes everything: local history, your account, reports and photos from our servers permanently.')+'</div>';
+ h+='<button class="danger" id="delBtn">'+pick('حذف حسابي وكل بياناتي','حذف الحساب وكل البيانات','Delete account & all data')+'</button>';
  h+='</div>';
  /* ★ عن نفاف والوثائق */
  h+='<div class="m-grp">'+pick('عن نفاف','عن التطبيق','About')+'</div>';
@@ -9960,6 +10053,7 @@ h+='</div><div class="m-card"><div class="m-sec">'+pick('الوضع السينم
  var w=$("obWrap");
  if(w){w.className='obWrap on';TOUR_I=0;renderOnboard();}
  };
+ var db=$("delBtn"); if(db)db.onclick=deleteEverything;
  var bs=$("setBody").getElementsByTagName("button"),j;
  for(j=0;j<bs.length;j++)bs[j].onclick=function(){
  var b=this;
