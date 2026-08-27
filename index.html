@@ -1731,6 +1731,21 @@
     background:rgba(255,255,255,.09);color:var(--tx3,rgba(255,255,255,.5));
     border-radius:99px;padding:3px 9px;margin-inline-start:8px;vertical-align:2px}
   body.th-light .srcTag{background:rgba(22,35,58,.07);color:rgba(22,35,58,.55)}
+  /* ★ نفاف يراقب العالم */
+  .wwCard{background:linear-gradient(135deg,rgba(255,157,92,.13),rgba(255,255,255,.04));
+    border:1px solid rgba(255,157,92,.3);border-radius:18px;
+    padding:12px 15px;margin-bottom:11px;cursor:pointer}
+  .wwCard:active{transform:scale(.99)}
+  .ww-top{font-size:10.5px;font-weight:800;color:#ff9d5c;margin-bottom:9px;letter-spacing:.02em}
+  .ww-row{display:flex;align-items:center;gap:11px}
+  .ww-ic{font-size:24px;flex:0 0 auto}
+  .ww-tx{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .ww-t{font-size:12px;font-weight:700;color:var(--tx3,rgba(255,255,255,.62))}
+  .ww-b{font-size:14px;font-weight:800;color:var(--tx,#fff)}
+  .ww-b b{color:#ff9d5c}
+  .ww-arw{font-size:20px;color:var(--tx3,rgba(255,255,255,.4));flex:0 0 auto}
+  .ww-src{font-size:9.5px;font-weight:600;color:var(--tx3,rgba(255,255,255,.45));
+    margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.1);line-height:1.7}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -7212,6 +7227,103 @@ function openEvent(){
 }
 function closeEvent(){EVENT_OPEN=false;$("evSheet").className='sheet';$("evBack").className='sheetBack';}
 
+/* ============================================================
+   ★★★ نفاف يراقب العالم — رصد وصفي لا خبر إعلامي ★★★
+   ⚠️ الفرق جوهري وقانوني:
+      خبر إعلامي: «فيضانات تجتاح كراتشي» ← يحتاج مصدرًا صحفيًا
+                  ويحمّلك مسؤولية التحذير
+      رصد وصفي  : «أمطار غزيرة تُرصد في كراتشي — ٤٨ ملم» ← قراءة
+                  بيانات مفتوحة تعرضها أصلًا
+   ⚠️ المصادر حكومية بالكامل:
+      • Open-Meteo ← ECMWF (أوروبي حكومي) · NOAA/GFS (أمريكي حكومي)
+        · DWD/ICON (ألماني حكومي)
+      • USGS ← هيئة المسح الجيولوجي الأمريكية (حكومية)
+   ⚠️ لا تحذيرات ولا توجيهات — وصف فقط مع اسم المصدر ووقته.
+   ============================================================ */
+var WW_SEEN={}, WW_I=0;
+
+/* عتبات الرصد — تُظهر ما هو استثنائي فعلًا */
+var WW_RULES=[
+ {k:'rain', ic:'🌧️', min:8,
+  t:['أمطار غزيرة','هطول غزير','Heavy rain'],
+  get:function(w){return w.precipitation;},
+  unit:['ملم','ملم','mm']},
+ {k:'wind', ic:'💨', min:60,
+  t:['رياح شديدة','رياح شديدة','Strong winds'],
+  get:function(w){return w.wind_gusts_10m||w.wind_speed_10m;},
+  unit:['كم/س','كم/س','km/h']},
+ {k:'heat', ic:'🔥', min:45,
+  t:['حر استثنائي','حر استثنائي','Extreme heat'],
+  get:function(w){return w.temperature_2m;},
+  unit:['°','°','°']},
+ {k:'cold', ic:'❄️', min:null, max:-15,
+  t:['برد قارس','برد قارس','Severe cold'],
+  get:function(w){return w.temperature_2m;},
+  unit:['°','°','°']}
+];
+
+/* يبحث عن رصد جدير بالعرض في شبكة المدن */
+function worldWatch(){
+ try{
+  if(!WORLD||!WORLD.length)return null;
+  var L=LI(), found=[];
+  for(var i=0;i<WORLD.length;i++){
+   var it=WORLD[i]; if(!it.w)continue;
+   for(var r=0;r<WW_RULES.length;r++){
+    var R=WW_RULES[r];
+    var v=R.get(it.w);
+    if(v==null)continue;
+    var hit=(R.max!=null)?(v<=R.max):(v>=R.min);
+    if(!hit)continue;
+    found.push({rule:R, city:it.city, val:v,
+      id:R.k+':'+it.city.en+':'+Math.round(v)});
+   }
+  }
+  if(!found.length)return null;
+  /* الأشد أولًا */
+  found.sort(function(a,b){
+   var sa=(a.rule.max!=null)?-a.val:a.val;
+   var sb=(b.rule.max!=null)?-b.val:b.val;
+   return (sb/(b.rule.min||b.rule.max||1))-(sa/(a.rule.min||a.rule.max||1));
+  });
+  if(WW_I>=found.length)WW_I=0;
+  return found[WW_I];
+ }catch(e){ return null; }
+}
+
+/* ★ البطاقة — وصف لا خبر */
+function worldWatchCard(){
+ try{
+  var f=worldWatch();
+  if(!f)return '';
+  var L=LI();
+  var cty=(L===2)?f.city.en:f.city.n;
+  var cnt=(L===2)?f.city.cen:f.city.c;
+  var val=Math.round(f.val*10)/10;
+  return '<div class="wwCard" id="wwCard">'+
+   '<div class="ww-top">🌍 '+
+    ['وصل رصد من '+cnt,'وصل رصد من '+cnt,'Observation from '+cnt][L]+
+   '</div>'+
+   '<div class="ww-row">'+
+    '<span class="ww-ic">'+f.rule.ic+'</span>'+
+    '<span class="ww-tx">'+
+     '<span class="ww-t">'+f.rule.t[L]+'</span>'+
+     '<span class="ww-b">'+cty+' · <b>'+val+'</b> '+f.rule.unit[L]+'</span>'+
+    '</span>'+
+    '<span class="ww-arw">›</span>'+
+   '</div>'+
+   '<div class="ww-src">'+
+    ['المصدر: نماذج حكومية مفتوحة — ECMWF · NOAA · DWD · وصف لا تحذير.',
+     'المصدر: نماذج حكومية مفتوحة (ECMWF · NOAA · DWD)؛ وصف لا تحذير.',
+     'Source: open government models — ECMWF · NOAA · DWD. Descriptive, not a warning.'][L]+
+   '</div></div>';
+ }catch(e){ return ''; }
+}
+function wwWire(){
+ var el=$("wwCard");
+ if(el)el.onclick=function(){showTab('world');};
+}
+
 /* ★ نفاف يراقب العالم — لمحة من شبكة المدن
    ⚠️ يقرأ WORLD الموجود أصلًا — لا طلبات جديدة ولا تغيير بيانات */
 var GLANCE_I=0;
@@ -7653,6 +7765,7 @@ function renderNow(){
  var nc=blockOn('news')?newsCard():''; if(nc)h+='<div class="fadeIn d1">'+nc+'</div>';
  var pc2=blockOn('reports')?pillCard():''; if(pc2)h+='<div class="fadeIn d1" id="pillHost">'+pc2+'</div>';
  var wc=blockOn('watch')?watchCard():''; if(wc)h+='<div class="fadeIn d1">'+wc+'</div>';
+ var ww=blockOn('worldWatch')?worldWatchCard():''; if(ww)h+='<div class="fadeIn d1">'+ww+'</div>';
  var gl=blockOn('glance')?worldGlance():''; if(gl)h+='<div class="fadeIn d1" id="glanceHost">'+gl+'</div>';
  var fu=fusionCard(); if(fu)h+='<div class="fadeIn d1">'+fu+'</div>';
  var lf=liveFeedCard();
@@ -7741,7 +7854,7 @@ function renderNow(){
  $("nowBody").innerHTML=h;
  wireTimeline();
  rotWire();rotStart();
- glanceWire();
+ glanceWire();wwWire();
  var ph=$("pillCard");if(ph)ph.onclick=function(){pillNext();pillStart();};
  pillStart();
  var wcEl=$("watchCard");
@@ -9087,7 +9200,7 @@ function worldLoad(){
  var lats=WORLD_CITIES.map(function(c){return c.lat;}).join(',');
  var lons=WORLD_CITIES.map(function(c){return c.lon;}).join(',');
  fetch('https://api.open-meteo.com/v1/forecast?latitude='+lats+'&longitude='+lons+
- '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m'+
+ '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_gusts_10m,precipitation'+
  '&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto')
 .then(function(r){if(!r.ok)throw 0;return r.json();})
 .then(function(d){
@@ -10485,6 +10598,7 @@ setInterval(askPulse,420000);
 
 /* ★ كان يعيد رسم الصفحة كاملة كل ٢٢ ثانية فيومض رقم الحرارة —
    الآن يحدّث حاويته وحدها بانتقال ناعم */
+setInterval(function(){ WW_I++; },95000);
 setInterval(function(){
  if(TAB!=='now')return;
  var host=$("glanceHost");
