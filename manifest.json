@@ -4,11 +4,12 @@
   "description": "مشروع ثقافي تعليمي يحفظ معرفة أهل الجزيرة بالسماء — التقويم النجمي والمواسم وعلوم الجو — ويعرض معها تحليل نماذج جوية عالمية مفتوحة. ليس جهة أرصاد ولا يصدر تحذيرات.",
   "id": "/Nafaf/",
   "start_url": ".",
-  "scope": ".",
+  "scope": "./",
   "display": "standalone",
   "display_override": [
     "standalone",
-    "minimal-ui"
+    "minimal-ui",
+    "browser"
   ],
   "orientation": "portrait",
   "background_color": "#141c2b",
@@ -101,5 +102,99 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "الطقس القادم",
+      "short_name": "القادم",
+      "description": "تحليل الساعات والأيام القادمة",
+      "url": "./?tab=fc",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "يومك",
+      "short_name": "يومك",
+      "description": "أنشطة يومك والتقويم النجمي",
+      "url": "./?tab=life",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "الرصد المباشر",
+      "short_name": "الرصد",
+      "description": "خرائط الأمطار والسحب",
+      "url": "./?tab=live",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "اسأل نفاف",
+      "short_name": "اسأل",
+      "description": "المساعد الذكي",
+      "url": "./?ask=1",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/s1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "نبض نفاف — حالة الطقس الآن"
+    },
+    {
+      "src": "screenshots/s2.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "يومك والتقويم النجمي"
+    },
+    {
+      "src": "screenshots/s3.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "الطقس القادم"
+    },
+    {
+      "src": "screenshots/s4.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "الرصد المباشر"
+    }
+  ],
+  "launch_handler": {
+    "client_mode": [
+      "navigate-existing",
+      "auto"
+    ]
+  },
+  "handle_links": "preferred",
+  "edge_side_panel": {
+    "preferred_width": 420
+  }
 }
