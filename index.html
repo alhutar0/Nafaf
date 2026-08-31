@@ -1749,6 +1749,11 @@
   /* ★ خريطة OSM بمظهر داكن يطابق سمة نفاف */
   .osmDark{filter:invert(1) hue-rotate(185deg) brightness(.92) contrast(.88) saturate(.75)}
   body.th-light .osmDark{filter:none}
+  .planRow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .planBadge{font-size:12px;font-weight:800;border-radius:99px;padding:5px 13px;
+    background:rgba(127,140,160,.16);color:var(--tx2,rgba(255,255,255,.75))}
+  .planBadge.on{background:linear-gradient(135deg,#e6b45e,#cf9a3a);color:#2c1f08}
+  .planTx{font-size:11px;font-weight:600;color:var(--tx3,rgba(255,255,255,.5))}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -10113,6 +10118,106 @@ function finishDelete(wipeLocal,L){
    'Everything was deleted. Nafaf will restart.'][L]);
  setTimeout(function(){ location.reload(); },600);
 }
+/* ============================================================
+   ★★★ طبقة الاشتراكات — معطّلة حتى تُفعّل من البوابة ★★★
+   ⚠️ ما دام billing.enabled = false فالجميع بلا حدود إطلاقًا
+      ولا يظهر أي زر دفع — التطبيق كما هو تمامًا اليوم.
+   ⚠️ لا تُفعّلها قبل ترقية Open-Meteo للخطة التجارية.
+   ============================================================ */
+var BILL={tier:'open', active:false, limits:null, donateOn:false, donateUrl:''};
+var USAGE=null;
+
+/* عدّاد الاستخدام اليومي — محلي فقط */
+function usageToday(){
+ try{
+  var k='usage_'+new Date().toISOString().slice(0,10);
+  if(USAGE&&USAGE.k===k)return USAGE;
+  var raw=stGet(k);
+  USAGE=raw?JSON.parse(raw):{k:k,notif:0,ask:0};
+  USAGE.k=k;
+  return USAGE;
+ }catch(e){ return {k:'',notif:0,ask:0}; }
+}
+function usageBump(field){
+ try{
+  var u=usageToday();
+  u[field]=(u[field]||0)+1;
+  stSet(u.k,JSON.stringify(u));
+ }catch(e){}
+}
+/* هل تجاوز المستخدم حدّه؟ — دائمًا false إن كان النظام معطّلًا */
+function overLimit(field){
+ try{
+  if(BILL.tier==='open')return false;   /* النظام معطّل */
+  if(BILL.active)return false;          /* مشترك */
+  if(!BILL.limits)return false;
+  var cap=BILL.limits[field==='ask'?'askPerDay':'notifPerDay'];
+  if(!cap)return false;                 /* صفر = بلا حد */
+  return usageToday()[field]>=cap;
+ }catch(e){ return false; }
+}
+
+function billingLoad(){
+ try{
+  if(!PUSH_URL)return;
+  var vid=(typeof visitorId==='function')?visitorId():'';
+  fetch(PUSH_URL+'/billing/status?vid='+encodeURIComponent(vid))
+  .then(function(r){return r.ok?r.json():null;})
+  .then(function(d){
+   if(!d||!d.ok)return;
+   BILL={tier:d.tier||'open', active:!!d.active, limits:d.limits||null,
+         until:d.until||null, priceYear:d.priceYear, currency:d.currency,
+         donateOn:!!d.donateOn, donateUrl:d.donateUrl||''};
+   if(TAB==='now'&&typeof renderSettings==='function'){}
+  })
+  .catch(function(){});
+ }catch(e){}
+}
+
+/* ★ بطاقة الدعم في الإعدادات — تظهر فقط إن فُعّلت */
+function supportCard(){
+ try{
+  var L=LI(), h='';
+  /* الدعم الطوعي */
+  if(BILL.donateOn&&BILL.donateUrl){
+   h+='<div class="m-grp">'+['ادعم نفاف','ادعم نفاف','Support Nafaf'][L]+'</div>';
+   h+='<div class="m-card"><div class="m-hint">'+[
+    'نفاف مجاني بالكامل ويبقى كذلك. لو عجبك شغلنا وحبيت تدعم استمراره تقدر تساهم بأي مبلغ.',
+    'نفاف مجاني بالكامل وسيبقى كذلك؛ ويمكنك دعم استمراره بأي مبلغ إن أحببت.',
+    'Nafaf is free and always will be. If you find it useful, you can support its continuation.'
+   ][L]+'</div>'+
+   '<button class="shbtn gold" id="donateBtn" style="width:100%;margin-top:10px">☕ '+
+    ['ادعم نفاف','ادعم نفاف','Support Nafaf'][L]+'</button></div>';
+  }
+  /* حالة الاشتراك — فقط إن فُعّل النظام */
+  if(BILL.tier!=='open'){
+   h+='<div class="m-grp">'+['اشتراكك','اشتراكك','Your plan'][L]+'</div>';
+   h+='<div class="m-card">';
+   if(BILL.active){
+    var d=BILL.until?new Date(BILL.until):null;
+    h+='<div class="planRow"><span class="planBadge on">★ نفاف بلس</span>'+
+     (d?'<span class="planTx">'+['ساري حتى','ساري حتى','Until'][L]+' '+
+      d.toLocaleDateString('ar')+'</span>':'')+'</div>';
+   } else {
+    h+='<div class="planRow"><span class="planBadge">'+
+     ['المجاني','المجاني','Free'][L]+'</span></div>';
+    h+='<div class="m-hint">'+[
+     'كل ما تشوفه الحين مجاني للأبد. بلس يضيف إشعارات بلا حد ومواقع متعددة وأرشيفًا أعمق.',
+     'كل الميزات الحالية مجانية دائمًا؛ وبلس يضيف إشعارات بلا حد ومواقع متعددة وأرشيفًا أعمق.',
+     'Everything you see stays free forever. Plus adds unlimited alerts, multiple places and deeper archive.'
+    ][L]+'</div>';
+   }
+   h+='</div>';
+  }
+  return h;
+ }catch(e){ return ''; }
+}
+function wireSupport(){
+ var b=$("donateBtn");
+ if(b)b.onclick=function(){
+  try{ window.open(BILL.donateUrl,'_blank','noopener'); }catch(e){}
+ };
+}
 function renderSettings(){
  var h='';
  /* ★ تعليمات التثبيت على iOS أولًا لأنها الأهم هناك */
@@ -10191,6 +10296,7 @@ h+='</div><div class="m-card"><div class="m-sec">'+pick('الوضع السينم
  h+='<button class="danger" id="delBtn">'+pick('حذف حسابي وكل بياناتي','حذف الحساب وكل البيانات','Delete account & all data')+'</button>';
  h+='</div>';
  /* ★ عن نفاف والوثائق */
+ h+=supportCard();
  h+='<div class="m-grp">'+pick('عن نفاف','عن التطبيق','About')+'</div>';
  h+='<div class="m-card">';
  h+='<div class="m-link" id="lnkAbout"><span>'+pick('من نحن','من نحن','About us')+'</span><span class="m-arw">‹</span></div>';
@@ -10210,6 +10316,7 @@ h+='</div><div class="m-card"><div class="m-sec">'+pick('الوضع السينم
  var w=$("obWrap");
  if(w){w.className='obWrap on';TOUR_I=0;renderOnboard();}
  };
+ wireSupport();
  var db=$("delBtn"); if(db)db.onclick=deleteEverything;
  var bs=$("setBody").getElementsByTagName("button"),j;
  for(j=0;j<bs.length;j++)bs[j].onclick=function(){
@@ -10639,6 +10746,7 @@ function wireSecretPortal(){
 }
 setTimeout(function(){wireSecretPortal();},900);
 setTimeout(applyVisibility,1500);
+setTimeout(billingLoad,3500);
 /* ★★★ بيانات العالم تُجلب بالخلفية ★★★
    ⚠️ الخلل: worldLoad كانت تُستدعى فقط عند فتح تبويب «نافذة العالم»
       فتبقى WORLD فارغة وبطاقة «رصد العالم» لا تظهر إطلاقًا.

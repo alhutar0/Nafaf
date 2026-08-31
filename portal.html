@@ -282,6 +282,7 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
       <div class="navItem" data-p="sources"><span class="ni">📡</span>مصادر الطقس</div>
       <div class="navItem" data-p="fusion"><span class="ni">🧬</span>Rain Fusion</div>
       <div class="navItem" data-p="licensing"><span class="ni">⚖️</span>التراخيص</div>
+      <div class="navItem" data-p="billing"><span class="ni">💳</span>الاشتراكات</div>
 
       <div class="navGrp">التواصل</div>
       <div class="navItem" data-p="alerts"><span class="ni">🔔</span>التنبيهات</div>
@@ -536,6 +537,76 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
           <button class="btn gold" id="bAlSend" style="width:100%;margin-top:12px">🔔 إرسال الآن</button>
           <div class="note" style="margin-top:9px">
             ⚠️ يتجاوز السقف اليومي وساعات الصمت — استخدمه للضرورة فقط.
+          </div>
+        </div>
+      </section>
+
+
+      <!-- 💳 الاشتراكات -->
+      <section class="sec" data-s="billing">
+        <div class="pageHead">
+          <div class="pageTitle">الاشتراكات والدعم</div>
+          <div class="pageSub">نظام الربح — معطّل حتى تفعّله بنفسك</div>
+        </div>
+
+        <div class="card" style="border-color:rgba(220,120,90,.4)">
+          <h3>⚠️ قبل التفعيل<small>شرط قانوني لا يُتجاوز</small></h3>
+          <div class="note" style="line-height:2">
+            الخطة المجانية من <b>Open-Meteo للاستخدام غير التجاري فقط</b>.
+            أي تحصيل مالي — اشتراك أو تبرع مقابل ميزة — يجعل استخدامك تجاريًا
+            ويتطلب <b>اشتراكهم المدفوع</b> (يبدأ من نحو ٣٠ يورو شهريًا).
+            <br><br>
+            <b>التبرع الطوعي البحت</b> (بلا أي مقابل أو ميزة) أخف قانونيًا
+            لكنه يبقى منطقة رمادية — راجعه إن كبر حجمه.
+          </div>
+          <div class="rowSw" style="margin-top:12px">
+            <span>أقررتُ بترقية مصدر البيانات
+              <div class="rd">لا يمكن تفعيل «بلس» بدونه</div></span>
+            <span class="sw" id="swLicense"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>الدعم الطوعي<small>المرحلة الأولى — آمنة نسبيًا</small></h3>
+          <div class="rowSw">
+            <span>تفعيل زر «ادعم نفاف»
+              <div class="rd">تبرع اختياري بلا مقابل</div></span>
+            <span class="sw" id="swDonate"></span>
+          </div>
+          <label class="lbl" style="margin-top:12px">رابط الدعم</label>
+          <input class="inp" id="donateUrl" placeholder="https://buymeacoffee.com/..." />
+          <div class="note" style="margin-top:8px">
+            أنشئ حسابًا في Buy Me a Coffee أو Ko-fi وألصق الرابط هنا.
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>نفاف بلس<small>المرحلة الثانية — بعد ٥٠٠٠ مستخدم</small></h3>
+          <div class="rowSw">
+            <span>تفعيل الاشتراك المدفوع
+              <div class="rd">يتطلب إقرار ترقية البيانات أعلاه</div></span>
+            <span class="sw" id="swPlus"></span>
+          </div>
+          <div class="grid2" style="margin-top:12px">
+            <div><label class="lbl">السعر السنوي</label>
+              <input class="inp" id="priceYear" type="number" step="0.1" /></div>
+            <div><label class="lbl">العملة</label>
+              <input class="inp" id="currency" placeholder="OMR" /></div>
+          </div>
+          <h3 style="margin-top:18px">حدود المجاني<small>تُطبَّق عند تفعيل بلس فقط</small></h3>
+          <div id="limitList"></div>
+        </div>
+
+        <div class="card">
+          <h3>المشتركون<small id="subCount"></small></h3>
+          <div id="subList"><div class="empty">لا مشتركين.</div></div>
+          <div style="display:flex;gap:7px;margin-top:12px">
+            <input class="inp" id="grantVid" placeholder="معرّف الزائر" style="flex:2" />
+            <input class="inp" id="grantMonths" type="number" value="12" style="flex:1" />
+            <button class="btn gold" id="bGrant">منح</button>
+          </div>
+          <div class="note" style="margin-top:8px">
+            لمنح اشتراك يدويًا لمن يدفع بتحويل مباشر قبل ربط بوابة دفع.
           </div>
         </div>
       </section>
@@ -819,6 +890,7 @@ function goPage(p){
  if(p==='news')loadNews();
  if(p==='fusion')renderFusion();
  if(p==='licensing')renderLicensing();
+ if(p==='billing')renderBilling();
   if(p==='analytics')loadAnalytics();
   if(p==='health')runHealth();
   if(p==='versions')loadVersions();
@@ -1418,6 +1490,98 @@ $('bAlSend').onclick=function(){
   toast('أُرسل إلى '+(r.sent||0)+' مشترك');
   $('mTitle').value='';$('mBody').value='';
   loadAlerts();
+ });
+};
+
+/* ═══════ الاشتراكات ═══════ */
+var LIMIT_NAMES={
+ notifPerDay:['الإشعارات يوميًا','صفر = بلا حد'],
+ savedPlaces:['المواقع المحفوظة','عدد المواقع'],
+ askPerDay:['أسئلة اسأل نفاف','صفر = بلا حد'],
+ archiveYears:['سنوات الأرشيف','عمق البيانات التاريخية']
+};
+function renderBilling(){
+ if(!DRAFT)return;
+ if(!DRAFT.billing)DRAFT.billing={enabled:false,dataLicenseOk:false,donateOn:false,
+   donateUrl:'',plusOn:false,priceYear:9.9,currency:'OMR',
+   freeLimits:{notifPerDay:3,savedPlaces:1,askPerDay:20,archiveYears:1},
+   plusLimits:{notifPerDay:0,savedPlaces:10,askPerDay:0,archiveYears:10}};
+ var b=DRAFT.billing;
+ $('swLicense').className='sw'+(b.dataLicenseOk?' on':'');
+ $('swDonate').className='sw'+(b.donateOn?' on':'');
+ $('swPlus').className='sw'+(b.plusOn?' on':'');
+ $('donateUrl').value=b.donateUrl||'';
+ $('priceYear').value=b.priceYear||9.9;
+ $('currency').value=b.currency||'OMR';
+ var fl=b.freeLimits||{}, h='';
+ for(var k in LIMIT_NAMES){
+  h+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;'+
+   'border-bottom:1px solid rgba(255,255,255,.06)">'+
+   '<span style="flex:1;font-size:12.5px;font-weight:700">'+LIMIT_NAMES[k][0]+
+   '<div class="rd" style="font-size:10px;color:#6b7789">'+LIMIT_NAMES[k][1]+'</div></span>'+
+   '<input class="inp" type="number" data-lim="'+k+'" value="'+(fl[k]!=null?fl[k]:0)+
+   '" style="width:80px;text-align:center" /></div>';
+ }
+ $('limitList').innerHTML=h;
+ var ins=$('limitList').querySelectorAll('[data-lim]');
+ for(var i=0;i<ins.length;i++)ins[i].onchange=function(){
+  DRAFT.billing.freeLimits[this.getAttribute('data-lim')]=parseInt(this.value||0,10);
+  markDirty();
+ };
+ loadSubs();
+}
+$('swLicense').onclick=function(){
+ DRAFT.billing.dataLicenseOk=!DRAFT.billing.dataLicenseOk;
+ if(!DRAFT.billing.dataLicenseOk){DRAFT.billing.plusOn=false;DRAFT.billing.enabled=false;}
+ markDirty();renderBilling();
+};
+$('swDonate').onclick=function(){
+ DRAFT.billing.donateOn=!DRAFT.billing.donateOn;
+ DRAFT.billing.enabled=DRAFT.billing.donateOn||DRAFT.billing.plusOn;
+ markDirty();renderBilling();
+};
+$('swPlus').onclick=function(){
+ if(!DRAFT.billing.plusOn){
+  if(!DRAFT.billing.dataLicenseOk){
+   toast('فعّل إقرار ترقية البيانات أولًا',true);return;}
+  if(!confirm('تفعيل الاشتراك المدفوع؟ تأكّد أنك رقّيت Open-Meteo للخطة التجارية.'))return;
+ }
+ DRAFT.billing.plusOn=!DRAFT.billing.plusOn;
+ DRAFT.billing.enabled=DRAFT.billing.donateOn||DRAFT.billing.plusOn;
+ markDirty();renderBilling();
+};
+$('donateUrl').onchange=function(){DRAFT.billing.donateUrl=this.value.trim();markDirty();};
+$('priceYear').onchange=function(){DRAFT.billing.priceYear=parseFloat(this.value||9.9);markDirty();};
+$('currency').onchange=function(){DRAFT.billing.currency=this.value.trim()||'OMR';markDirty();};
+
+function loadSubs(){
+ get('/admin/billing/list').then(function(r){
+  var subs=(r&&r.subs)||[];
+  $('subCount').innerHTML=subs.length?(r.active+' نشط من '+subs.length):'';
+  if(!subs.length){$('subList').innerHTML='<div class="empty">لا مشتركين.</div>';return;}
+  $('subList').innerHTML=subs.map(function(x){
+   return '<div class="tRow"><span class="tag '+(x.active?'tOk':'tOff')+'">'+
+    (x.active?'نشط':'منتهٍ')+'</span>'+
+    '<span style="font-size:11px;font-family:monospace">'+esc(x.vid.slice(0,14))+'</span>'+
+    '<span style="font-size:10.5px;color:#8b98ab;margin-inline-start:auto">'+
+    new Date(x.until).toLocaleDateString('ar')+'</span>'+
+    '<button class="btn red" style="padding:5px 10px" data-rev="'+esc(x.vid)+'">سحب</button></div>';
+  }).join('');
+  var rv=$('subList').querySelectorAll('[data-rev]');
+  for(var i=0;i<rv.length;i++)rv[i].onclick=function(){
+   if(!confirm('سحب الاشتراك؟'))return;
+   api('/admin/billing/revoke',{vid:this.getAttribute('data-rev')})
+    .then(function(){toast('سُحب');loadSubs();});
+  };
+ });
+}
+$('bGrant').onclick=function(){
+ var vid=$('grantVid').value.trim();
+ if(!vid){toast('أدخل معرّف الزائر',true);return;}
+ var m=parseInt($('grantMonths').value||12,10);
+ api('/admin/billing/grant',{vid:vid,months:m}).then(function(r){
+  if(r.error){toast('فشل: '+r.error,true);return;}
+  toast('مُنح '+m+' شهرًا');$('grantVid').value='';loadSubs();
  });
 };
 
