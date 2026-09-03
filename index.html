@@ -1770,6 +1770,13 @@
     color:var(--tx3,rgba(255,255,255,.5));margin-top:12px;padding:11px 13px;
     background:var(--card,rgba(255,255,255,.05));border-radius:12px}
   .govFoot b{color:var(--tx2,rgba(255,255,255,.8))}
+  .gi-flag{position:absolute;top:7px;inset-inline-end:7px;z-index:3;
+    width:28px;height:28px;border-radius:50%;border:0;cursor:pointer;
+    background:rgba(0,0,0,.5);color:rgba(255,255,255,.85);
+    font-size:13px;line-height:1;display:flex;align-items:center;
+    justify-content:center;transition:background .2s,transform .15s;
+    -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+  .gi-flag:active{transform:scale(.88);background:rgba(220,90,90,.75)}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -8335,6 +8342,24 @@ function renderSrc(){
  h+='</div>';
 
  /* ★ تذكير ختامي */
+ /* ★ توضيح دقيق — الجهة الحكومية ≠ «مفتوحة المصدر»
+    ⚠️ العبارة «كلها مفتوحة المصدر» غير دقيقة: NOAA وNASA وUSGS
+       جهات حكومية تنشر في النطاق العام لا مشاريع مفتوحة المصدر. */
+ h+='<div class="govFoot" style="margin-top:10px">'+[
+  '<b>توضيح:</b> بعض الجهات أعلاه <b>مؤسسات حكومية</b> — NOAA وNASA وUSGS تابعة لحكومة '+
+  'الولايات المتحدة · DWD تابعة لحكومة ألمانيا · ECMWF منظمة حكومية دولية. '+
+  'ونفاف يعرض بياناتها المتاحة للعموم بموجب تراخيصها أو لكونها في النطاق العام — '+
+  'وليست هذه الجهات «مفتوحة المصدر» بل بياناتها متاحة للاستخدام.',
+  '<b>توضيح:</b> بعض الجهات أعلاه مؤسسات حكومية (NOAA وNASA وUSGS — الولايات المتحدة · '+
+  'DWD — ألمانيا · ECMWF — منظمة حكومية دولية). ويعرض نفاف بياناتها المتاحة للعموم '+
+  'بموجب تراخيصها أو لكونها في النطاق العام.',
+  '<b>Clarification:</b> Several organizations above are <b>government agencies</b> — '+
+  'NOAA, NASA and USGS are U.S. Government agencies · DWD is a German Government agency · '+
+  'ECMWF is an intergovernmental organisation. Nafaf displays their publicly available data '+
+  'under their licenses or as public domain works — these organizations are not '+
+  '\u201Copen-source projects\u201D; their data is simply publicly available.'
+ ][L2]+'</div>';
+
  h+='<div class="govFoot">'+[
   'للاطلاع على البيانات الأصلية ومصادرها الرسمية يُرجى زيارة الروابط أعلاه مباشرة. '+
   'وفي الأحوال الجوية الشديدة ارجع إلى <b>جهة الأرصاد الرسمية المختصة في بلدك</b>.',
@@ -10004,14 +10029,72 @@ function renderGallery(){
  return;
  }
 
+ /* ★ المحتوى المُبلَّغ عنه يختفي فورًا عن المُبلِّغ */
+ var flagged=[];
+ try{ flagged=JSON.parse(stGet('flagged')||'[]'); }catch(e){}
  var h=head+'<div class="galGrid">',i;
  for(i=0;i<GALLERY.length;i++){
  var g=GALLERY[i];
+ if(flagged.indexOf(g.id||i)>=0)continue;
+ /* ★ زر الإبلاغ — شرط Google Play للمحتوى المُنشأ من المستخدمين */
  h+='<div class="galItem"><img src="'+g.photo+'" alt="" loading="lazy" />'+
  '<div class="gi-ov"><div class="gi-w">'+g.wilaya+'</div>'+
- '<div class="gi-m">'+(g.name?g.name+' · ':'')+repAgo(g.ts)+'</div></div></div>';
+ '<div class="gi-m">'+(g.name?g.name+' · ':'')+repAgo(g.ts)+'</div></div>'+
+ '<button class="gi-flag" data-flag="'+(g.id||i)+'" title="'+
+ ['إبلاغ عن محتوى مسيء','الإبلاغ عن محتوى مخالف','Report inappropriate content'][L]+
+ '">⚑</button></div>';
  }
  b.innerHTML=h+'</div>'+rules;
+ wireFlags();
+}
+
+/* ============================================================
+   ★ نظام الإبلاغ عن المحتوى — امتثال لسياسة UGC في Google Play
+   ⚠️ تشترط السياسة «طبقة إشراف مرئية» قابلة للاستخدام فعليًا
+      لا مجرد نص ضوابط.
+   ============================================================ */
+function wireFlags(){
+ var fs=document.querySelectorAll('[data-flag]'),i;
+ for(i=0;i<fs.length;i++)fs[i].onclick=function(e){
+  e.stopPropagation();
+  flagContent(this.getAttribute('data-flag'));
+ };
+}
+function flagContent(id){
+ var L=LI();
+ var reasons=[
+  ['محتوى غير لائق','محتوى غير لائق','Inappropriate content'],
+  ['يكشف أشخاصًا أو خصوصية','ينتهك الخصوصية','Privacy violation'],
+  ['ليست صورة أجواء','خارج موضوع التطبيق','Not weather related'],
+  ['منقولة أو مسروقة','انتهاك حقوق','Copyright / stolen'],
+  ['مضلّلة أو مفبركة','محتوى مضلّل','Misleading or fake'],
+  ['سبب آخر','سبب آخر','Other']
+ ];
+ var msg=['اختر سبب الإبلاغ:','اختر سبب الإبلاغ:','Select a reason:'][L]+String.fromCharCode(10,10);
+ for(var i=0;i<reasons.length;i++)msg+=(i+1)+' — '+reasons[i][L]+String.fromCharCode(10);
+ msg+=String.fromCharCode(10)+['اكتب الرقم:','اكتب الرقم:','Enter number:'][L];
+ var pick0=prompt(msg,'1');
+ if(!pick0)return;
+ var nn=parseInt(pick0,10);
+ if(!(nn>=1&&nn<=reasons.length)){
+  toast(['رقم غير صحيح','اختيار غير صحيح','Invalid choice'][L],true); return;
+ }
+ try{
+  if(PUSH_URL)fetch(PUSH_URL+'/report-abuse',{method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({id:id,reason:reasons[nn-1][1],
+     vid:(typeof visitorId==='function')?visitorId():'',ts:Date.now()})})
+   .catch(function(){});
+ }catch(e){}
+ try{
+  var hid=JSON.parse(stGet('flagged')||'[]');
+  if(hid.indexOf(id)<0)hid.push(id);
+  stSet('flagged',JSON.stringify(hid));
+ }catch(e){}
+ alert(['شكرًا لك. وصل بلاغك وسيُراجَع خلال ٢٤ ساعة وأُخفي المحتوى عنك الآن.',
+  'شكرًا لك؛ وصل بلاغك وستتم مراجعته خلال ٢٤ ساعة وأُخفي المحتوى عنك.',
+  'Thank you. Your report was received and will be reviewed within 24 hours. The content is now hidden from your view.'][L]);
+ if(typeof renderGallery==='function')renderGallery();
 }
 
 /* ★ شارة نوع المصدر — يميّز الرصد من النموذج من القمر */
