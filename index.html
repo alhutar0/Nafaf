@@ -1754,6 +1754,22 @@
     background:rgba(127,140,160,.16);color:var(--tx2,rgba(255,255,255,.75))}
   .planBadge.on{background:linear-gradient(135deg,#e6b45e,#cf9a3a);color:#2c1f08}
   .planTx{font-size:11px;font-weight:600;color:var(--tx3,rgba(255,255,255,.5))}
+  /* ★ إخلاء المسؤولية الحكومي */
+  .govNotice{display:flex;align-items:flex-start;gap:10px;
+    background:rgba(255,180,94,.1);border:1px solid rgba(255,180,94,.3);
+    border-radius:14px;padding:13px 15px;margin-top:10px}
+  .gn-ic{font-size:15px;flex:0 0 auto;line-height:1.6}
+  .gn-tx{font-size:11.5px;font-weight:600;line-height:1.95;
+    color:var(--tx2,rgba(255,255,255,.82))}
+  .gn-tx b{color:#ffb45e}
+  .govTag{font-size:8.5px;font-weight:800;background:rgba(159,212,245,.18);
+    color:#9fd4f5;border-radius:99px;padding:2px 8px;margin-inline-start:6px}
+  .srcUrl{font-size:9px;color:var(--tx3,rgba(255,255,255,.38));
+    direction:ltr;display:inline-block;margin-top:2px}
+  .govFoot{font-size:10.5px;font-weight:600;line-height:1.9;
+    color:var(--tx3,rgba(255,255,255,.5));margin-top:12px;padding:11px 13px;
+    background:var(--card,rgba(255,255,255,.05));border-radius:12px}
+  .govFoot b{color:var(--tx2,rgba(255,255,255,.8))}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -6756,7 +6772,8 @@ var NAFAF_ABOUT={
  'مشروع <b>ثقافي تعليمي</b> يحفظ معرفة أهل الجزيرة بالسماء ويقدّمها بلسانهم: التقويم النجمي وأسماء المواسم والأرشيف المناخي وعلوم الجو. '+
  'ويعرض إلى جانب ذلك <b>تحليل نماذج جوية عالمية مفتوحة</b> ليضع المعرفة في سياق اليوم الذي تعيشه.<br><br>'+
  '<b>ما ليس نفاف؟</b><br>'+
- 'نفاف <b>ليس جهة أرصاد</b> ولا يُنتج بيانات أرصاد ولا يملك محطات رصد ولا رادارًا. '+
+ 'نفاف <b>تطبيق مستقل تمامًا</b> لا يمثّل أي جهة حكومية أو رسمية ولا ينتمي إليها '+
+ 'ولا يدّعي أي صفة رسمية. وهو <b>ليس جهة أرصاد</b>: لا يُنتج بيانات أرصاد ولا يملك محطات رصد ولا رادارًا. '+
  'ولا يصدر تحذيرات ولا إنذارات ولا توجيهات سلامة. '+
  'والمصدر المعتمد الوحيد في الأحوال الجوية الشديدة هو <b>جهة الأرصاد الرسمية المختصة في بلدك</b>.<br><br>'+
  '<b>ما الذي يميّزه؟</b><br>'+
@@ -6774,13 +6791,13 @@ var NAFAF_ABOUT={
  '• <b>خصوصيتك لك</b> — بياناتك في جهازك لا عندنا',
 
  '<b>نفاف</b> كلمة خليجية تعني المطر الخفيف. مشروع <b>ثقافي تعليمي</b> يحفظ معرفة أهل الجزيرة بالسماء ويعرض معها تحليل نماذج جوية مفتوحة.<br><br>'+
- '<b>ما ليس نفاف:</b> ليس جهة أرصاد ولا يُنتج بيانات أرصاد ولا يملك محطات رصد ولا يصدر تحذيرات. والمصدر المعتمد هو جهة الأرصاد الرسمية في بلدك.<br><br>'+
+ '<b>ما ليس نفاف:</b> تطبيق مستقل لا يمثّل أي جهة حكومية أو رسمية ولا ينتمي إليها. وليس جهة أرصاد: لا يُنتج بيانات أرصاد ولا يملك محطات رصد ولا يصدر تحذيرات. والمصدر المعتمد هو جهة الأرصاد الرسمية في بلدك.<br><br>'+
  '<b>المميزات:</b> التقويم النجمي العربي · مكتبة علمية · أرشيف مناخي موثّق · ثلاث لغات · تحليل نماذج مفتوحة · رصد مجتمعي.<br><br>'+
  '<b>الجهة:</b> مشروع فردي مستقل غير رسمي يعتمد على بيانات مفتوحة مجانية.<br><br>'+
  '<b>قيمنا:</b> الصدق في المصادر · حدود واضحة لا نتجاوزها · احترام الخصوصية.',
 
  '<b>Nafaf</b> is a Gulf word for light rain. A <b>cultural and educational</b> project preserving Arabian sky knowledge, presented alongside analysis from open global weather models.<br><br>'+
- '<b>What Nafaf is not:</b> Not a meteorological authority. It produces no meteorological data, owns no observation stations, and issues no warnings. The authoritative source is your national meteorological service.<br><br>'+
+ '<b>What Nafaf is not:</b> An entirely independent app — not affiliated with, endorsed by, or representing any government agency. Not a meteorological authority: it produces no meteorological data, owns no observation stations, and issues no warnings. The authoritative source is your national meteorological service.<br><br>'+
  '<b>Features:</b> Arabian star calendar · Science library · Documented climate archive · Three languages · Open model analysis · Community observation.<br><br>'+
  '<b>Who:</b> An independent project — not a company or official body. Self-funded, built on free open data.<br><br>'+
  '<b>Values:</b> Honesty over spectacle · Clear limits · Your privacy stays yours.'
@@ -8225,31 +8242,108 @@ var MODEL_DEFS=[
 function renderSrc(){
  var L=LI(),h='<div class="sec-t">'+pick('المصادر العالمية','المصادر العالمية','Global sources')+'</div>'+
  '<div class="sec-s">'+pick('أرقام حقيقية من نماذج التنبؤ العالمية لهذا الموقع','أرقام من نماذج التنبؤ العالمية','Real numbers from global models')+'</div>';
- if(!MODELS||!MODELS.length){h+='<div class="loading">'+pick('نجيب النماذج…','جارٍ الجلب…','Loading…')+'</div>';$("srcBody").innerHTML=h;return;}
+ /* ★★★ الإسناد يجب أن يظهر دائمًا ★★★
+    ⚠️ الخلل المُصلح: كانت الدالة تتوقف هنا إن لم تصل النماذج
+       فيختفي قسم إسناد المصادر وإخلاء المسؤولية الحكومي بالكامل —
+       وهذا ما يفحصه مراجع Google Play تحديدًا. */
+ var modelsReady=!!(MODELS&&MODELS.length);
+ if(!modelsReady){
+  h+='<div class="loading">'+pick('نجيب النماذج…','جارٍ الجلب…','Loading…')+'</div>';
+ } else {
  h+='<div class="sec-s">'+pick('أعلى حرارة اليوم حسب كل نموذج:','أعلى حرارة اليوم لكل نموذج:',"Today's high per model:")+'</div>';
  for(var i=0;i<MODELS.length;i++){var m=MODELS[i];
  h+='<div class="mrow"><span class="mn">'+m.d.nm+'<small>'+m.d.sub[L]+'</small></span>'+
  '<span class="mv">'+tconv(m.t)+'°'+(m.p!=null?' <small>'+m.p.toFixed(1)+'mm</small>':'')+'</span></div>';}
  if(MODEL_NOTE)h+=smart(pick('خلاصة نفاف','الخلاصة','Summary'),MODEL_NOTE);
- /* ★ إسناد مصادر البيانات — التزام بشروط التراخيص */
- h+='<div class="sec-t" style="margin-top:20px">'+
-  pick('إسناد المصادر','إسناد المصادر','Attribution')+'</div>';
- h+='<div class="attrBox">'+
-  '<div class="atr"><b>'+pick('الطقس','الطقس','Weather')+'</b>'+
-   '<a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>'+
-   '<small>CC BY 4.0 · ECMWF · GFS · ICON</small></div>'+
-  '<div class="atr"><b>'+pick('أسماء الأماكن','أسماء الأماكن','Place names')+'</b>'+
-   '<a href="https://openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'+
-   '<small>© '+pick('مساهمو OpenStreetMap · ODbL',
-     'مساهمو OpenStreetMap · ODbL','OpenStreetMap contributors · ODbL')+'</small></div>'+
-  '<div class="atr"><b>'+pick('صور الأقمار','صور الأقمار','Satellite')+'</b>'+
-   '<a href="https://earthdata.nasa.gov" target="_blank" rel="noopener">NASA GIBS</a>'+
-   '<small>'+pick('ناسا لا تؤيد هذا التطبيق','ناسا لا تؤيد هذا التطبيق',
-     'NASA does not endorse this app')+'</small></div>'+
-  '<div class="atr"><b>'+pick('الزلازل','الزلازل','Earthquakes')+'</b>'+
-   '<a href="https://earthquake.usgs.gov" target="_blank" rel="noopener">USGS</a>'+
-   '<small>'+pick('نطاق عام','نطاق عام','Public domain')+'</small></div>'+
- '</div>';
+ }
+ /* ============================================================
+    ★ إسناد المصادر — امتثال لسياسة الادّعاءات المضلِّلة (Google Play)
+    ⚠️ تشترط السياسة على أي تطبيق يعرض بيانات من جهات حكومية:
+       ١ · روابط مباشرة وفعّالة للمصادر الأصلية
+       ٢ · إخلاء مسؤولية صريح بعدم تمثيل أي جهة حكومية
+    ============================================================ */
+ var L2=LI();
+ h+='<div class="sec-t" style="margin-top:22px">'+
+  ['مصادر البيانات','مصادر البيانات','Data sources'][L2]+'</div>';
+
+ /* ★ إخلاء المسؤولية أولًا — قبل أسماء الجهات */
+ h+='<div class="govNotice">'+
+  '<span class="gn-ic">⚠️</span><span class="gn-tx">'+[
+   'نفاف تطبيق <b>مستقل تمامًا</b> ولا يمثّل أي جهة حكومية أو رسمية ولا ينتمي إليها. '+
+   'والجهات المذكورة أدناه <b>لا تُصادق على نفاف ولا ترتبط به</b> بأي شكل. '+
+   'يعرض نفاف بياناتها المفتوحة المتاحة للعموم فقط مع الإسناد الكامل.',
+   'نفاف تطبيق <b>مستقل تمامًا</b> ولا يمثّل أي جهة حكومية أو رسمية ولا ينتمي إليها؛ '+
+   'والجهات المذكورة أدناه <b>لا تصادق عليه ولا ترتبط به</b>. '+
+   'ويعرض بياناتها المفتوحة المتاحة للعموم مع الإسناد الكامل.',
+   'Nafaf is an <b>entirely independent</b> application. It is not affiliated with, '+
+   'endorsed by, or representing any government agency. The organizations listed below '+
+   '<b>do not endorse Nafaf</b>. It displays only their publicly available open data with full attribution.'
+  ][L2]+'</span></div>';
+
+ h+='<div class="sec-s" style="margin-top:14px">'+
+  ['اضغط أي مصدر لزيارة موقعه الرسمي مباشرة:',
+   'اضغط أي مصدر لزيارة موقعه الرسمي:',
+   'Tap any source to visit its official site:'][L2]+'</div>';
+
+ /* ★ كل مصدر برابطه الرسمي الفعّال */
+ var SRCS=[
+  {n:'Open-Meteo', u:'https://open-meteo.com',
+   t:['الطقس','الطقس','Weather'],
+   d:['واجهة تجميعية · CC BY 4.0','واجهة تجميعية · CC BY 4.0','Aggregator · CC BY 4.0'], gov:false},
+  {n:'ECMWF', u:'https://www.ecmwf.int',
+   t:['نموذج أوروبي','نموذج أوروبي','European model'],
+   d:['المركز الأوروبي للتنبؤات متوسطة المدى · CC BY 4.0',
+      'المركز الأوروبي للتنبؤات متوسطة المدى · CC BY 4.0',
+      'European Centre for Medium-Range Weather Forecasts · CC BY 4.0'], gov:true},
+  {n:'NOAA', u:'https://www.noaa.gov',
+   t:['نموذج GFS','نموذج GFS','GFS model'],
+   d:['الإدارة الوطنية للمحيطات والغلاف الجوي — حكومة الولايات المتحدة · نطاق عام',
+      'الإدارة الوطنية للمحيطات والغلاف الجوي (الولايات المتحدة) · نطاق عام',
+      'National Oceanic and Atmospheric Administration — U.S. Government · Public domain'], gov:true},
+  {n:'DWD', u:'https://www.dwd.de',
+   t:['نموذج ICON','نموذج ICON','ICON model'],
+   d:['الخدمة الجوية الألمانية — حكومة ألمانيا · بيانات مفتوحة',
+      'الخدمة الجوية الألمانية (ألمانيا) · بيانات مفتوحة',
+      'German Weather Service — German Government · Open data'], gov:true},
+  {n:'NASA', u:'https://www.nasa.gov',
+   t:['صور الأقمار','صور الأقمار','Satellite imagery'],
+   d:['الإدارة الوطنية للطيران والفضاء — حكومة الولايات المتحدة · ناسا لا تؤيد هذا التطبيق',
+      'الإدارة الوطنية للطيران والفضاء (الولايات المتحدة) · ناسا لا تؤيد هذا التطبيق',
+      'National Aeronautics and Space Administration — U.S. Government · NASA does not endorse this app'], gov:true},
+  {n:'USGS', u:'https://www.usgs.gov',
+   t:['الزلازل','الزلازل','Earthquakes'],
+   d:['هيئة المسح الجيولوجي الأمريكية — حكومة الولايات المتحدة · نطاق عام',
+      'هيئة المسح الجيولوجي الأمريكية (الولايات المتحدة) · نطاق عام',
+      'United States Geological Survey — U.S. Government · Public domain'], gov:true},
+  {n:'OpenStreetMap', u:'https://www.openstreetmap.org/copyright',
+   t:['أسماء الأماكن','أسماء الأماكن','Place names'],
+   d:['© مساهمو OpenStreetMap · ODbL','© مساهمو OpenStreetMap · ODbL',
+      '© OpenStreetMap contributors · ODbL'], gov:false}
+ ];
+
+ h+='<div class="attrBox">';
+ for(var si=0;si<SRCS.length;si++){
+  var S=SRCS[si];
+  h+='<div class="atr">'+
+   '<b>'+S.t[L2]+'</b>'+
+   '<a href="'+S.u+'" target="_blank" rel="noopener noreferrer">'+S.n+' ↗</a>'+
+   (S.gov?'<span class="govTag">'+
+     ['جهة حكومية','جهة حكومية','Government'][L2]+'</span>':'')+
+   '<small>'+S.d[L2]+'<br><span class="srcUrl">'+S.u+'</span></small>'+
+  '</div>';
+ }
+ h+='</div>';
+
+ /* ★ تذكير ختامي */
+ h+='<div class="govFoot">'+[
+  'للاطلاع على البيانات الأصلية ومصادرها الرسمية يُرجى زيارة الروابط أعلاه مباشرة. '+
+  'وفي الأحوال الجوية الشديدة ارجع إلى <b>جهة الأرصاد الرسمية المختصة في بلدك</b>.',
+  'للاطلاع على البيانات الأصلية يُرجى زيارة الروابط أعلاه؛ وفي الأحوال الشديدة يُرجع إلى '+
+  '<b>جهة الأرصاد الرسمية المختصة في بلدك</b>.',
+  'To access original source data, please visit the official links above. For severe weather, '+
+  'consult the <b>official meteorological authority in your country</b>.'
+ ][L2]+'</div>';
+
  $("srcBody").innerHTML=h;}
 function fetchModels(lat,lon){
  var ids=MODEL_DEFS.map(function(m){return m.id;}).join(",");
