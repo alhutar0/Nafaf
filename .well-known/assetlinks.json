@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "online.nafaf.twa",
+      "sha256_cert_fingerprints": [
+        "68:2C:67:3E:A8:73:D6:F4:B9:5B:B2:08:68:AF:2F:8C:ED:8D:3E:44:41:6C:FD:C7:C7:CC:CD:E6:B6:71:81:C7",
+        "B2:6E:C5:FB:BF:53:9D:CC:EB:D0:39:FE:AC:78:CC:BA:65:77:82:74:E2:9F:AC:B2:BD:BB:E0:9D:88:16:C4:D6"
+      ]
+    }
+  }
+]
