@@ -6,7 +6,7 @@
       على حذف النسخة القديمة تلقائيًا دون أي إجراء من المستخدم.
    ============================================================ */
 
-var CACHE = 'nafaf-v3';   /* رُفع الرقم — يمسح كل ذاكرة v1 القديمة تلقائيًا */
+var CACHE = 'nafaf-v14';   /* رُفع الرقم — يمسح كل ذاكرة v1 القديمة تلقائيًا */
 
 self.addEventListener('install', function (e) {
   self.skipWaiting();   /* لا تنتظر إغلاق كل التبويبات — فعّل فورًا */
@@ -61,6 +61,31 @@ self.addEventListener('fetch', function (e) {
   );
 });
 
+/* ★ تحديث الودجت بطلب من التطبيق */
+self.addEventListener('message', function (e) {
+  var d = e.data || {};
+  if (d.type === 'nafaf-widget' && d.title) {
+    e.waitUntil(
+      self.registration.showNotification(d.title, {
+        body: d.body || '',
+        tag: 'nafaf-widget',
+        renotify: false,
+        silent: true,
+        requireInteraction: true,
+        dir: 'rtl', lang: 'ar',
+        badge: 'icons/icon-96.png',
+        icon: 'icons/icon-192.png',
+        data: { url: './', widget: true }
+      })
+    );
+  } else if (d.type === 'nafaf-widget-off') {
+    e.waitUntil(
+      self.registration.getNotifications({ tag: 'nafaf-widget' })
+        .then(function (ns) { ns.forEach(function (n) { n.close(); }); })
+    );
+  }
+});
+
 self.addEventListener('push', function (e) {
   var d = {};
   try { d = e.data.json(); } catch (x) { d = { title: 'نفاف', body: e.data ? e.data.text() : '' }; }
@@ -79,7 +104,10 @@ self.addEventListener('push', function (e) {
 });
 
 self.addEventListener('notificationclick', function (e) {
-  e.notification.close();
+  /* ★★★ ودجت نفاف — لا يُغلق بالنقر بل يفتح التطبيق ويبقى ★★★
+     ⚠️ الإشعار العادي يُغلق · الودجت يبقى مثبّتًا */
+  var isWidget = e.notification.tag === 'nafaf-widget';
+  if (!isWidget) e.notification.close();
   e.waitUntil(
     clients.matchAll({ type: 'window' }).then(function (cs) {
       for (var i = 0; i < cs.length; i++) {

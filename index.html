@@ -2,7 +2,9 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<style>html,body{background:#0E1830}</style>
 <meta name="theme-color" content="#141c2b" />
 <link rel="manifest" id="mf" href="manifest.json" />
 <meta name="description" content="نفاف — مشروع ثقافي تعليمي يحفظ معرفة أهل الجزيرة بالسماء: التقويم النجمي والمواسم وعلوم الجو وأرشيف مناخي موثّق بثلاث لغات مع تحليل نماذج جوية مفتوحة." />
@@ -1777,12 +1779,616 @@
     justify-content:center;transition:background .2s,transform .15s;
     -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
   .gi-flag:active{transform:scale(.88);background:rgba(220,90,90,.75)}
+  /* ★★★ السفر عبر الزمن باللمس ★★★ */
+  .pulseWrap{touch-action:pan-y;-webkit-user-select:none;user-select:none}
+  .pulseWrap.scrubbing{cursor:grabbing}
+  .pulseWrap.scrubbing .pgTemp,.pulseWrap.scrubbing .pgIcon{
+    transition:none!important}
+  .scrubBar{position:absolute;top:-2px;left:50%;
+    width:auto!important;height:auto!important;
+    min-width:0;max-width:none;inset-inline:auto;bottom:auto;right:auto;
+    transform:translateX(-50%) translateY(-6px) scale(.94);
+    z-index:8;opacity:0;pointer-events:none;white-space:nowrap;
+    background:rgba(10,17,30,.9);border:1px solid rgba(230,180,94,.3);
+    border-radius:99px;padding:5px 14px;text-align:center;
+    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+    box-shadow:0 6px 20px rgba(0,0,0,.4);
+    transition:opacity .22s,transform .22s cubic-bezier(.3,1.3,.5,1)}
+  .scrubBar.on{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+  .sb-row{display:flex;align-items:baseline;gap:8px;justify-content:center}
+  .sb-time{font-size:14px;font-weight:800;color:#fff;letter-spacing:.02em}
+  .sb-delta{font-size:10.5px;font-weight:800;color:#e6b45e}
+  .sb-meta{font-size:9.5px;font-weight:700;color:rgba(255,255,255,.58);
+    margin-top:1px;line-height:1.3}
+  .sb-meta:empty{display:none}
+  .scrubHint{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);
+    width:auto!important;height:auto!important;top:auto;right:auto;
+    z-index:7;font-size:11px;font-weight:700;white-space:nowrap;
+    background:rgba(230,180,94,.16);border:1px solid rgba(230,180,94,.32);
+    color:#f0d9a8;border-radius:99px;padding:5px 12px;font-size:10px;
+    transition:opacity .5s,transform .5s}
+  .anim .scrubHint{animation:shPulse 2.6s ease-in-out infinite}
+  @keyframes shPulse{0%,100%{transform:translateX(-50%) translateY(0)}
+    50%{transform:translateX(-50%) translateY(-4px)}}
+  .scrubHint.gone{opacity:0;transform:translateX(-50%) scale(.9)}
+  /* ★★★ رياضتي ★★★ */
+  body.fitActive .askFab,body.fitActive .fab,body.fitActive .evBtn,body.fitActive .fabTip,body.fitActive #fabTip{display:none!important}
+  #p-fit{padding-bottom:90px}
+
+  .fitWin{background:var(--card,rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.12);
+    border-radius:18px;padding:14px 15px;margin-bottom:11px}
+  .fw-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .fw-lbl{font-size:11.5px;font-weight:800;color:var(--tx3,rgba(255,255,255,.6))}
+  .fw-badge{font-size:11px;font-weight:800;color:#1a1204;border-radius:99px;padding:4px 11px}
+  .fw-best{font-size:13.5px;font-weight:700;color:var(--tx,#fff);margin:9px 0 11px;line-height:1.8}
+  .fw-best b{color:#e6b45e;font-size:15px}
+  .fw-strip{display:flex;gap:4px;align-items:flex-end}
+  .fw-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .fw-bar{width:100%;height:46px;display:flex;align-items:flex-end;
+    background:rgba(255,255,255,.05);border-radius:6px;overflow:hidden}
+  .fw-bar i{display:block;width:100%;border-radius:6px 6px 0 0}
+  .fw-h{font-size:9px;font-weight:700;color:var(--tx3,rgba(255,255,255,.5))}
+  .fw-col.best .fw-bar{outline:2px solid #e6b45e;outline-offset:1px}
+  .fw-col.best .fw-h{color:#e6b45e}
+  .fitCard{background:var(--card,rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.12);
+    border-radius:18px;padding:15px;margin-bottom:11px}
+  .fitCard.live{border-color:rgba(127,227,154,.4);box-shadow:0 0 0 1px rgba(127,227,154,.12) inset}
+  .fitCard.paused{border-color:rgba(230,180,94,.45)}
+  .fitTypes{display:flex;gap:8px;margin-bottom:12px}
+  .fitType{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+    padding:11px 4px;border-radius:14px;cursor:pointer;font-family:inherit;
+    font-size:12.5px;font-weight:800;color:var(--tx2,rgba(255,255,255,.8));
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+  .fitType span{font-size:24px;line-height:1}
+  .fitType.on{background:rgba(230,180,94,.18);border-color:#e6b45e;color:#fff}
+  .fitGo{width:100%;padding:15px;border:0;border-radius:16px;cursor:pointer;font-family:inherit;
+    font-size:15px;font-weight:800;color:#1a1204;
+    background:linear-gradient(135deg,#7fe39a,#4fc27a);box-shadow:0 8px 24px rgba(79,194,122,.35)}
+  .fitGo:active,.fitB:active,.fitType:active{transform:scale(.97)}
+  .fitNote{font-size:10.5px;font-weight:600;color:var(--tx3,rgba(255,255,255,.5));
+    margin-top:10px;line-height:1.8;text-align:center}
+  .fitHead{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    font-size:12.5px;font-weight:800;color:var(--tx2,rgba(255,255,255,.85));margin-bottom:6px}
+  .fitGps{font-size:10px;font-weight:800;border-radius:99px;padding:3px 9px;background:rgba(255,255,255,.1)}
+  .fitGps.good{background:rgba(127,227,154,.2);color:#7fe39a}
+  .fitGps.fair{background:rgba(230,211,94,.2);color:#e6d35e}
+  .fitGps.bad{background:rgba(255,122,92,.2);color:#ff7a5c}
+  .fitTime{font-size:50px;font-weight:800;text-align:center;color:#fff;
+    letter-spacing:.01em;font-variant-numeric:tabular-nums;margin:4px 0 8px}
+  .fitGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .fitGrid.four{grid-template-columns:repeat(4,1fr)}
+  .fitGrid>div{background:rgba(255,255,255,.05);border-radius:12px;padding:9px 4px;text-align:center}
+  .fitGrid b{display:block;font-size:17px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums}
+  .fitGrid small{font-size:9.5px;font-weight:700;color:var(--tx3,rgba(255,255,255,.55))}
+  .fitRoute{margin:10px 0 2px;min-height:10px}
+  .fitSvg{width:100%;height:auto;display:block;background:rgba(0,0,0,.18);border-radius:12px}
+  .fitElev{width:100%;height:auto;display:block;margin-top:6px}
+  .fitElevLbl{display:flex;justify-content:space-between;font-size:9px;font-weight:700;
+    color:var(--tx3,rgba(255,255,255,.5));margin-bottom:8px}
+  .fitBtns{display:flex;gap:8px;margin-top:10px}
+  .fitB{flex:1;padding:13px;border-radius:14px;cursor:pointer;font-family:inherit;
+    font-size:14px;font-weight:800;color:#fff;background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.18)}
+  .fitB.stop{background:#e0405a;border-color:#e0405a}
+  .fitList{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+  .fitRow{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
+    color:var(--tx2,rgba(255,255,255,.82));padding:7px 9px;border-radius:10px;background:rgba(255,255,255,.04)}
+  .fr-d{color:var(--tx3,rgba(255,255,255,.5));min-width:38px}
+  .fr-v{flex:1;text-align:center;font-variant-numeric:tabular-nums}
+  .fitLink{margin-top:10px;background:none;border:0;color:#ff7a5c;font-family:inherit;
+    font-size:11px;font-weight:800;cursor:pointer;width:100%}
+  .fitProf{display:flex;gap:10px}
+  .fitProf label{flex:1;font-size:11px;font-weight:700;color:var(--tx3,rgba(255,255,255,.6))}
+  .fitProf input{display:block;width:100%;margin-top:5px;padding:10px;border-radius:11px;
+    border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);
+    color:#fff;font-family:inherit;font-size:15px;font-weight:700;box-sizing:border-box}
+  .fitDisc{font-size:10px;font-weight:600;color:var(--tx3,rgba(255,255,255,.42));
+    text-align:center;line-height:1.8;margin:6px 8px 16px}
+  .fitPill{position:fixed;top:10px;left:50%;transform:translateX(-50%) translateY(-80px);
+    z-index:60;border:0;border-radius:99px;padding:8px 16px;cursor:pointer;font-family:inherit;
+    font-size:12.5px;font-weight:800;color:#0f2416;background:#7fe39a;
+    box-shadow:0 6px 20px rgba(0,0,0,.35);font-variant-numeric:tabular-nums;
+    transition:transform .3s cubic-bezier(.3,1.3,.5,1)}
+  .fitPill.on{transform:translateX(-50%) translateY(0)}
+  .fitPill.paused{background:#e6b45e}
+  body.th-light .fitTime,body.th-light .fitGrid b{color:#1b2c47}
+/* ════════════ ★★★ نفاف ٢ — التصميم الجديد ★★★ ════════════ */
+body.v2,body.v2.th-light,body.v2.th-mid{
+  --bg1:#0E1830;--bg2:#12203c;--bg3:#16294a;
+  --card:rgba(255,255,255,.085);--cardBd:rgba(255,255,255,.16);
+  --tx:#F2F4F7;--tx2:rgba(242,244,247,.78);--tx3:rgba(169,184,204,.9);
+  --gold:#E3A94B;--sheet:#12203c;--sheetTx:#F2F4F7;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,"Noto Sans Arabic",Arial,sans-serif;
+  background:#0E1830!important;padding:0 12px 0}
+body.v2 #skyScene,body.v2 .tabs{display:none!important}
+#v2Sky,.v2hz,.v2veil,.v2dock,.v2more,.v2moreBack{display:none}
+body.v2 #v2Sky{display:block;position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+body.v2 .v2hz{display:flex;flex-direction:column;position:fixed;left:0;right:0;top:54vh;bottom:0;z-index:0;
+  pointer-events:none;color:#16304f;transform:translate3d(var(--v2px,0px),0,0);transition:color 1.8s ease}
+.v2hz svg{width:112%;height:10vh;margin-left:-6%;display:block;flex:0 0 auto}
+.v2ground{flex:1;background:currentColor;margin-top:-1px}
+body.v2 .v2veil{display:block;position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(14,24,48,.12) 0%,rgba(14,24,48,.18) 40%,rgba(14,24,48,.45) 66%,rgba(14,24,48,.86) 100%)}
+body.v2 .wrap{z-index:1;padding:calc(10px + env(safe-area-inset-top,0px)) 4px 132px}
+body.v2 .foot{color:var(--tx3);opacity:.7}
+
+/* الرأس */
+body.v2 .wm-en,body.v2 .wm-sep{display:none}
+body.v2 .wm-ar{font-family:inherit;font-weight:700;font-size:27px;color:#F2F4F7;letter-spacing:0}
+body.v2 .gearbtn{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.085);
+  border:1px solid rgba(255,255,255,.16);color:#F2F4F7;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+body.v2 .locbar{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:18px;
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+body.v2 .lbtn.gold{background:#E3A94B;color:#241703;border-color:#E3A94B}
+
+/* ★ عائلات البطاقات — تنويع مقصود بدل قالب موحّد */
+/* ١ · بيانات: داكنة ثابتة تقرأ بوضوح */
+body.v2 .card,body.v2 .smart,body.v2 .b2,body.v2 .hitem,body.v2 .m-card,body.v2 .qk,body.v2 .attrBox,
+body.v2 .fitCard,body.v2 .srcBanner,body.v2 .trustCard,body.v2 .daySum{
+  background:rgba(11,19,38,.64)!important;border:1px solid rgba(255,255,255,.1)!important;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 8px 26px rgba(3,8,20,.3)}
+/* ٢ · زجاج خفيف: ما يلامس السماء */
+body.v2 .h6,body.v2 .pgSide,body.v2 .glance,body.v2 .wwCard,body.v2 .pgTimeBox,body.v2 .pgRangeBox{
+  background:rgba(255,255,255,.09)!important;border:1px solid rgba(255,255,255,.18)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3)}
+/* ٣ · نحاسي: صوت نفاف والتنبيهات */
+body.v2 .nafaf,body.v2 .watchCard,body.v2 .pillCard,body.v2 .fitWin{
+  background:linear-gradient(135deg,rgba(227,169,75,.2),rgba(227,169,75,.05) 55%,rgba(11,19,38,.6))!important;
+  border:1px solid rgba(227,169,75,.38)!important;
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+body.v2 .nlabel{font-family:inherit;font-weight:700;font-size:14px;
+  color:#241703!important;background:#E3A94B!important}
+body.v2 .nafaf,body.v2 .nafaf p,body.v2 #nafafText{color:#F2F4F7!important}
+body.v2 .nafaf .srcnote{color:#A9B8CC!important}
+/* ٤ · بطاقات الهوية: الموسم والسحب */
+body.v2 .v2season{background:linear-gradient(135deg,rgba(227,169,75,.36),rgba(140,82,24,.3) 50%,rgba(11,19,38,.72))!important;
+  border:1px solid rgba(227,169,75,.55)!important;box-shadow:0 14px 40px rgba(60,30,0,.28)}
+body.v2 .v2season .nm{font-size:28px}
+body.v2 .v2radar{background:radial-gradient(circle at 28% 50%,rgba(92,201,176,.16),rgba(6,16,28,.86) 70%)!important;
+  border:1px solid rgba(92,201,176,.32)!important}
+/* عناوين أثقل */
+body.v2 .sec-t,body.v2 .v2h{font-family:inherit;font-weight:700;letter-spacing:0}
+body.v2.perfLow .card,body.v2.perfLow .smart,body.v2.perfLow .b2,body.v2.perfLow .hitem,body.v2.perfLow .h6,
+body.v2.perfLow .pgSide,body.v2.perfLow .nafaf,body.v2.perfLow .watchCard,body.v2.perfLow .locbar,body.v2.perfLow .fitCard{
+  -webkit-backdrop-filter:none;backdrop-filter:none}
+body.v2.perfLow .h6,body.v2.perfLow .pgSide{background:rgba(14,26,50,.72)!important}
+
+/* البطل */
+.heroV2{position:relative;min-height:40vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:8px 0 18px;touch-action:pan-y;-webkit-user-select:none;user-select:none}
+.hv-ic{width:96px;height:96px;margin-bottom:-6px}
+.hv-ic svg{width:96px;height:96px}
+.hv-temp{font-weight:200;font-size:108px;line-height:1;letter-spacing:-4px;color:#F2F4F7;
+  font-variant-numeric:tabular-nums;text-shadow:0 6px 40px rgba(0,0,0,.25)}
+.hv-temp sup{font-size:38px;font-weight:300;vertical-align:50px;letter-spacing:0}
+.hv-desc{font-size:19px;font-weight:400;margin-top:4px;color:#F2F4F7}
+.hv-pills{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+.hv-pill{font-size:12.5px;color:#A9B8CC;border:1px solid rgba(255,255,255,.16);border-radius:999px;
+  padding:5px 12px;background:rgba(255,255,255,.05)}
+.hv-pill b{color:#F2F4F7;font-weight:600}
+.hv-next{margin-top:12px;font-size:12.5px;color:#F2F4F7;background:rgba(227,169,75,.16);
+  border:1px solid rgba(227,169,75,.34);border-radius:999px;padding:6px 14px}
+.heroV2 .scrubBar{top:0}
+.heroV2 .scrubHint{bottom:-6px}
+
+/* صوت نفاف */
+.v2voice{border-radius:22px;padding:15px 17px;display:flex;gap:12px;align-items:flex-start;margin:4px 0 0}
+.v2dot{flex:0 0 auto;width:10px;height:10px;border-radius:50%;background:#E3A94B;margin-top:9px;
+  box-shadow:0 0 0 6px rgba(227,169,75,.16)}
+.v2voice p{margin:0;font-size:15.5px;line-height:1.8;color:#F2F4F7}
+.v2voice .srcnote{font-size:10.5px;color:#A9B8CC;margin-top:6px}
+
+.v2h{font-family:inherit;font-weight:500;font-size:17px;color:#F2F4F7;margin:24px 4px 10px}
+.v2hours{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.v2hours::-webkit-scrollbar{display:none}
+.v2hr{flex:0 0 62px;scroll-snap-align:start;border-radius:18px;padding:11px 4px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16)}
+.v2hr .t{font-size:11.5px;color:#A9B8CC}
+.v2hr .v{font-size:17px;font-weight:600;color:#F2F4F7;font-variant-numeric:tabular-nums}
+.v2hr .pp{font-size:10.5px;color:#5CC9B0;min-height:13px}
+.v2hr svg{width:28px;height:28px}
+.v2hr.now{background:#E3A94B;border-color:#E3A94B}
+.v2hr.now .t,.v2hr.now .v,.v2hr.now .pp{color:#241703}
+
+.v2grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.v2tile{border-radius:20px;padding:14px;min-height:116px;display:flex;flex-direction:column;justify-content:space-between}
+.v2tile .v2k{font-size:12.5px;color:#A9B8CC}
+.v2tile .v2big{font-size:26px;font-weight:300;color:#F2F4F7;font-variant-numeric:tabular-nums;white-space:nowrap}
+.v2tile .v2big small{font-size:12px;color:#A9B8CC;font-weight:400}
+.v2tile .v2row{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.v2ring{width:52px;height:52px}
+.v2ring circle{fill:none;stroke-width:6}
+.v2ring .bg{stroke:rgba(255,255,255,.12)}
+.v2ring .fg{stroke:#5CC9B0;stroke-linecap:round}
+.v2arrow{width:42px;height:42px;transition:transform 1.2s cubic-bezier(.3,1.4,.4,1)}
+.v2uv{height:7px;border-radius:99px;position:relative;
+  background:linear-gradient(to left,#5CC9B0,#E3D35E,#E3A94B,#E06B4F,#9B5BD4)}
+.v2uv i{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#F2F4F7;
+  border:3px solid #0E1830;transform:translate(50%,-50%)}
+
+.v2season{border-radius:24px;padding:17px;display:flex;gap:15px;align-items:center}
+.v2season .arc{width:82px;height:82px;flex:0 0 auto}
+.v2season .nm{font-family:inherit;font-size:23px;font-weight:700;color:#F2F4F7;line-height:1.25}
+.v2season p{margin:5px 0 0;font-size:13.5px;line-height:1.7;color:#A9B8CC}
+.v2season p.nx{color:#E3A94B;font-size:12px}
+
+.v2radar{border-radius:24px;overflow:hidden;position:relative;height:148px;display:flex;align-items:flex-end;
+  padding:14px 16px;cursor:pointer}
+.v2radar canvas{position:absolute;inset:0;width:100%;height:100%}
+.v2radar .lbl{position:relative;font-size:14px;font-weight:600;color:#F2F4F7}
+.v2radar .lbl small{display:block;font-size:11.5px;color:#A9B8CC;font-weight:400;margin-top:2px}
+.v2radar:active{transform:scale(.99)}
+
+/* الشريط السفلي */
+body.v2 .v2dock{display:flex;position:fixed;left:50%;bottom:0;z-index:44;width:min(440px,calc(100% - 20px));
+  transform:translateX(-50%);margin-bottom:calc(10px + env(safe-area-inset-bottom,0px));
+  border-radius:26px;padding:8px;background:rgba(12,22,44,.66);border:1px solid rgba(255,255,255,.16);
+  -webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);
+  box-shadow:0 14px 44px rgba(0,0,0,.4)}
+.v2blob{position:absolute;top:10px;left:0;right:auto;height:36px;border-radius:14px;background:#E3A94B;z-index:0;
+  pointer-events:none;transition:transform .55s cubic-bezier(.34,1.56,.64,1),width .35s ease}
+.v2tab{flex:1;position:relative;z-index:1;border:0;background:none;cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;gap:4px;padding:8px 0 4px;min-height:58px;color:#F2F4F7}
+.v2tab svg{width:24px;height:24px;transition:transform .35s cubic-bezier(.34,1.56,.64,1),color .3s}
+.v2tab span{font-size:11px;color:#A9B8CC;transition:color .3s}
+.v2tab[aria-current="page"] svg{color:#241703;transform:scale(1.06)}
+.v2tab[aria-current="page"] span{color:#F2F4F7;font-weight:600}
+.v2tab:active svg{transform:scale(.82)}
+.v2tab:focus-visible,.v2more-it:focus-visible{outline:2px solid #E3A94B;outline-offset:2px;border-radius:14px}
+
+/* صفحة المزيد */
+body.v2 .v2moreBack{display:block;position:fixed;inset:0;z-index:46;background:rgba(4,8,18,.5);opacity:0;pointer-events:none;
+  transition:opacity .3s}
+.v2moreBack.on{opacity:1!important;pointer-events:auto!important}
+body.v2 .v2more{display:block;position:fixed;left:50%;bottom:0;z-index:47;width:min(460px,100%);
+  transform:translate(-50%,110%);transition:transform .45s cubic-bezier(.3,1.2,.5,1);
+  background:rgba(13,22,44,.985);border:1px solid rgba(255,255,255,.14);border-bottom:0;border-radius:28px 28px 0 0;box-shadow:0 -18px 50px rgba(0,0,0,.45);
+  padding:10px 16px calc(22px + env(safe-area-inset-bottom,0px));
+  -webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px)}
+body.v2 .v2more.on{transform:translate(-50%,0)}
+.v2grip{width:40px;height:5px;border-radius:99px;background:rgba(255,255,255,.25);margin:0 auto 14px}
+.v2more-g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.v2more-it{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 6px;border-radius:18px;
+  border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#F2F4F7;cursor:pointer;
+  font-family:inherit;transition:transform .15s,background .25s}
+.v2more-it svg{width:26px;height:26px}
+.v2more-it span{font-size:12.5px;font-weight:600}
+.v2more-it.on{background:#E3A94B;border-color:#E3A94B;color:#241703}
+.v2more-it:active{transform:scale(.94)}
+
+/* رفع العناصر العائمة فوق الشريط */
+body.v2 .fab{bottom:calc(98px + env(safe-area-inset-bottom,0px))}
+body.v2 .askFab{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+body.v2 .evBtn{bottom:calc(102px + env(safe-area-inset-bottom,0px))}
+body.v2 .fabTip{bottom:calc(112px + env(safe-area-inset-bottom,0px))}
+body.v2 .installBar{bottom:calc(88px + env(safe-area-inset-bottom,0px));border-radius:18px;left:10px;right:10px;
+  padding-bottom:12px;border:1px solid rgba(255,255,255,.16);
+  transform:translateY(calc(100% + 140px));visibility:hidden;pointer-events:none}
+body.v2 .installBar.on{transform:translateY(0);visibility:visible;pointer-events:auto}
+body.v2 #p-fit{padding-bottom:40px}
+
+/* حركات الأيقونات */
+.anim .v2spin{transform-origin:50px 44px;animation:v2spin 22s linear infinite}
+@keyframes v2spin{to{transform:rotate(360deg)}}
+.anim .v2drift{animation:v2drift 6s ease-in-out infinite}
+@keyframes v2drift{0%,100%{transform:translateX(0)}50%{transform:translateX(-4px)}}
+.anim .v2drop{animation:v2drop 1.1s linear infinite}
+.anim .v2drop:nth-child(2){animation-delay:.35s}.anim .v2drop:nth-child(3){animation-delay:.7s}
+@keyframes v2drop{0%{transform:translateY(-6px);opacity:0}25%{opacity:1}100%{transform:translateY(14px);opacity:0}}
+.anim .v2bolt{animation:v2bolt 3.2s steps(1) infinite}
+@keyframes v2bolt{0%,86%,92%,100%{opacity:0}88%,95%{opacity:1}}
+.anim .v2tw{animation:v2tw 2.4s ease-in-out infinite}
+@keyframes v2tw{0%,100%{opacity:.25}50%{opacity:1}}
+.anim .v2wave{animation:v2wave 3s ease-in-out infinite}
+@keyframes v2wave{0%,100%{transform:translateX(0)}50%{transform:translateX(-6px)}}
+.anim .v2pulse{transform-origin:50px 44px;animation:v2pulse 2.6s ease-in-out infinite}
+@keyframes v2pulse{0%,100%{transform:scale(1);opacity:.35}50%{transform:scale(1.18);opacity:.1}}
+.noanim .v2blob,.noanim .v2more{transition:none}
+/* ════════ ★ نفاف ٢.٢ — المشهد · الرادار · رياضتي · راحة العين ════════ */
+/* المشهد مرسوم كاملًا في اللوحة — الأفق القديم لم يعد لازمًا */
+body.v2 .v2hz{display:none!important}
+body.v2 .v2veil{background:linear-gradient(to bottom,rgba(10,18,36,.1) 0%,rgba(10,18,36,.16) 45%,rgba(10,18,36,.5) 68%,rgba(10,18,36,.84) 100%)!important}
+/* راحة العين: أبيض أنعم وظلال خفيفة */
+body.v2,body.v2.th-light,body.v2.th-mid{--tx:#EDF1F6;--tx2:rgba(237,241,246,.8)}
+body.v2{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,"Noto Sans Arabic",Arial,sans-serif;
+  text-rendering:optimizeLegibility}
+body.v2 .wm-ar{font-size:25px;font-weight:800}
+body.v2 .pgTemp,body.v2 .big{text-shadow:0 2px 18px rgba(0,0,0,.28)}
+
+/* الرادار المباشر */
+body.v2 .v2radar{height:196px;padding:0!important;display:block}
+.v2rmap{position:absolute;inset:0;z-index:0;pointer-events:none;background:#0b1424}
+.v2rmap .leaflet-tile-pane{filter:saturate(.9)}
+.v2radar canvas{display:none}
+.v2radar::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(to top,rgba(6,12,24,.9) 0%,rgba(6,12,24,.35) 42%,rgba(6,12,24,0) 70%)}
+.v2radar .lbl{position:absolute;right:16px;left:16px;bottom:14px;z-index:2}
+.v2rlive{position:absolute;top:12px;right:12px;z-index:2;font-size:11px;font-weight:700;color:#0E1830;
+  background:#5CC9B0;border-radius:99px;padding:4px 10px}
+.v2rlive b{font-variant-numeric:tabular-nums}
+.v2rattr{position:absolute;top:13px;left:12px;z-index:2;font-size:9px;color:rgba(237,241,246,.6);
+  background:rgba(6,12,24,.5);border-radius:6px;padding:2px 6px}
+
+/* رياضتي — خريطة المشي */
+.fitMapWrap{position:relative;margin:12px 0 4px;border-radius:16px;overflow:hidden;height:230px;
+  border:1px solid rgba(255,255,255,.12);background:#0b1424}
+.fitMapWrap.sum{height:210px;margin-top:4px}
+.fitMap{position:absolute;inset:0}
+.fitCenter{position:absolute;bottom:10px;left:10px;z-index:500;width:40px;height:40px;border-radius:12px;border:0;
+  background:rgba(14,24,48,.85);color:#EDF1F6;font-size:20px;cursor:pointer;opacity:.5}
+.fitCenter.on{opacity:1;background:#E3A94B;color:#241703}
+.fitOsm{position:absolute;bottom:6px;right:8px;z-index:500;font-size:9px;color:rgba(237,241,246,.65);
+  background:rgba(6,12,24,.55);border-radius:6px;padding:1px 6px}
+/* أهداف اليوم */
+.fgRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fgRing{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:14px;padding:10px}
+.fgRing svg{width:58px;height:58px;flex:0 0 auto}
+.fgRing b{display:block;font-size:17px;font-weight:800;color:#EDF1F6;font-variant-numeric:tabular-nums}
+.fgRing small{font-size:10.5px;color:var(--tx3)}
+.fitLink.sm{width:auto;margin:0;padding:0;font-size:11.5px;color:#E3A94B}
+/* الأرقام القياسية */
+.frRow{display:grid;grid-template-columns:1.1fr 1fr 1fr .8fr;gap:6px;align-items:center;font-size:12px;
+  color:var(--tx2);padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.04);margin-top:6px}
+.frRow b{color:#EDF1F6;font-variant-numeric:tabular-nums}
+/* الكيلومترات */
+.fitSplits{margin-top:12px}
+.fsRow{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx2);margin-top:6px}
+.fsRow span{width:18px;text-align:center;color:var(--tx3)}
+.fsRow i{display:block;height:8px;border-radius:99px;background:rgba(92,201,176,.55)}
+.fsRow i.best{background:#E3A94B}
+.fsRow b{margin-inline-start:auto;color:#EDF1F6;font-variant-numeric:tabular-nums}
+.fitShare{width:100%;margin-top:12px;padding:12px;border-radius:14px;border:1px solid rgba(227,169,75,.45);
+  background:rgba(227,169,75,.14);color:#EDF1F6;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+.fitAp{display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:12.5px;
+  color:var(--tx2);font-weight:600}
+/* ★ رياضتي — الحماس */
+.fitCard.hype{background:linear-gradient(135deg,rgba(227,169,75,.2),rgba(92,201,176,.08) 60%,rgba(11,19,38,.62))!important;
+  border-color:rgba(227,169,75,.4)!important}
+.hyRow{display:flex;gap:10px;align-items:stretch}
+.hyStreak{flex:0 0 96px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:16px;
+  background:rgba(255,255,255,.06);padding:10px 4px;text-align:center}
+.hyStreak .flame{font-size:30px;line-height:1;filter:grayscale(1);opacity:.45}
+.hyStreak.on .flame{filter:none;opacity:1}
+.anim .hyStreak.on .flame{animation:flm 1.4s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes flm{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.14) rotate(3deg)}}
+.hyStreak b{font-size:24px;font-weight:800;color:#EDF1F6;margin-top:2px}
+.hyStreak small{font-size:10px;color:var(--tx3)}
+.hyWeek{flex:1;display:flex;flex-direction:column;justify-content:center;gap:7px}
+.hyWL{display:flex;justify-content:space-between;font-size:12px;color:var(--tx2);font-weight:700}
+.hyWL b{color:#EDF1F6;font-variant-numeric:tabular-nums}
+.hyBar{height:10px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+.hyBar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#5CC9B0,#E3A94B);transition:width 1s ease}
+.hyWeek small{font-size:11px;color:var(--tx3)}
+.fbdGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.fbd{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 2px;border-radius:14px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);font-family:inherit;color:var(--tx3)}
+.fbd .fbd-ic{font-size:22px;line-height:1;filter:grayscale(1);opacity:.35}
+.fbd .fbd-t{font-size:9.5px;font-weight:700;line-height:1.3;text-align:center}
+.fbd.on{border-color:rgba(227,169,75,.5);background:rgba(227,169,75,.14);color:#EDF1F6}
+.fbd.on .fbd-ic{filter:none;opacity:1}
+.fbd.pop{animation:bdp .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes bdp{0%{transform:scale(.8)}100%{transform:scale(1)}}
+/* أزرار حيّة */
+.anim .fitGo{position:relative;animation:goPulse 2.2s ease-in-out infinite}
+@keyframes goPulse{0%,100%{box-shadow:0 8px 24px rgba(79,194,122,.35),0 0 0 0 rgba(127,227,154,.45)}
+  50%{box-shadow:0 8px 24px rgba(79,194,122,.35),0 0 0 12px rgba(127,227,154,0)}}
+.fitType span{transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+.fitType.on span{transform:scale(1.22) translateY(-2px)}
+.anim .fitType.on span{animation:tyBob 1.6s ease-in-out infinite}
+@keyframes tyBob{0%,100%{transform:scale(1.22) translateY(-2px)}50%{transform:scale(1.22) translateY(-6px)}}
+/* العدّ التنازلي */
+.fitCd{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:rgba(6,12,24,.72);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:opacity .3s}
+.fitCd.out{opacity:0}
+.fitCd b{font-size:120px;font-weight:900;color:#E3A94B;animation:cdIn .7s cubic-bezier(.3,1.5,.5,1)}
+@keyframes cdIn{0%{transform:scale(2.2);opacity:0}60%{opacity:1}100%{transform:scale(1)}}
+.fitConf{position:fixed;inset:0;z-index:95;pointer-events:none}
+/* نافذة الوسام */
+.fitBadgePop{position:fixed;left:50%;top:38%;z-index:96;transform:translate(-50%,-50%);width:min(300px,82vw);
+  text-align:center;padding:24px 18px;border-radius:26px;cursor:pointer;
+  background:linear-gradient(160deg,#2a2210,#12203c);border:1px solid rgba(227,169,75,.6);
+  box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 6px rgba(227,169,75,.12);animation:bpIn .6s cubic-bezier(.3,1.5,.5,1);transition:opacity .4s,transform .4s}
+.fitBadgePop.out{opacity:0;transform:translate(-50%,-60%)}
+@keyframes bpIn{0%{transform:translate(-50%,-50%) scale(.4);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.fbp-ic{font-size:64px;line-height:1.1}
+.fbp-k{font-size:12px;font-weight:800;color:#E3A94B;margin-top:8px}
+.fbp-t{font-size:22px;font-weight:800;color:#EDF1F6;margin-top:4px}
+.fbp-d{font-size:13px;color:#A9B8CC;margin-top:6px}
+.noanim .fitCd b,.noanim .fitBadgePop{animation:none}
+/* ════════ ★ نفاف ٢.٣ — السلاسة · بطاقات أغمق · إعدادات داكنة · NAFAF ════════ */
+/* ★ السلاسة: التمويه الحيّ فوق سماء متحركة يُعاد حسابه كل إطار لكل بطاقة —
+   هذا سبب التقطيع. نلغيه ونعوّضه بخلفيات أغمق قليلًا */
+body.v2 *,body.v2 *::before,body.v2 *::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+body.v2 .card,body.v2 .smart,body.v2 .b2,body.v2 .hitem,body.v2 .qk,body.v2 .attrBox,body.v2 .fitCard,
+body.v2 .srcBanner,body.v2 .trustCard,body.v2 .daySum{background:rgba(9,16,32,.8)!important}
+body.v2 .h6,body.v2 .pgSide,body.v2 .glance,body.v2 .wwCard,body.v2 .pgTimeBox,body.v2 .pgRangeBox{
+  background:rgba(12,21,40,.68)!important;border-color:rgba(255,255,255,.14)!important}
+body.v2 .nafaf,body.v2 .watchCard,body.v2 .pillCard,body.v2 .fitWin{
+  background:linear-gradient(135deg,rgba(227,169,75,.2),rgba(20,24,34,.8) 55%,rgba(9,16,32,.84))!important}
+body.v2 .fitCard.hype{background:linear-gradient(135deg,rgba(227,169,75,.22),rgba(9,16,32,.84) 60%)!important}
+body.v2 .hero{background:rgba(9,16,32,.46)!important}
+body.v2 .locbar,body.v2 .gearbtn{background:rgba(9,16,32,.62)!important}
+body.v2 .v2dock{background:rgba(9,15,30,.95)}
+body.v2 .v2more{background:#0f1a31}
+/* الطبقة الأمامية */
+#v2Fore{display:none}
+body.v2 #v2Fore{display:block;position:fixed;inset:0;width:100%;height:100%;z-index:30;pointer-events:none}
+/* ★ اسم التطبيق: نفاف + NAFAF */
+body.v2 .wm-en{display:inline-block!important;font-size:12.5px;font-weight:800;letter-spacing:.3em;
+  color:#E3A94B;opacity:.9;margin:0 12px;vertical-align:middle}
+/* ★ الإعدادات: لوحة داكنة متناسقة تنزلق من الأسفل */
+body.v2 #ovSet{background:rgba(4,8,18,.66)}
+body.v2 #ovSet .modal{position:absolute;left:0;right:0;top:auto;bottom:0;width:auto;max-width:560px;margin:0 auto;
+  max-height:88%;overflow-y:auto;overflow-x:hidden;background:#0f1a31;color:#EDF1F6;
+  border-radius:26px 26px 0 0;border:1px solid rgba(255,255,255,.1);border-bottom:0;
+  padding:16px 16px calc(24px + env(safe-area-inset-bottom,0px));box-shadow:0 -20px 50px rgba(0,0,0,.5)}
+body.v2 #ovSet .mHead{border-bottom-color:rgba(255,255,255,.1)}
+body.v2 #ovSet .m-t{color:#EDF1F6}
+body.v2 #ovSet .backBtn{border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:#EDF1F6}
+body.v2 #ovSet .m-grp{color:#E3A94B;border-bottom-color:rgba(227,169,75,.2);opacity:.9;flex:0 0 100%;width:100%;margin:18px 0 8px}
+body.v2 #ovSet .m-card{background:rgba(255,255,255,.045)!important;border:1px solid rgba(255,255,255,.08)!important;box-shadow:none}
+body.v2 #ovSet .m-sec{color:#EDF1F6}
+body.v2 #ovSet .m-hint{color:#95a6bb}
+body.v2 #ovSet .opt{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);color:#dde5ee}
+body.v2 #ovSet .opt.on{background:#E3A94B;border-color:#E3A94B;color:#241703}
+body.v2 #ovSet .rowSw{color:#EDF1F6}
+body.v2 #ovSet .danger{background:rgba(220,90,90,.12);border-color:rgba(255,143,143,.35);color:#ff9b9b}
+body.v2 #ovSet a{color:#9fd4f5}
+/* ★ انتقال ناعم بين الصفحات */
+body.v2.anim .panel.on{animation:pnIn .24s cubic-bezier(.2,.8,.3,1) both}
+@keyframes pnIn{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:none}}
+body.v2 #v2Sky,body.v2 #v2Fore{will-change:contents;transform:translateZ(0)}
+body.v2 .v2dock{transform:translateX(-50%) translateZ(0)}
+/* ════════ ★ نفاف ٢.٤ — بطاقات موحّدة · إعدادات مقروءة · شعار أكبر ════════ */
+/* ★ لون واحد لكل البطاقات — بلا تدرّجات متنافرة */
+body.v2{--v2card:rgba(10,17,34,.84);--v2bd:rgba(255,255,255,.1)}
+body.v2 .card,body.v2 .smart,body.v2 .b2,body.v2 .hitem,body.v2 .qk,body.v2 .attrBox,body.v2 .fitCard,body.v2 .fitCard.hype,
+body.v2 .srcBanner,body.v2 .trustCard,body.v2 .daySum,body.v2 .h6,body.v2 .pgSide,body.v2 .glance,body.v2 .wwCard,
+body.v2 .pgTimeBox,body.v2 .pgRangeBox,body.v2 .nafaf,body.v2 .watchCard,body.v2 .pillCard,body.v2 .fitWin,
+body.v2 .v2season,body.v2 .v2radar,body.v2 .hero,body.v2 .locbar,body.v2 .gearbtn,body.v2 .v2tile,body.v2 .v2voice{
+  background:var(--v2card)!important;border:1px solid var(--v2bd)!important;box-shadow:0 6px 20px rgba(3,8,20,.22)!important}
+body.v2 .v2dock{background:rgba(10,17,34,.96)!important;border-color:var(--v2bd)!important}
+body.v2 .v2season .nm{color:#EDF1F6}
+/* ★ الشعار أكبر — العربي والإنجليزي بنفس الحجم */
+body.v2 .wm-ar{font-size:30px!important;font-weight:800;line-height:1.1;color:#EDF1F6}
+body.v2 .wm-en{font-size:30px!important;font-weight:800;line-height:1.1;letter-spacing:.04em!important;
+  color:#E3A94B!important;opacity:1!important;margin:0 12px!important}
+/* ★ الإعدادات: كل نص مقروء */
+body.v2 #ovSet .modal{color:#EDF1F6}
+body.v2 #ovSet .m-link{display:flex;align-items:center;justify-content:space-between;padding:13px 4px;
+  border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer}
+body.v2 #ovSet .m-link:last-child{border-bottom:0}
+body.v2 #ovSet .m-link span{color:#EDF1F6;font-size:14px;font-weight:600}
+body.v2 #ovSet .m-link .m-arw{color:#8fa0b5;font-size:18px}
+body.v2 #ovSet .rowSw>span:first-child{color:#EDF1F6;font-size:14px;font-weight:600}
+/* ★ مفاتيح التشغيل — لم يكن لها تنسيق في التطبيق فكانت غير مرئية */
+.rowSw{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.sw{flex:0 0 auto;position:relative;display:inline-block;width:50px;height:30px;border-radius:99px;cursor:pointer;
+  background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.22);transition:background .25s}
+.sw::after{content:"";position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:#fff;
+  box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .3s cubic-bezier(.3,1.4,.5,1)}
+.sw.on{background:#E3A94B;border-color:#E3A94B}
+.sw.on::after{transform:translateX(-20px)}
+[dir="ltr"] .sw::after{right:auto;left:3px}
+[dir="ltr"] .sw.on::after{transform:translateX(20px)}
+/* ★ سجل التمارين بمسارات مصغّرة */
+.fitRow{cursor:pointer;transition:background .2s}
+.fitRow.on{background:rgba(227,169,75,.14)!important;outline:1px solid rgba(227,169,75,.4)}
+.frThumb{flex:0 0 54px;width:54px;height:27px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.frThumb .fitSvg{width:54px;height:27px;background:rgba(0,0,0,.25);border-radius:6px}
+.frThumb .fitSvg path{stroke-width:9}
+.frThumb .fitSvg circle{r:0}
+/* ★ توحيد بقية البطاقات في كل الصفحات */
+body.v2 .watch,body.v2 .feed,body.v2 .rotator,body.v2 .timeline,body.v2 .stab,body.v2 .brief,body.v2 .anom,
+body.v2 .astro,body.v2 .onday,body.v2 .story,body.v2 .actPanel,body.v2 .smartV,body.v2 .tlbar,body.v2 .galRules,
+body.v2 .qk-foot,body.v2 .govNotice,body.v2 .govFoot{
+  background:var(--v2card)!important;background-image:none!important;border:1px solid var(--v2bd)!important;
+  box-shadow:0 6px 20px rgba(3,8,20,.22)!important}
+body.v2 .govNotice{border-color:rgba(227,169,75,.4)!important}
+body.v2 .pgStrip{background:rgba(255,255,255,.05)!important;border-color:rgba(255,255,255,.08)!important}
+body.v2.perfLow .h6,body.v2.perfLow .pgSide{background:var(--v2card)!important}
+body.v2 .actPanel,body.v2 .actPanel *{color:#EDF1F6}
+/* ════════ ★ نفاف ٢.٥ — عودة السماء الحيّة: البطاقات تأخذ لونها منها ════════ */
+:root{--skyCard:rgba(12,30,56,.5);--skyCard2:rgba(10,24,46,.62);--skyEdge:rgba(210,228,245,.22);--skyDock:rgba(8,16,32,.9)}
+body.v2{--v2card:var(--skyCard);--v2bd:var(--skyEdge)}
+/* ★ كل البطاقات — لون واحد من السماء يتبدّل بنعومة مع الوقت والطقس */
+body.v2 .card,body.v2 .smart,body.v2 .b2,body.v2 .hitem,body.v2 .qk,body.v2 .attrBox,body.v2 .fitCard,body.v2 .fitCard.hype,
+body.v2 .srcBanner,body.v2 .trustCard,body.v2 .daySum,body.v2 .h6,body.v2 .pgSide,body.v2 .glance,body.v2 .wwCard,
+body.v2 .pgTimeBox,body.v2 .pgRangeBox,body.v2 .nafaf,body.v2 .watchCard,body.v2 .pillCard,body.v2 .fitWin,
+body.v2 .v2season,body.v2 .v2radar,body.v2 .locbar,body.v2 .gearbtn,body.v2 .v2tile,body.v2 .v2voice,
+body.v2 .watch,body.v2 .feed,body.v2 .rotator,body.v2 .timeline,body.v2 .stab,body.v2 .brief,body.v2 .anom,
+body.v2 .astro,body.v2 .onday,body.v2 .story,body.v2 .actPanel,body.v2 .smartV,body.v2 .tlbar,body.v2 .galRules,
+body.v2 .qk-foot,body.v2 .govNotice,body.v2 .govFoot{
+  background:var(--skyCard)!important;background-image:none!important;border:1px solid var(--skyEdge)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.14)!important;transition:background-color 1.4s ease,border-color 1.4s ease}
+/* نصوص كثيفة: درجة أعمق قليلًا من نفس اللون للقراءة */
+body.v2 .smart,body.v2 .feed,body.v2 .rotator,body.v2 .timeline,body.v2 .brief,body.v2 .story,body.v2 .fitCard,
+body.v2 .hitem,body.v2 .srcBanner,body.v2 .govNotice,body.v2 .actPanel{background:var(--skyCard2)!important}
+/* ★ الحلقة تطفو على السماء مباشرة */
+body.v2 .hero{background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+/* ★ وضوح النص فوق السماء بلا تمويه مكلف */
+body.v2 .wrap{text-shadow:0 1px 2px rgba(0,0,0,.28)}
+body.v2 .pgTemp,body.v2 .big{text-shadow:0 3px 22px rgba(0,0,0,.35)!important}
+body.v2 .v2dock{background:var(--skyDock)!important;border-color:var(--skyEdge)!important;transition:background-color 1.4s ease}
+body.v2 .v2veil{background:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 72%,rgba(5,9,20,.55) 100%)!important}
+body.v2 .pgStrip{background:rgba(255,255,255,.06)!important}
+/* ★★★ إحساس التطبيق الأصلي ★★★ */
+html,body{overscroll-behavior:none;overscroll-behavior-y:none}
+body{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+input,textarea,[contenteditable],.srcnote,.docSheet p{-webkit-user-select:text;user-select:text}
+img{-webkit-user-drag:none;user-drag:none}
+button,a,[data-dk],[data-mk],.v2tab{-webkit-touch-callout:none}
+:focus:not(:focus-visible){outline:none}
+/* ════════ ★ طبقة التطبيق الأصلي ٢ ════════ */
+/* الهيكل المتلألئ أثناء التحميل */
+.skel{padding:14px 2px 30px}
+.sk{position:relative;overflow:hidden;background:rgba(255,255,255,.07);border-radius:18px}
+.sk::after{content:"";position:absolute;inset:0;transform:translateX(100%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);animation:skSh 1.3s ease-in-out infinite}
+@keyframes skSh{to{transform:translateX(-100%)}}
+.sk-ring{width:240px;height:240px;border-radius:50%;margin:26px auto 22px}
+.sk-line{height:22px;width:55%;margin:0 auto 22px;border-radius:99px}
+.sk-row{display:flex;gap:8px;margin-bottom:14px}
+.sk-row .sk{flex:1;height:96px;display:block}
+.sk-card{height:120px;margin-bottom:12px}
+.sk-card.short{height:80px}
+.noanim .sk::after{animation:none}
+/* اسحب للتحديث */
+.ptr{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:50%;z-index:48;width:44px;height:44px;border-radius:50%;
+  display:grid;place-items:center;background:rgba(10,17,34,.92);border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 8px 24px rgba(0,0,0,.35);transform:translate(-50%,-70px);opacity:0;transition:opacity .2s,transform .25s}
+.ptr svg{width:22px;height:22px;transition:transform .2s}
+.ptr.ready svg{transform:scale(1.2)}
+.ptr.spin{transition:transform .25s}
+.ptr.spin svg{animation:ptrS 1s linear infinite}
+@keyframes ptrS{to{transform:rotate(360deg)}}
+/* شريط التنبيه */
+#snack{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:49;max-width:88%;
+  transform:translate(-50%,20px);opacity:0;pointer-events:none;padding:12px 18px;border-radius:14px;
+  background:#15223d;border:1px solid rgba(255,255,255,.14);color:#EDF1F6;font-size:13px;font-weight:700;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);transition:opacity .3s,transform .35s cubic-bezier(.3,1.4,.5,1)}
+#snack.on{opacity:1;transform:translate(-50%,0)}
+#snack.off{border-color:rgba(255,143,143,.45)}
+#snack.ok{border-color:rgba(92,201,176,.5)}
+/* المدن الأخيرة */
+.recentRow{display:none}
+.recentRow.on{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 10px;margin-top:-2px}
+.recentRow::-webkit-scrollbar{display:none}
+.rcChip{flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:8px 13px;border-radius:99px;cursor:pointer;
+  background:var(--skyCard,rgba(10,17,34,.6));border:1px solid var(--skyEdge,rgba(255,255,255,.14));
+  color:#EDF1F6;font-family:inherit;font-size:12.5px;font-weight:700;white-space:nowrap}
+.rcChip svg{width:13px;height:13px;opacity:.7}
+.rcChip:active{transform:scale(.95)}
+/* زر المشاركة بجانب الإعدادات */
+.shareBtn{display:grid;place-items:center;margin-inline-start:8px}
+.shareBtn svg{width:20px;height:20px}
+.gearbtn{touch-action:manipulation}
+/* أهداف لمس أكبر (من الفحص) */
+.fitLink.sm{padding:11px 14px!important;margin:-11px -12px -11px 0!important;min-height:36px}
+body.v2 .attr a,body.v2 .atr a,body.v2 .srcUrl,body.v2 .govFoot a{display:inline-block;padding:9px 3px}
+/* ★ الرأس: NAFAF فقط */
+body.v2 .wm-ar,body.v2 .wm-sep{display:none!important}
+body.v2 .wm-en{margin:0!important;font-size:30px!important;letter-spacing:.08em!important}
+/* ★ زر التصوير — لافت ويدل على التقاط صورة */
+body.v2 .shareBtn{position:relative;border-color:rgba(227,169,75,.45)!important;
+  background:linear-gradient(145deg,rgba(227,169,75,.22),var(--skyCard,rgba(10,17,34,.6)) 70%)!important}
+body.v2 .shareBtn svg{width:23px;height:23px;color:#EDF1F6}
+body.v2 .shareBtn:active svg{transform:scale(.88)}
+body.v2 .shareBtn::after{content:"";position:absolute;inset:-4px;border-radius:17px;border:1.5px solid rgba(227,169,75,.55);
+  opacity:0;pointer-events:none}
+body.v2.anim .shareBtn::after{animation:shotPing 5s ease-out 3s infinite}
+@keyframes shotPing{0%{opacity:.9;transform:scale(.92)}35%{opacity:0;transform:scale(1.18)}100%{opacity:0}}
+/* ومضة الكاميرا عند الالتقاط */
+.shotFlash{position:fixed;inset:0;z-index:99;background:#fff;pointer-events:none;animation:shotF .45s ease-out forwards}
+@keyframes shotF{0%{opacity:.85}100%{opacity:0}}
 .fadeIn{opacity:0;animation:fadeUp .5s ease forwards}
 .noanim .fadeIn{opacity:1;animation:none}
  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .d1{animation-delay:.05s}.d2{animation-delay:.13s}.d3{animation-delay:.21s}
 .d4{animation-delay:.29s}.d5{animation-delay:.37s}.d6{animation-delay:.45s}
 </style>
+
 </head>
 <body class="anim">
 
@@ -1803,6 +2409,10 @@
 </div>
 
 <div id="skyScene" aria-hidden="true"></div>
+<canvas id="v2Sky" aria-hidden="true"></canvas>
+<canvas id="v2Fore" aria-hidden="true"></canvas>
+<div class="v2hz" id="v2Horizon" aria-hidden="true"><svg viewBox="0 0 400 60" preserveAspectRatio="none"><path fill="currentColor" d="M0 60 L0 38 L22 30 L38 34 L58 18 L74 26 L92 12 L110 24 L128 20 L150 32 L172 22 L190 28 L214 10 L236 24 L256 18 L280 30 L300 22 L322 34 L344 26 L366 32 L400 24 L400 60Z" opacity=".55"/><path fill="currentColor" d="M0 60 L0 46 L30 40 L60 44 L96 36 L130 42 L170 38 L210 44 L250 40 L290 46 L330 42 L370 44 L400 40 L400 60Z"/><g fill="currentColor"><path d="M318 44 q1-10 2-16 q-6 2-10 0 q6-3 10-2 q-4-5-9-6 q7 0 10 4 q1-6 6-8 q-3 5-3 9 q5-3 10-1 q-6 1-8 4 q6 0 9 4 q-6-1-9-2 q0 6 1 14z"/><path d="M342 45 q1-8 2-13 q-5 1-8 0 q5-3 8-2 q-3-4-7-5 q6 0 8 3 q1-5 5-6 q-2 4-2 7 q4-2 8-1 q-5 1-7 3 q5 0 7 3 q-5-1-7-1 q0 5 1 12z"/></g></svg><div class="v2ground"></div></div>
+<div class="v2veil" aria-hidden="true"></div>
 <div class="wrap">
  <div class="top">
  <span class="brandbox"><span class="wm-en">NAFAF</span><span class="wm-sep">|</span><span class="wm-ar">نفاف</span></span>
@@ -1821,6 +2431,7 @@
  <div class="panel" id="p-life"><div id="lifeBody"><div class="loading">…</div></div></div>
  <div class="panel" id="p-fc"><div id="fcBody"><div class="loading">…</div></div></div>
  <div class="panel" id="p-world"><div id="worldBody"><div class="loading">…</div></div></div>
+ <div class="panel" id="p-fit"><div id="fitBody"><div class="loading">…</div></div></div>
  <div class="panel" id="p-live"><div id="liveBody"><div class="loading">…</div></div></div>
  <div class="panel" id="p-gallery"><div id="galBody"><div class="loading">…</div></div></div>
  <div class="panel" id="p-quake"><div id="quakeBody"><div class="loading">…</div></div></div>
@@ -1857,6 +2468,10 @@
  <div class="sHead"><button class="backBtn" id="evCloseBtn"><span>‹</span><b>رجوع</b></button></div>
  <div id="evBody"></div></div>
 <button class="evBtn" id="evBtn"></button>
+<button class="fitPill" id="fitPill"></button>
+<nav class="v2dock" id="v2Dock" aria-label="التنقل الرئيسي"></nav>
+<div class="v2moreBack" id="v2MoreBack"></div>
+<div class="v2more" id="v2More" role="dialog" aria-label="المزيد"><div class="v2grip"></div><div class="v2more-g" id="v2MoreBody"></div></div>
 <button class="askFab" id="askFab" aria-label="اسأل نفاف">
  <span class="af-ic">💬</span><span class="af-tx">اسأل نفاف</span></button>
 <div class="sheetBack" id="askBack"></div>
@@ -2127,7 +2742,10 @@ function applyMotion(){
  if(typeof PERF==='number'&&PERF!==null){
   if(PERF<0.5)pf=' perfLow'; else if(PERF<0.8)pf=' perfMid';
  }
- document.body.className=(on?'anim':'noanim')+th+pf;
+ /* ★ لا نمحو وسم الوضع السينمائي */
+ var fa=(typeof FIT==='object'&&FIT.on&&TAB==='fit')?' fitActive':'';
+ document.body.className=(on?'anim':'noanim')+th+pf+fa+(typeof V2!=='undefined'&&V2?' v2':'');
+ try{ if(typeof Sky2==='object')Sky2.wake(); }catch(e){}
  return {anim:on,scenery:MOTION!=='off'};}
 function applyScale(){document.documentElement.style.fontSize=(16*TSCALE)+'px';}
 /* ★ سمات العرض — اختيار المستخدم */
@@ -2290,11 +2908,22 @@ function $(i){return document.getElementById(i);}
 function cName(c){return LANG==='en'?(c.en||c.n):c.n;}
 function cCountry(c){return LANG==='en'?(c.cen||c.c):c.c;}
 
+/* ★★★ الليل/النهار بتوقيت المدينة لا الجهاز ★★★
+   ⚠️ الخلل المُصلح: كانت تقارن new Date() (وقت جهازك) بنص SUNRISE
+      الذي يُفسَّر بتوقيت الجهاز — فمستخدم في عُمان يرى طقس طوكيو
+      ليلًا نهارًا والوضع السينمائي يثبت على الليل.
+   ⚠️ الآن: كل المقارنات بالدقائق منذ منتصف ليل المدينة نفسها. */
 function computeNight(){
  if(!SUNRISE||!SUNSET){IS_NIGHT=false;IS_GOLDEN=false;return;}
- var now=new Date(),sr=new Date(SUNRISE),ss=new Date(SUNSET),Wd=40*60000;
- IS_NIGHT=(now<sr||now>ss);
- IS_GOLDEN=(Math.abs(now-sr)<=Wd)||(Math.abs(now-ss)<=Wd);}
+ var nowM=cityMinutes(new Date());
+ var srM=sunMinutes(SUNRISE), ssM=sunMinutes(SUNSET);
+ if(srM==null||ssM==null){
+  IS_NIGHT=(nowM>=19*60||nowM<5*60); IS_GOLDEN=false; return;
+ }
+ IS_NIGHT=(nowM<srM||nowM>ssM);
+ var Wd=40;
+ IS_GOLDEN=(Math.abs(nowM-srM)<=Wd)||(Math.abs(nowM-ssM)<=Wd);
+}
 function iconKey(st){var m=META[st]||META.clear||{iN:'moon',iD:'sun'};return IS_NIGHT?m.iN:m.iD;}
 function iconForCode(c,night){
  if(c>=95)return"storm";if(c>=80)return"heavy";if(c>=61)return"rain";
@@ -2860,9 +3489,217 @@ function pulseRing(st){
  var mm2=META[st]||META.clear;
  h+='<div class="pgDescIn">'+(mm2&&mm2.t?mm2.t[L]:'')+'</div>';
 
- h+='</div></div>';
+ h+='</div>';
+ /* ★ شريط الزمن والتلميح — السفر عبر الساعات */
+ h+=scrubBar();
+ h+=scrubHint();
+ h+='</div>';
  PG_MIN=tMin; PG_MAX=tMax;
  return h;
+}
+
+/* ============================================================
+   ★★★ السماء تحت إصبعك — سفر عبر الزمن باللمس ★★★
+   مرّر إصبعك أفقيًا على الحلقة → تسافر عبر ٢٤ ساعة قادمة
+   كل شيء يتغيّر لحظيًا: الحرارة · اللون · الأيقونة · الفيزياء
+   ⚠️ رد فعل فوري: اهتزاز عند كل ساعة · موجة عند اللمس
+   ============================================================ */
+var SCRUB={active:false, h:0, startX:0, startH:0, raf:null,
+ lastH:-1, wrap:null, hint:false};
+
+function scrubInit(){
+ var wrap=$("heroV2")||$("pulseWrap")||document.querySelector('.pulseWrap')||
+          document.querySelector('.pgWrap');
+ if(!wrap)return;
+ SCRUB.wrap=wrap;
+ /* لا نكرّر الربط */
+ if(wrap.getAttribute('data-scrub')==='1')return;
+ wrap.setAttribute('data-scrub','1');
+
+ function xOf(e){
+  if(e.touches&&e.touches.length)return e.touches[0].clientX;
+  if(e.changedTouches&&e.changedTouches.length)return e.changedTouches[0].clientX;
+  return e.clientX||0;
+ }
+ function yOf(e){
+  if(e.touches&&e.touches.length)return e.touches[0].clientY;
+  return e.clientY||0;
+ }
+ var downY=0, moved=false;
+
+ function start(e){
+  if(!HOURLY||!HOURLY.time)return;
+  SCRUB.startX=xOf(e); downY=yOf(e); moved=false;
+  SCRUB.startH=SCRUB.h;
+ }
+ function move(e){
+  if(!HOURLY||!HOURLY.time)return;
+  var dx=xOf(e)-SCRUB.startX;
+  var dy=yOf(e)-downY;
+  /* ★ لا نخطف التمرير العمودي */
+  if(!moved){
+   if(Math.abs(dy)>Math.abs(dx)||Math.abs(dx)<14)return;
+   moved=true;
+   SCRUB.active=true;
+   scrubOn();
+   try{ if(navigator.vibrate)navigator.vibrate(8); }catch(err){}
+  }
+  if(e.cancelable)e.preventDefault();
+  var w=SCRUB.wrap.offsetWidth||300;
+  /* عرض الحلقة كامل = ٢٤ ساعة */
+  var hrs=SCRUB.startH - (dx/w)*26;
+  SCRUB.h=Math.max(0, Math.min(23, hrs));
+  scrubPaint();
+ }
+ function end(){
+  if(!SCRUB.active)return;
+  SCRUB.active=false;
+  /* ★ عودة سلسة للحاضر */
+  scrubEase();
+ }
+ wrap.addEventListener('touchstart',start,{passive:true});
+ wrap.addEventListener('touchmove',move,{passive:false});
+ wrap.addEventListener('touchend',end);
+ wrap.addEventListener('touchcancel',end);
+ wrap.addEventListener('mousedown',function(e){start(e);
+  var mv=function(ev){move(ev);};
+  var up=function(){end();document.removeEventListener('mousemove',mv);
+   document.removeEventListener('mouseup',up);};
+  document.addEventListener('mousemove',mv);
+  document.addEventListener('mouseup',up);
+ });
+}
+
+function scrubOn(){
+ try{
+  var w=SCRUB.wrap; if(!w)return;
+  if(w.className.indexOf('scrubbing')<0)w.className+=' scrubbing';
+  var b=$("scrubBar");
+  if(b)b.className='scrubBar on';
+ }catch(e){}
+}
+function scrubOff(){
+ try{
+  var w=SCRUB.wrap; if(!w)return;
+  w.className=w.className.replace(/\s*scrubbing/g,'');
+  var b=$("scrubBar"); if(b)b.className='scrubBar';
+ }catch(e){}
+}
+
+/* ★ الرسم اللحظي — كل شيء يتبع الإصبع */
+function scrubPaint(){
+ try{
+  if(!HOURLY||!HOURLY.time)return;
+  var base=Clock.hourIndex();
+  var idx=Math.min(HOURLY.time.length-1, base+Math.round(SCRUB.h));
+  var hInt=Math.round(SCRUB.h);
+
+  /* ★ اهتزاز خفيف عند عبور كل ساعة */
+  if(hInt!==SCRUB.lastH){
+   SCRUB.lastH=hInt;
+   try{ if(navigator.vibrate&&SCRUB.active)navigator.vibrate(5); }catch(e){}
+  }
+
+  var t=HOURLY.temperature_2m[idx];
+  var code=HOURLY.weather_code[idx];
+  var pp=HOURLY.precipitation_probability?HOURLY.precipitation_probability[idx]:0;
+  var mm=HOURLY.precipitation?HOURLY.precipitation[idx]:0;
+  var wind=HOURLY.wind_speed_10m?HOURLY.wind_speed_10m[idx]:0;
+  var night=hourIsNight(HOURLY.time[idx]);
+
+  /* الحرارة */
+  var bt=$("bigTemp");
+  if(bt)bt.innerHTML=tconv(t)+'<sup>°</sup>';
+
+  /* الأيقونة */
+  var ic=document.querySelector('.hv-ic')||document.querySelector('.pgIcon');
+  if(ic)ic.innerHTML=(ic.className.indexOf('hv-ic')>=0&&typeof v2Icon==='function')?v2Icon(v2CodeKey(code,night)):(IC[iconForCode(code,night)]||'');
+
+  /* الوصف */
+  var ds=document.querySelector('.hv-desc')||document.querySelector('.pgDescIn');
+  if(ds){
+   var L=LI();
+   var lbl=(typeof codeLabel==='function')?codeLabel(code,L):'';
+   ds.innerHTML=lbl||'';
+  }
+
+  /* ★ شريط الزمن */
+  var tm=$("scrubTime"), dl=$("scrubDelta"), mt=$("scrubMeta");
+  if(tm){
+   var d=new Date(HOURLY.time[idx]);
+   var hh=d.getHours();
+   tm.innerHTML=(hh<10?'0':'')+hh+':00';
+  }
+  if(dl){
+   var L2=LI();
+   dl.innerHTML = SCRUB.h<0.5? ['الآن','الآن','Now'][L2] :
+    ('+'+Math.round(SCRUB.h)+['س','س','h'][L2]);
+  }
+  if(mt){
+   var L3=LI();
+   var parts=[];
+   if(pp>5)parts.push('💧 '+Math.round(pp)+'%');
+   if(mm>0.1)parts.push(Math.round(mm*10)/10+' '+['ملم','ملم','mm'][L3]);
+   if(wind>3)parts.push('💨 '+Math.round(wind));
+   mt.innerHTML=parts.join(' · ');
+  }
+
+  /* ★ القوس يتلوّن بحرارة تلك الساعة */
+  var arc=document.querySelector('.pgArc');
+  if(arc&&typeof tempColor==='function'){
+   try{ arc.setAttribute('stroke', tempColor(t)); }catch(e){}
+  }
+ }catch(e){}
+}
+
+/* ★ عودة ناعمة للحاضر */
+function scrubEase(){
+ if(SCRUB.raf)cancelAnimationFrame(SCRUB.raf);
+ var step=function(){
+  SCRUB.h *= 0.86;
+  if(SCRUB.h<0.06){
+   SCRUB.h=0; SCRUB.lastH=-1;
+   scrubPaint(); scrubOff();
+   /* استعد الأرقام الحقيقية */
+   setTimeout(function(){
+    try{ if(TAB==='now'&&typeof renderNow==='function')renderNow(); }catch(e){}
+   },200);
+   return;
+  }
+  scrubPaint();
+  SCRUB.raf=requestAnimationFrame(step);
+ };
+ SCRUB.raf=requestAnimationFrame(step);
+}
+
+/* ★ شريط الزمن — يظهر أثناء السحب فقط */
+function scrubBar(){
+ var L=LI();
+ return '<div class="scrubBar" id="scrubBar">'+
+  '<div class="sb-row">'+
+   '<span class="sb-time" id="scrubTime">--:--</span>'+
+   '<span class="sb-delta" id="scrubDelta">'+['الآن','الآن','Now'][L]+'</span>'+
+  '</div>'+
+  '<div class="sb-meta" id="scrubMeta"></div>'+
+ '</div>';
+}
+
+/* ★ تلميح أول مرة */
+function scrubHint(){
+ try{
+  if(stGet('scrubSeen')==='1')return '';
+  return '<div class="scrubHint" id="scrubHint">'+
+   ['👆 مرّر إصبعك على الدايرة وشوف السما تتغيّر',
+    '👆 مرّر إصبعك على الحلقة لتسافر عبر الساعات',
+    '👆 Swipe the ring to travel through the hours'][LI()]+'</div>';
+ }catch(e){ return ''; }
+}
+function scrubHintSeen(){
+ try{
+  stSet('scrubSeen','1');
+  var h=$("scrubHint");
+  if(h)h.className='scrubHint gone';
+ }catch(e){}
 }
 
 function buildScene(st){
@@ -3025,11 +3862,14 @@ function nightFactor(dt){
  return 1;
 }
 /* شدّة الذهبي: أقصاها عند لحظة الشروق/الغروب بالضبط */
+/* ★ شدّة الساعة الذهبية بتوقيت المدينة لا الجهاز
+   ⚠️ الخلل المُصلح: كانت تقارن ساعة جهازك بالشروق والغروب فمن يتصفح مدينة
+      بتوقيت مختلف لا يرى الغروب في وقته أبدًا */
 function goldenFactor(dt){
  if(!SUNRISE||!SUNSET)return 0;
- var sr=new Date(SUNRISE),ss=new Date(SUNSET),T=50*60000;
- function at(base){var x=new Date(dt);x.setHours(base.getHours(),base.getMinutes(),0,0);return x;}
- var d1=Math.abs(dt-at(sr)),d2=Math.abs(dt-at(ss)),d=Math.min(d1,d2);
+ var nowM=cityMinutes(dt||new Date()), srM=sunMinutes(SUNRISE), ssM=sunMinutes(SUNSET), T=50;
+ if(srM==null||ssM==null)return 0;
+ var d=Math.min(Math.abs(nowM-srM),Math.abs(nowM-ssM));
  if(d>T)return 0;
  return 1-(d/T);
 }
@@ -6205,7 +7045,11 @@ function applyAppCfg(c){
  if(c.navigation&&c.navigation.length){
   var nav=c.navigation.slice().sort(function(a,b){return (a.order||99)-(b.order||99);});
   var order=[],labels={};
+  NAV_KNOWN={};
   for(var i=0;i<nav.length;i++){
+   NAV_KNOWN[nav[i].id]=1;
+   /* اسم قديم لتبويب الطقس القادم */
+   if(nav[i].id==='fc'&&nav[i].label==='التوقعات'){nav[i].label='الطقس القادم';nav[i].en='Coming weather';}
    if(nav[i].enabled===false)continue;
    order.push(nav[i].id);
    if(nav[i].label)labels[nav[i].id]=nav[i];
@@ -6220,6 +7064,8 @@ function applyAppCfg(c){
  if(c.blocks&&c.blocks.now){
   BLOCK_ORDER=c.blocks.now.slice().sort(function(a,b){return (a.order||99)-(b.order||99);});
  }
+ /* ٢ب · الشريط السفلي */
+ if(c.dock&&c.dock.length){ DOCK_CFG=c.dock; try{buildDock();}catch(e){} }
  /* ٣ · الميزات */
  if(c.features)FEATURES=c.features;
  /* ★ وضع Rain Fusion من البوابة — shadow افتراضيًا */
@@ -6238,7 +7084,7 @@ function applyAppCfg(c){
  if(TAB==='now'&&typeof renderNow==='function')renderNow();
 }
 /* هل الميزة مفعّلة من البوابة؟ */
-var FEATURES=null, NAV_LABELS=null, BLOCK_ORDER=null;
+var FEATURES=null, NAV_LABELS=null, BLOCK_ORDER=null, NAV_KNOWN=null;
 function feat(name){
  if(!FEATURES)return true;               /* الافتراضي: مفعّلة */
  return FEATURES[name]!==false;
@@ -6283,6 +7129,12 @@ function visitorId(){
 }
 function pingVisit(){
  if(!PUSH_URL)return;
+ /* ★ لا تُكرّر قبل ١٥ دقيقة مهما استُدعيت */
+ try{
+  var last=parseInt(stGet('lastPing')||'0',10);
+  if(Date.now()-last<900000)return;
+  stSet('lastPing',String(Date.now()));
+ }catch(e){}
  fetch(PUSH_URL+'/visit',{method:'POST',
  headers:{'Content-Type':'application/json'},
  body:JSON.stringify({vid:visitorId()})}).catch(function(){});
@@ -7785,15 +8637,1591 @@ function trustCard(){
    ⚠️ SVG خالص: كيلوبايتات لا ميجابايتات · حادّ على أي شاشة
    ============================================================ */
 
+/* ============================================================
+   ★★★ رياضتي — تتبّع المشي والجري والدراجة ★★★
+   • المسافة والسرعة من GPS مع فلترة القفزات والضجيج
+   • الخطوات من حساس الحركة · وإن غاب فتقدير من طول الخطوة
+   • السعرات بمعادلة MET المعتمدة (Compendium of Physical Activities)
+   • الارتفاع من GPS · وإن غاب فمن بيانات ارتفاع مفتوحة بعد التمرين
+   • نافذة الرياضة: أنسب ساعة اليوم من الطقس الحقيقي
+
+   ⚠️ الخصوصية: كل البيانات (الوزن · الطول · المسارات) تبقى على
+      الجهاز فقط ولا تُرسل لأي خادم — فلا تُعد «جمعًا» للبيانات.
+   ⚠️ حدّ تطبيقات الويب: التتبع يعمل والتطبيق مفتوح. لذلك نمنع
+      انطفاء الشاشة تلقائيًا (Wake Lock) طوال التمرين.
+   ============================================================ */
+var FIT={on:false,paused:false,type:'walk',t0:0,elapsed:0,tick:null,watch:null,
+ wake:null,dist:0,pts:[],anchor:null,win:[],kcal:0,steps:0,motionSeen:false,
+ mEma:null,stepUp:false,lastStep:0,altEma:null,altRef:null,gain:0,loss:0,
+ altSeen:false,acc:null,last:null,wTick:0};
+
+var FIT_TYPES={
+ walk:{ic:'🚶',t:['مشي','مشي','Walk'],maxV:3.6},
+ run:{ic:'🏃',t:['جري','جري','Run'],maxV:8.5},
+ bike:{ic:'🚴',t:['دراجة','دراجة','Bike'],maxV:20}
+};
+
+/* ═══ الملف الشخصي — محلي فقط ═══ */
+function fitProf(){
+ try{ var p=JSON.parse(stGet('nafaf_fit_prof')||'null');
+  if(p&&p.w>20&&p.w<300&&p.h>100&&p.h<250)return p; }catch(e){}
+ return {w:70,h:170,set:false};
+}
+function fitHist(){
+ try{ var h=JSON.parse(stGet('nafaf_fit_hist')||'[]'); return Array.isArray(h)?h:[]; }
+ catch(e){ return []; }
+}
+function fitSaveHist(h){ try{ stSet('nafaf_fit_hist',JSON.stringify(h.slice(0,60))); }catch(e){} }
+
+/* ═══ MET حسب النوع والسرعة (Compendium 2011) ═══ */
+function fitMET(type,kmh){
+ if(kmh<0.8)return 1.3;                       /* واقف */
+ if(type==='bike'){
+  if(kmh<16)return 4.0; if(kmh<19)return 6.8; if(kmh<22.5)return 8.0;
+  if(kmh<25.7)return 10.0; return 12.0;
+ }
+ if(type==='run'||kmh>=7.5){
+  if(kmh<8)return 7.0; if(kmh<9.7)return 8.3; if(kmh<11.3)return 9.8;
+  if(kmh<12.9)return 11.0; if(kmh<14.5)return 11.8; if(kmh<16)return 12.8; return 14.5;
+ }
+ if(kmh<3.2)return 2.0; if(kmh<4.8)return 3.0; if(kmh<5.6)return 3.5;
+ if(kmh<6.4)return 4.3; return 5.0;
+}
+
+/* ═══ مؤشر الإجهاد الحراري — فئات مؤشر الحرارة (NWS) ═══ */
+function fitHeat(app){
+ if(app==null)return null;
+ if(app<5)  return {k:'cold',c:'#9fd4f5',t:['بارد','بارد','Cold']};
+ if(app<27) return {k:'ok',c:'#7fe39a',t:['مريح','مريح','Comfortable']};
+ if(app<32) return {k:'c1',c:'#e6d35e',t:['انتبه','حذر','Caution']};
+ if(app<41) return {k:'c2',c:'#ffb45e',t:['حرّ مرهق','حذر شديد','Extreme caution']};
+ if(app<54) return {k:'c3',c:'#ff7a5c',t:['خطر','خطر','Danger']};
+ return {k:'c4',c:'#e0405a',t:['خطر شديد','خطر شديد','Extreme danger']};
+}
+function fitScore(i){
+ var a=HOURLY.apparent_temperature[i], pp=(HOURLY.precipitation_probability||[])[i]||0,
+     w=(HOURLY.wind_speed_10m||[])[i]||0;
+ return 100-Math.abs(a-20)*3-Math.max(0,pp-20)*0.8-Math.max(0,w-25)*1.5;
+}
+
+/* ═══ نافذة الرياضة ═══ */
+function fitWindowCard(){
+ try{
+  if(!W||!HOURLY||!HOURLY.apparent_temperature)return '';
+  var L=LI(), base=Clock.hourIndex(), n=Math.min(18,HOURLY.time.length-base);
+  if(n<3)return '';
+  var nowH=fitHeat(W.apparent_temperature!=null?W.apparent_temperature:W.temperature_2m);
+  var best=-1,bs=-1e9,i;
+  for(i=0;i<n;i++){ var sc=fitScore(base+i); if(sc>bs){bs=sc;best=base+i;} }
+  var bh=new Date(HOURLY.time[best]).getHours();
+  var bApp=Math.round(HOURLY.apparent_temperature[best]);
+  var bHeat=fitHeat(HOURLY.apparent_temperature[best]);
+  var allHot=true;
+  for(i=0;i<n;i++)if(HOURLY.apparent_temperature[base+i]<41){allHot=false;break;}
+
+  var h='<div class="fitWin">'+
+   '<div class="fw-top"><span class="fw-lbl">'+['الإجهاد الحراري الحين','الإجهاد الحراري الآن','Heat stress now'][L]+'</span>'+
+   (nowH?'<span class="fw-badge" style="background:'+nowH.c+'">'+nowH.t[L]+'</span>':'')+'</div>';
+  if(allHot){
+   h+='<div class="fw-best">'+['كل الساعات الجاية فوق حدّ الخطر الحراري','جميع الساعات القادمة فوق حد الخطر الحراري','All coming hours are above the danger threshold'][L]+'</div>';
+  } else {
+   h+='<div class="fw-best">'+['أنسب وقت للرياضة','أنسب وقت للرياضة','Best time to exercise'][L]+
+    ' <b>'+(bh<10?'0':'')+bh+':00</b> · '+['الإحساس','الإحساس','feels'][L]+' '+tconv(bApp)+'°'+
+    (bHeat?' · <span style="color:'+bHeat.c+'">'+bHeat.t[L]+'</span>':'')+'</div>';
+  }
+  /* شريط ١٢ ساعة */
+  var mx=-99,mn=99,m=Math.min(12,n);
+  for(i=0;i<m;i++){var v=HOURLY.apparent_temperature[base+i];if(v>mx)mx=v;if(v<mn)mn=v;}
+  h+='<div class="fw-strip">';
+  for(i=0;i<m;i++){
+   var ix=base+i, ap=HOURLY.apparent_temperature[ix], hz=fitHeat(ap);
+   var pct=mx===mn?60:Math.round(28+(ap-mn)/(mx-mn)*72);
+   var hr=new Date(HOURLY.time[ix]).getHours();
+   h+='<div class="fw-col'+(ix===best&&!allHot?' best':'')+'">'+
+    '<div class="fw-bar"><i style="height:'+pct+'%;background:'+(hz?hz.c:'#888')+'"></i></div>'+
+    '<div class="fw-h">'+(hr<10?'0':'')+hr+'</div></div>';
+  }
+  h+='</div></div>';
+  return h;
+ }catch(e){ return ''; }
+}
+
+/* ═══ الحساب اللحظي ═══ */
+function fitSpeedKmh(){
+ var now=Date.now(), d=0, t0=null, i;
+ for(i=FIT.win.length-1;i>=0;i--){
+  if(now-FIT.win[i].t>25000)break;
+  d+=FIT.win[i].d; t0=FIT.win[i].t;
+ }
+ if(t0==null)return 0;
+ var dt=Math.max(5,(now-t0)/1000);
+ return d/dt*3.6;
+}
+function fitStride(){
+ var p=fitProf();
+ return p.h/100*(FIT.type==='run'?0.65:0.415);  /* متر */
+}
+function fitStepsNow(){
+ if(FIT.type==='bike')return null;
+ if(FIT.motionSeen)return {v:FIT.steps,est:false};
+ return {v:Math.round(FIT.dist/fitStride()),est:true};
+}
+function fitFmtTime(s){
+ s=Math.max(0,Math.round(s));
+ var hh=Math.floor(s/3600), mm=Math.floor(s%3600/60), ss=s%60;
+ return (hh?hh+':':'')+(mm<10&&hh?'0':'')+mm+':'+(ss<10?'0':'')+ss;
+}
+function fitPace(){
+ if(FIT.dist<50)return '--:--';
+ var sPerKm=FIT.elapsed/(FIT.dist/1000);
+ if(sPerKm>3600)return '--:--';
+ var m=Math.floor(sPerKm/60), s=Math.round(sPerKm%60);
+ if(s===60){m++;s=0;}
+ return m+':'+(s<10?'0':'')+s;
+}
+
+/* ═══ GPS ═══ */
+function fitPos(p){
+ var c=p.coords; FIT.acc=c.accuracy;
+ if(!FIT.on)return;
+ if(FIT.paused){
+  FIT.anchor=null;
+  /* ★ استئناف تلقائي حين يتحرك بعد توقف تلقائي */
+  if(FIT.autoPaused&&c.accuracy<=35){
+   if(!FIT.apRef)FIT.apRef={lat:c.latitude,lon:c.longitude};
+   else if(geoKm(FIT.apRef.lat,FIT.apRef.lon,c.latitude,c.longitude)*1000>8){
+    FIT.paused=false;FIT.autoPaused=false;FIT.apRef=null;FIT.lastMoveT=Date.now();
+    try{ if(navigator.vibrate)navigator.vibrate(15); }catch(e){}
+    toast(['كمّلنا — رجعت تتحرك','استؤنف التمرين','Resumed'][LI()]); renderFit();
+   }
+  }
+  fitMapPush(c.latitude,c.longitude,false);
+  return;
+ }
+ if(c.accuracy>35){ fitLive(); return; }
+ var pt={lat:c.latitude,lon:c.longitude,t:p.timestamp||Date.now(),alt:c.altitude};
+
+ /* الارتفاع من GPS مع تنعيم وعتبة ٣ م ضد التذبذب */
+ if(c.altitude!=null&&(c.altitudeAccuracy==null||c.altitudeAccuracy<25)){
+  FIT.altSeen=true;
+  FIT.altEma=FIT.altEma==null?c.altitude:FIT.altEma*0.8+c.altitude*0.2;
+  if(FIT.altRef==null)FIT.altRef=FIT.altEma;
+  var dA=FIT.altEma-FIT.altRef;
+  if(dA>=3){FIT.gain+=dA;FIT.altRef=FIT.altEma;}
+  else if(dA<=-3){FIT.loss+=-dA;FIT.altRef=FIT.altEma;}
+ }
+
+ if(!FIT.anchor){ FIT.anchor=pt; FIT.pts.push([pt.lat,pt.lon,pt.alt]); fitMapPush(pt.lat,pt.lon,true); fitLive(); return; }
+ var d=geoKm(FIT.anchor.lat,FIT.anchor.lon,pt.lat,pt.lon)*1000;
+ var dt=(pt.t-FIT.anchor.t)/1000;
+ if(dt<=0)return;
+ /* قفزة GPS غير منطقية لهذا النوع — تُرفض */
+ if(d/dt>FIT_TYPES[FIT.type].maxV){ FIT.anchor=pt; return; }
+ /* حركة أصغر من دقة القياس — تُؤجّل حتى تتراكم */
+ if(d<Math.max(3,c.accuracy*0.35)){ fitLive(); return; }
+ FIT.dist+=d;
+ FIT.win.push({t:Date.now(),d:d});
+ if(FIT.win.length>60)FIT.win.shift();
+ FIT.anchor=pt;
+ FIT.pts.push([pt.lat,pt.lon,pt.alt]);
+ FIT.lastMoveT=Date.now();
+ fitMapPush(pt.lat,pt.lon,true);
+ fitSplitCheck();
+ fitLive();
+}
+function fitPosErr(e){
+ var L=LI();
+ if(e&&e.code===1){
+  toast(['محتاج إذن الموقع عشان أحسب المسافة','يلزم إذن الموقع لحساب المسافة','Location permission needed'][L],true);
+  fitStop(true);
+ }
+}
+
+/* ═══ الخطوات من حساس الحركة ═══ */
+function fitMotion(e){
+ if(!FIT.on||FIT.paused)return;
+ var a=e.accelerationIncludingGravity;
+ if(!a||a.x==null)return;
+ var m=Math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z);
+ FIT.mEma=FIT.mEma==null?m:FIT.mEma*0.92+m*0.08;
+ var d=m-FIT.mEma, now=Date.now();
+ var th=(FIT.type==='run')?2.2:1.1;
+ if(!FIT.stepUp&&d>th){
+  FIT.stepUp=true;
+  if(now-FIT.lastStep>260){ FIT.steps++; FIT.motionSeen=true; FIT.lastStep=now; }
+ } else if(FIT.stepUp&&d<th*0.3){ FIT.stepUp=false; }
+}
+
+/* ═══ منع انطفاء الشاشة ═══ */
+function fitWake(){
+ try{
+  if(!('wakeLock' in navigator))return;
+  navigator.wakeLock.request('screen').then(function(l){ FIT.wake=l; }).catch(function(){});
+ }catch(e){}
+}
+function fitUnwake(){ try{ if(FIT.wake){FIT.wake.release();FIT.wake=null;} }catch(e){} }
+
+/* ═══ التشغيل ═══ */
+function fitStart(){
+ var L=LI();
+ if(!navigator.geolocation){
+  toast(['جهازك ما يدعم تحديد الموقع','الجهاز لا يدعم تحديد الموقع','Location not supported'][L],true); return;
+ }
+ FIT.on=true; FIT.paused=false; FIT.t0=Date.now(); FIT.elapsed=0; FIT.dist=0; FIT.pts=[];
+ FIT.anchor=null; FIT.win=[]; FIT.kcal=0; FIT.steps=0; FIT.motionSeen=false; FIT.mEma=null;
+ FIT.stepUp=false; FIT.lastStep=0; FIT.altEma=null; FIT.altRef=null; FIT.gain=0; FIT.loss=0;
+ FIT.altSeen=false; FIT.acc=null; FIT.last=null; FIT.wTick=0;
+ FIT.goalHit=0; FIT.splits=[]; FIT.nextKm=1000; FIT.splitT=0; FIT.lastMoveT=Date.now(); FIT.autoPaused=false; FIT.apRef=null;
+
+ /* حساس الحركة — آيفون يطلب إذنًا صريحًا من ضغطة المستخدم */
+ try{
+  if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){
+   DeviceMotionEvent.requestPermission().then(function(r){
+    if(r==='granted')window.addEventListener('devicemotion',fitMotion);
+   }).catch(function(){});
+  } else window.addEventListener('devicemotion',fitMotion);
+ }catch(e){}
+
+ try{
+  FIT.watch=navigator.geolocation.watchPosition(fitPos,fitPosErr,
+   {enableHighAccuracy:true,maximumAge:1000,timeout:20000});
+ }catch(e){}
+ fitWake();
+ try{ if(navigator.vibrate)navigator.vibrate([15,60,15]); }catch(e){}
+
+ FIT.tick=setInterval(function(){
+  if(!FIT.on)return;
+  /* ★ توقف تلقائي بعد ١٢ ثانية بلا حركة */
+  if(!FIT.paused&&fitAP()&&FIT.elapsed>20&&Date.now()-FIT.lastMoveT>12000){
+   FIT.paused=true;FIT.autoPaused=true;FIT.anchor=null;FIT.apRef=null;
+   try{ if(navigator.vibrate)navigator.vibrate([12,50,12]); }catch(e){}
+   toast(['وقّفنا مؤقتًا — ما تتحرك','إيقاف تلقائي','Auto-paused'][LI()]); renderFit();
+  }
+  if(!FIT.paused){
+   FIT.elapsed+=1;
+   var kmh=fitSpeedKmh();
+   FIT.kcal+=fitMET(FIT.type,kmh)*fitProf().w/3600;
+  }
+  fitLive();
+  /* ودجت الإشعار يعرض التمرين كل دقيقة */
+  FIT.wTick++;
+  if(FIT.wTick%60===0)fitWidget();
+ },1000);
+ renderFit();
+ fitPillPaint();
+}
+function fitPause(){
+ FIT.paused=!FIT.paused;
+ if(FIT.paused)FIT.anchor=null;
+ try{ if(navigator.vibrate)navigator.vibrate(12); }catch(e){}
+ renderFit();
+}
+function fitStop(silent){
+ if(!FIT.on)return;
+ FIT.on=false;
+ if(FIT.tick){clearInterval(FIT.tick);FIT.tick=null;}
+ try{ if(FIT.watch!=null)navigator.geolocation.clearWatch(FIT.watch); }catch(e){}
+ FIT.watch=null;
+ try{ window.removeEventListener('devicemotion',fitMotion); }catch(e){}
+ fitUnwake();
+ try{ if(navigator.vibrate)navigator.vibrate([20,80,20,80,20]); }catch(e){}
+
+ if(!silent&&FIT.elapsed>=20){
+  var st=fitStepsNow();
+  /* تقليل النقاط المحفوظة — المسار يكفيه ١٥٠ نقطة */
+  var pts=FIT.pts, step=Math.max(1,Math.ceil(pts.length/150)), route=[];
+  for(var i=0;i<pts.length;i+=step)route.push(pts[i]);
+  if(pts.length&&route[route.length-1]!==pts[pts.length-1])route.push(pts[pts.length-1]);
+  var s={id:Date.now(),ts:FIT.t0,type:FIT.type,dur:FIT.elapsed,dist:Math.round(FIT.dist),
+   kcal:Math.round(FIT.kcal),steps:st?st.v:null,stepsEst:st?st.est:false,
+   gain:Math.round(FIT.gain),altSrc:FIT.altSeen?'gps':null,route:route,splits:FIT.splits||[],place:(CUR&&CUR.n)||''};
+  var rec0=fitRecords()[s.type]||{dist:0,pace:0,kcal:0};
+  var h=fitHist(); h.unshift(s); fitSaveHist(h);
+  var pNew=(s.dist>=1000)?s.dur/(s.dist/1000):0;
+  var sameT=0; for(var q2=1;q2<h.length;q2++)if(h[q2].type===s.type)sameT++;
+  if(sameT>0&&s.dist>=500&&(s.dist>rec0.dist||(pNew&&rec0.pace&&pNew<rec0.pace)))
+   setTimeout(function(){toast(['🏅 رقم قياسي جديد!','🏅 رقم قياسي جديد','🏅 New personal record!'][LI()]);},900);
+  FIT.last=s;
+  if(!FIT.altSeen&&route.length>=2)fitElevFill(s);
+  FIT.lastOld=false;
+  if(s.dist>=200)fitConfetti();
+  fitBadgeCheck();
+ }
+ try{ if(typeof WIDGET==='object'&&WIDGET.on&&typeof widgetShow==='function')widgetShow(); }catch(e){}
+ renderFit();
+ fitPillPaint();
+}
+
+/* ═══ الارتفاع من بيانات مفتوحة إن غاب عن GPS ═══ */
+function fitElevFill(s){
+ try{
+  var r=s.route, step=Math.max(1,Math.ceil(r.length/90)), la=[], lo=[], idx=[];
+  for(var i=0;i<r.length;i+=step){ la.push(r[i][0].toFixed(5)); lo.push(r[i][1].toFixed(5)); idx.push(i); }
+  fetch('https://api.open-meteo.com/v1/elevation?latitude='+la.join(',')+'&longitude='+lo.join(','))
+  .then(function(x){return x.ok?x.json():null;})
+  .then(function(d){
+   if(!d||!d.elevation)return;
+   var e=d.elevation, g=0, ref=e[0];
+   for(var k=1;k<e.length;k++){
+    if(e[k]-ref>=2){g+=e[k]-ref;ref=e[k];} else if(ref-e[k]>=2)ref=e[k];
+   }
+   for(var j=0;j<idx.length;j++)if(s.route[idx[j]])s.route[idx[j]][2]=e[j];
+   var h=fitHist();
+   for(var q=0;q<h.length;q++)if(h[q].id===s.id){h[q].gain=Math.round(g);h[q].altSrc='dem';h[q].route=s.route;}
+   fitSaveHist(h);
+   s.gain=Math.round(g); s.altSrc='dem';
+   if(TAB==='fit')renderFit();
+  }).catch(function(){});
+ }catch(e){}
+}
+
+/* ═══ تحديث الأرقام بلا إعادة رسم ═══ */
+function fitLive(){
+ if(TAB!=='fit'){ fitPillPaint(); return; }
+ var L=LI(), e=function(id){return document.getElementById(id);};
+ if(e('fitTime'))e('fitTime').innerHTML=fitFmtTime(FIT.elapsed);
+ if(e('fitDist'))e('fitDist').innerHTML=(FIT.dist/1000).toFixed(2);
+ var kmh=fitSpeedKmh();
+ if(e('fitPace'))e('fitPace').innerHTML=FIT.type==='bike'?kmh.toFixed(1):fitPace();
+ if(e('fitKcal'))e('fitKcal').innerHTML=Math.round(FIT.kcal);
+ var st=fitStepsNow();
+ if(e('fitSteps'))e('fitSteps').innerHTML=st?((st.est?'~':'')+st.v):'—';
+ if(e('fitGain'))e('fitGain').innerHTML='+'+Math.round(FIT.gain);
+ if(e('fitGps')){
+  var a=FIT.acc, cls=a==null?'wait':(a<=15?'good':(a<=35?'fair':'bad'));
+  e('fitGps').className='fitGps '+cls;
+  e('fitGps').innerHTML=a==null?['نلقط إشارة GPS…','جارٍ التقاط الإشارة…','Acquiring GPS…'][L]:
+   ('GPS ±'+Math.round(a)+' '+['م','م','m'][L]);
+ }
+ if(FIT.elapsed%10===0){fitGoalRefresh();
+  try{var gd=fitGoal(),td=fitToday();
+   if(!FIT.goalHit&&(td.dist/1000>=gd.km||td.steps>=gd.steps)){FIT.goalHit=1;fitConfetti();
+    toast(['🎯 وصلت هدفك اليوم! كفو','🎯 حققت هدف اليوم','🎯 Daily goal reached!'][LI()]);
+    try{if(navigator.vibrate)navigator.vibrate([40,60,40,60,120]);}catch(e){}}
+  }catch(e){}}
+ if(!FIT.map&&e('fitRoute')&&FIT.pts.length>1&&FIT.elapsed%5===0)e('fitRoute').innerHTML=fitRouteSvg(FIT.pts,true);
+}
+
+/* ═══ رسم المسار والارتفاع ═══ */
+function fitRouteSvg(r,live){
+ if(!r||r.length<2)return '';
+ var mnLa=99,mxLa=-99,mnLo=999,mxLo=-999,i;
+ for(i=0;i<r.length;i++){
+  if(r[i][0]<mnLa)mnLa=r[i][0]; if(r[i][0]>mxLa)mxLa=r[i][0];
+  if(r[i][1]<mnLo)mnLo=r[i][1]; if(r[i][1]>mxLo)mxLo=r[i][1];
+ }
+ var k=Math.cos((mnLa+mxLa)/2*Math.PI/180);
+ var w=(mxLo-mnLo)*k, hgt=(mxLa-mnLa), sp=Math.max(w,hgt)||1e-6;
+ var W2=300,H2=150,pad=14, sc=Math.min((W2-2*pad)/(w||sp),(H2-2*pad)/(hgt||sp));
+ var ox=(W2-w*sc)/2, oy=(H2-hgt*sc)/2, d='';
+ for(i=0;i<r.length;i++){
+  var x=ox+(r[i][1]-mnLo)*k*sc, y=oy+(mxLa-r[i][0])*sc;
+  d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);
+ }
+ var f=r[0], l=r[r.length-1];
+ var fx=ox+(f[1]-mnLo)*k*sc, fy=oy+(mxLa-f[0])*sc, lx=ox+(l[1]-mnLo)*k*sc, ly=oy+(mxLa-l[0])*sc;
+ return '<svg viewBox="0 0 300 150" class="fitSvg">'+
+  '<path d="'+d+'" fill="none" stroke="#e6b45e" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>'+
+  '<circle cx="'+fx.toFixed(1)+'" cy="'+fy.toFixed(1)+'" r="5" fill="#7fe39a"/>'+
+  '<circle cx="'+lx.toFixed(1)+'" cy="'+ly.toFixed(1)+'" r="5" fill="'+(live?'#9fd4f5':'#ff7a5c')+'"/>'+
+  '</svg>';
+}
+function fitElevSvg(r){
+ var a=[],i; for(i=0;i<r.length;i++)if(r[i][2]!=null)a.push(r[i][2]);
+ if(a.length<3)return '';
+ var mn=Math.min.apply(null,a), mx=Math.max.apply(null,a), rg=Math.max(4,mx-mn), d='M0 60';
+ for(i=0;i<a.length;i++){
+  var x=i/(a.length-1)*300, y=56-(a[i]-mn)/rg*48;
+  d+='L'+x.toFixed(1)+' '+y.toFixed(1);
+ }
+ d+='L300 60Z';
+ return '<svg viewBox="0 0 300 60" class="fitElev"><path d="'+d+'" fill="rgba(159,212,245,.28)" stroke="#9fd4f5" stroke-width="1.6"/></svg>'+
+  '<div class="fitElevLbl"><span>'+Math.round(mn)+' م</span><span>'+Math.round(mx)+' م</span></div>';
+}
+
+/* ═══ ودجت الإشعار أثناء التمرين ═══ */
+function fitWidget(){
+ try{
+  if(typeof WIDGET!=='object'||!WIDGET.on||!FIT.on)return;
+  if(!('serviceWorker' in navigator))return;
+  var L=LI(), T=FIT_TYPES[FIT.type];
+  navigator.serviceWorker.ready.then(function(reg){
+   return reg.showNotification(T.ic+' '+T.t[L]+' · '+(FIT.dist/1000).toFixed(2)+' '+['كم','كم','km'][L],{
+    body:'⏱ '+fitFmtTime(FIT.elapsed)+' · 🔥 '+Math.round(FIT.kcal)+' '+['سعرة','سعرة','kcal'][L]+
+     ' · ⛰ +'+Math.round(FIT.gain)+' '+['م','م','m'][L],
+    tag:'nafaf-widget',renotify:false,silent:true,requireInteraction:true,
+    dir:'rtl',lang:'ar',icon:'icons/icon-192.png',badge:'icons/icon-96.png',
+    data:{url:'./?tab=fit',widget:true}});
+  }).catch(function(){});
+ }catch(e){}
+}
+
+/* ═══ شريط التمرين العائم في باقي الصفحات ═══ */
+function fitPillPaint(){
+ var p=document.getElementById('fitPill'); if(!p)return;
+ if(!FIT.on||TAB==='fit'){ p.className='fitPill'; return; }
+ var T=FIT_TYPES[FIT.type];
+ p.className='fitPill on'+(FIT.paused?' paused':'');
+ p.innerHTML=T.ic+' '+fitFmtTime(FIT.elapsed)+' · '+(FIT.dist/1000).toFixed(2)+' '+['كم','كم','km'][LI()];
+}
+
+/* ═══ رياضتي — الإضافات: خريطة المشي · الكيلومترات · التوقف التلقائي
+   · أهداف اليوم · الأرقام القياسية · المشاركة ═══
+   ⚠️ كل البيانات محلية على الجهاز فقط */
+function fitAP(){ try{ return stGet('nafaf_fit_ap')!=='0'; }catch(e){ return true; } }
+function fitGoal(){
+ try{ var g=JSON.parse(stGet('nafaf_fit_goal')||'null'); if(g&&g.steps>0&&g.km>0)return g; }catch(e){}
+ return {steps:8000,km:5};
+}
+function fitToday(){
+ var h=fitHist(), d0=new Date(); d0.setHours(0,0,0,0);
+ var o={steps:0,dist:0,kcal:0,n:0}, i;
+ for(i=0;i<h.length;i++)if(h[i].ts>=d0.getTime()){o.steps+=h[i].steps||0;o.dist+=h[i].dist||0;o.kcal+=h[i].kcal||0;o.n++;}
+ if(FIT.on){var st=fitStepsNow();o.steps+=st?st.v:0;o.dist+=FIT.dist;o.kcal+=Math.round(FIT.kcal);}
+ return o;
+}
+function fitRing(pct,colr,big,small){
+ var C=2*Math.PI*26, off=C*(1-Math.min(1,pct));
+ return '<div class="fgRing"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="7"/>'+
+  '<circle cx="32" cy="32" r="26" fill="none" stroke="'+colr+'" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 32 32)"/></svg>'+
+  '<div><b>'+big+'</b><small>'+small+'</small></div></div>';
+}
+function fitGoalCard(inner){
+ var L=LI(), g=fitGoal(), td=fitToday();
+ return (inner?'':'<div id="fitGoalBox">')+'<div class="fitCard"><div class="fitHead"><span>'+['هدفك اليوم','هدف اليوم','Today\u2019s goal'][L]+'</span>'+
+  '<button class="fitLink sm" id="fitGoalEd">'+['عدّل','تعديل','Edit'][L]+'</button></div>'+
+  '<div class="fgRow">'+
+   fitRing(td.steps/g.steps,'#E3A94B',td.steps.toLocaleString('en'),['من ','من ','of '][L]+g.steps.toLocaleString('en')+' '+['خطوة','خطوة','steps'][L])+
+   fitRing(td.dist/1000/g.km,'#5CC9B0',(td.dist/1000).toFixed(1),['من ','من ','of '][L]+g.km+' '+['كم','كم','km'][L])+
+  '</div>'+(td.kcal?'<div class="fitNote">🔥 '+td.kcal+' '+['سعرة اليوم','سعرة اليوم','kcal today'][L]+'</div>':'')+'</div>'+(inner?'':'</div>');
+}
+function fitGoalEdit(){
+ var g=fitGoal(), a=prompt(['كم خطوة هدفك اليومي؟','هدف الخطوات اليومي؟','Daily step goal?'][LI()],g.steps);
+ if(a===null)return; var b2=prompt(['وكم كيلومتر؟','وهدف المسافة (كم)؟','Distance goal (km)?'][LI()],g.km);
+ var sN=parseInt(a,10),kN=parseFloat(b2);
+ if(sN>=500&&sN<=60000&&kN>=.5&&kN<=100){try{stSet('nafaf_fit_goal',JSON.stringify({steps:sN,km:kN}));}catch(e){} renderFit();}
+}
+function fitGoalRefresh(){
+ var b=document.getElementById('fitGoalBox'); if(!b)return;
+ b.innerHTML=fitGoalCard(true); var ge=document.getElementById('fitGoalEd'); if(ge)ge.onclick=fitGoalEdit;
+}
+function fitRecords(){
+ var h=fitHist(), r={}, i;
+ for(i=0;i<h.length;i++){var x=h[i],t=x.type;if(!r[t])r[t]={dist:0,pace:0,kcal:0};
+  if(x.dist>r[t].dist)r[t].dist=x.dist;
+  if(x.kcal>r[t].kcal)r[t].kcal=x.kcal;
+  if(x.dist>=1000){var p=x.dur/(x.dist/1000);if(!r[t].pace||p<r[t].pace)r[t].pace=p;}}
+ return r;
+}
+function fitPaceTxt(sPerKm){ if(!sPerKm)return '—'; var m=Math.floor(sPerKm/60),s=Math.round(sPerKm%60); if(s===60){m++;s=0;} return m+':'+(s<10?'0':'')+s; }
+function fitRecordsCard(){
+ var L=LI(), r=fitRecords(), h='', k;
+ for(k in r){ if(!FIT_TYPES[k])continue;
+  h+='<div class="frRow"><span>'+FIT_TYPES[k].ic+' '+FIT_TYPES[k].t[L]+'</span>'+
+   '<span><b>'+(r[k].dist/1000).toFixed(2)+'</b> '+['كم','كم','km'][L]+'</span>'+
+   '<span><b>'+fitPaceTxt(r[k].pace)+'</b> '+['د/كم','د/كم','/km'][L]+'</span>'+
+   '<span><b>'+r[k].kcal+'</b> 🔥</span></div>'; }
+ if(!h)return '';
+ return '<div class="fitCard"><div class="fitHead"><span>🏅 '+['أرقامك القياسية','أرقامك القياسية','Personal records'][L]+'</span></div>'+h+'</div>';
+}
+/* خريطة المشي */
+function fitMapsOff(){
+ try{ if(FIT.map){FIT.map.remove();} }catch(e){} FIT.map=null;FIT.line=null;FIT.me=null;
+ try{ if(FIT.smap){FIT.smap.remove();} }catch(e){} FIT.smap=null;
+}
+function fitMapLive(){
+ var el=document.getElementById('fitMap'); if(!el||typeof L==='undefined'||!L.map)return false;
+ try{
+  var c=FIT.pts.length?[FIT.pts[FIT.pts.length-1][0],FIT.pts[FIT.pts.length-1][1]]:(CUR?[CUR.lat,CUR.lon]:[23.6,58.4]);
+  FIT.map=L.map(el,{zoomControl:false,attributionControl:false}).setView(c,16);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,className:'osmDark'}).addTo(FIT.map);
+  FIT.line=L.polyline(FIT.pts.map(function(p){return [p[0],p[1]];}),{color:'#E3A94B',weight:5,opacity:.95,lineCap:'round'}).addTo(FIT.map);
+  FIT.me=L.circleMarker(c,{radius:7,color:'#fff',weight:3,fillColor:'#5CC9B0',fillOpacity:1}).addTo(FIT.map);
+  FIT.follow=true;
+  FIT.map.on('dragstart',function(){FIT.follow=false;var b=document.getElementById('fitCenter');if(b)b.className='fitCenter on';});
+  return true;
+ }catch(e){ return false; }
+}
+function fitMapPush(lat,lon,addLine){
+ try{
+  if(!FIT.map)return;
+  if(addLine&&FIT.line)FIT.line.addLatLng([lat,lon]);
+  if(FIT.me)FIT.me.setLatLng([lat,lon]);
+  if(FIT.follow)FIT.map.panTo([lat,lon],{animate:true,duration:.6});
+ }catch(e){}
+}
+function fitMapSummary(s){
+ var el=document.getElementById('fitSumMap'); if(!el||!s.route||s.route.length<2||typeof L==='undefined'||!L.map)return false;
+ try{
+  var ll=s.route.map(function(p){return [p[0],p[1]];});
+  FIT.smap=L.map(el,{zoomControl:false,attributionControl:false,dragging:true,scrollWheelZoom:false});
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,className:'osmDark'}).addTo(FIT.smap);
+  var pl=L.polyline(ll,{color:'#E3A94B',weight:5,opacity:.95,lineCap:'round'}).addTo(FIT.smap);
+  L.circleMarker(ll[0],{radius:6,color:'#fff',weight:2,fillColor:'#7fe39a',fillOpacity:1}).addTo(FIT.smap);
+  L.circleMarker(ll[ll.length-1],{radius:6,color:'#fff',weight:2,fillColor:'#ff7a5c',fillOpacity:1}).addTo(FIT.smap);
+  FIT.smap.fitBounds(pl.getBounds(),{padding:[22,22]});
+  return true;
+ }catch(e){ return false; }
+}
+/* الكيلومترات */
+function fitSplitCheck(){
+ if(!FIT.splits)return;
+ while(FIT.dist>=FIT.nextKm){
+  var dur=FIT.elapsed-FIT.splitT; FIT.splits.push(dur); FIT.splitT=FIT.elapsed; FIT.nextKm+=1000;
+  try{ if(navigator.vibrate)navigator.vibrate([30,70,30]); }catch(e){}
+  var L=LI();
+  toast(['الكيلو ','الكيلومتر ','Km '][L]+FIT.splits.length+' · '+fitPaceTxt(dur)+' '+['د','د','min'][L]);
+ }
+}
+function fitSplitsHtml(sp){
+ if(!sp||!sp.length)return '';
+ var L=LI(), mx=Math.max.apply(null,sp), mn=Math.min.apply(null,sp), h='<div class="fitSplits"><div class="fitHead"><span>'+['كل كيلو','الكيلومترات','Splits'][L]+'</span></div>';
+ for(var i=0;i<sp.length;i++){var w=mx===mn?70:Math.round(40+(mx-sp[i])/(mx-mn)*55);
+  h+='<div class="fsRow"><span>'+(i+1)+'</span><i style="width:'+w+'%" class="'+(sp[i]===mn?'best':'')+'"></i><b>'+fitPaceTxt(sp[i])+'</b></div>';}
+ return h+'</div>';
+}
+function fitShare(s){
+ var L=LI(), T=FIT_TYPES[s.type];
+ var txt=T.ic+' '+T.t[L]+' — '+(s.dist/1000).toFixed(2)+' '+['كم','كم','km'][L]+' · '+fitFmtTime(s.dur)+
+  ' · '+s.kcal+' '+['سعرة','سعرة','kcal'][L]+(s.steps?' · '+s.steps+' '+['خطوة','خطوة','steps'][L]:'')+
+  (s.place?' · '+s.place:'')+'\n'+['مع نفاف 🌤 nafaf.online','مع نفاف 🌤 nafaf.online','with Nafaf 🌤 nafaf.online'][L];
+ try{ if(navigator.share){navigator.share({text:txt}).catch(function(){});return;} }catch(e){}
+ try{ navigator.clipboard.writeText(txt).then(function(){toast(['نسخت الملخّص','تم نسخ الملخص','Summary copied'][L]);}); }catch(e){}
+}
+
+/* ═══ رياضتي — الحماس: عدّ تنازلي · احتفال · سلسلة أيام · تحدي الأسبوع · أوسمة ═══ */
+var FIT_BADGES=[
+ {k:'first',  ic:'👟',t:['أول خطوة','أول تمرين','First step'],d:['سجّلت أول تمرين','أول تمرين مسجّل','Your first workout']},
+ {k:'km5',    ic:'🥉',t:['خمسة كيلو','٥ كيلومترات','5 km'],d:['٥ كم بتمرين واحد','٥ كم في تمرين واحد','5 km in one workout']},
+ {k:'km10',   ic:'🥈',t:['عشرة كيلو','١٠ كيلومترات','10 km'],d:['١٠ كم بتمرين واحد','١٠ كم في تمرين واحد','10 km in one workout']},
+ {k:'steps10k',ic:'🚶',t:['عشرة آلاف','١٠ آلاف خطوة','10k steps'],d:['١٠ آلاف خطوة بيوم','١٠ آلاف خطوة في يوم','10,000 steps in a day']},
+ {k:'streak3',ic:'🔥',t:['ثلاث أيام','سلسلة ٣ أيام','3-day streak'],d:['تمرّنت ٣ أيام ورا بعض','٣ أيام متتالية','3 days in a row']},
+ {k:'streak7',ic:'🏆',t:['أسبوع كامل','سلسلة ٧ أيام','7-day streak'],d:['أسبوع بدون انقطاع','٧ أيام متتالية','7 days in a row']},
+ {k:'dawn',   ic:'🌅',t:['فجر نفاف','تمرين الفجر','Dawn runner'],d:['تمرين قبل ٦:٣٠ الصبح','تمرين قبل ٦:٣٠ صباحًا','Workout before 6:30 am']},
+ {k:'night',  ic:'🌙',t:['سهّير','تمرين ليلي','Night owl'],d:['تمرين بعد ٩ بالليل','تمرين بعد ٩ مساءً','Workout after 9 pm']},
+ {k:'climb',  ic:'⛰️',t:['متسلّق','متسلّق','Climber'],d:['صعود ١٠٠ م بتمرين','صعود ١٠٠ م في تمرين','100 m climb in a workout']},
+ {k:'total50',ic:'💎',t:['خمسين كيلو','٥٠ كم إجمالًا','50 km total'],d:['٥٠ كم مجموع كل تمارينك','٥٠ كم إجمالي التمارين','50 km across all workouts']}
+];
+function fitStreak(){
+ var h=fitHist(), days={}, i;
+ for(i=0;i<h.length;i++){var d=new Date(h[i].ts);days[d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()]=1;}
+ var c=new Date(), n=0, key=function(x){return x.getFullYear()+'-'+x.getMonth()+'-'+x.getDate();};
+ if(!days[key(c)])c.setDate(c.getDate()-1);
+ while(days[key(c)]){n++;c.setDate(c.getDate()-1);}
+ return n;
+}
+function fitEarned(){
+ var h=fitHist(), e={}, tot=0, byDay={}, i;
+ if(h.length)e.first=1;
+ for(i=0;i<h.length;i++){var x=h[i],d=new Date(x.ts),hr=d.getHours()+d.getMinutes()/60,dk=d.toDateString();
+  tot+=x.dist; byDay[dk]=(byDay[dk]||0)+(x.steps||0);
+  if(x.dist>=5000)e.km5=1; if(x.dist>=10000)e.km10=1; if((x.gain||0)>=100)e.climb=1;
+  if(hr<6.5)e.dawn=1; if(hr>=21)e.night=1;}
+ for(var k in byDay)if(byDay[k]>=10000)e.steps10k=1;
+ var st=fitStreak(); if(st>=3)e.streak3=1; if(st>=7)e.streak7=1;
+ if(tot>=50000)e.total50=1;
+ return e;
+}
+function fitWeekKm(){
+ var h=fitHist(), now=new Date(), d0=new Date(now); d0.setHours(0,0,0,0);
+ d0.setDate(d0.getDate()-((d0.getDay()+1)%7));   /* الأسبوع يبدأ السبت */
+ var s=0; for(var i=0;i<h.length;i++)if(h[i].ts>=d0.getTime())s+=h[i].dist;
+ if(FIT.on)s+=FIT.dist; return s/1000;
+}
+function fitHypeCard(){
+ var L=LI(), st=fitStreak(), wk=fitWeekKm(), goal=Math.max(5,Math.round(fitGoal().km*4)), pct=Math.min(1,wk/goal);
+ var e=fitEarned(), got=0, bh='', i;
+ for(i=0;i<FIT_BADGES.length;i++){var b=FIT_BADGES[i],on=!!e[b.k];if(on)got++;
+  bh+='<button class="fbd'+(on?' on':'')+'" data-bd="'+i+'"><span class="fbd-ic">'+b.ic+'</span><span class="fbd-t">'+b.t[L]+'</span></button>';}
+ return '<div class="fitCard hype">'+
+  '<div class="hyRow">'+
+   '<div class="hyStreak'+(st>0?' on':'')+'"><span class="flame">🔥</span><b>'+st+'</b><small>'+['يوم ورا بعض','يوم متتالٍ','day streak'][L]+'</small></div>'+
+   '<div class="hyWeek"><div class="hyWL"><span>'+['تحدي الأسبوع','تحدي الأسبوع','Weekly challenge'][L]+'</span><b>'+wk.toFixed(1)+' / '+goal+' '+['كم','كم','km'][L]+'</b></div>'+
+    '<div class="hyBar"><i style="width:'+Math.round(pct*100)+'%"></i></div>'+
+    '<small>'+(pct>=1?['كسبت التحدي! 🎉','أنجزت التحدي 🎉','Challenge complete 🎉'][L]:
+     (['باقي ','متبقٍ ','Left: '][L]+(goal-wk).toFixed(1)+' '+['كم','كم','km'][L]))+'</small></div>'+
+  '</div>'+
+  '<div class="fitHead" style="margin-top:12px"><span>'+['أوسمتك','الأوسمة','Badges'][L]+' · '+got+'/'+FIT_BADGES.length+'</span></div>'+
+  '<div class="fbdGrid">'+bh+'</div></div>';
+}
+function fitHypeWire(){
+ var bs=document.querySelectorAll('[data-bd]');
+ for(var i=0;i<bs.length;i++)bs[i].onclick=function(){
+  var b=FIT_BADGES[+this.getAttribute('data-bd')],L=LI(),on=this.className.indexOf('on')>=0;
+  this.classList.remove('pop');void this.offsetWidth;this.classList.add('pop');
+  try{if(navigator.vibrate)navigator.vibrate(on?[10,40,10]:8);}catch(e){}
+  toast(b.ic+' '+b.t[L]+' — '+b.d[L]+(on?'':' · '+['ما كسبته بعد','لم يُكتسب بعد','locked'][L]));
+ };
+}
+/* احتفال بالقصاصات الملوّنة */
+function fitConfetti(){
+ if(document.body.className.indexOf('noanim')>=0)return;
+ var c=document.createElement('canvas');c.className='fitConf';document.body.appendChild(c);
+ var W2=c.width=window.innerWidth,H2=c.height=window.innerHeight,x=c.getContext('2d'),P=[],cols=['#E3A94B','#5CC9B0','#F2F4F7','#ff7a5c','#9fd4f5'];
+ for(var i=0;i<110;i++)P.push({x:W2/2+(Math.random()-.5)*60,y:H2*.42,vx:(Math.random()-.5)*14,vy:-6-Math.random()*10,
+  r:3+Math.random()*4,c:cols[i%cols.length],a:Math.random()*6.28,va:(Math.random()-.5)*.4});
+ var t0=performance.now();
+ (function f(ts){var e=ts-t0;x.clearRect(0,0,W2,H2);
+  for(var j=0;j<P.length;j++){var p=P[j];p.vy+=.35;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.a+=p.va;
+   x.save();x.translate(p.x,p.y);x.rotate(p.a);x.globalAlpha=Math.max(0,1-e/2400);x.fillStyle=p.c;x.fillRect(-p.r,-p.r*.5,p.r*2,p.r);x.restore();}
+  if(e<2400)requestAnimationFrame(f);else c.remove();})(t0);
+}
+/* عدّ تنازلي قبل الانطلاق */
+function fitCountdown(cb){
+ var L=LI(),o=document.createElement('div');o.className='fitCd';document.body.appendChild(o);
+ var seq=['3','2','1',['يلا!','انطلق!','Go!'][L]],i=0;
+ (function step(){
+  if(i>=seq.length){o.classList.add('out');setTimeout(function(){o.remove();},300);cb();return;}
+  o.innerHTML='<b>'+seq[i]+'</b>';try{if(navigator.vibrate)navigator.vibrate(i<3?20:[40,40,60]);}catch(e){}
+  i++;setTimeout(step,i<4?780:520);
+ })();
+}
+/* بعد كل تمرين: وسام جديد؟ */
+function fitBadgeCheck(){
+ try{
+  var raw=stGet('nafaf_fit_badges'),e=fitEarned(),now=[],fresh=[],L=LI(),k,i;
+  for(k in e)now.push(k);
+  /* أول تشغيل بعد التحديث: نسجّل ما كسبه سابقًا بصمت بلا نوافذ */
+  if(raw==null){ stSet('nafaf_fit_badges',JSON.stringify(now)); return; }
+  var prev=JSON.parse(raw||'[]');
+  for(i=0;i<now.length;i++)if(prev.indexOf(now[i])<0)fresh.push(now[i]);
+  stSet('nafaf_fit_badges',JSON.stringify(now));
+  if(!fresh.length)return;
+  var b=null;for(i=0;i<FIT_BADGES.length;i++)if(FIT_BADGES[i].k===fresh[0])b=FIT_BADGES[i];
+  if(!b)return;
+  setTimeout(function(){
+   fitConfetti();
+   var o=document.createElement('div');o.className='fitBadgePop';
+   o.innerHTML='<div class="fbp-ic">'+b.ic+'</div><div class="fbp-k">'+['وسام جديد!','وسام جديد','New badge!'][L]+'</div><div class="fbp-t">'+b.t[L]+'</div><div class="fbp-d">'+b.d[L]+'</div>';
+   document.body.appendChild(o);o.onclick=function(){o.remove();};
+   setTimeout(function(){if(o.parentNode)o.classList.add('out');setTimeout(function(){o.remove();},400);},3400);
+   try{if(navigator.vibrate)navigator.vibrate([30,60,30,60,80]);}catch(e2){}
+  },700);
+ }catch(e){}
+}
+
+/* ═══ الصفحة ═══ */
+function renderFit(){
+ var b=$("fitBody"); if(!b)return;
+ fitMapsOff();
+ /* ★ آخر تمرين يبقى معروضًا بخريطته حتى بعد إغلاق التطبيق */
+ if(!FIT.on&&!FIT.last){var hs0=fitHist(); if(hs0.length){FIT.last=hs0[0];FIT.lastOld=true;}}
+ var L=LI(), prof=fitProf(), h='';
+ h+='<div class="sec-t">'+['رياضتي','رياضتي','My fitness'][L]+'</div>';
+ h+='<div class="sec-s">'+['مشي وجري ودراجة — مع جوّك الحقيقي','المشي والجري والدراجة مع حالة الطقس','Walk, run and ride — with your real weather'][L]+'</div>';
+ var topCards=fitHypeCard()+fitWindowCard()+fitGoalCard();
+ if(!FIT.on)h+=topCards;
+
+ if(!FIT.on){
+  h+='<div class="fitCard"><div class="fitTypes">';
+  for(var k in FIT_TYPES)h+='<button class="fitType'+(FIT.type===k?' on':'')+'" data-ft="'+k+'">'+
+   '<span>'+FIT_TYPES[k].ic+'</span>'+FIT_TYPES[k].t[L]+'</button>';
+  h+='</div><button class="fitGo" id="fitGo">'+['ابدأ التمرين','ابدأ التمرين','Start workout'][L]+'</button>'+
+   '<div class="fitNote">'+['خلّ نفاف مفتوح أثناء التمرين — نمنع انطفاء الشاشة تلقائيًا.',
+    'أبقِ نفاف مفتوحًا أثناء التمرين؛ نمنع انطفاء الشاشة تلقائيًا.',
+    'Keep Nafaf open while exercising — the screen stays on automatically.'][L]+'</div></div>';
+ } else {
+  var T=FIT_TYPES[FIT.type];
+  h+='<div class="fitCard live'+(FIT.paused?' paused':'')+'">'+
+   '<div class="fitHead"><span>'+T.ic+' '+T.t[L]+(FIT.paused?' · '+['موقوف','متوقف مؤقتًا','Paused'][L]:'')+'</span>'+
+   '<span class="fitGps wait" id="fitGps"></span></div>'+
+   '<div class="fitTime" id="fitTime">0:00</div>'+
+   '<div class="fitGrid">'+
+    '<div><b id="fitDist">0.00</b><small>'+['كم','كم','km'][L]+'</small></div>'+
+    '<div><b id="fitPace">--:--</b><small>'+(FIT.type==='bike'?['كم/س','كم/س','km/h'][L]:['دقيقة/كم','دقيقة/كم','min/km'][L])+'</small></div>'+
+    '<div><b id="fitKcal">0</b><small>'+['سعرة','سعرة','kcal'][L]+'</small></div>'+
+    '<div><b id="fitSteps">—</b><small>'+['خطوة','خطوة','steps'][L]+'</small></div>'+
+    '<div><b id="fitGain">+0</b><small>'+['م صعود','م صعود','m climb'][L]+'</small></div>'+
+    '<div><b>'+(W?tconv(W.apparent_temperature!=null?W.apparent_temperature:W.temperature_2m)+'°':'—')+'</b><small>'+['الإحساس','الإحساس','feels'][L]+'</small></div>'+
+   '</div>'+
+   '<div class="fitMapWrap"><div class="fitMap" id="fitMap"></div><button class="fitCenter" id="fitCenter" aria-label="موقعي">⌖</button><span class="fitOsm">© OpenStreetMap</span></div>'+
+   '<div class="fitRoute" id="fitRoute"></div>'+
+   '<div class="fitBtns"><button class="fitB" id="fitPauseB">'+(FIT.paused?['كمّل','استئناف','Resume'][L]:['وقّف مؤقت','إيقاف مؤقت','Pause'][L])+'</button>'+
+   '<button class="fitB stop" id="fitStopB">'+['خلصت','إنهاء','Finish'][L]+'</button></div></div>';
+  h+=topCards;
+ }
+
+ /* ملخص آخر تمرين */
+ if(!FIT.on&&FIT.last){
+  var s=FIT.last, TT=FIT_TYPES[s.type], sd=new Date(s.ts);
+  h+='<div class="fitCard sum" id="fitSumCard"><div class="fitHead"><span>'+TT.ic+' '+(FIT.lastOld?(['مسار تمرينك','مسار التمرين','Workout route'][L]+' · '+sd.getDate()+'/'+(sd.getMonth()+1)):['خلصت! ملخّص تمرينك','ملخص التمرين','Workout summary'][L])+'</span></div>'+
+   (s.place?'<div class="fitNote" style="margin:0 0 8px">📍 '+s.place+'</div>':'')+
+   '<div class="fitMapWrap sum"><div class="fitMap" id="fitSumMap"></div><span class="fitOsm">© OpenStreetMap</span></div>'+
+   (s.route&&s.route[0]&&s.route[0][2]!=null?fitElevSvg(s.route):'')+
+   '<div class="fitGrid">'+
+    '<div><b>'+(s.dist/1000).toFixed(2)+'</b><small>'+['كم','كم','km'][L]+'</small></div>'+
+    '<div><b>'+fitFmtTime(s.dur)+'</b><small>'+['المدة','المدة','time'][L]+'</small></div>'+
+    '<div><b>'+s.kcal+'</b><small>'+['سعرة','سعرة','kcal'][L]+'</small></div>'+
+    (s.steps!=null?'<div><b>'+(s.stepsEst?'~':'')+s.steps+'</b><small>'+['خطوة','خطوة','steps'][L]+'</small></div>':'')+
+    '<div><b>+'+s.gain+'</b><small>'+['م صعود','م صعود','m climb'][L]+'</small></div>'+
+   '</div>'+fitSplitsHtml(s.splits)+'<button class="fitShare" id="fitShareB">'+['شارك تمرينك','مشاركة التمرين','Share workout'][L]+'</button></div>';
+ }
+
+ /* الأسبوع والسجل */
+ var hist=fitHist(), wk={n:0,d:0,t:0,k:0}, now=Date.now();
+ for(var i=0;i<hist.length;i++)if(now-hist[i].ts<7*864e5){wk.n++;wk.d+=hist[i].dist;wk.t+=hist[i].dur;wk.k+=hist[i].kcal;}
+ if(hist.length){
+  h+='<div class="fitCard"><div class="fitHead"><span>'+['أسبوعك','آخر ٧ أيام','Last 7 days'][L]+'</span></div>'+
+   '<div class="fitGrid four">'+
+    '<div><b>'+wk.n+'</b><small>'+['تمرين','تمرين','workouts'][L]+'</small></div>'+
+    '<div><b>'+(wk.d/1000).toFixed(1)+'</b><small>'+['كم','كم','km'][L]+'</small></div>'+
+    '<div><b>'+Math.round(wk.t/60)+'</b><small>'+['دقيقة','دقيقة','min'][L]+'</small></div>'+
+    '<div><b>'+wk.k+'</b><small>'+['سعرة','سعرة','kcal'][L]+'</small></div>'+
+   '</div><div class="fitList">';
+  for(i=0;i<Math.min(8,hist.length);i++){
+   var x=hist[i], dt=new Date(x.ts);
+   h+='<div class="fitRow'+(FIT.last&&FIT.last.id===x.id?' on':'')+'" data-hi="'+i+'"><span class="frThumb">'+(x.route&&x.route.length>1?fitRouteSvg(x.route,false):FIT_TYPES[x.type].ic)+'</span>'+
+    '<span class="fr-d">'+dt.getDate()+'/'+(dt.getMonth()+1)+'</span>'+
+    '<span class="fr-v">'+(x.dist/1000).toFixed(2)+' '+['كم','كم','km'][L]+'</span>'+
+    '<span class="fr-v">'+fitFmtTime(x.dur)+'</span>'+
+    '<span class="fr-v">'+x.kcal+' 🔥</span></div>';
+  }
+  h+='</div><button class="fitLink" id="fitClear">'+['امسح سجلّ التمارين','حذف سجل التمارين','Clear history'][L]+'</button></div>';
+ }
+
+ h+=fitRecordsCard();
+ /* الملف الشخصي */
+ h+='<div class="fitCard"><div class="fitHead"><span>'+['بياناتك للحساب','بيانات الحساب','Your measurements'][L]+'</span></div>'+
+  '<div class="fitProf"><label>'+['الوزن (كغ)','الوزن (كغ)','Weight (kg)'][L]+
+  '<input type="number" id="fitW" value="'+prof.w+'" min="25" max="250"></label>'+
+  '<label>'+['الطول (سم)','الطول (سم)','Height (cm)'][L]+
+  '<input type="number" id="fitH" value="'+prof.h+'" min="110" max="230"></label></div>'+
+  '<div class="fitAp"><span>'+['وقّف تلقائي لما أوقف','إيقاف تلقائي عند التوقف','Auto-pause when stopped'][L]+'</span><span class="sw'+(fitAP()?' on':'')+'" id="fitApSw"></span></div>'+
+  '<div class="fitNote">🔒 '+['تبقى على جهازك بس — ما نرسلها لأي مكان.','تُحفظ على جهازك فقط ولا تُرسل إلى أي خادم.','Stored on your device only — never sent anywhere.'][L]+'</div></div>';
+
+ h+='<div class="fitDisc">'+['الأرقام تقديرية من GPS وحساسات الجوال وليست قياسًا طبيًا ولا استشارة صحية.',
+  'الأرقام تقديرية من GPS وحساسات الجهاز وليست قياسًا طبيًا ولا استشارة صحية.',
+  'Figures are estimates from GPS and phone sensors — not medical measurements or health advice.'][L]+'</div>';
+
+ b.innerHTML=h;
+ fitWire();
+ /* الخرائط بعد إدراج العناصر */
+ /* ★ الخرائط تُبنى بعد انتهاء انتقال الصفحة حتى لا يتقطّع */
+ clearTimeout(FIT.mapT);
+ FIT.mapT=setTimeout(function(){
+  if(TAB!=='fit')return;
+  if(FIT.on){ if(!FIT.map&&!fitMapLive()){var fr=$("fitRoute"); if(fr)fr.innerHTML=fitRouteSvg(FIT.pts,true); var mw=document.querySelector('.fitMapWrap'); if(mw)mw.style.display='none';} }
+  else if(FIT.last){ if(!FIT.smap&&!fitMapSummary(FIT.last)){var sm=document.querySelector('.fitMapWrap.sum'); if(sm)sm.outerHTML=fitRouteSvg(FIT.last.route,false);} }
+ },320);
+ var cb=$("fitCenter"); if(cb)cb.onclick=function(){FIT.follow=true;cb.className='fitCenter';var p=FIT.pts[FIT.pts.length-1];if(p&&FIT.map)FIT.map.setView([p[0],p[1]],16);};
+ var hr=document.querySelectorAll('[data-hi]');
+ for(var hq=0;hq<hr.length;hq++)hr[hq].onclick=function(){
+  var x=fitHist()[+this.getAttribute('data-hi')]; if(!x)return;
+  FIT.last=x; FIT.lastOld=true; try{if(navigator.vibrate)navigator.vibrate(8);}catch(e){}
+  renderFit(); setTimeout(function(){var c=$("fitSumCard"); if(c)c.scrollIntoView({behavior:'smooth',block:'start'});},60);
+ };
+ var shb=$("fitShareB"); if(shb)shb.onclick=function(){fitShare(FIT.last);};
+ var ge=$("fitGoalEd"); if(ge)ge.onclick=fitGoalEdit;
+ fitHypeWire();
+ var ap=$("fitApSw"); if(ap)ap.onclick=function(){try{stSet('nafaf_fit_ap',fitAP()?'0':'1');}catch(e){} ap.className='sw'+(fitAP()?' on':'');};
+ try{
+  var bc=document.body.className.replace(/\s*fitActive/g,'');
+  if(FIT.on&&TAB==='fit')bc+=' fitActive';
+  document.body.className=bc;
+ }catch(e){}
+ if(FIT.on)fitLive();
+}
+function fitWire(){
+ var L=LI(), i, ts=document.querySelectorAll('[data-ft]');
+ for(i=0;i<ts.length;i++)ts[i].onclick=function(){ FIT.type=this.getAttribute('data-ft'); try{stSet('nafaf_fit_type',FIT.type);}catch(e){} renderFit(); };
+ var g=$("fitGo"); if(g)g.onclick=function(){ fitCountdown(fitStart); };
+ var p=$("fitPauseB"); if(p)p.onclick=fitPause;
+ var s=$("fitStopB"); if(s)s.onclick=function(){ fitStop(false); };
+ var c=$("fitClear"); if(c)c.onclick=function(){
+  if(!confirm(['نمسح كل سجلّ التمارين؟','حذف سجل التمارين بالكامل؟','Delete all workout history?'][L]))return;
+  try{stDel('nafaf_fit_hist');}catch(e){} FIT.last=null; renderFit();
+ };
+ var sv=function(){
+  var w=parseFloat(($("fitW")||{}).value), hh=parseFloat(($("fitH")||{}).value);
+  if(w>20&&w<300&&hh>100&&hh<250){ try{stSet('nafaf_fit_prof',JSON.stringify({w:w,h:hh,set:true}));}catch(e){} }
+ };
+ var wi=$("fitW"), hi=$("fitH");
+ if(wi)wi.onchange=sv; if(hi)hi.onchange=sv;
+}
+
+/* ============================================================
+   ★★★ نفاف ٢ — التصميم الجديد ★★★
+   سماء حيّة تتبع الطقس الحقيقي وتوقيت المدينة · زجاج شفاف
+   · شريط سفلي بخمس أيقونات · بطاقات تفاصيل حيّة
+   ⚠️ طبقة عرض فقط — كل البيانات والمنطق كما هي
+   ============================================================ */
+var V2=true;
+
+/* ═══ أيقونات متحركة ═══ */
+function v2Icon(k,sz){
+ sz=sz||96;
+ var CL='<path d="M30 70h40a15 15 0 0 0 2-29.9A21 21 0 0 0 31.6 44 13 13 0 0 0 30 70z" fill="#E9EEF5"/>';
+ var o='<svg viewBox="0 0 100 100" width="'+sz+'" height="'+sz+'" aria-hidden="true">', i;
+ if(k==='clear'||k==='heat'){
+  var c=k==='heat'?'#F08A3C':'#F5C451';
+  if(k==='heat')o+='<circle class="v2pulse" cx="50" cy="44" r="30" fill="#F08A3C"/>';
+  o+='<g class="v2spin">';
+  for(i=0;i<8;i++)o+='<rect x="48" y="6" width="4" height="11" rx="2" fill="'+c+'" transform="rotate('+(i*45)+' 50 44)"/>';
+  o+='</g><circle cx="50" cy="44" r="17" fill="'+c+'"/>';
+  if(k==='heat')o+='<g stroke="#F3C07A" stroke-width="3" stroke-linecap="round" fill="none"><path class="v2wave" d="M24 78q6-4 12 0t12 0 12 0 12 0 6 0"/><path class="v2wave" d="M30 88q6-4 12 0t12 0 12 0 6 0"/></g>';
+ } else if(k==='night'){
+  o+='<path d="M60 20a26 26 0 1 0 22 36A22 22 0 0 1 60 20z" fill="#E7ECF7"/>'+
+   '<circle class="v2tw" cx="28" cy="24" r="2.4" fill="#fff"/><circle class="v2tw" style="animation-delay:.8s" cx="20" cy="46" r="1.8" fill="#fff"/><circle class="v2tw" style="animation-delay:1.5s" cx="38" cy="14" r="1.5" fill="#fff"/>';
+ } else if(k==='rain'||k==='storm'){
+  o+='<g class="v2drift">'+CL+'</g>';
+  if(k==='storm')o+='<path class="v2bolt" d="M52 64 L44 80 L52 80 L47 94 L62 74 L54 74 L58 64Z" fill="#F5C451"/>';
+  o+='<g stroke="#8CC8F0" stroke-width="3" stroke-linecap="round"><line class="v2drop" x1="38" y1="76" x2="35" y2="84"/><line class="v2drop" x1="52" y1="76" x2="49" y2="84"/><line class="v2drop" x1="66" y1="76" x2="63" y2="84"/></g>';
+ } else if(k==='dust'){
+  o+='<circle cx="62" cy="36" r="13" fill="#E8C27A" opacity=".55"/>'+
+   '<g stroke="#E3C48C" stroke-width="4" stroke-linecap="round" fill="none"><path class="v2wave" d="M14 54h52q8 0 8-7"/><path class="v2wave" d="M20 66h60"/><path class="v2wave" d="M14 78h44q8 0 8 7"/></g>';
+ } else if(k==='cloudyN'){
+  o+='<path d="M56 16a20 20 0 1 0 17 28A17 17 0 0 1 56 16z" fill="#E7ECF7"/><g class="v2drift">'+CL+'</g>';
+ } else if(k==='cloudy'){
+  o+='<g class="v2drift">'+CL+'</g><g opacity=".55" transform="translate(-14 -14) scale(.7)">'+CL+'</g>';
+ } else {
+  o+='<circle cx="62" cy="36" r="14" fill="#F5C451"/><g class="v2drift">'+CL+'</g>';
+ }
+ return o+'</svg>';
+}
+function v2CodeKey(code,n){
+ if(code>=95)return 'storm'; if(code>=51)return 'rain';
+ if(code===45||code===48)return 'cloudy';
+ if(code===3)return n?'cloudyN':'cloudy';
+ if(code===2)return n?'cloudyN':'partly';
+ return n?'night':'clear';
+}
+/* مفتاح المشهد من حالة الطقس الحقيقية */
+function v2Key(st){
+ if(st==='storm')return 'storm';
+ if(st&&st.indexOf('rain')===0)return 'rain';
+ if(st==='dust')return 'dust';
+ if(st==='cloudy'||st==='fog')return 'cloudy';
+ if(st==='heat')return 'heat';
+ return 'clear';
+}
+function v2IconKey(st){
+ var k=v2Key(st);
+ if(IS_NIGHT){
+  if(k==='clear'||k==='heat')return 'night';
+  if(k==='cloudy')return 'cloudyN';
+ }
+ return k;
+}
+
+/* ═══ السماء الحيّة ٣ — مشهد متكامل مرسوم كطبقة واحدة ═══
+   السماء · السحب · الجبال بثلاثة أعماق · الأرض · الوادي · النخيل
+   · الضباب · الريح · النفاف · المطر · العاصفة · الإعصار · الغبار · الحر
+   كلها من البيانات الحقيقية وبتوقيت المدينة
+   ⚠️ راحة العين: لا ومضات حادة · ألوان هادئة · حركة ناعمة */
+var Sky2=(function(){
+ var cv=null,cx=null,W=0,H=0,dpr=1,running=false,last=0,t=0,HY=0;
+ var PAL={
+  d:{clear:['#2a6aa8','#4f95cf','#c3def0'],heat:['#86502b','#c98a4e','#ecc896'],cloudy:['#4a6180','#7890ab','#b4c2d0'],
+     rain:['#2e3f54','#4a5f77','#7f93a6'],storm:['#141b28','#252f3e','#44505f'],dust:['#72593a','#a8875a','#d6bb8c'],
+     fog:['#8a96a4','#a9b3bd','#c9cfd4']},
+  n:{clear:['#070e22','#122246','#263a62'],heat:['#160f22','#2c1f38','#4a3450'],cloudy:['#0f1526','#1d2638','#303c52'],
+     rain:['#0c131f','#1a2431','#2c3848'],storm:['#06090f','#10161f','#1e2633'],dust:['#1f180f','#3a2e1d','#584632'],
+     fog:['#1a2029','#2a313b','#3c434d']},
+  g:['#2e3c63','#9a6058','#eda56a']
+ };
+ var GROUND={d:{clear:'#23364a',heat:'#5a3a22',cloudy:'#2b3848',rain:'#1f2a36',storm:'#0f141c',dust:'#5c4930',fog:'#56606a'},n:'#070c18'};
+ var col=[[42,106,168],[79,149,207],[195,222,240]],tgt=col.map(function(c){return c.slice();});
+ var gcol=[35,54,74],gtgt=[35,54,74];
+ var I={sun:0,moon:0,stars:0,cloud:0,dark:0,rain:0,drizzle:0,storm:0,cyclone:0,fog:0,wind:0,dust:0,heat:0,water:0},T={};
+ var stars=[],drops=[],fine=[],dust=[],streaks=[],clouds=[],splash=[],ridges=[],palms=[],fogB=[];
+ var moonImg=null,finger={x:-999,y:-999,on:0},tilt={x:0,y:0};
+ var G=0,topScrim=null,tintAcc=0,tintLast='',holdUntil=0,skipAcc=0,flash=0,bolt=null,nextBolt=3,shoot=null,key='clear',vx=-1,windK=1,spin=0,branches=[],far=0,flick=0,thunderAt=0,shake=0,AC=null;
+ function hex(h){return [parseInt(h.substr(1,2),16),parseInt(h.substr(3,2),16),parseInt(h.substr(5,2),16)];}
+ function mix(a,b,f){return [a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f];}
+ function rgb(c,a){return 'rgba('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+','+(a==null?1:a)+')';}
+ function still(){return document.body.className.indexOf('noanim')>=0;}
+ function q(){var p=(typeof PERF==='number')?PERF:1;return p<.45?.5:(p<.7?.75:1);}
+ function rnd(s){var x=Math.sin(s*9301+49297)*233280;return x-Math.floor(x);}
+ function size(){
+  if(!cv)return;
+  topScrim=null;
+  dpr=Math.min(window.devicePixelRatio||1,(typeof PERF==='number'&&PERF<.5)?1.25:2);
+  W=window.innerWidth;H=window.innerHeight;HY=H*.64;
+  cv.width=W*dpr;cv.height=H*dpr;cx.setTransform(dpr,0,0,dpr,0,0);
+  var a=W*H/360000*q(),i,r;
+  stars=[];for(i=0;i<Math.round(160*a);i++)stars.push({x:Math.random()*W,y:Math.random()*HY*.95,r:Math.random()*1.2+.3,p:Math.random()*6.28});
+  drops=[];for(i=0;i<Math.round(430*a);i++){var z=.3+Math.random()*.7;drops.push({x:Math.random()*W,y:Math.random()*H,z:z});}
+  fine=[];for(i=0;i<Math.round(220*a);i++)fine.push({x:Math.random()*W,y:Math.random()*H,z:.4+Math.random()*.6});
+  dust=[];for(i=0;i<Math.round(140*a);i++)dust.push({x:Math.random()*W,y:HY*.5+Math.random()*(H-HY*.5),r:Math.random()*1.8+.5,v:.5+Math.random()*1.5,p:Math.random()*6.28});
+  streaks=[];for(i=0;i<Math.round(70*a);i++)streaks.push({x:Math.random()*W,y:H*.15+Math.random()*H*.8,l:40+Math.random()*90,v:1+Math.random()*1.5});
+  clouds=[];for(i=0;i<9;i++){var pf=[],n=5+Math.floor(Math.random()*3);
+   for(r=0;r<n;r++)pf.push({dx:(r-n/2)*(26+Math.random()*10),dy:-Math.abs(Math.sin(r/(n-1)*Math.PI))*(18+Math.random()*16),rr:22+Math.random()*20});
+   clouds.push({x:Math.random()*W*1.4,y:H*(.06+Math.random()*.32),s:.7+Math.random()*.9,v:.05+Math.random()*.08,pf:pf,dep:Math.random()});}
+  clouds.sort(function(a,b){return a.dep-b.dep;});
+  splash=[];for(i=0;i<80;i++)splash.push({x:0,y:0,a:0,r:0,v:0});
+  fogB=[];for(i=0;i<6;i++)fogB.push({x:Math.random()*W,y:HY-H*.05+i*H*.035,w:W*(.7+Math.random()*.7),v:.03+Math.random()*.05});
+  /* الجبال بثلاثة أعماق — ثابتة البذرة حتى لا يتبدّل المشهد */
+  ridges=[];
+  var base=[HY-H*.085,HY-H*.045,HY-H*.012],amp=[H*.07,H*.045,H*.022];
+  for(r=0;r<3;r++){var pts=[],N=48;
+   for(i=0;i<=N;i++){var x=i/N*W*1.1-W*.05;
+    var y=base[r]-amp[r]*(.55*Math.abs(Math.sin(i*.21+r*2.1))+.3*Math.sin(i*.53+r)+.15*rnd(i+r*97));
+    pts.push([x,y]);}
+   ridges.push(pts);}
+  palms=[{x:W*.9,y:HY+H*.03,s:.62},{x:W*.965,y:HY+H*.02,s:.5},{x:W*.05,y:HY+H*.045,s:.72}];
+  moonImg=document.createElement('canvas');moonImg.width=moonImg.height=96;
+  var mc=moonImg.getContext('2d');mc.fillStyle='#E8EDF8';mc.beginPath();mc.arc(48,48,44,0,6.283);mc.fill();
+  mc.globalCompositeOperation='destination-out';mc.beginPath();mc.arc(68,36,40,0,6.283);mc.fill();
+  foreSize();
+  if(still())frame(performance.now());
+ }
+ function isStormOrRain(w){var c=w.weather_code|0;return c>=51&&c<=99&&!(c>=71&&c<=77);}
+ /* ★ القراءة من الطقس الحقيقي */
+ function sync(){
+  try{
+   var w=window.W; if(!w)return;
+   var code=w.weather_code|0, ws=w.wind_speed_10m||0, wg=w.wind_gusts_10m||ws, hum=w.relative_humidity_2m||0;
+   var pr=w.precipitation||0, day=0;
+   try{day=(window.DAILY&&DAILY.precipitation_sum)?(DAILY.precipitation_sum[0]||0):0;}catch(e){}
+   var st=(typeof stateOf==='function')?stateOf(w):'clear';
+   var nf=(typeof nightFactor==='function')?nightFactor(new Date()):(IS_NIGHT?1:0);
+   var gf=(typeof goldenFactor==='function')?goldenFactor(new Date()):0;
+   G=(isStormOrRain(w))?gf*.3:gf;
+   var isFog=(code===45||code===48), isDriz=(code>=51&&code<=57), isRain=((code>=61&&code<=67)||(code>=80&&code<=82)),
+       isStorm=(code>=95), isSnow=(code>=71&&code<=77||code===85||code===86);
+   key=isStorm?'storm':(isRain||isDriz)?'rain':isFog?'fog':st==='dust'?'dust':st==='heat'?'heat':(code===3)?'cloudy':'clear';
+   var pal=PAL.d[key].map(hex),paln=PAL.n[key].map(hex),g=PAL.g.map(hex);
+   tgt=[0,1,2].map(function(i){var c=mix(pal[i],paln[i],nf);
+    if(gf>0&&!isRain&&!isStorm&&!isFog)c=mix(c,g[i],Math.min(.75,gf*.8));return c;});
+   gtgt=hex(nf>.55?GROUND.n:GROUND.d[key]);
+   var cover=isStorm?1:(isRain?.85:isDriz?.7:isFog?.35:code===3?.9:code===2?.5:code===1?.22:.06);
+   var mist=0;
+   try{ if(hum>=85&&typeof cityMinutes==='function'){var nm=cityMinutes(new Date()),sr=sunMinutes(SUNRISE);
+    if(sr!=null&&nm>=sr-30&&nm<=sr+100)mist=.35;} }catch(e){}
+   var windy=Math.max(0,Math.min(1,(ws-20)/40));
+   var dir=(w.wind_direction_10m||90)+180; vx=Math.sin(dir*Math.PI/180); if(Math.abs(vx)<.25)vx=vx<0?-.25:.25;
+   windK=.6+Math.min(2.2,ws/18);
+   T={sun:(1-nf)*(1-cover*.85)*(key==='fog'?.3:1)*((isRain||isStorm||isSnow)?0:(isDriz?.3:1)),
+      moon:nf*(1-cover*.8), stars:nf*(1-cover), cloud:cover, dark:isStorm?1:(isRain?.55:0),
+      drizzle:isDriz?1:0, rain:isRain?Math.max(.45,Math.min(1,pr/4+.3)):(isStorm?1:0), storm:isStorm?1:0,
+      cyclone:((ws>=62||wg>=90)&&(isRain||isStorm))?1:0,
+      fog:isFog?1:Math.max(mist,hum>=94?.45:0), wind:windy, dust:st==='dust'?1:0, heat:st==='heat'?(1-nf):0,
+      water:(pr>=1.5||day>=10)?Math.max(.35,Math.min(1,Math.max(pr/6,day/30))):0, snow:isSnow?1:0};
+   if(still())frame(performance.now());
+  }catch(e){}
+ }
+ /* ★ الرعد: اهتزاز + صوت مُولَّد — فقط إن فعّله المستخدم من الإعدادات */
+ function thunder(){
+  try{ if(stGet('thunder')!=='1'||TAB!=='now'||document.hidden)return; }catch(e){return;}
+  try{ if(navigator.vibrate)navigator.vibrate([25,60,90,40,50]); }catch(e){}
+  try{
+   AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+   if(AC.state==='suspended')AC.resume();
+   var dur=2.6,len=AC.sampleRate*dur,buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0),lastv=0;
+   for(var i=0;i<len;i++){var wn=Math.random()*2-1;lastv=(lastv+.02*wn)/1.02;d[i]=lastv*3.5;}
+   var src=AC.createBufferSource();src.buffer=buf;
+   var lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=160;
+   var g=AC.createGain(),t0=AC.currentTime;
+   g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(.9,t0+.08);
+   g.gain.linearRampToValueAtTime(.45,t0+.5);g.gain.exponentialRampToValueAtTime(.001,t0+dur);
+   src.connect(lp);lp.connect(g);g.connect(AC.destination);src.start();
+  }catch(e){}
+ }
+/* ★★★ الطبقة الأمامية — مطر يتساقط أمام المحتوى كأنه ثلاثي الأبعاد ★★★
+    قطرات قريبة كبيرة سريعة + قطرات ترتطم بزجاج الشاشة وتنزلق
+    ⚠️ في صفحة «الآن» فقط ولا تعترض اللمس */
+ var fv=null,fx=null,near=[],glass=[],foreOn=false;
+ function foreSize(){
+  fv=document.getElementById('v2Fore'); if(!fv)return;
+  fx=fv.getContext('2d'); fv.width=W*dpr; fv.height=H*dpr; fx.setTransform(dpr,0,0,dpr,0,0);
+  var a=W*H/360000*q(),i;
+  near=[];for(i=0;i<Math.round(46*a);i++)near.push({x:Math.random()*W,y:Math.random()*H,z:1+Math.random()*.5});
+  glass=[];for(i=0;i<14;i++)glass.push({x:0,y:0,r:0,a:0,v:0});
+ }
+ function fore(dt,calm){
+  if(!fx)return;
+  var want=(TAB==='now')&&!calm&&(I.rain>.05||I.drizzle>.05||I.dust>.05||I.snow>.05);
+  if(!want){ if(foreOn){fx.clearRect(0,0,W,H);foreOn=false;} return; }
+  foreOn=true; fx.clearRect(0,0,W,H);
+  var mv=dt*.06,i,slant=vx*(1.4+windK)*(I.cyclone>.3?2:1);
+  if(I.rain>.05){
+   var nN=Math.round(near.length*Math.min(1,I.rain));
+   fx.lineCap='round';
+   for(i=0;i<nN;i++){var d=near[i];
+    d.y+=(22+d.z*14)*mv; d.x+=slant*mv*1.6;
+    if(d.y>H+40){d.y=-60-Math.random()*H*.3;d.x=Math.random()*(W+200)-100;}
+    if(d.x<-40)d.x=W+40; if(d.x>W+40)d.x=-40;
+    var ln=38+d.z*34, gx=d.x-slant*ln*.1;
+    var g=fx.createLinearGradient(d.x,d.y,gx,d.y-ln);
+    g.addColorStop(0,'rgba(225,238,252,'+(.34*I.rain)+')');g.addColorStop(1,'rgba(225,238,252,0)');
+    fx.strokeStyle=g;fx.lineWidth=1.8+d.z*.9;fx.beginPath();fx.moveTo(d.x,d.y);fx.lineTo(gx,d.y-ln);fx.stroke();}
+   /* قطرات على زجاج الشاشة تنزلق ببطء */
+   for(i=0;i<glass.length;i++){var gl=glass[i];
+    if(gl.a<=0){ if(Math.random()<dt/(700/Math.max(.3,I.rain))){gl.x=Math.random()*W;gl.y=Math.random()*H*.85;gl.r=3+Math.random()*5;gl.a=.5;gl.v=.02+Math.random()*.05;} continue; }
+    gl.y+=gl.v*dt;gl.a-=dt*.00028;
+    var rg=fx.createRadialGradient(gl.x-gl.r*.3,gl.y-gl.r*.3,0,gl.x,gl.y,gl.r);
+    rg.addColorStop(0,'rgba(255,255,255,'+(gl.a*.7)+')');rg.addColorStop(.6,'rgba(200,220,240,'+(gl.a*.25)+')');rg.addColorStop(1,'rgba(200,220,240,0)');
+    fx.fillStyle=rg;fx.beginPath();fx.ellipse(gl.x,gl.y,gl.r*.85,gl.r,0,0,6.283);fx.fill();
+    fx.strokeStyle='rgba(220,235,250,'+(gl.a*.18)+')';fx.lineWidth=gl.r*.5;fx.beginPath();fx.moveTo(gl.x,gl.y-gl.r);fx.lineTo(gl.x,gl.y-gl.r-18);fx.stroke();}
+  }
+  if(I.drizzle>.05){fx.strokeStyle='rgba(230,240,252,'+(.22*I.drizzle)+')';fx.lineWidth=1.2;fx.beginPath();
+   for(i=0;i<Math.round(near.length*.6);i++){var z=near[i];z.y+=10*mv;z.x+=vx*mv*1.2;
+    if(z.y>H+20){z.y=-20;z.x=Math.random()*W;}fx.moveTo(z.x,z.y);fx.lineTo(z.x-vx*3,z.y-14);}fx.stroke();}
+  if(I.dust>.05){for(i=0;i<Math.round(near.length*.5);i++){var p=near[i];p.x+=vx*mv*windK*3;p.y+=Math.sin(t+i)*.4;
+    if(p.x<-20)p.x=W+20;if(p.x>W+20)p.x=-20;
+    fx.fillStyle='rgba(236,204,150,'+(.28*I.dust)+')';fx.beginPath();fx.arc(p.x,(p.y%H+H)%H,2.4+p.z*1.6,0,6.283);fx.fill();}}
+ }
+ /* ★★★ البطاقات تأخذ لونها من السماء ★★★ */
+ function tintTick(dt){
+  tintAcc+=dt; if(tintAcc<700&&tintLast)return; tintAcc=0;
+  var base=mix(col[0],[5,9,20],.5), edge=mix(col[2],[255,255,255],.25), dock=mix(col[0],[4,7,16],.72);
+  if(G>.05){base=mix(base,[70,38,22],G*.45);edge=mix(edge,[255,190,130],G*.5);dock=mix(dock,[40,22,14],G*.4);}
+  var k=Math.round(G*10)+'/'+Math.round(base[0]/6)+','+Math.round(base[1]/6)+','+Math.round(base[2]/6)+'|'+Math.round(edge[0]/10);
+  if(k===tintLast)return; tintLast=k;
+  var r=document.documentElement.style;
+  r.setProperty('--skyCard',rgb(base,.5));
+  r.setProperty('--skyCard2',rgb(mix(base,[0,0,0],.18),.62));
+  r.setProperty('--skyEdge',rgb(edge,.22));
+  r.setProperty('--skyDock',rgb(dock,.9));
+  try{var tc=document.querySelector('meta[name="theme-color"]');if(tc)tc.setAttribute('content','#'+[col[0][0],col[0][1],col[0][2]].map(function(v){return ('0'+Math.round(v).toString(16)).slice(-2);}).join(''));}catch(e){}
+ }
+ function lerp(a,b,f){return a+(b-a)*f;}
+ function ridgePath(p){cx.beginPath();cx.moveTo(p[0][0],H);for(var i=0;i<p.length;i++)cx.lineTo(p[i][0],p[i][1]);cx.lineTo(p[p.length-1][0],H);cx.closePath();}
+ function palm(p,c,sway){
+  cx.save();cx.translate(p.x,p.y);cx.scale(p.s,p.s);
+  cx.strokeStyle=c;cx.fillStyle=c;cx.lineCap='round';
+  var lean=sway*14;
+  cx.lineWidth=4;cx.beginPath();cx.moveTo(0,0);cx.quadraticCurveTo(2+lean*.3,-26,lean,-52);cx.stroke();
+  cx.translate(lean,-52);
+  for(var i=0;i<7;i++){var a=-Math.PI*.95+i*Math.PI/6.3+sway*.6;
+   cx.lineWidth=2.4;cx.beginPath();cx.moveTo(0,0);
+   cx.quadraticCurveTo(Math.cos(a)*20,Math.sin(a)*20-6,Math.cos(a)*34,Math.sin(a)*34+10);cx.stroke();}
+  cx.beginPath();cx.arc(0,2,3.5,0,6.283);cx.fill();
+  cx.restore();
+ }
+ function frame(ts){
+  if(!cv)return;
+  /* ★ عند التنقل نعطي الصفحة الجديدة الأولوية كاملة */
+  if(ts<holdUntil){ last=ts; if(!document.hidden)requestAnimationFrame(frame); else running=false; return; }
+  /* ★ خارج «الآن» السماء مغطاة بالمحتوى: ٣٠ إطارًا تكفي وتوفّر المعالج */
+  if(TAB!=='now'&&!still()){ skipAcc+=ts-(last||ts); if(skipAcc<32){ last=ts; requestAnimationFrame(frame); return; } }
+  var dt=Math.min(50,skipAcc>0?skipAcc:(ts-(last||ts)));skipAcc=0;last=ts;t+=dt/1000;
+  var calm=still(),f=calm?1:Math.min(1,dt/1000*1.1),i,j;
+  for(i=0;i<3;i++)for(j=0;j<3;j++)col[i][j]=lerp(col[i][j],tgt[i][j],f);
+  for(j=0;j<3;j++)gcol[j]=lerp(gcol[j],gtgt[j],f);
+  for(var k in T)I[k]=lerp(I[k]||0,T[k],f);
+  var px=tilt.x*8,py=tilt.y*4, mv=calm?0:dt*.06;
+  cx.save(); if(shake>0){cx.translate((Math.random()-.5)*5*shake,(Math.random()-.5)*4*shake);shake-=dt/650;}
+
+  /* السماء */
+  var gr=cx.createLinearGradient(0,0,0,HY+H*.05);
+  gr.addColorStop(0,rgb(col[0]));gr.addColorStop(.55,rgb(col[1]));gr.addColorStop(1,rgb(col[2]));
+  cx.fillStyle=gr;cx.fillRect(0,0,W,H);
+
+  /* النجوم والشهب */
+  if(I.stars>.01){
+   for(i=0;i<stars.length;i++){var s=stars[i],a=I.stars*.7*(.45+.55*Math.abs(Math.sin(t*.7+s.p)));
+    cx.fillStyle='rgba(255,255,255,'+a.toFixed(3)+')';cx.beginPath();cx.arc(s.x+px*.4,s.y+py*.4,s.r,0,6.283);cx.fill();}
+   if(!calm){if(!shoot&&Math.random()<dt/18000)shoot={x:W*(.3+Math.random()*.7),y:H*Math.random()*.22,l:0};
+    if(shoot){shoot.l+=dt*.8;var sx=shoot.x-shoot.l,sy=shoot.y+shoot.l*.42;
+     var sg=cx.createLinearGradient(sx,sy,sx+64,sy-28);sg.addColorStop(0,'rgba(255,255,255,'+(.7*I.stars)+')');sg.addColorStop(1,'rgba(255,255,255,0)');
+     cx.strokeStyle=sg;cx.lineWidth=1.4;cx.beginPath();cx.moveTo(sx,sy);cx.lineTo(sx+64,sy-28);cx.stroke();if(shoot.l>W*.5)shoot=null;}}
+  }
+  /* القمر */
+  if(I.moon>.02&&moonImg){var mx=W*.2+px,my=H*.12+py;
+   var mg=cx.createRadialGradient(mx,my,8,mx,my,85);mg.addColorStop(0,'rgba(215,226,255,'+(.16*I.moon)+')');mg.addColorStop(1,'rgba(215,226,255,0)');
+   cx.fillStyle=mg;cx.beginPath();cx.arc(mx,my,85,0,6.283);cx.fill();
+   cx.globalAlpha=I.moon*.95;cx.drawImage(moonImg,mx-21,my-21,42,42);cx.globalAlpha=1;}
+  /* الشمس — وهج ناعم مريح للعين */
+  if(I.sun>.01){var sx2=W*.8+px,sy2=lerp(H*.11,HY-H*.07,Math.min(1,G*1.3))+py,R=Math.max(W,H)*.5,hot=Math.max(I.heat,G*.8);
+   var sgc=cx.createRadialGradient(sx2,sy2,0,sx2,sy2,R);
+   sgc.addColorStop(0,'rgba(255,'+Math.round(lerp(238,200,hot))+','+Math.round(lerp(190,130,hot))+','+(.7*I.sun)+')');
+   sgc.addColorStop(.08,'rgba(255,226,170,'+(.3*I.sun)+')');sgc.addColorStop(1,'rgba(255,220,160,0)');
+   cx.fillStyle=sgc;cx.fillRect(0,0,W,HY);
+   cx.fillStyle=G>.2?'rgba(255,'+Math.round(lerp(236,170,G))+','+Math.round(lerp(200,110,G))+','+(.95*I.sun)+')':'rgba(255,246,222,'+(.9*I.sun)+')';
+   cx.beginPath();cx.arc(sx2,sy2,15+G*5,0,6.283);cx.fill();}
+  /* ★ توهج الأفق الذهبي عند الشروق والغروب */
+  if(G>.04){var hg=cx.createLinearGradient(0,HY-H*.3,0,HY+H*.02);
+   hg.addColorStop(0,'rgba(255,150,80,0)');hg.addColorStop(.6,'rgba(255,140,70,'+(.34*G)+')');hg.addColorStop(1,'rgba(255,196,120,'+(.5*G)+')');
+   cx.fillStyle=hg;cx.fillRect(0,HY-H*.3,W,H*.32);}
+
+  /* الإعصار — أذرع سحابية حلزونية بطيئة */
+  if(I.cyclone>.02){spin+=calm?0:dt*.00012;
+   cx.save();cx.translate(W*.5,H*.14);cx.rotate(spin);
+   for(j=0;j<3;j++){cx.beginPath();
+    for(i=0;i<=80;i++){var th=i/80*Math.PI*2.4+j*2.094,rr=18+i*W*.011;
+     var xx=Math.cos(th)*rr,yy=Math.sin(th)*rr*.42;i?cx.lineTo(xx,yy):cx.moveTo(xx,yy);}
+    cx.strokeStyle='rgba(175,188,204,'+(.34*I.cyclone)+')';cx.lineWidth=30;cx.lineCap='round';cx.stroke();}
+   cx.fillStyle='rgba(20,28,40,'+(.35*I.cyclone)+')';cx.beginPath();cx.ellipse(0,0,22,10,0,0,6.283);cx.fill();
+   cx.restore();}
+
+  /* السحب — عناقيد مضاءة من الأعلى */
+  var nC=Math.round(clouds.length*Math.min(1,I.cloud*1.1));
+  if(I.cloud>.02){
+   var lit=I.dark>.3?mix([150,160,176],[70,78,92],I.dark):mix([248,250,253],[196,204,216],I.cloud*.6);
+   if(flash>0)lit=mix(lit,[240,244,255],flash*.85);if(far>0)lit=mix(lit,[215,225,250],far*.4);
+   for(i=0;i<nC;i++){var c=clouds[i];
+    c.x+=vx*c.v*mv*windK*1.6;if(c.x<-W*.4)c.x=W*1.3;if(c.x>W*1.35)c.x=-W*.35;
+    var al=Math.min(1,I.cloud*1.2)*(.55+c.dep*.4);
+    for(j=0;j<c.pf.length;j++){var p=c.pf[j],cxp=c.x+p.dx*c.s+px*(.3+c.dep*.5),cyp=c.y+p.dy*c.s,rr2=p.rr*c.s;
+     var cg=cx.createRadialGradient(cxp,cyp-rr2*.35,rr2*.1,cxp,cyp,rr2);
+     cg.addColorStop(0,rgb(mix(lit,[255,255,255],.25),.8*al));cg.addColorStop(.62,rgb(mix(lit,[110,120,138],.4),.58*al));cg.addColorStop(1,rgb(lit,0));
+     cx.fillStyle=cg;cx.beginPath();cx.arc(cxp,cyp,rr2,0,6.283);cx.fill();}
+   }
+   if(I.cloud>.8){cx.fillStyle=rgb(mix(lit,col[1],.5),(I.cloud-.8)*1.2);cx.fillRect(0,0,W,HY);}
+  }
+  /* البرق — صاعقة بفروع ووهج + ومضات بعيدة داخل السحب + رعد */
+  if(I.storm>.3&&!calm){nextBolt-=dt/1000;
+   if(nextBolt<=0){nextBolt=5+Math.random()*6;flash=1;flick=0;bolt=[];branches=[];
+    var bx=W*(.15+Math.random()*.7),by=H*.06;
+    while(by<HY-H*.03){bolt.push([bx,by]);
+     if(Math.random()<.22&&bolt.length>2){var br=[[bx,by]],qx=bx,qy=by,dirb=Math.random()<.5?-1:1;
+      for(var bb=0;bb<4;bb++){qx+=dirb*(10+Math.random()*16);qy+=12+Math.random()*10;br.push([qx,qy]);}branches.push(br);}
+     bx+=(Math.random()-.5)*38;by+=14+Math.random()*14;}
+    thunderAt=t+.6+Math.random()*1.8;}
+   if(Math.random()<dt/2600&&flash<=0)far=.5+Math.random()*.5;
+   if(far>0){cx.fillStyle='rgba(210,220,245,'+(far*.12)+')';cx.fillRect(0,0,W,HY*.8);far-=dt/220;}
+   if(flash>0){
+    flick+=dt;var fl=flash*(flick<90?1:(flick<150?.35:(flick<230?.9:1)));
+    cx.fillStyle='rgba(228,236,255,'+(fl*.22)+')';cx.fillRect(0,0,W,H);
+    if(bolt){cx.save();cx.shadowColor='rgba(185,205,255,1)';cx.shadowBlur=30;
+     cx.strokeStyle='rgba(252,253,255,'+fl+')';cx.lineWidth=4;cx.lineJoin='round';cx.beginPath();
+     for(i=0;i<bolt.length;i++)i?cx.lineTo(bolt[i][0],bolt[i][1]):cx.moveTo(bolt[i][0],bolt[i][1]);cx.stroke();
+     cx.lineWidth=2;for(j=0;j<branches.length;j++){var brr=branches[j];cx.beginPath();
+      for(i=0;i<brr.length;i++)i?cx.lineTo(brr[i][0],brr[i][1]):cx.moveTo(brr[i][0],brr[i][1]);cx.stroke();}
+     cx.restore();}
+    flash-=dt/420;}
+   if(thunderAt&&t>=thunderAt){thunderAt=0;shake=1;thunder();}
+  }
+  /* الجبال — منظور جوي: الأبعد أفتح وأضبب */
+  var skyB=col[2],gnd=gcol;
+  for(j=0;j<3;j++){
+   var dep=[.35,.62,.86][j],rc=mix(skyB,gnd,dep);
+   if(I.fog>.05)rc=mix(rc,skyB,I.fog*(1-dep)*.8);
+   cx.save();cx.translate(px*(.2+j*.25),0);ridgePath(ridges[j]);cx.fillStyle=rgb(rc);cx.fill();cx.restore();
+   if(j===0&&I.fog>.02){for(i=0;i<fogB.length;i++){var fb=fogB[i];fb.x+=fb.v*mv*(vx<0?-1:1);
+     if(fb.x>W+fb.w*.5)fb.x=-fb.w*.5;if(fb.x<-fb.w*.5)fb.x=W+fb.w*.5;
+     var fg2=cx.createRadialGradient(fb.x,fb.y,0,fb.x,fb.y,fb.w*.5);
+     fg2.addColorStop(0,rgb(mix(skyB,[235,238,242],.45),.42*I.fog));fg2.addColorStop(1,rgb(skyB,0));
+     cx.save();cx.translate(fb.x,fb.y);cx.scale(1,.16);cx.translate(-fb.x,-fb.y);
+     cx.fillStyle=fg2;cx.beginPath();cx.arc(fb.x,fb.y,fb.w*.5,0,6.283);cx.fill();cx.restore();}}
+  }
+  /* الأرض */
+  var gg=cx.createLinearGradient(0,HY,0,H);
+  gg.addColorStop(0,rgb(mix(gnd,skyB,.12)));gg.addColorStop(1,rgb(mix(gnd,[4,8,16],.55)));
+  cx.fillStyle=gg;cx.fillRect(0,HY+H*.005,W,H);
+  /* لمعان الأرض المبلولة */
+  if(I.rain>.05||I.drizzle>.05){var wet=Math.max(I.rain,I.drizzle*.6);
+   var sh=cx.createLinearGradient(0,HY,0,HY+H*.12);sh.addColorStop(0,rgb(skyB,.18*wet));sh.addColorStop(1,rgb(skyB,0));
+   cx.fillStyle=sh;cx.fillRect(0,HY,W,H*.12);}
+  /* الوادي — مجرى يجري بالماء حين يكثر المطر */
+  var p0=[W*.1,H],p1=[W*.44,HY+H*.2],p2=[W*.3,HY+H*.07],p3=[W*.5,HY+H*.01],L=[],R2=[];
+  for(i=0;i<=30;i++){var u=i/30,a1=(1-u),x=a1*a1*a1*p0[0]+3*a1*a1*u*p1[0]+3*a1*u*u*p2[0]+u*u*u*p3[0],
+   y=a1*a1*a1*p0[1]+3*a1*a1*u*p1[1]+3*a1*u*u*p2[1]+u*u*u*p3[1],wd=26*(1-u)+1.5;
+   L.push([x-wd,y]);R2.push([x+wd,y]);}
+  cx.beginPath();cx.moveTo(L[0][0],L[0][1]);for(i=1;i<L.length;i++)cx.lineTo(L[i][0],L[i][1]);
+  for(i=R2.length-1;i>=0;i--)cx.lineTo(R2[i][0],R2[i][1]);cx.closePath();
+  cx.fillStyle=rgb(mix(gnd,[0,0,0],.3),.8);cx.fill();
+  if(I.water>.02){
+   var wg2=cx.createLinearGradient(0,HY,0,H);
+   wg2.addColorStop(0,rgb(mix(skyB,[200,215,230],.3),.75*I.water));
+   wg2.addColorStop(1,rgb(mix(col[0],[30,60,90],.4),.85*I.water));
+   cx.fillStyle=wg2;cx.fill();
+   cx.save();cx.clip();cx.strokeStyle='rgba(240,247,255,'+(.55*I.water)+')';cx.lineWidth=1.6;
+   cx.setLineDash([10,16]);cx.lineDashOffset=calm?0:-t*40;
+   for(j=-1;j<=1;j++){cx.beginPath();for(i=0;i<=30;i++){var mxw=(L[i][0]+R2[i][0])/2+j*(R2[i][0]-L[i][0])*.28;i?cx.lineTo(mxw,L[i][1]):cx.moveTo(mxw,L[i][1]);}cx.stroke();}
+   cx.setLineDash([]);cx.restore();}
+  /* النخيل يميل مع الريح */
+  var pc=rgb(mix(gnd,[0,0,0],.45));
+  for(i=0;i<palms.length;i++)palm(palms[i],pc,(calm?0:Math.sin(t*1.4+i)*.25*(.3+I.wind))+vx*.25*I.wind);
+
+  /* ضباب قريب ومُغطٍّ */
+  if(I.fog>.02){var fv=cx.createLinearGradient(0,HY-H*.2,0,H);
+   fv.addColorStop(0,rgb(mix(skyB,[230,234,238],.5),0));fv.addColorStop(.35,rgb(mix(skyB,[230,234,238],.5),.46*I.fog));
+   fv.addColorStop(1,rgb(mix(skyB,[230,234,238],.3),.18*I.fog));cx.fillStyle=fv;cx.fillRect(0,0,W,H);}
+  /* خطوط الريح */
+  if(I.wind>.03&&!calm){cx.lineCap='round';
+   for(i=0;i<streaks.length;i++){var s2=streaks[i];s2.x+=vx*s2.v*mv*windK*4;
+    if(s2.x<-s2.l)s2.x=W+s2.l;if(s2.x>W+s2.l)s2.x=-s2.l;
+    var sg2=cx.createLinearGradient(s2.x,0,s2.x-vx*s2.l,0);sg2.addColorStop(0,'rgba(240,244,250,0)');sg2.addColorStop(.5,'rgba(240,244,250,'+(.32*I.wind)+')');sg2.addColorStop(1,'rgba(240,244,250,0)');
+    cx.strokeStyle=sg2;cx.lineWidth=1.4;cx.beginPath();cx.moveTo(s2.x,s2.y);cx.quadraticCurveTo(s2.x-vx*s2.l*.5,s2.y-4,s2.x-vx*s2.l,s2.y);cx.stroke();}}
+  /* الغبار */
+  if(I.dust>.01){cx.fillStyle='rgba(196,158,100,'+(.3*I.dust)+')';cx.fillRect(0,0,W,H);
+   for(i=0;i<dust.length;i++){var d=dust[i];
+    if(!calm){d.x+=vx*d.v*mv*windK;d.y+=Math.sin(t+d.p)*.25;}
+    if(finger.on){var dx=d.x-finger.x,dy=d.y-finger.y,dd=Math.hypot(dx,dy)||1;if(dd<100){d.x+=dx/dd*3;d.y+=dy/dd*3;}}
+    if(d.x<-10)d.x=W+10;if(d.x>W+10)d.x=-10;
+    cx.fillStyle='rgba(236,204,150,'+(.5*I.dust)+')';cx.beginPath();cx.arc(d.x,d.y,d.r*1.2,0,6.283);cx.fill();}}
+  /* النفاف — رذاذ ناعم */
+  if(I.drizzle>.02){cx.strokeStyle='rgba(222,236,250,'+(.36*I.drizzle)+')';cx.lineWidth=1;cx.beginPath();
+   for(i=0;i<fine.length;i++){var fd=fine[i];if(!calm){fd.y+=fd.z*mv*2.2;fd.x+=vx*mv*.6*windK;}
+    if(fd.y>H){fd.y=-4;fd.x=Math.random()*W;}if(fd.x<-5)fd.x=W+5;if(fd.x>W+5)fd.x=-5;
+    cx.moveTo(fd.x,fd.y);cx.lineTo(fd.x-vx*2,fd.y-7*fd.z);}cx.stroke();}
+  /* المطر بعمقين + ارتطام بالأرض */
+  if(I.rain>.02){var slant=vx*(1.2+windK*.9)*(I.cyclone>.3?2.2:1);
+   var nR=Math.round(drops.length*Math.min(1,I.rain));
+   var gust=calm?1:(1+.3*Math.sin(t*.9));
+   for(var pass=0;pass<2;pass++){cx.beginPath();
+    cx.strokeStyle='rgba(212,230,250,'+((pass?.58:.26)*I.rain)+')';cx.lineWidth=pass?1.8:.9;
+    for(i=0;i<nR;i++){var dr=drops[i];if((dr.z>.65)!==(pass===1))continue;
+     if(!calm){dr.y+=(9+dr.z*12)*mv*(I.storm>.3?1.3:1)*gust;dr.x+=slant*mv*dr.z;}
+     if(finger.on&&dr.z>.65){var rx=dr.x-finger.x,ry=dr.y-finger.y,rd=Math.hypot(rx,ry)||1;if(rd<65)dr.x+=rx/rd*5;}
+     var lim=HY+H*.02+dr.z*(H-HY);
+     if(dr.y>lim){if(dr.z>.55&&!calm){for(j=0;j<splash.length;j++)if(splash[j].a<=0){splash[j]={x:dr.x,y:dr.y,a:.85,r:1,v:1.5+Math.random()*1.5};break;}}
+      dr.y=-20;dr.x=Math.random()*(W+160)-80;}
+     if(dr.x<-30)dr.x=W+30;if(dr.x>W+30)dr.x=-30;
+     var ln=12+dr.z*26;cx.moveTo(dr.x,dr.y);cx.lineTo(dr.x-slant*ln*.12,dr.y-ln);}
+    cx.stroke();}
+   cx.lineWidth=1;
+   cx.lineWidth=1.3;
+   for(j=0;j<splash.length;j++){var sp=splash[j];if(sp.a<=0)continue;
+    /* حلقة ارتطام + قطرتان ترتدّان */
+    cx.strokeStyle='rgba(225,238,252,'+(sp.a*I.rain)+')';cx.beginPath();cx.ellipse(sp.x,sp.y,sp.r*3,sp.r*.8,0,0,6.283);cx.stroke();
+    var up=Math.max(0,sp.v*sp.r*1.6-sp.r*sp.r*.35);
+    cx.fillStyle='rgba(225,238,252,'+(sp.a*I.rain)+')';
+    cx.beginPath();cx.arc(sp.x-sp.r*2.2,sp.y-up,1.3,0,6.283);cx.fill();
+    cx.beginPath();cx.arc(sp.x+sp.r*2.2,sp.y-up*.8,1.1,0,6.283);cx.fill();
+    sp.r+=dt*.028;sp.a-=dt*.0019;}}
+  /* وهج الحر */
+  if(I.heat>.01&&!calm){for(i=0;i<10;i++){var yy=HY-6+i*6;cx.strokeStyle='rgba(255,215,160,'+(.04*I.heat)+')';cx.lineWidth=2;cx.beginPath();
+    for(var xx=0;xx<=W;xx+=14)cx.lineTo(xx,yy+Math.sin(xx*.035+t*2.4+i)*2.2);cx.stroke();}}
+
+  cx.restore();
+  fore(dt,calm);
+  /* ★ سطوع مريح: خفض الوهج نهارًا حتى تُقرأ المعلومات فوق السماء */
+  /* تعتيم خفيف أعلى الشاشة فقط لوضوح الرأس */
+  if(!topScrim){topScrim=cx.createLinearGradient(0,0,0,H*.22);topScrim.addColorStop(0,'rgba(6,10,22,.22)');topScrim.addColorStop(1,'rgba(6,10,22,0)');}
+  cx.fillStyle=topScrim;cx.fillRect(0,0,W,H*.22);
+  tintTick(dt);
+  document.documentElement.style.setProperty('--v2px',(-tilt.x*6).toFixed(1)+'px');
+  if(!calm&&!document.hidden)requestAnimationFrame(frame);else{running=false;last=0;}
+ }
+ function start(){cv=document.getElementById('v2Sky');if(!cv)return;cx=cv.getContext('2d');size();sync();
+  if(!running){running=true;requestAnimationFrame(frame);}}
+ function wake(){if(cv&&!running&&!still()&&!document.hidden){running=true;requestAnimationFrame(frame);}}
+ window.addEventListener('resize',size);
+ document.addEventListener('visibilitychange',wake);
+ var fp=function(e){var p=e.touches?e.touches[0]:e;if(!p)return;finger.x=p.clientX;finger.y=p.clientY;finger.on=1;};
+ window.addEventListener('pointermove',fp,{passive:true});window.addEventListener('touchmove',fp,{passive:true});
+ window.addEventListener('pointerdown',fp,{passive:true});
+ window.addEventListener('pointerup',function(){finger.on=0;},{passive:true});window.addEventListener('touchend',function(){finger.on=0;},{passive:true});
+ window.addEventListener('deviceorientation',function(e){if(e.gamma==null)return;tilt.x=Math.max(-1,Math.min(1,e.gamma/35));tilt.y=Math.max(-1,Math.min(1,((e.beta||45)-45)/45));},{passive:true});
+ function hold(ms){ holdUntil=performance.now()+(ms||380); }
+ return {colors:function(){return col;},start:start,sync:sync,wake:wake,hold:hold,_I:I,_T:function(){return T;}};
+})();
+
+/* ═══ البطل الجديد ═══ */
+function heroV2(st,m,hi,lo,tod,nx){
+ var L=LI(), feel=(W.apparent_temperature!=null)?tconv(W.apparent_temperature):null, h='';
+ h+='<div class="heroV2 fadeIn d1" id="heroV2">'+
+  '<div class="hv-ic">'+v2Icon(v2IconKey(st))+'</div>'+
+  '<div class="hv-temp" id="bigTemp">—<sup>°</sup></div>'+
+  '<div class="hv-desc">'+m.t[L]+(tod?' · '+tod:'')+'</div>'+
+  '<div class="hv-pills">'+
+   (feel!=null?'<span class="hv-pill">'+pick('الإحساس','الإحساس','Feels')+' <b>'+feel+'°</b></span>':'')+
+   (hi!==''?'<span class="hv-pill">'+pick('العظمى','العظمى','High')+' <b>'+hi+'°</b></span>':'')+
+   (lo!==''?'<span class="hv-pill">'+pick('الصغرى','الصغرى','Low')+' <b>'+lo+'°</b></span>':'')+
+  '</div>'+
+  (nx?'<div class="hv-next">'+nx+'</div>':'')+
+  scrubBar()+scrubHint()+
+ '</div>';
+ /* صوت نفاف */
+ h+='<div class="v2voice fadeIn d1"><i class="v2dot"></i><div><p id="nafafText">'+(NAFAF_TXT||pickLocal(st))+'</p>'+
+  (NAFAF_SRC?'<div class="srcnote">'+NAFAF_SRC+'</div>':'')+'</div></div>';
+ /* الساعات */
+ if(HOURLY){
+  var si=Clock.hourIndex(), i, hs='';
+  if(si>=0){
+   for(i=si;i<Math.min(si+12,HOURLY.time.length);i++){
+    var hh=new Date(HOURLY.time[i]), n=hourIsNight(HOURLY.time[i]);
+    var code=HOURLY.weather_code[i];
+    var ik=v2CodeKey(code,n);
+    var pp=HOURLY.precipitation_probability?HOURLY.precipitation_probability[i]:0;
+    hs+='<div class="v2hr'+(i===si?' now':'')+'"><div class="t">'+(i===si?pick('الحين','الآن','Now'):String(hh.getHours()).padStart(2,'0')+':00')+'</div>'+
+     v2Icon(ik,28)+'<div class="v">'+(i===si?tconv(W.temperature_2m):tconv(HOURLY.temperature_2m[i]))+'°</div>'+
+     '<div class="pp">'+(pp>=20?Math.round(pp)+'%':'')+'</div></div>';
+   }
+   h+='<h2 class="v2h">'+pick('الساعات الجاية','الساعات القادمة','Next hours')+'</h2><div class="v2hours fadeIn d2">'+hs+'</div>';
+  }
+ }
+ return h;
+}
+
+/* ═══ بطاقات التفاصيل ═══ */
+function detailsV2(){
+ var L=LI(), hum=Math.round(W.relative_humidity_2m||0), h='';
+ var uv=(typeof UVv!=='undefined'&&UVv!=null)?Math.round(UVv):null;
+ var uvT=uv==null?'—':(uv<=2?pick('منخفضة','منخفضة','Low'):uv<=5?pick('متوسطة','متوسطة','Moderate'):uv<=7?pick('عالية','عالية','High'):uv<=10?pick('عالية جدًا','عالية جدًا','Very high'):pick('شديدة','شديدة','Extreme'));
+ var pm=(typeof PMv!=='undefined'&&PMv!=null)?Math.round(PMv):null;
+ var aqT=pm==null?'—':(pm>75?pick('سيّئ','سيّئ','Bad'):pm>50?pick('متوسط','متوسط','Fair'):pm>25?pick('مقبول','مقبول','OK'):pick('جيد','جيد','Good'));
+ var aqC=pm==null?'#A9B8CC':(pm>75?'#E06B4F':pm>50?'#E3A94B':pm>25?'#E3D35E':'#5CC9B0');
+ var dir=W.wind_direction_10m||0;
+ h+='<h2 class="v2h">'+pick('تفاصيل الحين','التفاصيل الآن','Details')+'</h2><div class="v2grid fadeIn d2">';
+ h+='<div class="v2tile"><div class="v2k">'+pick('الرطوبة','الرطوبة','Humidity')+'</div><div class="v2row"><div class="v2big">'+hum+'<small>%</small></div>'+
+  '<svg class="v2ring" viewBox="0 0 60 60"><circle class="bg" cx="30" cy="30" r="24"/><circle class="fg" cx="30" cy="30" r="24" stroke-dasharray="150.8" stroke-dashoffset="'+(150.8*(1-hum/100)).toFixed(1)+'" transform="rotate(-90 30 30)"/></svg></div></div>';
+ h+='<div class="v2tile"><div class="v2k">'+pick('الرياح','الرياح','Wind')+'</div><div class="v2row"><div class="v2big">'+wconv(W.wind_speed_10m)+'<small> '+wlabel()+'</small></div>'+
+  '<svg class="v2arrow" viewBox="0 0 44 44" style="transform:rotate('+((dir+180)%360)+'deg)"><circle cx="22" cy="22" r="20" fill="none" stroke="rgba(255,255,255,.18)"/><path d="M22 8 L28 26 L22 22 L16 26Z" fill="#E3A94B"/></svg></div></div>';
+ h+='<div class="v2tile"><div class="v2k">'+pick('الأشعة فوق البنفسجية','الأشعة فوق البنفسجية','UV index')+'</div><div class="v2big">'+(uv==null?'—':uv)+'<small> '+uvT+'</small></div>'+
+  '<div class="v2uv"><i style="right:'+(uv==null?0:Math.min(100,uv/11*100))+'%"></i></div></div>';
+ h+='<div class="v2tile"><div class="v2k">'+pick('جودة الهواء','جودة الهواء','Air quality')+'</div><div class="v2big">'+(pm==null?'—':pm)+'<small> PM2.5</small></div>'+
+  '<div class="v2k" style="color:'+aqC+';font-weight:600">'+aqT+'</div></div>';
+ h+='</div>';
+ return h;
+}
+
+/* ═══ السما بعيون أهلها ═══ */
+function seasonV2(){
+ try{
+  var i=starInfo(), L=LI(), len=Math.max(1,i.dayIn+i.toNext-1), pct=Math.min(1,i.dayIn/len);
+  return '<h2 class="v2h">'+pick('السما بعيون أهلها','التقويم النجمي','The sky, as our elders read it')+'</h2>'+
+   '<div class="v2season fadeIn d3" id="v2Season">'+
+   '<svg class="arc" viewBox="0 0 84 84"><circle cx="42" cy="42" r="34" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="7"/>'+
+   '<circle cx="42" cy="42" r="34" fill="none" stroke="#E3A94B" stroke-width="7" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="'+(213.6*(1-pct)).toFixed(1)+'" transform="rotate(-90 42 42)"/>'+
+   '<text x="42" y="48" text-anchor="middle" fill="#F2F4F7" font-size="18" font-weight="700">'+i.dayIn+'</text></svg>'+
+   '<div><div class="nm">'+i.s.nm[L]+'</div><p>'+i.s.mn[L]+'</p>'+
+   '<p class="nx">'+(L===2?(i.next.nm[L]+' in '+i.toNext+' days'):(i.next.nm[L]+' بعد '+i.toNext+' يوم'))+'</p></div></div>';
+ }catch(e){ return ''; }
+}
+
+/* ═══ السحب حولك — رادار مطر مباشر (RainViewer) ═══
+   نفس مصدر تبويب الرصد · آخر ساعة تتحرك في حلقة · اللمس يفتح الرصد */
+function radarV2(){
+ var L2=LI(), mm=W.precipitation||0, pmax=0, i;
+ try{var si=Clock.hourIndex();for(i=si;i<Math.min(si+3,HOURLY.time.length);i++)pmax=Math.max(pmax,HOURLY.precipitation_probability[i]||0);}catch(e){}
+ var lbl=mm>0.1?pick('مطر حولك الحين','هطول في منطقتك الآن','Rain around you now'):
+  (pmax>=50?pick('سحب ممطرة محتملة خلال ساعتين','هطول محتمل خلال ساعتين','Rain likely within 2 hours'):
+   pick('ما في سحب ممطرة قريبة','لا سحب ممطرة قريبة','No rain clouds nearby'));
+ V2RAD.rain=mm>0.1||pmax>=50; V2RAD.storm=stateOf(W)==='storm';
+ return '<h2 class="v2h">'+pick('السحب حولك','السحب حولك','Clouds around you')+'</h2>'+
+  '<div class="v2radar fadeIn d3" id="v2Radar"><div class="v2rmap" id="v2RadarMap"></div>'+
+  '<canvas id="v2RadarCv" aria-hidden="true"></canvas>'+
+  '<span class="v2rlive" id="v2RLive">'+pick('مباشر','مباشر','Live')+' · <b id="v2RTime">--:--</b></span>'+
+  '<div class="lbl">'+lbl+'<small>'+pick('اضغط لفتح الرصد المباشر','اضغط لفتح الرصد المباشر','Tap to open live radar')+'</small></div>'+
+  '<span class="v2rattr">RainViewer · © OpenStreetMap</span></div>';
+}
+var V2RAD={rain:false,storm:false,cells:[],a:0,on:false,map:null,layers:[],frames:[],idx:0,timer:null,data:null,ts:0};
+function radarSweep(){
+ var cv=document.getElementById('v2RadarCv'); if(!cv)return;
+ cv.style.display='block'; V2RAD.cells=[];
+ if(V2RAD.rain)for(var i=0;i<7;i++)V2RAD.cells.push({x:Math.random(),y:Math.random(),r:.08+Math.random()*.12,c:V2RAD.storm&&i<2});
+ if(V2RAD.on)return; V2RAD.on=true;
+ (function draw(){
+  var c=document.getElementById('v2RadarCv');
+  if(!c||c.style.display==='none'||TAB!=='now'||document.hidden){V2RAD.on=false;return;}
+  var r=c.getBoundingClientRect(),d=Math.min(window.devicePixelRatio||1,2);
+  if(c.width!==Math.round(r.width*d)){c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);}
+  var ctx=c.getContext('2d'),Wd=c.width,Hd=c.height,cxp=Wd*.72,cyp=Hd*.5,R=Math.max(Wd,Hd)*.7,i;ctx.clearRect(0,0,Wd,Hd);
+  ctx.strokeStyle='rgba(169,184,204,.18)';ctx.lineWidth=d;for(i=1;i<=3;i++){ctx.beginPath();ctx.arc(cxp,cyp,R*i/3.4,0,6.283);ctx.stroke();}
+  for(i=0;i<V2RAD.cells.length;i++){var ce=V2RAD.cells[i];ce.x-=.0006;if(ce.x<-.2)ce.x=1.1;
+   var g=ctx.createRadialGradient(ce.x*Wd,ce.y*Hd,0,ce.x*Wd,ce.y*Hd,ce.r*Wd);
+   g.addColorStop(0,ce.c?'rgba(227,110,79,.8)':'rgba(92,201,176,.75)');g.addColorStop(1,'rgba(92,201,176,0)');
+   ctx.fillStyle=g;ctx.beginPath();ctx.arc(ce.x*Wd,ce.y*Hd,ce.r*Wd,0,6.283);ctx.fill();}
+  if(document.body.className.indexOf('noanim')<0)V2RAD.a+=.02;
+  ctx.strokeStyle='rgba(227,169,75,.45)';ctx.lineWidth=2*d;ctx.beginPath();ctx.moveTo(cxp,cyp);ctx.lineTo(cxp+Math.cos(V2RAD.a)*R,cyp+Math.sin(V2RAD.a)*R);ctx.stroke();
+  requestAnimationFrame(draw);
+ })();
+}
+function radarV2Stop(){
+ if(V2RAD.timer){clearInterval(V2RAD.timer);V2RAD.timer=null;}
+ try{ if(V2RAD.map){V2RAD.map.remove();} }catch(e){}
+ V2RAD.map=null;V2RAD.layers=[];
+}
+function radarV2Start(){
+ var box=document.getElementById('v2Radar'); if(!box)return;
+ box.onclick=function(){ if(typeof showTab==='function')showTab('live'); };
+ var el0=document.getElementById('v2RadarMap');
+ /* ★ نفس العنصر والخريطة قائمة: لا شيء نفعله — هذا ما يجعل التنقل سلسًا */
+ try{ if(V2RAD.map&&el0&&V2RAD.map.getContainer()===el0)return; }catch(e){}
+ radarV2Stop();
+ /* ★ نبني الخريطة فقط حين تقترب البطاقة من الشاشة */
+ if(!V2RAD.lazy&&'IntersectionObserver' in window&&el0){
+  V2RAD.lazy=true;
+  var io=new IntersectionObserver(function(en){
+   if(en[0]&&en[0].isIntersecting){io.disconnect();V2RAD.lazy=false;radarV2Start();}
+  },{rootMargin:'200px'});
+  io.observe(box); return;
+ }
+ V2RAD.lazy=false;
+ var el=document.getElementById('v2RadarMap');
+ if(!el||typeof L==='undefined'||!L.map||!CUR){ radarSweep(); return; }
+ var cvs=document.getElementById('v2RadarCv'); if(cvs)cvs.style.display='none';
+ try{
+  V2RAD.map=L.map(el,{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false,
+   doubleClickZoom:false,boxZoom:false,keyboard:false,touchZoom:false,tap:false}).setView([CUR.lat,CUR.lon],7);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:9,className:'osmDark'}).addTo(V2RAD.map);
+  L.circleMarker([CUR.lat,CUR.lon],{radius:5,color:'#0E1830',weight:2,fillColor:'#E3A94B',fillOpacity:1}).addTo(V2RAD.map);
+ }catch(e){ radarSweep(); return; }
+ var go=function(d){
+  if(!V2RAD.map)return;
+  var host=d.host||'https://tilecache.rainviewer.com', past=(d.radar&&d.radar.past)||[];
+  V2RAD.frames=past.slice(-6); if(!V2RAD.frames.length){ radarSweep(); return; }
+  V2RAD.layers=V2RAD.frames.map(function(f){
+   return L.tileLayer(host+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:0,maxZoom:9,zIndex:5}).addTo(V2RAD.map);
+  });
+  V2RAD.idx=V2RAD.frames.length-1; show(V2RAD.idx);
+  var still=document.body.className.indexOf('noanim')>=0, hold=0;
+  if(still)return;
+  V2RAD.timer=setInterval(function(){
+   if(!document.getElementById('v2RadarMap')){radarV2Stop();return;}
+   if(TAB!=='now'||document.hidden)return;
+   if(V2RAD.idx===V2RAD.frames.length-1&&hold<2){hold++;return;}
+   hold=0; V2RAD.idx=(V2RAD.idx+1)%V2RAD.frames.length; show(V2RAD.idx);
+  },700);
+ };
+ function show(i){
+  for(var k=0;k<V2RAD.layers.length;k++)V2RAD.layers[k].setOpacity(k===i?.78:0);
+  var f=V2RAD.frames[i], te=document.getElementById('v2RTime');
+  if(f&&te){var dd=new Date(f.time*1000+((TZ_OFF!=null?TZ_OFF:0)*1000)+new Date().getTimezoneOffset()*60000);
+   te.textContent=String(dd.getHours()).padStart(2,'0')+':'+String(dd.getMinutes()).padStart(2,'0');}
+ }
+ if(V2RAD.data&&Date.now()-V2RAD.ts<300000){ go(V2RAD.data); return; }
+ fetch('https://api.rainviewer.com/public/weather-maps.json')
+  .then(function(r){if(!r.ok)throw 0;return r.json();})
+  .then(function(d){V2RAD.data=d;V2RAD.ts=Date.now();go(d);})
+  .catch(function(){ radarV2Stop(); var m=document.getElementById('v2RadarMap'); if(m)m.style.display='none'; radarSweep(); });
+}
+
+/* ═══ الشريط السفلي ═══ */
+var DOCK_ICONS={
+ now:'<circle cx="9" cy="9" r="3.5"/><path d="M9 2.5v1.2M3.7 4.7l.9.9M2.5 9h1.2"/><path d="M8 20h9.5a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6 1.2A3 3 0 0 0 8 20z"/>',
+ fc:'<rect x="3.5" y="5" width="17" height="15" rx="3.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8.5 14.5h2M13.5 14.5h2"/>',
+ fit:'<circle cx="14.5" cy="4.5" r="1.8"/><path d="M8 21l3-6 3 2.5V21"/><path d="M6 12l3.5-3.5 4 1.5 2.5 3.5 3 1"/><path d="M11 15l-1.5-6"/>',
+ live:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12l6-6"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+ more:'<rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/>',
+ life:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
+ world:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+ gallery:'<rect x="3.5" y="5" width="17" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"/>',
+ quake:'<path d="M2.5 12h3l2-5 3 10 3-13 2.5 8h5.5"/>',
+ src:'<path d="M5 4.5h9.5a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h9.5M9 8.5h5"/>',
+ set:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/>'
+};
+var DOCK_KEYS=['now','fc','fit','live','more'];
+var DOCK_CFG=null;
+/* ★ تبويبات الشريط من البوابة: أول ٤ مفعّلة بالترتيب + المزيد دائمًا */
+function dockKeys(){
+ if(!DOCK_CFG)return DOCK_KEYS;
+ var d=DOCK_CFG.slice().sort(function(a,b){return (a.order||99)-(b.order||99);}), out=[], i;
+ for(i=0;i<d.length&&out.length<4;i++)if(d[i].enabled!==false&&d[i].id!=='more')out.push(d[i].id);
+ if(!out.length)return DOCK_KEYS;
+ out.push('more'); return out;
+}
+function dockLabel(k,L){
+ if(DOCK_CFG&&L!==2)for(var i=0;i<DOCK_CFG.length;i++)if(DOCK_CFG[i].id===k&&DOCK_CFG[i].label)return DOCK_CFG[i].label;
+ if(DOCK_LBL[k])return DOCK_LBL[k][L];
+ for(var j=0;j<TABS.length;j++)if(TABS[j].k===k)return TABS[j].t[L];
+ return k;
+}
+var DOCK_LBL={now:['الآن','الآن','Now'],fc:['القادم','القادم','Ahead'],fit:['رياضتي','رياضتي','Fitness'],
+ live:['الرصد','الرصد','Radar'],more:['المزيد','المزيد','More']};
+function dockSvg(k){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(DOCK_ICONS[k]||'')+'</svg>';}
+function dockVisible(){
+ var vis={},o=(typeof orderedTabs==='function')?orderedTabs():TABS,i;
+ for(i=0;i<o.length;i++)vis[o[i].k]=o[i];
+ return vis;
+}
+function buildDock(){
+ var d=document.getElementById('v2Dock'); if(!d)return;
+ var L=LI(), vis=dockVisible(), h='<i class="v2blob" id="v2Blob"></i>', i;
+ var dk=dockKeys();
+ for(i=0;i<dk.length;i++){
+  var k=dk[i]; if(k!=='more'&&!vis[k])continue;
+  var lb=dockLabel(k,L);
+  h+='<button class="v2tab" data-dk="'+k+'" aria-label="'+lb+'">'+dockSvg(DOCK_ICONS[k]?k:'more')+'<span>'+lb+'</span></button>';
+ }
+ d.innerHTML=h;
+ var bs=d.querySelectorAll('[data-dk]');
+ for(i=0;i<bs.length;i++)bs[i].onclick=function(){
+  var k=this.getAttribute('data-dk');
+  try{ if(navigator.vibrate)navigator.vibrate(8); }catch(e){}
+  if(k==='more'){ moreOpen(); return; }
+  if(typeof showTab==='function')showTab(k);
+ };
+ dockPaint();
+}
+function dockPaint(){
+ var d=document.getElementById('v2Dock'); if(!d)return;
+ var act=(dockKeys().indexOf(TAB)>=0)?TAB:'more', bs=d.querySelectorAll('[data-dk]'), on=null, i;
+ for(i=0;i<bs.length;i++){
+  if(bs[i].getAttribute('data-dk')===act){bs[i].setAttribute('aria-current','page');on=bs[i];}
+  else bs[i].removeAttribute('aria-current');
+ }
+ var bl=document.getElementById('v2Blob');
+ if(bl&&on){
+  var dr=d.getBoundingClientRect(),r=on.getBoundingClientRect(),w=Math.min(62,r.width-10);
+  if(r.width>0){bl.style.width=w+'px';bl.style.transform='translateX('+(r.left-dr.left+(r.width-w)/2)+'px)';}
+ }
+}
+/* ═══ صفحة المزيد ═══ */
+function moreOpen(){
+ var L=LI(), vis=dockVisible(), o=(typeof orderedTabs==='function')?orderedTabs():TABS, h='', i;
+ for(i=0;i<o.length;i++){
+  var k=o[i].k; if(dockKeys().indexOf(k)>=0)continue;
+  var lb=(NAV_LABELS&&NAV_LABELS[k]&&NAV_LABELS[k].label&&L!==2)?NAV_LABELS[k].label:o[i].t[L];
+  h+='<button class="v2more-it'+(TAB===k?' on':'')+'" data-mk="'+k+'">'+dockSvg(DOCK_ICONS[k]?k:'more')+'<span>'+lb+'</span></button>';
+ }
+ h+='<button class="v2more-it" data-mk="__set">'+dockSvg('set')+'<span>'+pick('الإعدادات','الإعدادات','Settings')+'</span></button>';
+ var sh=document.getElementById('v2More'), bd=document.getElementById('v2MoreBack');
+ document.getElementById('v2MoreBody').innerHTML=h;
+ sh.className='v2more on'; bd.className='v2moreBack on';
+ var bs=sh.querySelectorAll('[data-mk]');
+ for(i=0;i<bs.length;i++)bs[i].onclick=function(){
+  var k=this.getAttribute('data-mk'); moreClose();
+  try{ if(navigator.vibrate)navigator.vibrate(6); }catch(e){}
+  if(k==='__set'){ var g=document.getElementById('gearBtn'); if(g)g.click(); return; }
+  if(typeof showTab==='function')showTab(k);
+ };
+}
+function moreClose(){
+ var sh=document.getElementById('v2More'), bd=document.getElementById('v2MoreBack');
+ if(sh)sh.className='v2more'; if(bd)bd.className='v2moreBack';
+}
+
 /* ============ عرض: الآن ============ */
 /* ★ key اختياري يسمح بتحديث المؤشر في مكانه بلا إعادة رسم */
 function stat(k,v,cls,key){return '<div class="stat"'+(key?' data-k="'+key+'"':'')+
  '><div class="k">'+k+'</div><div class="v '+(cls||'')+'">'+v+'</div></div>';}
+/* ★★★ ترتيب أقسام الصفحة الرئيسية من البوابة ★★★
+   كل قسم محاط بعلامة — نعيد ترتيبها حسب ما حدّده المشغّل 
+   والقسم المخفي يُحذف والقسم الجديد غير المعروف للبوابة يظهر في مكانه الافتراضي */
+var BLOCK_DEFAULT=['news','reports','watch','worldWatch','glance','fusion','hero','hourly','feed','rotate','changes',
+ 'timeline','stability','stats','nafaf','sea','season','radar','astro','onthisday','rainscale','pressure'];
+function orderBlocks(h){
+ try{
+  var parts=h.split(/<!--B:([a-zA-Z]+)-->/), head=parts[0], map={}, i, out=head;
+  for(i=1;i<parts.length;i+=2)map[parts[i]]=(map[parts[i]]||'')+(parts[i+1]||'');
+  var ord=[], seen={};
+  if(BLOCK_ORDER){
+   var bo=BLOCK_ORDER.slice().sort(function(a,b){return (a.order||99)-(b.order||99);});
+   for(i=0;i<bo.length;i++){seen[bo[i].id]=1; if(bo[i].enabled!==false&&map[bo[i].id]!=null)ord.push(bo[i].id);}
+  }
+  for(i=0;i<BLOCK_DEFAULT.length;i++){var k=BLOCK_DEFAULT[i];
+   if(!seen[k]&&map[k]!=null){
+    /* قسم جديد لم تعرفه البوابة: يُدرج بعد أقرب قسم سابق له في الترتيب الافتراضي */
+    var at=ord.length;
+    for(var j=i-1;j>=0;j--){var p=ord.indexOf(BLOCK_DEFAULT[j]);if(p>=0){at=p+1;break;}}
+    if(!BLOCK_ORDER)at=ord.length;
+    ord.splice(at,0,k);}
+  }
+  for(i=0;i<ord.length;i++)out+=map[ord[i]];
+  return out;
+ }catch(e){ return h.replace(/<!--B:[a-zA-Z]+-->/g,''); }
+}
+/* ★★★ السلاسة: لا نعيد بناء «الآن» كاملة عند الرجوع إليها إن لم يتغيّر شيء ★★★
+   إعادة البناء تُجبر المتصفح على تخطيط الصفحة كلها من جديد — سبب التقطيع.
+   ⚠️ أي تحديث بيانات أو إعداد يستدعي renderNow مباشرة فيُرسم كالمعتاد */
+var NOW_AT=0, NOW_KEY='';
+function nowKey(){
+ try{ return [W&&W.temperature_2m,W&&W.weather_code,W&&W.time,CUR&&CUR.lat,CUR&&CUR.lon,LI(),
+  typeof THEME!=='undefined'?THEME:'',BLOCK_ORDER?BLOCK_ORDER.length:0,IS_NIGHT].join('|'); }catch(e){ return String(Math.random()); }
+}
+function nowFresh(){
+ var b=document.getElementById('nowBody');
+ return !!(b&&b.children.length>2&&Date.now()-NOW_AT<120000&&NOW_KEY===nowKey());
+}
+function nowResume(){
+ try{ rotStart(); }catch(e){}
+ try{ pillStart(); }catch(e){}
+ try{ if(V2)radarV2Start(); }catch(e){}
+ try{ if(typeof cinemaAllowed==='function'&&cinemaAllowed())cinemaStart(); }catch(e){}
+}
 function renderNow(){
- if(!W){$("nowBody").innerHTML='<div class="loading">'+pick('نجيب طقسك الحقيقي…','جارٍ جلب البيانات…','Fetching real data…')+'</div>';return;}
+ if(!W){$("nowBody").innerHTML='<div class="skel" aria-label="'+pick('نجيب طقسك','جارٍ التحميل','Loading')+'">'+
+  '<div class="sk sk-ring"></div><div class="sk sk-line"></div><div class="sk-row"><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i><i class="sk"></i></div>'+
+  '<div class="sk sk-card"></div><div class="sk sk-card short"></div></div>';return;}
  computeNight();
  var st=stateOf(W),m=META[st],L=LI();
  paintSky(st);
+ try{ if(V2)Sky2.sync(); }catch(e){}
  var uvT=UVv!=null?Math.round(UVv):'—',uvC=UVv==null?'':(UVv<=2?'uvG':UVv<=5?'uvY':UVv<=7?'uvO':'uvR');
  var aqT='—',aqC='';
  if(PMv!=null){var p=Math.round(PMv);
@@ -7805,14 +10233,16 @@ function renderNow(){
  var nx=nextChangeLine();
  var h='';
  /* ★ الترتيب من البوابة — blockOn تتحكم في الإظهار */
- var nc=blockOn('news')?newsCard():''; if(nc)h+='<div class="fadeIn d1">'+nc+'</div>';
- var pc2=blockOn('reports')?pillCard():''; if(pc2)h+='<div class="fadeIn d1" id="pillHost">'+pc2+'</div>';
- var wc=blockOn('watch')?watchCard():''; if(wc)h+='<div class="fadeIn d1">'+wc+'</div>';
- var ww=blockOn('worldWatch')?worldWatchCard():''; if(ww)h+='<div class="fadeIn d1">'+ww+'</div>';
- var gl=blockOn('glance')?worldGlance():''; if(gl)h+='<div class="fadeIn d1" id="glanceHost">'+gl+'</div>';
- var fu=fusionCard(); if(fu)h+='<div class="fadeIn d1">'+fu+'</div>';
+ h+='<!--B:news-->';var nc=blockOn('news')?newsCard():''; if(nc)h+='<div class="fadeIn d1">'+nc+'</div>';
+ h+='<!--B:reports-->';var pc2=blockOn('reports')?pillCard():''; if(pc2)h+='<div class="fadeIn d1" id="pillHost">'+pc2+'</div>';
+ h+='<!--B:watch-->';var wc=blockOn('watch')?watchCard():''; if(wc)h+='<div class="fadeIn d1">'+wc+'</div>';
+ h+='<!--B:worldWatch-->';var ww=blockOn('worldWatch')?worldWatchCard():''; if(ww)h+='<div class="fadeIn d1">'+ww+'</div>';
+ h+='<!--B:glance-->';var gl=blockOn('glance')?worldGlance():''; if(gl)h+='<div class="fadeIn d1" id="glanceHost">'+gl+'</div>';
+ h+='<!--B:fusion-->';var fu=fusionCard(); if(fu)h+='<div class="fadeIn d1">'+fu+'</div>';
  var lf=liveFeedCard();
  var brf=briefCard();
+ h+='<!--B:hero-->';
+ {
  /* ★ رقم الحرارة الكبير أولًا ثم الأيقونة صغيرة أسفله */
  var pr=pulseRing(st);
  h+='<div class="hero fadeIn d1">';
@@ -7863,6 +10293,8 @@ function renderNow(){
    (nx?'<div class="next">'+nx+'</div>':'');
  }
  h+='</div>';
+ }
+ h+='<!--B:hourly-->';
  if(HOURLY){var sh='',i,now=new Date(),si=-1;
  si=Clock.hourIndex();  /* ★ بتوقيت المدينة لا الجهاز */
  if(si>=0){for(i=si;i<Math.min(si+6,HOURLY.time.length);i++){var hh=new Date(HOURLY.time[i]);
@@ -7870,34 +10302,45 @@ function renderNow(){
  IC[iconForCode(HOURLY.weather_code[i],hourIsNight(HOURLY.time[i]))]+
  '<div class="tt">'+tconv(HOURLY.temperature_2m[i])+'°</div><div class="pp">'+hrPrecip(i)+'</div></div>';}
  h+='<div class="strip6 fadeIn d2">'+sh+'</div>';}}
- if(lf)h+='<div class="fadeIn d2">'+lf+'</div>'; /* ★ السما الآن بعد الحرارة */
- var rc=rotCard(); if(rc)h+='<div class="fadeIn d2" id="rotHost">'+rc+'</div>';
- var chg=changesCard(); if(chg)h+='<div class="fadeIn d2">'+chg+'</div>';
- var tlc=timelineCard(); if(tlc)h+='<div class="fadeIn d3">'+tlc+'</div>';
- var stc=stabilityCard(); if(stc)h+='<div class="fadeIn d3">'+stc+'</div>';
+ h+='<!--B:feed-->';if(lf)h+='<div class="fadeIn d2">'+lf+'</div>'; /* ★ السما الآن بعد الحرارة */
+ h+='<!--B:rotate-->';var rc=rotCard(); if(rc)h+='<div class="fadeIn d2" id="rotHost">'+rc+'</div>';
+ h+='<!--B:changes-->';var chg=changesCard(); if(chg)h+='<div class="fadeIn d2">'+chg+'</div>';
+ h+='<!--B:timeline-->';var tlc=timelineCard(); if(tlc)h+='<div class="fadeIn d3">'+tlc+'</div>';
+ h+='<!--B:stability-->';var stc=stabilityCard(); if(stc)h+='<div class="fadeIn d3">'+stc+'</div>';
+ h+='<!--B:stats-->';
  h+='<div class="card fadeIn d3"><div class="stats">'+
  stat(pick('الإحساس','الإحساس','Feels'),tconv(W.apparent_temperature)+'°','','feels')+
  stat(pick('الرطوبة','الرطوبة','Humidity'),Math.round(W.relative_humidity_2m)+'%','','hum')+
  stat(pick('الرياح','الرياح','Wind'),wconv(W.wind_speed_10m),'','wind')+
  stat('UV',uvT,uvC)+stat(pick('الهواء','الهواء','Air'),aqT,aqC)+'</div></div>';
+ h+='<!--B:nafaf-->';
  h+='<div class="fadeIn d4"><span class="nlabel">نفاف</span><div class="nafaf"><p id="nafafText">'+(NAFAF_TXT||pickLocal(st))+'</p>'+
  (NAFAF_SRC?'<div class="srcnote">'+NAFAF_SRC+'</div>':'')+'</div></div>'+
  /* ★ صندوق السؤال انتقل للأيقونة العائمة — أوسع وأذكى */
  '';
+ h+='<!--B:sea-->';
  h+='<div class="big2 fadeIn d6"><div class="b2"><div class="k">'+pick('ارتفاع الموج','ارتفاع الموج','Waves')+'</div>'+
  '<div class="v">'+((MARINE&&MARINE.wave_height!=null)?MARINE.wave_height.toFixed(1):'—')+'</div><div class="u">'+pick('متر','متر','m')+'</div></div>'+
  '<div class="b2"><div class="k">'+pick('الهبّات','الهبّات','Gusts')+'</div><div class="v">'+(GUSTS!=null?wconv(GUSTS):'—')+'</div><div class="u">'+wlabel()+'</div></div></div>';
+ if(V2)h+='<!--B:season-->'+seasonV2()+'<!--B:radar-->'+radarV2();
  var ae=astroToday();
+ h+='<!--B:astro-->';
  if(ae&&ae.p>=75)h+='<div class="fadeIn d6">'+astroCard()+'</div>';
+ h+='<!--B:onthisday-->';
  var od=todayEvents();
  if(od.exact.length){var oc=onThisDayCard();if(oc)h+='<div class="fadeIn d6">'+oc+'</div>';}
  var rs=rainScaleLine();
+ h+='<!--B:rainscale-->';
  if(rs)h+='<div class="smart fadeIn d6"><div class="h">'+pick('حجم المطر','مقياس الهطول','Rain in scale')+'</div><div class="b">'+rs+'</div></div>';
- var pc=pressureCard();if(pc)h+='<div class="fadeIn d6">'+pc+'</div>';
+ h+='<!--B:pressure-->';var pc=pressureCard();if(pc)h+='<div class="fadeIn d6">'+pc+'</div>';
+ h=orderBlocks(h);
  $("nowBody").innerHTML=h;
+ NOW_AT=Date.now(); NOW_KEY=nowKey();
  wireTimeline();
  rotWire();rotStart();
  glanceWire();wwWire();
+ scrubInit();
+ if(V2)radarV2Start();
  var ph=$("pillCard");if(ph)ph.onclick=function(){pillNext();pillStart();};
  pillStart();
  var wcEl=$("watchCard");
@@ -10202,6 +12645,7 @@ function layerGrid(){
 /* ============ التبويبات ============ */
 var TABS=[{k:'now',t:['الآن','الآن','Now']},{k:'life',t:['يومك','يومك','Your day']},
  {k:'fc',t:['الطقس القادم','الطقس القادم','Coming weather']},
+ {k:'fit',t:['رياضتي','رياضتي','Fitness']},
  {k:'live',t:['الرصد المباشر','الرصد المباشر','Live radar']},
  {k:'world',t:['نافذة العالم','نافذة العالم','World']},
  {k:'gallery',t:['أجواء نفاف','معرض الأجواء','Skies']},
@@ -10215,6 +12659,14 @@ function orderedTabs(){
  if(TABS[j].k===CFG.tabOrder[i]){out.push(TABS[j]);break;}
  /* ★ حين تأتي القائمة من البوابة تكون كاملة ونهائية —
     فالتبويب غير المذكور مخفيّ عمدًا لا منسيّ */
+ /* ★ تبويب جديد لم تعرفه البوابة إطلاقًا يظهر — المطفأ عمدًا يبقى مخفيًا */
+ for(j=0;j<TABS.length;j++){
+  if(NAV_LABELS&&NAV_KNOWN&&!NAV_KNOWN[TABS[j].k]){
+   var have=false;
+   for(i=0;i<out.length;i++)if(out[i].k===TABS[j].k){have=true;break;}
+   if(!have)out.push(TABS[j]);
+  }
+ }
  if(!NAV_LABELS){
   for(j=0;j<TABS.length;j++){
    var found=false;
@@ -10237,7 +12689,7 @@ function buildTabs(){
 function showPanels(){var i;
  if(TAB!=='now'){cinemaStop();rotStop();pillStop();}
  for(i=0;i<TABS.length;i++){var el=$("p-"+TABS[i].k);if(el)el.className="panel"+(TAB===TABS[i].k?" on":"");}
- if(TAB==='now')renderNow();if(TAB==='life')renderLife();if(TAB==='fc')renderFc();if(TAB==='world')renderWorld();if(TAB==='quake')renderQuakes();if(TAB==='gallery'){galleryLoad(true);renderGallery();}if(TAB==='live')renderLive();if(TAB==='src')renderSrc();}
+ if(TAB==='now'){ if(nowFresh())nowResume(); else renderNow(); }if(TAB==='life')renderLife();if(TAB==='fc')renderFc();if(TAB==='world')renderWorld();if(TAB==='quake')renderQuakes();if(TAB==='gallery'){galleryLoad(true);renderGallery();}if(TAB==='live')renderLive();if(TAB==='src')renderSrc();if(TAB==='fit')renderFit();else{try{fitMapsOff();}catch(e){}try{document.body.className=document.body.className.replace(/\s*fitActive/g,'');}catch(e){}}fitPillPaint();}
 
 /* ============ الإعدادات ============ */
 function optBtn(label,on,attr){return '<button class="opt'+(on?' on':'')+'" '+attr+'>'+label+'</button>';}
@@ -10395,6 +12847,184 @@ function wireSupport(){
   try{ window.open(BILL.donateUrl,'_blank','noopener'); }catch(e){}
  };
 }
+/* ============================================================
+   ★★★ ودجت نفاف — إشعار دائم بطقسك ★★★
+   أقرب شيء لودجت الشاشة الرئيسية ضمن حدود تطبيق الويب:
+   إشعار ثابت لا يُزال بالسحب يعرض الحرارة والحالة والموقع 
+   ويتحدّث تلقائيًا كل نصف ساعة.
+
+   ⚠️ يتطلب إذن الإشعارات — ويعمل حتى والتطبيق مغلق
+   ⚠️ على أندرويد يظهر مثبّتًا أعلى شريط الإشعارات
+   ============================================================ */
+var WIDGET={on:false, timer:null, lastTemp:null};
+
+function widgetSupported(){
+ try{
+  return ('Notification' in window) &&
+         ('serviceWorker' in navigator) &&
+         (typeof ServiceWorkerRegistration!=='undefined') &&
+         ('showNotification' in ServiceWorkerRegistration.prototype);
+ }catch(e){ return false; }
+}
+
+/* ★ نص الودجت من الطقس الحقيقي */
+function widgetText(){
+ try{
+  if(!W)return null;
+  var L=LI();
+  var st=stateOf(W);
+  var m=META[st]||META.clear;
+  var t=tconv(W.temperature_2m);
+  var feel=W.apparent_temperature!=null?tconv(W.apparent_temperature):null;
+  var place=(CUR&&CUR.n)?CUR.n:'';
+  var desc=(m&&m.t)?m.t[L]:'';
+
+  /* السطر الأول: الحرارة والحالة */
+  var title=t+'° · '+desc;
+
+  /* السطر الثاني: تفاصيل مفيدة */
+  var bits=[];
+  if(place)bits.push('📍 '+place);
+  if(feel!=null&&Math.abs(feel-t)>=2)
+   bits.push(['الإحساس','الإحساس','Feels'][L]+' '+feel+'°');
+  if(W.relative_humidity_2m!=null)
+   bits.push(['رطوبة','رطوبة','Humidity'][L]+' '+Math.round(W.relative_humidity_2m)+'%');
+  if(W.wind_speed_10m!=null)
+   bits.push('💨 '+wconv(W.wind_speed_10m)+' '+wlabel());
+
+  /* ★ أقرب حدث مطر إن وُجد */
+  var extra='';
+  try{
+   if(HOURLY&&HOURLY.precipitation_probability){
+    var base=Clock.hourIndex();
+    for(var i=1;i<=12;i++){
+     var idx=base+i;
+     if(idx>=HOURLY.time.length)break;
+     if(HOURLY.precipitation_probability[idx]>=55){
+      var hd=new Date(HOURLY.time[idx]);
+      extra='\n🌧️ '+['مطر محتمل','هطول محتمل','Rain likely'][L]+' '+
+       (hd.getHours()<10?'0':'')+hd.getHours()+':00'+
+       ' ('+Math.round(HOURLY.precipitation_probability[idx])+'%)';
+      break;
+     }
+    }
+   }
+  }catch(e){}
+
+  return {title:title, body:bits.join(' · ')+extra,
+          icon:(m&&m.emoji)?m.emoji:'🌤️'};
+ }catch(e){ return null; }
+}
+
+/* ★ عرض/تحديث الودجت */
+function widgetShow(){
+ try{
+  if(!widgetSupported())return Promise.resolve(false);
+  if(Notification.permission!=='granted')return Promise.resolve(false);
+  var d=widgetText();
+  if(!d)return Promise.resolve(false);
+  return navigator.serviceWorker.ready.then(function(reg){
+   return reg.showNotification(d.title,{
+    body:d.body,
+    tag:'nafaf-widget',      /* ★ نفس الوسم = يستبدل لا يكرّر */
+    renotify:false,
+    silent:true,             /* ★ بلا صوت — ليس تنبيهًا */
+    requireInteraction:true, /* ★ لا يختفي تلقائيًا */
+    dir:'rtl', lang:'ar',
+    badge:'icons/icon-96.png',
+    icon:'icons/icon-192.png',
+    data:{url:'./', widget:true}
+   }).then(function(){
+    WIDGET.lastTemp=W?W.temperature_2m:null;
+    return true;
+   });
+  }).catch(function(){ return false; });
+ }catch(e){ return Promise.resolve(false); }
+}
+
+function widgetHide(){
+ try{
+  if(!widgetSupported())return;
+  navigator.serviceWorker.ready.then(function(reg){
+   return reg.getNotifications({tag:'nafaf-widget'});
+  }).then(function(ns){
+   for(var i=0;i<ns.length;i++)ns[i].close();
+  }).catch(function(){});
+ }catch(e){}
+}
+
+/* ★ التشغيل */
+function widgetStart(){
+ var L=LI();
+ if(!widgetSupported()){
+  toast(['جهازك ما يدعم هالميزة','هذه الميزة غير مدعومة على جهازك',
+   'Not supported on this device'][L],true);
+  return;
+ }
+ var go=function(){
+  WIDGET.on=true;
+  try{stSet('widget','1');}catch(e){}
+  widgetShow().then(function(ok){
+   if(!ok){
+    WIDGET.on=false;
+    try{stSet('widget','0');}catch(e){}
+    toast(['ما قدرت أشغّل الودجت','تعذّر تشغيل الودجت','Could not start widget'][L],true);
+   } else {
+    toast(['الودجت شغّال — شوف شريط الإشعارات ✨',
+     'تم تشغيل الودجت؛ يظهر في شريط الإشعارات',
+     'Widget on — check your notification bar ✨'][L]);
+   }
+   widgetPaint();
+   widgetLoop();
+  });
+ };
+ if(Notification.permission==='granted'){ go(); return; }
+ Notification.requestPermission().then(function(p){
+  if(p==='granted')go();
+  else toast(['محتاج إذن الإشعارات عشان يشتغل',
+   'يتطلب إذن الإشعارات','Notification permission required'][L],true);
+ });
+}
+function widgetStop(){
+ WIDGET.on=false;
+ try{stSet('widget','0');}catch(e){}
+ if(WIDGET.timer){clearInterval(WIDGET.timer);WIDGET.timer=null;}
+ widgetHide();
+ widgetPaint();
+ toast(['وقّفنا الودجت','تم إيقاف الودجت','Widget off'][LI()]);
+}
+function widgetToggle(){ WIDGET.on?widgetStop():widgetStart(); }
+
+/* ★ التحديث الدوري — كل نصف ساعة */
+function widgetLoop(){
+ if(WIDGET.timer)clearInterval(WIDGET.timer);
+ WIDGET.timer=setInterval(function(){
+  try{ if(WIDGET.on&&W)widgetShow(); }catch(e){}
+ },1800000);
+}
+
+/* ★ زر الإعدادات */
+function widgetRow(){
+ if(!widgetSupported())return '';
+ var L=LI();
+ return '<div class="rowSw" id="widgetRow">'+
+  '<span>'+['ودجت نفاف','ودجت الإشعار الدائم','Nafaf widget'][L]+
+   '<div class="m-hint" style="margin:3px 0 0">'+[
+    'طقسك ثابت بشريط الإشعارات — يتحدّث كل نص ساعة',
+    'إشعار ثابت يعرض طقسك ويتحدّث كل نصف ساعة',
+    'A pinned notification with your weather, updated every 30 min'
+   ][L]+'</div></span>'+
+  '<span class="sw'+(WIDGET.on?' on':'')+'" id="widgetSw"></span>'+
+ '</div>';
+}
+function widgetPaint(){
+ var sw=$("widgetSw");
+ if(sw)sw.className='sw'+(WIDGET.on?' on':'');
+}
+function widgetWire(){
+ var sw=$("widgetSw");
+ if(sw)sw.onclick=widgetToggle;
+}
 function renderSettings(){
  var h='';
  /* ★ تعليمات التثبيت على iOS أولًا لأنها الأهم هناك */
@@ -10455,17 +13085,9 @@ h+='</div><div class="m-card"><div class="m-sec">'+pick('الوضع السينم
  '⚠️ الوميض خفيف ومتباعد؛ يُنصح بإبقائه مطفأً لمن لديه حساسية ضوئية. ويُحترم إعداد تقليل الحركة تلقائيًا.',
  '⚠️ Flashes are gentle and at least 7 s apart, but keep this off if you have photosensitivity. System reduce-motion is always respected.')+'</div>';
  }
- h+='<div class="m-grp">'+pick('التخصيص','التخصيص','Customize')+'</div>';
- h+='</div><div class="m-card"><div class="m-sec">'+pick('ترتيب بطاقات «يومك»','ترتيب البطاقات','Card order')+'</div>';
- h+='<div class="m-hint">'+pick('رتّبها كما يناسبك.','أعد الترتيب.','Reorder as you like.')+'</div>';
- var names={streak:['السلسلة','السلسلة','Streak'],activities:['أنشطة يومك','الأنشطة','Activities'],
- story:['قصة اليوم','قصة اليوم',"Today's story"],star:['الدرور والنجوم','المواسم النجمية','Star season'],
- brief:['موجز نفاف','موجز نفاف','Nafaf brief'],anomaly:['مقابل المعدّل الرسمي','المعدّل الرسمي','Official average'],astro:['سماء الليلة','حدث السماء','Tonight\u2019s sky'],onday:['في مثل هذا اليوم','في مثل هذا اليوم','On this day'],smell:['رائحة الجو','رائحة الأجواء','Scent of the air'],pressure:['الضغط الجوي','الضغط الجوي','Pressure'],models:['اتفاق النماذج','اتفاق النماذج','Model agreement'],sun:['الشروق والغروب','الشروق والغروب','Sun times'],
- rain:['عدّاد النفاف','عدّاد المطر','Rain counter'],yearago:['قبل سنة','قبل عام','A year ago']};
+ h+='<div class="m-grp">'+pick('بياناتي','بياناتي','My data')+'</div>';
+ h+='</div><div class="m-card"><div class="m-sec">'+pick('حذف الحساب','حذف الحساب','Delete account')+'</div>';
  var L=LI(),i;
- for(i=0;i<CARDS.length;i++){var k=CARDS[i],nm=(names[k]||[k,k,k])[L];
- h+='<div class="ordrow"><span class="on2">'+nm+'</span>'+
- '<button class="ordbtn" data-dn="'+i+'">↓</button><button class="ordbtn" data-up="'+i+'">↑</button></div>';}
  h+='<div class="m-hint">'+pick(
   'يحذف كل شي يخصك: سجلّك المحلي وحسابك ورصداتك وصورك من خوادمنا نهائيًا.',
   'يحذف جميع بياناتك: السجل المحلي والحساب والرصدات والصور من خوادمنا نهائيًا.',
@@ -10473,6 +13095,15 @@ h+='</div><div class="m-card"><div class="m-sec">'+pick('الوضع السينم
  h+='<button class="danger" id="delBtn">'+pick('حذف حسابي وكل بياناتي','حذف الحساب وكل البيانات','Delete account & all data')+'</button>';
  h+='</div>';
  /* ★ عن نفاف والوثائق */
+ /* ★ ودجت الإشعار الدائم */
+ var wr=widgetRow();
+ if(wr)h+='<div class="m-grp">'+pick('الودجت','الودجت','Widget')+'</div>'+
+  '<div class="m-card">'+wr+'</div>';
+ /* ★ الرعد مع العواصف في السماء الحيّة */
+ h+='<div class="m-grp">'+pick('السما الحيّة','السماء الحيّة','Living sky')+'</div><div class="m-card">'+
+  '<div class="rowSw"><span>'+pick('صوت الرعد واهتزازه','صوت الرعد واهتزازه','Thunder sound & haptics')+
+  '<div class="m-hint" style="margin:3px 0 0">'+pick('مع كل صاعقة في العواصف الحقيقية فقط','يعمل مع العواصف الحقيقية فقط','Only during real thunderstorms')+'</div></span>'+
+  '<span class="sw'+(stGet('thunder')==='1'?' on':'')+'" id="thunderSw"></span></div></div>';
  h+=supportCard();
  h+='<div class="m-grp">'+pick('عن نفاف','عن التطبيق','About')+'</div>';
  h+='<div class="m-card">';
@@ -10494,6 +13125,8 @@ h+='</div><div class="m-card"><div class="m-sec">'+pick('الوضع السينم
  if(w){w.className='obWrap on';TOUR_I=0;renderOnboard();}
  };
  wireSupport();
+ widgetWire();
+ var tsw=$("thunderSw"); if(tsw)tsw.onclick=function(){var on=stGet('thunder')!=='1';stSet('thunder',on?'1':'0');tsw.className='sw'+(on?' on':'');};
  var db=$("delBtn"); if(db)db.onclick=deleteEverything;
  var bs=$("setBody").getElementsByTagName("button"),j;
  for(j=0;j<bs.length;j++)bs[j].onclick=function(){
@@ -10923,6 +13556,308 @@ function wireSecretPortal(){
 }
 setTimeout(function(){wireSecretPortal();},900);
 setTimeout(applyVisibility,1500);
+/* ★★★ زر الرجوع في أندرويد كتطبيق حقيقي ★★★
+   ١ · يغلق النافذة المفتوحة (الإعدادات · المدينة · المزيد)
+   ٢ · ثم يرجع من أي تبويب إلى «الآن»
+   ٣ · ومن «الآن» يخرج من التطبيق
+   ⚠️ بدونه كان الرجوع يُغلق نفاف فورًا من أي مكان — أوضح أثر لصفحة الويب */
+var NAVH={ov:0,skip:0,pop:false,popClose:0};
+function navOverlays(){ return [document.getElementById('ovSet'),document.getElementById('ovCity'),document.getElementById('v2More')]; }
+function navIsOpen(el){ return !!(el&&(' '+el.className+' ').indexOf(' on ')>=0); }
+function navCloseAll(){
+ var ls=navOverlays(),c=0,i;
+ for(i=0;i<ls.length;i++)if(navIsOpen(ls[i])){c++;
+  if(ls[i].id==='v2More'){try{moreClose();}catch(e){}} else ls[i].className='ov';}
+ NAVH.popClose+=c; return c;
+}
+function navInit(){
+ try{
+  /* ★ نحن من يتحكم بموضع التمرير — لا المتصفح */
+  try{ if('scrollRestoration' in history)history.scrollRestoration='manual'; }catch(e){}
+  if(!history.state||!history.state.tab)history.replaceState({tab:TAB||'now',root:1},'');
+  var ls=navOverlays();
+  ls.forEach(function(el){
+   if(!el)return; var was=navIsOpen(el);
+   new MutationObserver(function(){
+    var now=navIsOpen(el); if(now===was)return; was=now;
+    if(NAVH.popClose>0&&!now){NAVH.popClose--;return;}
+    if(now){ history.pushState({tab:TAB,ov:1},''); NAVH.ov++; }
+    else if(NAVH.ov>0){ NAVH.ov--; NAVH.skip++; history.back(); }
+   }).observe(el,{attributes:true,attributeFilter:['class']});
+  });
+  var _st=showTab;
+  showTab=function(k){
+   var prev=TAB; _st(k);
+   if(NAVH.pop||k===prev)return;
+   if(k==='now'){ if(history.state&&history.state.tab&&history.state.tab!=='now'&&!history.state.root){NAVH.skip++;history.back();} }
+   else if(prev==='now'||!history.state||history.state.root)history.pushState({tab:k},'');
+   else history.replaceState({tab:k},'');
+  };
+  window.addEventListener('popstate',function(e){
+   if(NAVH.skip>0){NAVH.skip--;return;}
+   NAVH.pop=true;
+   try{
+    if(navCloseAll()>0){ NAVH.ov=Math.max(0,NAVH.ov-1); }
+    else { var t=(e.state&&e.state.tab)||'now'; if(t!==TAB)showTab(t); }
+   }catch(err){}
+   NAVH.pop=false;
+  });
+ }catch(e){}
+}
+/* ════════════ ★★★ نفاف — طبقة التطبيق الأصلي ٢ ★★★ ════════════ */
+
+/* ═══ ١ · موضع التمرير محفوظ لكل تبويب + لمس التبويب الحالي يصعد للأعلى ═══ */
+var TAB_SCROLL={};
+function nativeTabs(){
+ var _st=showTab;
+ showTab=function(k){
+  var prev=TAB; TAB_SCROLL[prev]=window.scrollY||0;
+  _st.apply(this,arguments);
+  if(k!==prev){ var y=TAB_SCROLL[k]||0; requestAnimationFrame(function(){ window.scrollTo(0,y); }); }
+ };
+ document.addEventListener('click',function(e){
+  var b=e.target.closest&&e.target.closest('.v2tab');
+  if(b&&b.getAttribute('data-dk')===TAB&&(window.scrollY||0)>40){
+   e.stopPropagation(); window.scrollTo({top:0,behavior:'smooth'});
+   try{ if(navigator.vibrate)navigator.vibrate(6); }catch(x){}
+  }
+ },true);
+}
+
+/* ═══ ٢ · اسحب للتحديث — بأسلوب التطبيقات ═══ */
+var PTR={y0:0,dy:0,on:false,busy:false};
+function ptrInit(){
+ var el=document.createElement('div'); el.id='ptr'; el.className='ptr';
+ el.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 3c3 4.2 6 7.6 6 11a6 6 0 0 1-12 0c0-3.4 3-6.8 6-11z" fill="#E3A94B"/></svg>';
+ document.body.appendChild(el);
+ window.addEventListener('touchstart',function(e){
+  if(PTR.busy||TAB!=='now'||(window.scrollY||0)>2||e.touches.length!==1)return;
+  if(e.target.closest&&e.target.closest('.pulseWrap,.heroV2,.hours,.v2hours,.strip6,.leaflet-container,.ov,.v2more'))return;
+  PTR.y0=e.touches[0].clientY; PTR.x0=e.touches[0].clientX; PTR.on=true; PTR.dy=0;
+ },{passive:true});
+ window.addEventListener('touchmove',function(e){
+  if(!PTR.on)return;
+  var dy=e.touches[0].clientY-PTR.y0, dx=Math.abs(e.touches[0].clientX-PTR.x0);
+  if(dy<=0||dx>dy){ PTR.dy=0; el.style.transform='translate(-50%,-70px)'; return; }
+  PTR.dy=Math.min(130,dy*.55);
+  el.style.transform='translate(-50%,'+(PTR.dy-60)+'px) rotate('+(PTR.dy*3)+'deg)';
+  el.style.opacity=Math.min(1,PTR.dy/60);
+  el.className='ptr'+(PTR.dy>=72?' ready':'');
+  if(PTR.dy>=72&&!PTR.buzz){PTR.buzz=1;try{if(navigator.vibrate)navigator.vibrate(10);}catch(x){}}
+  if(PTR.dy<72)PTR.buzz=0;
+ },{passive:true});
+ window.addEventListener('touchend',function(){
+  if(!PTR.on)return; PTR.on=false;
+  if(PTR.dy>=72){
+   PTR.busy=true; el.className='ptr spin'; el.style.transform='translate(-50%,24px)'; el.style.opacity=1;
+   try{ fetchAll(); }catch(x){}
+   var t0=Date.now();
+   (function wait(){ if((window.W&&Date.now()-t0>600)||Date.now()-t0>12000){ptrHide();return;} setTimeout(wait,200); })();
+  } else ptrHide();
+  PTR.dy=0; PTR.buzz=0;
+ });
+ function ptrHide(){ PTR.busy=false; el.className='ptr'; el.style.opacity=0; el.style.transform='translate(-50%,-70px)'; }
+}
+
+/* ═══ ٣ · الاتصال: شريط تنبيه كالتطبيقات + تحديث تلقائي عند العودة ═══ */
+function snack(msg,kind){
+ var s=document.getElementById('snack');
+ if(!s){ s=document.createElement('div'); s.id='snack'; document.body.appendChild(s); }
+ s.className='snack on '+(kind||''); s.textContent=msg;
+ clearTimeout(s._t); s._t=setTimeout(function(){ s.className='snack '+(kind||''); },kind==='off'?6000:2600);
+}
+function netInit(){
+ window.addEventListener('offline',function(){
+  snack(pick('ما في إنترنت — نعرض آخر بيانات وصلت','لا يوجد اتصال — تُعرض آخر بيانات','You\u2019re offline — showing the last data'),'off');
+ });
+ window.addEventListener('online',function(){
+  snack(pick('رجع الاتصال — نحدّث طقسك','عاد الاتصال — جارٍ التحديث','Back online — updating'),'ok');
+  try{ if(typeof LAST_FETCH==='number'&&Date.now()-LAST_FETCH>5*60000)fetchAll(); }catch(e){}
+ });
+ /* رجعت للتطبيق بعد غياب طويل: حدّث تلقائيًا */
+ document.addEventListener('visibilitychange',function(){
+  try{ if(!document.hidden&&navigator.onLine!==false&&typeof LAST_FETCH==='number'&&Date.now()-LAST_FETCH>30*60000)fetchAll(); }catch(e){}
+ });
+}
+
+/* ═══ ٤ · لا قوائم متصفح عند الضغط المطوّل · لا تكبير بإصبعين ═══ */
+function gestureInit(){
+ document.addEventListener('contextmenu',function(e){
+  var t=e.target; if(t&&(t.closest('input,textarea,[contenteditable]')))return;
+  e.preventDefault();
+ });
+ document.addEventListener('gesturestart',function(e){e.preventDefault();});
+ document.addEventListener('dblclick',function(e){ if(!(e.target.closest&&e.target.closest('.leaflet-container')))e.preventDefault(); },{passive:false});
+}
+
+/* ═══ ٥ · المدن الأخيرة — تنقّل بلمسة ═══ */
+function recentGet(){ try{ var r=JSON.parse(stGet('nafaf_recent')||'[]'); return Array.isArray(r)?r:[]; }catch(e){ return []; } }
+function recentPush(){
+ try{
+  if(!CUR||CUR.lat==null)return;
+  var r=recentGet().filter(function(c){ return Math.abs(c.lat-CUR.lat)>.02||Math.abs(c.lon-CUR.lon)>.02; });
+  r.unshift({n:CUR.n,lat:CUR.lat,lon:CUR.lon,c:CUR.c||'',sub:CUR.sub||'',cc:CUR.cc||''});
+  stSet('nafaf_recent',JSON.stringify(r.slice(0,6)));
+  recentPaint();
+ }catch(e){}
+}
+function recentPaint(){
+ var row=document.getElementById('recentRow'); if(!row)return;
+ var r=recentGet().filter(function(c){ return !CUR||Math.abs(c.lat-CUR.lat)>.02||Math.abs(c.lon-CUR.lon)>.02; });
+ if(!r.length||r[0].n==='…'){ row.innerHTML=''; row.className='recentRow'; return; }
+ row.className='recentRow on';
+ row.innerHTML=r.slice(0,5).map(function(c,i){
+  return '<button class="rcChip" data-rc="'+i+'"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="2"/></svg>'+
+   String(c.n).replace(/</g,'&lt;')+'</button>';
+ }).join('');
+ var bs=row.querySelectorAll('[data-rc]');
+ for(var i=0;i<bs.length;i++)bs[i].onclick=function(){
+  var c=r[+this.getAttribute('data-rc')]; if(!c)return;
+  try{ if(navigator.vibrate)navigator.vibrate(8); }catch(e){}
+  selectGlobal(c.lat,c.lon,c.n,c.c,c.sub);
+ };
+}
+
+/* ═══ ٦ · شارك طقسك كصورة — بطاقة جميلة للواتساب والسوشال ═══ */
+function shareCard(){
+ if(!W)return;
+ /* ★ أيقونة الطقس المتحركة نفسها مرسومة في الصورة */
+ var ico=new Image(), done=false;
+ var go=function(){ if(done)return; done=true; shareCardDraw(ico.complete&&ico.naturalWidth?ico:null); };
+ try{
+  var svg=v2Icon(v2IconKey(stateOf(W)),240).replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ');
+  ico.onload=go; ico.onerror=go; ico.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+ }catch(e){ go(); }
+ setTimeout(go,900);
+}
+function shareCardDraw(ico){
+ try{
+  var L=LI(), st=stateOf(W), m=META[st]||META.clear;
+  var c=document.createElement('canvas'), Wd=1080, Hd=1350; c.width=Wd; c.height=Hd;
+  var x=c.getContext('2d');
+  var cs=getComputedStyle(document.documentElement);
+  var sky=(Sky2&&Sky2.colors)?Sky2.colors():[[42,106,168],[79,149,207],[195,222,240]];
+  var g=x.createLinearGradient(0,0,0,Hd);
+  g.addColorStop(0,'rgb('+sky[0].map(Math.round)+')');g.addColorStop(.55,'rgb('+sky[1].map(Math.round)+')');g.addColorStop(1,'rgb('+sky[2].map(Math.round)+')');
+  x.fillStyle=g;x.fillRect(0,0,Wd,Hd);
+  /* جبال */
+  x.fillStyle='rgba(10,18,34,.55)';x.beginPath();x.moveTo(0,Hd);
+  for(var i=0;i<=24;i++){x.lineTo(i/24*Wd,Hd*.86-Math.abs(Math.sin(i*.9))*80-Math.sin(i*.37)*30);}x.lineTo(Wd,Hd);x.fill();
+  x.fillStyle='rgba(6,12,24,.75)';x.beginPath();x.moveTo(0,Hd);
+  for(i=0;i<=24;i++){x.lineTo(i/24*Wd,Hd*.91-Math.abs(Math.sin(i*1.3+1))*45);}x.lineTo(Wd,Hd);x.fill();
+  x.fillStyle='rgba(0,0,0,.18)';x.fillRect(0,0,Wd,Hd);
+  var font='-apple-system,"Segoe UI",Tahoma,"Noto Sans Arabic",Arial,sans-serif';
+  x.direction='rtl';x.textAlign='center';x.fillStyle='#fff';x.shadowColor='rgba(0,0,0,.35)';x.shadowBlur=24;
+  x.font='800 64px '+font; x.fillText((CUR&&CUR.n)||'',Wd/2,170);
+  x.font='600 34px '+font; x.fillStyle='rgba(255,255,255,.8)';
+  var d=new Date(); x.fillText(d.toLocaleDateString(L===2?'en-GB':'ar',{weekday:'long',day:'numeric',month:'long'}),Wd/2,225);
+  if(ico){x.shadowBlur=0;x.drawImage(ico,Wd/2-120,238,240,240);x.shadowBlur=24;}
+  x.fillStyle='#fff'; x.font='200 250px '+font; x.fillText(tconv(W.temperature_2m)+'°',Wd/2+26,650);
+  x.font='700 56px '+font; x.fillText(m.t[L],Wd/2,730);
+  x.font='600 38px '+font; x.fillStyle='rgba(255,255,255,.85)';
+  var hi=DAILY?tconv(DAILY.temperature_2m_max[0]):'', lo=DAILY?tconv(DAILY.temperature_2m_min[0]):'';
+  x.fillText(pick('الإحساس','الإحساس','Feels')+' '+tconv(W.apparent_temperature)+'°   ·   '+hi+'° / '+lo+'°',Wd/2,800);
+  /* الساعات */
+  try{ var si=Clock.hourIndex(), n=0, bx=110, bw=(Wd-220)/5;
+   x.shadowBlur=0;
+   for(i=si+1;i<HOURLY.time.length&&n<5;i+=2,n++){
+    var cxp=Wd-bx-bw*n-bw/2;
+    x.fillStyle='rgba(8,14,28,.42)'; roundRect(x,cxp-bw/2+8,860,bw-16,190,28); x.fill();
+    x.fillStyle='rgba(255,255,255,.75)'; x.font='600 30px '+font; var hh=new Date(HOURLY.time[i]).getHours();
+    x.fillText((hh<10?'0':'')+hh+':00',cxp,915);
+    x.fillStyle='#fff'; x.font='700 48px '+font; x.fillText(tconv(HOURLY.temperature_2m[i])+'°',cxp,985);
+    var pp=HOURLY.precipitation_probability?HOURLY.precipitation_probability[i]:0;
+    x.fillStyle='#8fe0cc'; x.font='600 26px '+font; x.fillText(pp>=20?Math.round(pp)+'%':'',cxp,1028);
+   } }catch(e){}
+  /* العلامة */
+  x.shadowBlur=18; x.fillStyle='#fff'; x.font='800 58px '+font; x.fillText('نفاف  NAFAF',Wd/2,Hd-120);
+  x.shadowBlur=0; x.fillStyle='rgba(255,255,255,.7)'; x.font='500 30px '+font; x.fillText('nafaf.online',Wd/2,Hd-70);
+  c.toBlob(function(blob){
+   if(!blob)return;
+   var f=new File([blob],'nafaf-weather.png',{type:'image/png'});
+   try{
+    if(navigator.canShare&&navigator.canShare({files:[f]})){ navigator.share({files:[f],text:pick('طقسي اليوم مع نفاف','طقس اليوم مع نفاف','Today\u2019s weather with Nafaf')+' 🌤 nafaf.online'}).catch(function(){}); return; }
+   }catch(e){}
+   var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='nafaf-weather.png'; document.body.appendChild(a); a.click(); a.remove();
+   toast(pick('حفظنا الصورة بجهازك','تم حفظ الصورة','Image saved'));
+  },'image/png');
+ }catch(e){ toast(pick('ما قدرت أجهّز الصورة','تعذّر إنشاء الصورة','Could not create the image'),true); }
+}
+function roundRect(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
+
+function native2Init(){
+ try{ nativeTabs(); }catch(e){}
+ try{ ptrInit(); }catch(e){}
+ try{ netInit(); }catch(e){}
+ try{ gestureInit(); }catch(e){}
+ try{
+  var sb=document.createElement('button'); sb.id='shareBtn'; sb.className='gearbtn shareBtn'; sb.setAttribute('aria-label','صوّر طقسك وشاركه');
+  sb.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">'+
+   '<path d="M4 8.5a2 2 0 0 1 2-2h1.6l1.3-2h6.2l1.3 2H18a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8"/>'+
+   '<circle cx="12" cy="12.6" r="3.6" stroke="#E3A94B" stroke-width="2"/>'+
+   '<circle cx="12" cy="12.6" r="1.3" fill="#E3A94B"/>'+
+   '<circle cx="17" cy="9.2" r=".9" fill="currentColor"/></svg>';
+  var g=document.getElementById('gearBtn'); if(g&&g.parentNode)g.parentNode.insertBefore(sb,g.nextSibling);
+  sb.onclick=function(){
+   try{if(navigator.vibrate)navigator.vibrate([12,40,18]);}catch(e){}
+   if(document.body.className.indexOf('noanim')<0){var f=document.createElement('div');f.className='shotFlash';document.body.appendChild(f);setTimeout(function(){f.remove();},500);}
+   shareCard();
+  };
+ }catch(e){}
+ try{
+  var lb=document.querySelector('.locbar');
+  if(lb&&!document.getElementById('recentRow')){ var rr=document.createElement('div'); rr.id='recentRow'; rr.className='recentRow'; lb.parentNode.insertBefore(rr,lb.nextSibling); }
+  var _sg=selectGlobal; selectGlobal=function(){ _sg.apply(this,arguments); setTimeout(recentPush,50); };
+  var _sc=selectCity; selectCity=function(){ _sc.apply(this,arguments); setTimeout(recentPush,50); };
+  setTimeout(function(){ recentPush(); },4000);
+ }catch(e){}
+ /* ★ أسماء لقارئ الشاشة للمفاتيح */
+ var swT=0; try{ new MutationObserver(function(){
+  if(swT)return; swT=requestAnimationFrame(function(){ swT=0;
+  var sw=document.querySelectorAll('.sw:not([role])');
+  for(var i=0;i<sw.length;i++){ sw[i].setAttribute('role','switch');
+   var lab=sw[i].parentElement&&sw[i].parentElement.querySelector('span'); if(lab)sw[i].setAttribute('aria-label',lab.textContent.trim().slice(0,40));
+   sw[i].setAttribute('tabindex','0'); }
+  var sw2=document.querySelectorAll('.sw[role]'); for(var j=0;j<sw2.length;j++)sw2[j].setAttribute('aria-checked',sw2[j].className.indexOf(' on')>=0?'true':'false');
+  });
+ }).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']}); }catch(e){}
+}
+/* ★★★ نفاف ٢ — التشغيل ★★★ */
+(function(){
+ try{
+  if(document.body.className.indexOf('v2')<0)document.body.className+=' v2';
+  var _bt=buildTabs; buildTabs=function(){ _bt.apply(this,arguments); try{buildDock();}catch(e){} };
+  var _sp=showPanels; showPanels=function(){ try{Sky2.hold(380);}catch(e){} _sp.apply(this,arguments); try{dockPaint();moreClose();Sky2.wake();}catch(e){} };
+  buildDock(); Sky2.start();
+  navInit();
+  native2Init();
+  setInterval(function(){ try{ computeNight(); Sky2.sync(); }catch(e){} },60000);
+  window.addEventListener('resize',function(){ setTimeout(dockPaint,60); });
+  var mb=document.getElementById('v2MoreBack'); if(mb)mb.onclick=moreClose;
+  var orig=(typeof paintLiveNumbers==='function')?paintLiveNumbers:null;
+  if(orig)paintLiveNumbers=function(){ try{orig.apply(this,arguments);}catch(e){} try{Sky2.sync();}catch(e){} };
+ }catch(e){}
+})();
+(function(){ var fp=document.getElementById('fitPill');
+ if(fp)fp.onclick=function(){ if(typeof showTab==='function')showTab('fit'); }; })();
+try{ var ft0=stGet('nafaf_fit_type'); if(ft0&&FIT_TYPES[ft0])FIT.type=ft0; }catch(e){}
+/* ★ قفل الشاشة يُفقد عند الخروج — نستعيده عند العودة أثناء التمرين */
+document.addEventListener('visibilitychange',function(){
+ try{ if(!document.hidden&&FIT.on&&!FIT.wake)fitWake(); }catch(e){}
+});
+/* ★ تنبيه قبل إغلاق الصفحة أثناء تمرين */
+window.addEventListener('beforeunload',function(e){
+ if(FIT.on&&FIT.elapsed>30){ e.preventDefault(); e.returnValue=''; }
+});
+/* ★ الودجت — استعادة الحالة وتحديثه مع كل جلب جديد */
+setTimeout(function(){
+ try{
+  if(stGet('widget')==='1'&&widgetSupported()&&Notification.permission==='granted'){
+   WIDGET.on=true; widgetShow(); widgetLoop();
+  }
+ }catch(e){}
+},6000);
+
 setTimeout(billingLoad,3500);
 /* ★★★ بيانات العالم تُجلب بالخلفية ★★★
    ⚠️ الخلل: worldLoad كانت تُستدعى فقط عند فتح تبويب «نافذة العالم»
@@ -10945,7 +13880,7 @@ setTimeout(function(){
   var q=location.search||'';
   var m=q.match(/[?&]tab=(\w+)/);
   if(m&&typeof showTab==='function'){
-   var valid=['now','life','fc','live','world','gallery','quake','src'];
+   var valid=['now','life','fc','fit','live','world','gallery','quake','src'];
    if(valid.indexOf(m[1])>=0)showTab(m[1]);
   }
   if(/[?&]ask=1/.test(q)&&typeof askOpen==='function')setTimeout(askOpen,700);
@@ -11090,7 +14025,22 @@ function useRealLocation(lat,lon){
  });
 }
 
-setInterval(function(){pingVisit();},180000);
+/* ★★★ ترشيد استهلاك قاعدة البيانات ★★★
+   ⚠️ كان كل ٣ دقائق = ٤٨٠ نداء يوميًا للمستخدم الواحد وكل نداء
+      عدة عمليات كتابة — يستنزف حد Cloudflare المجاني بمستخدمين.
+   ⚠️ الآن: كل ١٥ دقيقة · ويتوقف تمامًا والتطبيق بالخلفية. */
+setInterval(function(){
+ if(document.hidden)return;
+ pingVisit();
+},900000);
+document.addEventListener('visibilitychange',function(){
+ if(!document.hidden){
+  try{
+   var last=parseInt(stGet('lastPing')||'0',10);
+   if(Date.now()-last>900000)pingVisit();
+  }catch(e){ pingVisit(); }
+ }
+});
 setInterval(function(){
  feedAstro();feedSave(); /* الأحداث الفلكية تتحرك دائمًا */
  var prev=IS_NIGHT,prevG=IS_GOLDEN;computeNight();

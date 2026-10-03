@@ -236,6 +236,12 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
     .iconBtn:disabled{opacity:.25;cursor:not-allowed}
     .dg-act{display:flex;gap:4px;flex:0 0 auto}
     .dg-nm{font-size:12px}
+
+.dockPrev{margin-bottom:14px}
+.dpLbl{font-size:11.5px;color:#8b98ab;margin-bottom:8px}
+.dpBar{display:flex;gap:6px;background:rgba(12,22,44,.9);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:7px}
+.dpIt{flex:1;text-align:center;font-size:12px;font-weight:700;padding:10px 4px;border-radius:13px;color:#A9B8CC}
+.dpIt.on{background:#E3A94B;color:#241703}
 </style>
 </head>
 <body>
@@ -274,6 +280,7 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
       <div class="navGrp">التطبيق</div>
       <div class="navItem" data-p="tabs"><span class="ni">🧭</span>التبويبات</div>
       <div class="navItem" data-p="blocks"><span class="ni">🧩</span>المكوّنات</div>
+      <div class="navItem" data-p="dock"><span class="ni">📱</span>الشريط السفلي</div>
       <div class="navItem" data-p="features"><span class="ni">⚡</span>الميزات</div>
       <div class="navItem" data-p="theme"><span class="ni">🎨</span>المظهر</div>
 
@@ -353,6 +360,19 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
           <div class="pageSub">رتّب بطاقات صفحة «الآن» أو أخفِ ما لا تريده</div>
         </div>
         <div class="card"><div id="blockList"></div></div>
+      </section>
+
+      <!-- 📱 الشريط السفلي -->
+      <section class="sec" data-s="dock">
+        <div class="pageHead">
+          <div class="pageTitle">الشريط السفلي</div>
+          <div class="pageSub">اختر التبويبات التي تظهر أسفل الشاشة ورتّبها — أول ٤ مفعّلة تظهر، و«المزيد» يبقى دائمًا</div>
+        </div>
+        <div class="card">
+          <div id="dockPreview" class="dockPrev"></div>
+          <div id="dockList"></div>
+          <div class="note" style="margin-top:10px">التبويب المُطفأ هنا لا يُحذف — يبقى متاحًا داخل «المزيد». ولإخفائه من التطبيق كله استخدم صفحة «التبويبات».</div>
+        </div>
       </section>
 
       <!-- ⚡ الميزات -->
@@ -877,7 +897,7 @@ function goPage(p){
   for(var j=0;j<secs.length;j++)
     secs[j].className='sec'+(secs[j].getAttribute('data-s')===p?' on':'');
   /* شريط المسودة يظهر في صفحات البناء فقط */
-  var buildPages=['tabs','blocks','features','theme','rules','sources'];
+  var buildPages=['tabs','blocks','dock','features','theme','rules','sources'];
   $('draftBar').style.display=(buildPages.indexOf(p)>=0)?'flex':'none';
   if(window.innerWidth<900)openSide(false);
   window.scrollTo(0,0);
@@ -907,6 +927,7 @@ for(var g=0;g<gos.length;g++)
 var SEARCH_MAP=[
   {q:'تبويب ترتيب صفحات تنقل',p:'tabs',t:'🧭 التبويبات',d:'ترتيب وإخفاء'},
   {q:'مكون بطاقة ترتيب رئيسية',p:'blocks',t:'🧩 المكوّنات',d:'صفحة الآن'},
+  {q:'شريط سفلي أيقونات تبويب اسفل',p:'dock',t:'📱 الشريط السفلي',d:'ترتيب وإخفاء'},
   {q:'ميزة تشغيل إطفاء',p:'features',t:'⚡ الميزات',d:'تشغيل وإطفاء'},
   {q:'سمة لون مظهر ثيم',p:'theme',t:'🎨 المظهر',d:'السمة الافتراضية'},
   {q:'قاعدة شرط مطر رياح تلقائي',p:'rules',t:'🎯 القواعد',d:'إذا-عندها'},
@@ -1112,6 +1133,15 @@ function renderAll(){
   /* المكوّنات */
   if(DRAFT.blocks&&DRAFT.blocks.now)
     dragList('blockList',DRAFT.blocks.now,function(){markDirty();renderAll();},{rename:true});
+  /* الشريط السفلي */
+  if(DRAFT.dock&&DRAFT.dock.length){
+    dragList('dockList',DRAFT.dock,function(){markDirty();renderAll();},{rename:true});
+    var dk=DRAFT.dock.slice().sort(function(a,b){return (a.order||99)-(b.order||99);}).filter(function(d){return d.enabled!==false;}).slice(0,4);
+    var ph='';
+    dk.forEach(function(d,i){ph+='<span class="dpIt'+(i===0?' on':'')+'">'+(d.label||d.id)+'</span>';});
+    ph+='<span class="dpIt">المزيد</span>';
+    var pv=$('dockPreview'); if(pv)pv.innerHTML='<div class="dpLbl">معاينة الشريط</div><div class="dpBar">'+ph+'</div>';
+  }
   /* الميزات */
   var fs=DRAFT.features||{}, fh='';
   FEAT_GROUPS.forEach(function(g){
