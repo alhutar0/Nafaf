@@ -6,7 +6,7 @@
       على حذف النسخة القديمة تلقائيًا دون أي إجراء من المستخدم.
    ============================================================ */
 
-var CACHE = 'nafaf-v14';   /* رُفع الرقم — يمسح كل ذاكرة v1 القديمة تلقائيًا */
+var CACHE = 'nafaf-v21';   /* رُفع الرقم — يمسح كل ذاكرة v1 القديمة تلقائيًا */
 
 self.addEventListener('install', function (e) {
   self.skipWaiting();   /* لا تنتظر إغلاق كل التبويبات — فعّل فورًا */
@@ -43,6 +43,34 @@ self.addEventListener('fetch', function (e) {
     return;
   }
 
+  /* مكتبات محلية ثابتة الإصدار (three.js للوادي) وملفات اللغة — تُحفظ مرة وتعمل بلا إنترنت */
+  if (url.indexOf('/vendor/') >= 0 || url.indexOf('/i18n/') >= 0) {
+    e.respondWith(
+      caches.match(e.request).then(function (m) {
+        var net = fetch(e.request).then(function (r) {
+          if (r && r.ok) { var c = r.clone(); caches.open(CACHE).then(function (x) { x.put(e.request, c); }); }
+          return r;
+        });
+        return m || net;
+      })
+    );
+    return;
+  }
+
+  /* مختبر الوادي: مكتبة الرسم ثابتة الإصدار — تُحفظ مرة وتعمل بلا إنترنت بعدها */
+  if (url.indexOf('cdn.jsdelivr.net/npm/three@0.162.0/') >= 0) {
+    e.respondWith(
+      caches.match(e.request).then(function (m) {
+        return m || fetch(e.request).then(function (r) {
+          var c = r.clone();
+          caches.open(CACHE).then(function (x) { x.put(e.request, c); });
+          return r;
+        });
+      })
+    );
+    return;
+  }
+
   if (url.indexOf('open-meteo.com') >= 0 || url.indexOf('rainviewer.com') >= 0) {
     e.respondWith(
       fetch(e.request)
@@ -72,7 +100,7 @@ self.addEventListener('message', function (e) {
         renotify: false,
         silent: true,
         requireInteraction: true,
-        dir: 'rtl', lang: 'ar',
+        dir: 'auto',
         badge: 'icons/icon-96.png',
         icon: 'icons/icon-192.png',
         data: { url: './', widget: true }
