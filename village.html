@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<!-- i18n --><script>try{if(localStorage.getItem("lang")==="en")document.write('<script src="i18n/nafaf-i18n.js"><\/script>')}catch(e){}</script><!-- /i18n --><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#05080F">
+<title>قرية نفاف</title>
+<style>
+/* Layout: the village is the whole screen, painted in today's real light and weather; a small glass card holds the day's chores and the streak; everything else is done by tapping the village itself. */
+:root{--bg:#0A0D14;--glass:rgba(14,16,24,.82);--line:rgba(240,235,225,.12);--fg:#F3EFE6;--muted:#A9A396;--brass:#E3A94B;--teal:#5CC9B0;--ok:#6FD39B;--warn:#F2B84B;--bad:#F06B5B;
+  --f:system-ui,-apple-system,"Segoe UI",Tahoma,"Geeza Pro","Noto Sans Arabic",Arial,sans-serif;
+  --gl:max(16px,env(safe-area-inset-left,0px));--gr:max(16px,env(safe-area-inset-right,0px));--gt:max(12px,env(safe-area-inset-top,0px));--gb:max(12px,env(safe-area-inset-bottom,0px));color-scheme:dark}
+html,body{height:100%;overflow:hidden;margin:0}*{box-sizing:border-box}[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);font-size:14px;line-height:1.5;direction:rtl;padding-left:var(--gl);padding-right:var(--gr);padding-block:0;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.glass{background:var(--glass);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:pointer;touch-action:manipulation}
+.card{position:fixed;z-index:4;top:var(--gt);right:var(--gr);width:300px;border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.head b{font-size:15px}.streak{font-size:22px;font-weight:800;color:var(--brass)}.streak small{font-size:11px;color:var(--muted);font-weight:600}
+.lvl{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}.lvl i{display:block;height:100%;background:var(--brass);border-radius:3px}
+.tasks{display:flex;flex-direction:column;gap:5px;font-size:12.5px}
+.tasks div{display:grid;grid-template-columns:18px 1fr;gap:6px;align-items:start}
+.tasks i{width:16px;height:16px;border-radius:50%;border:2px solid var(--muted);margin-top:2px}
+.tasks .done i{background:var(--ok);border-color:var(--ok)}.tasks .done span{color:var(--muted);text-decoration:line-through}
+.wx{font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:6px}
+.meters{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;color:var(--muted)}
+.meters .m{height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:2px}.meters .m i{display:block;height:100%;border-radius:3px}
+.toast{position:fixed;z-index:6;left:50%;bottom:calc(var(--gb) + 20px);transform:translateX(-50%);border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;transition:opacity .4s;pointer-events:none;max-width:calc(100% - 40px);text-align:center}
+@media (max-width:760px){.card{left:var(--gl);width:auto;padding:10px 12px}}
+</style>
+</head><body>
+<a href="./" style="position:fixed;z-index:20;top:max(12px,env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));font-size:12px;color:#EDF1F6;text-decoration:none;background:rgba(8,13,26,.85);border:1px solid rgba(237,241,246,.15);border-radius:999px;padding:4px 12px">→ نفاف</a>
+
+<canvas id="cv" aria-label="قرية نفاف: انقر الفلج والنوافذ والفوانيس والنخيل"></canvas>
+<aside class="card glass" aria-live="polite">
+  <div class="head"><b>قرية نفاف</b><span class="streak"><span class="num" id="streak">1</span> <small>يوم متواصل</small></span></div>
+  <div class="lvl"><i id="lvlBar"></i></div>
+  <div style="font-size:11.5px;color:var(--muted)" id="lvlT"></div>
+  <div class="meters"><div>الخزان <span class="num" id="tankT"></span><div class="m"><i id="tankB" style="background:#4FB3E8"></i></div></div><div>صحة النخيل <span class="num" id="hlthT"></span><div class="m"><i id="hlthB" style="background:var(--ok)"></i></div></div></div>
+  <div class="tasks" id="tasks"></div>
+  <div class="wx" id="wx">أجلب جو صحار الآن…</div>
+</aside>
+<div class="toast glass" id="toast" style="opacity:0"></div>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(x,a,b)=>x<a?a:x>b?b:x,lerp=(a,b,t)=>a+(b-a)*t,D2R=Math.PI/180;
+const FONT=getComputedStyle(document.body).fontFamily;
+const PLACE={lat:24.347,lon:56.709,name:'صحار'};
+/* ================= saved village (this browser only) ================= */
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+const yesterday=()=>{const d=new Date(Date.now()-864e5);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+let V={streak:0,best:0,last:'',tank:40,health:80,blessing:0,gate:false,windows:[false,false,false,false,false,false],lamps:[false,false,false,false],done:{},doneDay:''};
+try{Object.assign(V,JSON.parse(localStorage.getItem('nafaf.village')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('nafaf.village',JSON.stringify(V))}catch(e){}};
+if(V.last!==today()){V.streak=V.last===yesterday()?V.streak+1:1;if(V.last&&V.last!==yesterday())V.health=Math.max(30,V.health-15);V.last=today();V.best=Math.max(V.best,V.streak);V.done={};V.doneDay=today();save()}
+const LEVELS=[[1,'نواة القرية: بيتان وثلاث نخلات'],[3,'بيت ثالث ونخيل أكثر'],[7,'برج المراقبة يرتفع'],[14,'سوق صغير وساقية ثانية'],[30,'حصن القرية'],[60,'قرية مزدهرة']];
+const level=()=>{let l=0;LEVELS.forEach((x,i)=>{if(V.streak>=x[0])l=i});return l};
+/* ================= real light and weather ================= */
+function sunTimes(){const d=new Date(),n=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5),decl=23.44*Math.sin(D2R*360/365*(n-81)),lat=PLACE.lat*D2R;
+  const ha=Math.acos(clamp(-Math.tan(lat)*Math.tan(decl*D2R),-1,1))/D2R,B=D2R*360/365*(n-81),eot=9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B),tz=-d.getTimezoneOffset()/60;
+  const noon=12-PLACE.lon/15+tz-eot/60;return{rise:noon-ha/15,set:noon+ha/15}}
+let WX=null;
+fetch('https://api.open-meteo.com/v1/forecast?latitude='+PLACE.lat+'&longitude='+PLACE.lon+'&current=temperature_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m&timezone=auto').then(r=>r.json()).then(j=>{const c=j.current;
+  WX={T:c.temperature_2m,rain:c.precipitation>.05||(c.weather_code>=51&&c.weather_code<=99),code:c.weather_code,ws:c.wind_speed_10m,wd:c.wind_direction_10m};
+  WX.dust=WX.ws>=25&&WX.wd>=190&&WX.wd<=290;   // the hot, dusty suhaili and gharbi winds blow from the south-west and west
+  $('wx').textContent='جو '+PLACE.name+' الآن: '+Math.round(WX.T)+'° · ريح '+Math.round(WX.ws)+' كم/س'+(WX.rain?' · مطر':'')+(WX.dust?' · سهيلي مغبّر':'');tasks()})
+ .catch(()=>{$('wx').textContent=/claude/i.test(location.hostname)?'هذه المعاينة معزولة عن الإنترنت، فمهام المطر والغبار تنتظر الجو الحي على nafaf.online. الغروب والسقي يعملان.':'تعذّر جلب الجو الحي. مهام المطر والغبار متوقفة الآن.';tasks()});
+/* ================= today's chores ================= */
+function hourNow(){const d=new Date();return d.getHours()+d.getMinutes()/60}
+function isDusk(){const s=sunTimes(),h=hourNow();return h>=s.set-.25||h<s.rise}
+function tasks(){const L=[];
+  if(WX&&WX.rain)L.push(['gate','المطر نازل: افتح بوابة الفلج ليمتلئ الخزان',V.gate]);
+  if(WX&&WX.dust)L.push(['win','السهيلي مغبّر: سكّر نوافذ البيوت',V.windows.every(Boolean)]);
+  if(isDusk())L.push(['lamp','غابت الشمس: أشعل الفوانيس',V.lamps.every(Boolean)]);
+  L.push(['water','اسقِ النخيل من الخزان (انقر النخلة)',!!V.done.water]);
+  L.push(['visit','افتح التطبيق اليوم لتحافظ على السلسلة',true]);
+  $('tasks').innerHTML=L.map(t=>'<div class="'+(t[2]?'done':'')+'"><i></i><span>'+t[1]+'</span></div>').join('');
+  $('streak').textContent=V.streak;const l=level(),nx=LEVELS[l+1];$('lvlT').textContent=LEVELS[l][1]+(nx?' · بعد '+((n=>n===1?'يوم':n===2?'يومين':n<=10?n+' أيام':n+' يومًا')(nx[0]-V.streak))+': '+nx[1]:'');$('lvlBar').style.width=(nx?clamp((V.streak-LEVELS[l][0])/(nx[0]-LEVELS[l][0]),0,1)*100:100)+'%';
+  $('tankT').textContent=Math.round(V.tank)+'٪';$('tankB').style.width=V.tank+'%';$('hlthT').textContent=Math.round(V.health)+'٪';$('hlthB').style.width=V.health+'%';$('hlthB').style.background=V.health>60?'var(--ok)':V.health>35?'var(--warn)':'var(--bad)'}
+let toastT=0;function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>e.style.opacity=0,2600)}
+/* ================= the scene and its hit areas ================= */
+const cv=$('cv'),cx=cv.getContext('2d');let W=0,H=0,DPR=1,HIT=[];
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR}
+addEventListener('resize',resize);
+const drops=Array.from({length:140},()=>({x:Math.random(),y:Math.random()})),dust=Array.from({length:160},()=>({x:Math.random(),y:Math.random(),s:Math.random()}));
+let last=performance.now(),flow=0;
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;const c=cx,t=now/1000;c.setTransform(DPR,0,0,DPR,0,0);HIT=[];
+  const s=sunTimes(),h=hourNow(),dayL=clamp(Math.min((h-s.rise)/1,(s.set-h)/1),0,1),dusk=1-Math.abs(clamp((h-s.set)/1.2,-1,1));
+  const sky=c.createLinearGradient(0,0,0,H*.7);sky.addColorStop(0,`rgb(${Math.round(lerp(8,70,dayL))},${Math.round(lerp(12,130,dayL))},${Math.round(lerp(30,200,dayL))})`);sky.addColorStop(1,`rgb(${Math.round(lerp(20,230,dayL)+dusk*60)},${Math.round(lerp(25,200,dayL)+dusk*10)},${Math.round(lerp(45,170,dayL))})`);c.fillStyle=sky;c.fillRect(0,0,W,H);
+  if(dayL<.3){c.fillStyle='#fff';for(let k=0;k<80;k++){c.globalAlpha=(1-dayL/.3)*(.3+.4*Math.sin(t+k));c.fillRect((k*197%997)/997*W,(k*83%541)/541*H*.45,1.5,1.5)}c.globalAlpha=1}
+  const gy=H*.68,lv=level(),dark=1-dayL;
+  // the Hajar behind the village
+  c.fillStyle=`rgb(${Math.round(lerp(25,120,dayL))},${Math.round(lerp(22,95,dayL))},${Math.round(lerp(30,80,dayL))})`;c.beginPath();c.moveTo(0,gy);for(let x=0;x<=W;x+=20)c.lineTo(x,gy-H*.12-Math.sin(x*.004)*H*.08-Math.sin(x*.013+1)*H*.03);c.lineTo(W,gy);c.fill();
+  c.fillStyle=`rgb(${Math.round(lerp(40,196,dayL))},${Math.round(lerp(32,160,dayL))},${Math.round(lerp(24,110,dayL))})`;c.fillRect(0,gy,W,H-gy);
+  // falaj: channel, gate and tank
+  const chY=gy+H*.08,gateX=W*.82,tankX=W*.12;flow+=dt*(V.gate&&WX&&WX.rain?3:V.gate?.6:0);
+  c.fillStyle='#3E5B6E';c.fillRect(tankX,chY-5,gateX-tankX,10);
+  if(V.gate){c.fillStyle='rgba(120,200,255,.9)';for(let k=0;k<30;k++){const x=gateX-((flow*40+k*37)%(gateX-tankX));c.fillRect(x,chY-2,6,3)}}
+  c.fillStyle=V.gate?'#6FD39B':'#8A5A3A';c.fillRect(gateX-8,chY-24,16,30);HIT.push({x:gateX-24,y:chY-40,w:48,h:60,k:'gate'});
+  c.font='600 11px '+FONT;c.fillStyle='#fff';c.textAlign='center';c.direction='rtl';c.fillText(V.gate?'البوابة مفتوحة':'بوابة الفلج',gateX,chY-30);
+  const tw=W*.12,th=H*.12;c.fillStyle='#6B5442';c.fillRect(tankX-tw/2,chY-th,tw,th);c.fillStyle='#4FB3E8';c.fillRect(tankX-tw/2+4,chY-4-(th-8)*V.tank/100,tw-8,(th-8)*V.tank/100);c.fillStyle='#fff';c.fillText('الخزان '+Math.round(V.tank)+'٪',tankX,chY-th-6);
+  // houses with windows
+  const nH=[2,3,3,4,5,6][lv],wins=[];for(let k=0;k<nH;k++){const hx=W*.25+k*W*.11,hw=W*.08,hh=H*.11;c.fillStyle='#B48A5E';c.fillRect(hx,gy-hh,hw,hh);c.fillStyle='#9C744C';for(let m=0;m<4;m++)c.fillRect(hx+m*hw/4+2,gy-hh-6,hw/4-4,6);
+    const wx=hx+hw/2-10,wy=gy-hh*.65,closed=V.windows[k];c.fillStyle=closed?'#5A3A22':(dark>.5&&V.lamps.some(Boolean)?'#FFD27A':'#2A2018');c.fillRect(wx,wy,20,18);c.strokeStyle='#3A2616';c.strokeRect(wx,wy,20,18);
+    if(closed){c.strokeStyle='#8A5A3A';c.beginPath();c.moveTo(wx,wy);c.lineTo(wx+20,wy+18);c.moveTo(wx+20,wy);c.lineTo(wx,wy+18);c.stroke()}HIT.push({x:wx-10,y:wy-10,w:40,h:38,k:'win',i:k})}
+  if(lv>=2){const bx=W*.9,bh=H*.2;c.fillStyle='#A07850';c.fillRect(bx-18,gy-bh,36,bh);c.fillStyle='#8A643E';for(let m=0;m<3;m++)c.fillRect(bx-18+m*13,gy-bh-8,9,8)}
+  if(lv>=4){c.fillStyle='#9A7048';c.fillRect(W*.02,gy-H*.16,W*.08,H*.16);c.fillRect(W*.02-6,gy-H*.2,18,H*.2);c.fillRect(W*.1-12,gy-H*.2,18,H*.2)}
+  // palms; health shows in their crowns
+  const nP=[3,5,7,9,11,14][lv];for(let k=0;k<nP;k++){const px=W*.22+k*(W*.62/nP),ph=H*(.13+.04*Math.sin(k*1.9)),sway=Math.sin(t+k)*3*(WX&&WX.ws>20?2:1),g=V.health/100;
+    c.strokeStyle='#6E5238';c.lineWidth=5;c.beginPath();c.moveTo(px,gy+H*.12);c.quadraticCurveTo(px+4,gy+H*.12-ph*.5,px+sway,gy+H*.12-ph);c.stroke();
+    c.strokeStyle=`rgb(${Math.round(lerp(170,60,g))},${Math.round(lerp(130,165,g))},${Math.round(lerp(60,80,g))})`;c.lineWidth=3;for(let a=0;a<7;a++){const an=-Math.PI+a*Math.PI/6,L=ph*.42;c.beginPath();c.moveTo(px+sway,gy+H*.12-ph);c.quadraticCurveTo(px+sway+Math.cos(an)*L*.6,gy+H*.12-ph+Math.sin(an)*L*.6-8,px+sway+Math.cos(an)*L,gy+H*.12-ph+Math.sin(an)*L*.3+L*.35);c.stroke()}
+    HIT.push({x:px-30,y:gy+H*.12-ph-30,w:60,h:ph+30,k:'palm'})}
+  // lanterns
+  for(let k=0;k<4;k++){const lx=W*(.3+k*.15),ly=gy+H*.02;c.strokeStyle='#4A3A2A';c.lineWidth=3;c.beginPath();c.moveTo(lx,ly+40);c.lineTo(lx,ly);c.stroke();
+    const on=V.lamps[k];if(on){const gl=c.createRadialGradient(lx,ly,0,lx,ly,60);gl.addColorStop(0,'rgba(255,200,100,'+(.5*dark+.15)+')');gl.addColorStop(1,'rgba(255,200,100,0)');c.fillStyle=gl;c.fillRect(lx-60,ly-60,120,120)}
+    c.fillStyle=on?'#FFD27A':'#3A3226';c.fillRect(lx-7,ly-14,14,16);HIT.push({x:lx-25,y:ly-30,w:50,h:70,k:'lamp',i:k})}
+  // weather
+  if(WX&&WX.rain){c.strokeStyle='rgba(190,215,255,.5)';c.beginPath();for(const d of drops){d.y=(d.y+dt*1.2)%1;const x=d.x*W,y=d.y*H;c.moveTo(x,y);c.lineTo(x-2,y+14)}c.stroke();if(V.gate)V.tank=Math.min(100,V.tank+dt*1.5)}
+  if(WX&&WX.dust){c.fillStyle='rgba(210,160,100,.22)';c.fillRect(0,0,W,H);c.fillStyle='rgba(230,190,140,.6)';for(const d of dust){d.x=(d.x-dt*(.08+d.s*.1)+1)%1;c.fillRect(d.x*W,d.y*H,2,2)}
+    const open=V.windows.slice(0,nH).filter(w=>!w).length;if(open)V.health=Math.max(0,V.health-dt*.05*open)}
+  V.tank=Math.max(0,V.tank-dt*.002);V.health=Math.max(0,V.health-dt*(WX&&WX.T>40?.004:.0015));
+  if(Math.floor(t)%5===0)save();
+  requestAnimationFrame(frame)}
+cv.addEventListener('click',e=>{const x=e.clientX,y=e.clientY,h=HIT.slice().reverse().find(r=>x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h);if(!h)return;
+  if(h.k==='gate'){V.gate=!V.gate;toast(V.gate?(WX&&WX.rain?'فتحت البوابة والمطر نازل: الخزان يمتلي':'البوابة مفتوحة، بس ما في مطر يعبّي الخزان الحين'):'سكّرت بوابة الفلج')}
+  if(h.k==='win'){V.windows[h.i]=!V.windows[h.i];toast(V.windows[h.i]?'سكّرت الدريشة':'فتحت الدريشة')}
+  if(h.k==='lamp'){V.lamps[h.i]=!V.lamps[h.i];if(V.lamps.every(Boolean)&&isDusk()&&!V.done.lamp){V.done.lamp=1;V.blessing++;toast('الفوانيس كلها شاعلة، القرية تنوّر الليلة')}}
+  if(h.k==='palm'){if(V.tank<5){toast('الخزان شبه فاضي: افتح الفلج يوم ينزل المطر')}else{V.tank=Math.max(0,V.tank-6);V.health=Math.min(100,V.health+8);if(!V.done.water){V.done.water=1;V.blessing++}toast('سقيت النخلة من الخزان')}}
+  if(!isDusk()&&V.lamps.some(Boolean)&&h.k==='lamp')toast('الشمس بعدها طالعة، خلّ الفوانيس للمغرب');
+  save();tasks()});
+setInterval(tasks,30000);resize();tasks();requestAnimationFrame(frame);
+})();
+</script>
+
+<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{})</script>
+</body></html>

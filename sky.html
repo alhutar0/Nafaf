@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<!-- i18n --><script>try{if(localStorage.getItem("lang")==="en")document.write('<script src="i18n/nafaf-i18n.js"><\/script>')}catch(e){}</script><!-- /i18n --><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#05080F">
+<title>البوصلة السماوية</title>
+<style>
+/* Layout: the screen is a window onto the real sky in the direction the phone points; the horizon, sun, moon, wind, rain and towns sit where they really are; a slim glass line at the top says where you are looking, and a card at the bottom appears only when the phone is held flat. */
+:root{--bg:#03060C;--glass:rgba(8,13,24,.8);--line:rgba(226,234,243,.12);--fg:#E8EEF5;--muted:#93A3B7;--brass:#E3A94B;--teal:#5CC9B0;--sky:#7FB8FF;
+  --f:system-ui,-apple-system,"Segoe UI",Tahoma,"Geeza Pro","Noto Sans Arabic",Arial,sans-serif;
+  --gl:max(16px,env(safe-area-inset-left,0px));--gr:max(16px,env(safe-area-inset-right,0px));--gt:max(12px,env(safe-area-inset-top,0px));--gb:max(12px,env(safe-area-inset-bottom,0px));color-scheme:dark}
+html,body{height:100%;overflow:hidden;margin:0}*{box-sizing:border-box}[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);font-size:14px;line-height:1.5;direction:rtl;padding-left:var(--gl);padding-right:var(--gr);padding-block:0}
+button{font:inherit;color:inherit;cursor:pointer}:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.glass{background:var(--glass);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+video,#cv{position:fixed;inset:0;width:100%;height:100%;display:block;object-fit:cover}
+#cv{touch-action:none;cursor:grab}
+.bar{position:fixed;z-index:4;top:var(--gt);left:50%;transform:translateX(-50%);border-radius:999px;padding:6px 16px;display:flex;gap:14px;font-size:12.5px;white-space:nowrap}
+.bar b{font-size:15px}
+.card{position:fixed;z-index:4;left:var(--gl);right:var(--gr);bottom:var(--gb);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;max-width:520px;margin-inline:auto;transition:transform .35s,opacity .35s}
+.card.away{transform:translateY(120%);opacity:0}
+.card h1{margin:0;font-size:15px}
+.rows{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12.5px}
+.rows div{background:rgba(255,255,255,.04);border-radius:10px;padding:6px 9px}
+.rows small{display:block;color:var(--muted);font-size:10.5px}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:rgba(255,255,255,.06);border-radius:10px;padding:7px 11px;font-size:12.5px;font-weight:700}
+.btn.pri{background:var(--brass);color:#1a1206;border-color:transparent}
+.note{font-size:11.5px;color:var(--muted);margin:0;line-height:1.6}
+</style>
+</head><body>
+<a href="./" style="position:fixed;z-index:20;top:max(12px,env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));font-size:12px;color:#EDF1F6;text-decoration:none;background:rgba(8,13,26,.85);border:1px solid rgba(237,241,246,.15);border-radius:999px;padding:4px 12px">→ نفاف</a>
+
+<video id="cam" playsinline muted hidden></video>
+<canvas id="cv" aria-label="السماء في الاتجاه الذي يشير إليه هاتفك"></canvas>
+<div class="bar glass" aria-live="polite"><span>تنظر نحو <b id="dir">—</b></span><span class="num" id="ang">—</span><span id="mode">بطاقات</span></div>
+<aside class="card glass" id="card">
+  <h1>ارفع هاتفك نحو السماء</h1>
+  <div class="rows" id="rows"></div>
+  <div class="btns"><button class="btn pri" id="perm" hidden>فعّل حساسات الحركة</button><button class="btn" id="camB">الكاميرا خلف السماء</button></div>
+  <p class="note" id="note"></p>
+</aside>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(x,a,b)=>x<a?a:x>b?b:x,D=Math.PI/180,rev=x=>((x%360)+360)%360;
+const FONT=getComputedStyle(document.body).fontFamily;
+let ME={lat:24.347,lon:56.709,name:'صحار'},view={h:120,e:5},sensor=false,WX=null;
+const CITIES=[['مسقط',23.588,58.408],['صحار',24.347,56.709],['صلالة',17.019,54.089],['نزوى',22.933,57.531],['صور',22.567,59.529],['عبري',23.226,56.516],['البريمي',24.25,55.793],['خصب',26.198,56.248],['الدقم',19.662,57.705],['دبي',25.204,55.27],['أبوظبي',24.453,54.377],['الدوحة',25.285,51.531],['الرياض',24.713,46.675],['مكة',21.389,39.857],['الكويت',29.376,47.977],['المنامة',26.228,50.586],['كراتشي',24.861,67.01],['مومباي',19.076,72.878],['طهران',35.689,51.389],['القاهرة',30.044,31.236]];
+function bearing(a,b,c,d){const y=Math.sin((d-b)*D)*Math.cos(c*D),x=Math.cos(a*D)*Math.sin(c*D)-Math.sin(a*D)*Math.cos(c*D)*Math.cos((d-b)*D);return rev(Math.atan2(y,x)/D)}
+function dist(a,b,c,d){const s=Math.sin((c-a)*D/2)**2+Math.cos(a*D)*Math.cos(c*D)*Math.sin((d-b)*D/2)**2;return 12742*Math.asin(Math.sqrt(s))}
+function destPt(la,lo,b,km){const r=km/6371,p1=la*D,l1=lo*D,br=b*D,p2=Math.asin(Math.sin(p1)*Math.cos(r)+Math.cos(p1)*Math.sin(r)*Math.cos(br));return[p2/D,(l1+Math.atan2(Math.sin(br)*Math.sin(r)*Math.cos(p1),Math.cos(r)-Math.sin(p1)*Math.sin(p2)))/D]}
+
+/* ================= sun and moon (Schlyter's low-precision method, ~0.1°–1°) ================= */
+function astro(date){const d=date.getTime()/864e5+2440587.5-2451543.5,UT=date.getUTCHours()+date.getUTCMinutes()/60+date.getUTCSeconds()/3600;
+  const sin=x=>Math.sin(x*D),cos=x=>Math.cos(x*D),ecl=23.4393-3.563e-7*d;
+  const ws=282.9404+4.70935e-5*d,es=.016709-1.151e-9*d,Ms=rev(356.047+.9856002585*d);let E=Ms+es/D*sin(Ms)*(1+es*cos(Ms));
+  const xv=cos(E)-es,yv=Math.sqrt(1-es*es)*sin(E),vs=Math.atan2(yv,xv)/D,rs=Math.hypot(xv,yv),Ls=rev(vs+ws);
+  const N=rev(125.1228-.0529538083*d),inc=5.1454,wm=rev(318.0634+.1643573223*d),a=60.2666,e=.0549,Mm=rev(115.3654+13.0649929509*d);
+  let Em=Mm+e/D*sin(Mm)*(1+e*cos(Mm));for(let k=0;k<5;k++)Em=Em-(Em-e/D*sin(Em)-Mm)/(1-e*cos(Em));
+  const mx=a*(cos(Em)-e),my=a*Math.sqrt(1-e*e)*sin(Em),v=Math.atan2(my,mx)/D;let r=Math.hypot(mx,my);
+  const xh=r*(cos(N)*cos(v+wm)-sin(N)*sin(v+wm)*cos(inc)),yh=r*(sin(N)*cos(v+wm)+cos(N)*sin(v+wm)*cos(inc)),zh=r*sin(v+wm)*sin(inc);
+  let lon=Math.atan2(yh,xh)/D,lat=Math.atan2(zh,Math.hypot(xh,yh))/D;
+  const Lm=rev(Mm+wm+N),Dd=rev(Lm-Ls),F=rev(Lm-N);
+  lon+=-1.274*sin(Mm-2*Dd)+.658*sin(2*Dd)-.186*sin(Ms)-.059*sin(2*Mm-2*Dd)-.057*sin(Mm-2*Dd+Ms)+.053*sin(Mm+2*Dd)+.046*sin(2*Dd-Ms)+.041*sin(Mm-Ms)-.035*sin(Dd)-.031*sin(Mm+Ms);
+  lat+=-.173*sin(F-2*Dd)-.055*sin(Mm-F-2*Dd)-.046*sin(Mm+F-2*Dd)+.033*sin(F+2*Dd)+.017*sin(2*Mm+F);r+=-.58*cos(Mm-2*Dd)-.46*cos(2*Dd);
+  const eq=(l,b)=>{const x=cos(l)*cos(b),y=sin(l)*cos(b),z=sin(b);const ye=y*cos(ecl)-z*sin(ecl),ze=y*sin(ecl)+z*cos(ecl);return[rev(Math.atan2(ye,x)/D),Math.atan2(ze,Math.hypot(x,ye))/D]};
+  const LST=rev((Ls+180)+UT*15+ME.lon);
+  const hor=(ra,dec)=>{const H=rev(LST-ra),x=cos(H)*cos(dec),y=sin(H)*cos(dec),z=sin(dec),xh=x*sin(ME.lat)-z*cos(ME.lat),zh=x*cos(ME.lat)+z*sin(ME.lat);return{az:rev(Math.atan2(y,xh)/D+180),alt:Math.asin(clamp(zh,-1,1))/D}};
+  const S=hor(...eq(Ls,0)),M=hor(...eq(lon,lat));M.alt-=Math.asin(1/r)/D*Math.cos(M.alt*D);   // topocentric parallax
+  const elong=Math.acos(clamp(cos(Ls-lon)*cos(lat),-1,1))/D,illum=(1-cos(elong))/2,wax=rev(lon-Ls)<180;
+  return{sun:S,moon:M,illum,wax}}
+const DIRS=['الشمال','الشمال الشرقي','الشرق','الجنوب الشرقي','الجنوب','الجنوب الغربي','الغرب','الشمال الغربي'];
+const dirName=a=>DIRS[Math.round(rev(a)/45)%8];
+function localWind(d){const s=rev(d);if(s>=292.5||s<22.5)return'الشمال';if(s<67.5)return'النعشي';if(s<112.5)return'المطلعي';if(s<202.5)return'الكوس';if(s<247.5)return'السهيلي';return'الغربي'}
+
+/* ================= live weather around you ================= */
+async function loadWX(){const pts=[[ME.lat,ME.lon]];for(const r of [15,40,80,150])for(let b=0;b<360;b+=30)pts.push(destPt(ME.lat,ME.lon,b,r));
+  try{const j=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+pts.map(p=>p[0].toFixed(3)).join(',')+'&longitude='+pts.map(p=>p[1].toFixed(3)).join(',')+'&current=precipitation,weather_code,cloud_cover,cape,wind_speed_10m,wind_direction_10m').then(r=>{if(!r.ok)throw 0;return r.json()});
+    const L=Array.isArray(j)?j:[j],c0=L[0].current;let rain=null,nashu=null,bestN=0;
+    L.forEach((x,i)=>{if(!i)return;const c=x.current,p=pts[i],dkm=dist(ME.lat,ME.lon,p[0],p[1]),az=bearing(ME.lat,ME.lon,p[0],p[1]);
+      if((c.precipitation>.05||c.weather_code>=51)&&(!rain||dkm<rain.d))rain={d:dkm,az,mm:c.precipitation};
+      const n=(c.cape||0)*(c.cloud_cover||0)/100;if(n>bestN){bestN=n;nashu={d:dkm,az,cape:c.cape}}});
+    const here=c0.precipitation>.05||c0.weather_code>=51;
+    WX={ws:c0.wind_speed_10m,wd:c0.wind_direction_10m,cc:c0.cloud_cover,rain:here?{d:0,az:null}:rain,nashu:bestN>150?nashu:null};$('note').textContent='الريح والمطر والنشو من Open-Meteo حول '+ME.name+' الآن، حتى 150 كم.'}
+  catch(e){WX=null;$('note').textContent=/claude/i.test(location.hostname)?'هذه المعاينة معزولة عن الإنترنت وعن حساسات الهاتف: القمر والشمس والمدن محسوبة هنا، أما الريح والمطر فتظهر على nafaf.online. اسحب الشاشة لتدير نظرك.':'تعذّر جلب الريح والمطر الآن.'}
+  rows()}
+function rows(){const A=astro(new Date());const r=[['القمر',dirName(A.moon.az)+' · ارتفاع '+Math.round(A.moon.alt)+'°'],['إضاءة القمر',Math.round(A.illum*100)+'٪ '+(A.wax?'متزايد':'متناقص')],
+  ['الريح',WX?localWind(WX.wd)+' من '+dirName(WX.wd)+' · '+Math.round(WX.ws)+' كم/س':'—'],['أقرب مطر',WX?(WX.rain?(WX.rain.d===0?'فوقك الآن':'نحو '+dirName(WX.rain.az)+' · '+Math.round(WX.rain.d)+' كم'):'لا مطر حتى 150 كم'):'—'],
+  ['النشو',WX?(WX.nashu?'صوب '+dirName(WX.nashu.az)+' · '+Math.round(WX.nashu.d)+' كم':'لا سحب ركامية نشطة'):'—'],['الشمس',Math.round(A.sun.alt)>0?dirName(A.sun.az)+' · '+Math.round(A.sun.alt)+'°':'تحت الأفق']];
+  $('rows').innerHTML=r.map(x=>'<div><small>'+x[0]+'</small>'+x[1]+'</div>').join('')}
+
+/* ================= motion sensors ================= */
+function fromEuler(a,b,g){const cA=Math.cos(a*D),sA=Math.sin(a*D),cB=Math.cos(b*D),sB=Math.sin(b*D),cG=Math.cos(g*D),sG=Math.sin(g*D);
+  const vx=-(cG*sA*sB+cA*sG),vy=-(sA*sG-cA*cG*sB),vz=-(cB*cG);    // the back camera's direction in east-north-up coordinates
+  return{h:rev(Math.atan2(vx,vy)/D),e:Math.asin(clamp(vz,-1,1))/D}}
+let smooth=null;
+function onOri(ev){let a=ev.alpha;if(ev.webkitCompassHeading!=null)a=360-ev.webkitCompassHeading;if(a==null||ev.beta==null)return;sensor=true;
+  const v=fromEuler(a,ev.beta,ev.gamma||0);if(!smooth)smooth=v;else{let dh=((v.h-smooth.h+540)%360)-180;smooth={h:rev(smooth.h+dh*.25),e:smooth.e+(v.e-smooth.e)*.25}}view=smooth}
+function startSensors(){if('ondeviceorientationabsolute' in window)addEventListener('deviceorientationabsolute',onOri);else addEventListener('deviceorientation',onOri)}
+if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){$('perm').hidden=false;$('perm').onclick=()=>DeviceOrientationEvent.requestPermission().then(s=>{if(s==='granted'){startSensors();$('perm').hidden=true}}).catch(()=>{})}
+else startSensors();
+$('camB').addEventListener('click',async()=>{const v=$('cam');if(!v.hidden){v.srcObject&&v.srcObject.getTracks().forEach(t=>t.stop());v.hidden=true;return}
+  try{v.srcObject=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});v.hidden=false;v.play()}catch(e){$('note').textContent='لم يُسمح بالكاميرا، فالسماء مرسومة بدلها.'}});
+// without sensors: drag to look around
+let drag=null;const cv=$('cv');
+cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,h:view.h,e:view.e};cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointermove',e=>{if(!drag||sensor)return;view={h:rev(drag.h+(drag.x-e.clientX)*.15),e:clamp(drag.e+(e.clientY-drag.y)*.15,-20,85)}});
+cv.addEventListener('pointerup',()=>drag=null);
+
+/* ================= the sky lens ================= */
+const cx=cv.getContext('2d');let W=0,H=0,DPR=1;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR}
+addEventListener('resize',resize);
+let A=astro(new Date()),tA=0;
+function frame(now){const c=cx;c.setTransform(DPR,0,0,DPR,0,0);if(now-tA>10000){A=astro(new Date());tA=now;rows()}
+  const fov=W<760?55:70,ppd=W/fov,P=(az,alt)=>{const dh=((az-view.h+540)%360)-180;return[W/2-dh*ppd*(-1),H/2-(alt-view.e)*ppd,Math.abs(dh)<fov/2+15]};
+  const pin=p=>[p[0],Math.min(p[1],H-150),p[2]];   // keep ground features in view when looking up
+  const camOn=!$('cam').hidden,sunUp=clamp((A.sun.alt+6)/20,0,1);
+  if(camOn)c.clearRect(0,0,W,H);else{const g=c.createLinearGradient(0,P(0,60)[1],0,P(0,0)[1]);g.addColorStop(0,`rgb(${Math.round(4+40*sunUp)},${Math.round(8+90*sunUp)},${Math.round(20+170*sunUp)})`);g.addColorStop(1,`rgb(${Math.round(10+150*sunUp)},${Math.round(16+150*sunUp)},${Math.round(30+170*sunUp)})`);c.fillStyle=g;c.fillRect(0,0,W,H);
+    if(sunUp<.4){c.fillStyle='#fff';for(let k=0;k<160;k++){const az=(k*137.5)%360,alt=(k*53.3)%80+2,p=P(az,alt);if(p[2]){c.globalAlpha=(1-sunUp/.4)*(.3+.4*Math.abs(Math.sin(k)));c.fillRect(p[0],p[1],1.6,1.6)}}c.globalAlpha=1}
+    const hy=P(0,0)[1];c.fillStyle='rgba(20,18,16,.92)';c.fillRect(0,hy,W,H-hy)}
+  // horizon and compass
+  const hy=P(0,0)[1];c.strokeStyle='rgba(255,255,255,.4)';c.lineWidth=1;c.beginPath();c.moveTo(0,hy);c.lineTo(W,hy);c.stroke();
+  c.font='600 12px '+FONT;c.textAlign='center';c.direction='rtl';
+  for(let az=0;az<360;az+=15){const p=P(az,0);if(!p[2])continue;c.strokeStyle='rgba(255,255,255,.5)';c.beginPath();c.moveTo(p[0],hy);c.lineTo(p[0],hy+(az%45?6:12));c.stroke();if(az%45===0){c.fillStyle=az===0?'#F06B5B':'#fff';c.fillText(DIRS[az/45],p[0],hy+26)}}
+  // towns on the horizon
+  c.font='600 11px '+FONT;for(const t of CITIES){if(Math.abs(t[1]-ME.lat)<.05&&Math.abs(t[2]-ME.lon)<.05)continue;const az=bearing(ME.lat,ME.lon,t[1],t[2]),dk=dist(ME.lat,ME.lon,t[1],t[2]),p=P(az,-2-Math.min(6,dk/300));if(!p[2])continue;c.fillStyle='rgba(227,169,75,.95)';c.beginPath();c.arc(p[0],hy,3,0,7);c.fill();c.fillText(t[0]+' '+Math.round(dk)+' كم',p[0],p[1]+40)}
+  // sun and moon where they really are
+  const s=P(A.sun.az,A.sun.alt);if(s[2]&&A.sun.alt>-3){const g=c.createRadialGradient(s[0],s[1],0,s[0],s[1],60);g.addColorStop(0,'rgba(255,230,150,.9)');g.addColorStop(1,'rgba(255,230,150,0)');c.fillStyle=g;c.fillRect(s[0]-60,s[1]-60,120,120);c.fillStyle='#FFF2C8';c.beginPath();c.arc(s[0],s[1],12,0,7);c.fill()}
+  const m=P(A.moon.az,A.moon.alt);if(m[2]){const R=14;c.fillStyle='rgba(40,48,64,.9)';c.beginPath();c.arc(m[0],m[1],R,0,7);c.fill();
+    // lit part: terminator from illuminated fraction
+    c.save();c.beginPath();c.arc(m[0],m[1],R,0,7);c.clip();c.fillStyle='#EEF2F8';const k=A.illum*2-1;c.beginPath();
+    if(A.wax){c.arc(m[0],m[1],R,-Math.PI/2,Math.PI/2);c.ellipse(m[0],m[1],Math.abs(k)*R,R,0,Math.PI/2,-Math.PI/2,k>0)}else{c.arc(m[0],m[1],R,Math.PI/2,-Math.PI/2);c.ellipse(m[0],m[1],Math.abs(k)*R,R,0,-Math.PI/2,Math.PI/2,k>0)}c.fill();c.restore();
+    c.fillStyle='#fff';c.fillText('القمر '+Math.round(A.illum*100)+'٪'+(A.moon.alt<0?' (تحت الأفق)':''),m[0],m[1]-22)}
+  if(!(m[2]&&m[1]>0&&m[1]<H)){const dh=((A.moon.az-view.h+540)%360)-180,ang=Math.atan2(-(A.moon.alt-view.e),dh),ex=W/2+Math.cos(ang)*Math.min(W,H)*.42,ey=H/2+Math.sin(ang)*Math.min(W,H)*.42;c.fillStyle='rgba(238,242,248,.85)';c.font='600 12px '+FONT;c.fillText('القمر ←',ex,ey)}
+  if(WX){const w=pin(P(WX.wd,8));if(w[2]){c.strokeStyle='#7FB8FF';c.lineWidth=3;const t=(now/600)%1;for(let k=0;k<3;k++){const x=w[0]+(k-1)*24,y=w[1]+((t+k/3)%1)*30-15;c.beginPath();c.moveTo(x,y-10);c.lineTo(x,y+10);c.moveTo(x-6,y+4);c.lineTo(x,y+10);c.lineTo(x+6,y+4);c.stroke()}
+      c.fillStyle='#7FB8FF';c.font='700 13px '+FONT;c.fillText('من هنا يهب '+localWind(WX.wd)+' · '+Math.round(WX.ws)+' كم/س',w[0],w[1]-28)}
+    if(WX.rain&&WX.rain.az!=null){const r=pin(P(WX.rain.az,3));if(r[2]){c.strokeStyle='rgba(150,200,255,.8)';c.lineWidth=1.5;for(let k=0;k<14;k++){const x=r[0]-30+k*4.6,y=r[1]-30+((now/8+k*13)%40);c.beginPath();c.moveTo(x,y);c.lineTo(x-2,y+10);c.stroke()}c.fillStyle='#9CC8FF';c.font='700 13px '+FONT;c.fillText('مطر حقيقي هنا · '+Math.round(WX.rain.d)+' كم',r[0],r[1]-40)}}
+    if(WX.nashu){const n=pin(P(WX.nashu.az,6));if(n[2]){c.fillStyle='rgba(240,240,250,.85)';for(const[dx,dy,rr]of[[-20,0,16],[0,-12,20],[20,0,15],[0,6,18]]){c.beginPath();c.arc(n[0]+dx,n[1]+dy,rr,0,7);c.fill()}c.fillStyle='#fff';c.font='700 13px '+FONT;c.fillText('النشو · '+Math.round(WX.nashu.d)+' كم',n[0],n[1]-36)}}}
+  // crosshair, mode
+  c.strokeStyle='rgba(255,255,255,.5)';c.beginPath();c.arc(W/2,H/2,18,0,7);c.stroke();
+  const lens=view.e>15;$('card').classList.toggle('away',lens);$('mode').textContent=lens?'عدسة السماء':'بطاقات';$('dir').textContent=dirName(view.h);$('ang').textContent=Math.round(view.h)+'° · ارتفاع '+Math.round(view.e)+'°';
+  requestAnimationFrame(frame)}
+if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{ME={lat:p.coords.latitude,lon:p.coords.longitude,name:'موقعك'};A=astro(new Date());loadWX()},()=>loadWX(),{timeout:8000,maximumAge:600000});else loadWX();
+resize();rows();requestAnimationFrame(frame);
+})();
+</script>
+
+<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{})</script>
+</body></html>

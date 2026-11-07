@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<!-- i18n --><script>try{if(localStorage.getItem("lang")==="en")document.write('<script src="i18n/nafaf-i18n.js"><\/script>')}catch(e){}</script><!-- /i18n --><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#05080F">
+<title>استوديو نشرة نفاف</title>
+<style>
+/* Layout: the broadcast stage (a canvas at 16:9, 9:16 or 1:1) is centred and owns the screen; a floating rail of icon+word buttons on the right opens one sheet at a time; a slim player bar along the bottom carries play and the scene timeline. */
+:root{
+  --bg:#05080F;--glass:rgba(9,15,27,.86);--line:rgba(226,234,243,.10);
+  --fg:#E8EEF5;--muted:#93A3B7;--brass:#E3A94B;--teal:#5CC9B0;--sky:#7FB8FF;--rec:#F0505A;
+  --ok:#6FD39B;--warn:#F2B84B;--bad:#F06B5B;
+  --f:system-ui,-apple-system,"Segoe UI",Tahoma,"Geeza Pro","Noto Sans Arabic",Arial,sans-serif;
+  --gl:max(16px,env(safe-area-inset-left,0px));--gr:max(16px,env(safe-area-inset-right,0px));
+  --gt:max(12px,env(safe-area-inset-top,0px));--gb:max(12px,env(safe-area-inset-bottom,0px));
+  --rail:66px;--bar:64px;
+  color-scheme:dark}
+html,body{height:100%;overflow:hidden;margin:0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);font-size:14px;line-height:1.5;direction:rtl;padding-left:var(--gl);padding-right:var(--gr);padding-block:0;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.glass{background:var(--glass);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+body::after{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(1200px 700px at 50% 40%,#0E1A2C 0%,#05080F 70%)}
+
+.stage{position:fixed;z-index:1;left:var(--gl);right:calc(var(--gr) + var(--rail) + 14px);top:calc(var(--gt) + 34px);bottom:calc(var(--gb) + var(--bar) + 14px);display:grid;place-items:center}
+#cv{display:block;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px var(--line);max-width:100%;max-height:100%;background:#0B1424}
+.top{position:fixed;z-index:4;top:var(--gt);left:var(--gl);right:calc(var(--gr) + var(--rail) + 14px);display:flex;align-items:center;gap:10px;font-size:13px}
+.top b{font-weight:800}
+.top small{font-size:9.5px;letter-spacing:.2em;color:var(--brass);direction:ltr}
+.top .place{margin-inline-start:auto;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recdot{display:inline-flex;align-items:center;gap:6px;color:var(--rec);font-weight:700}
+.recdot::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--rec);animation:bl 1s infinite}
+@keyframes bl{50%{opacity:.25}}
+
+.rail{position:fixed;z-index:6;right:var(--gr);top:50%;transform:translateY(-50%);width:var(--rail);border-radius:18px;padding:6px;display:flex;flex-direction:column;gap:2px}
+.rail button{border:0;background:transparent;border-radius:12px;padding:7px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:10.5px;font-weight:700;transition:background .2s,color .2s}
+.rail button svg{width:21px;height:21px}
+.rail button:hover{color:var(--fg);background:rgba(255,255,255,.05)}
+.rail button[aria-pressed="true"]{background:rgba(227,169,75,.16);color:var(--brass)}
+
+.sheet{position:fixed;z-index:5;top:var(--gt);right:calc(var(--gr) + var(--rail) + 10px);bottom:calc(var(--gb) + var(--bar) + 12px);width:360px;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;transition:opacity .22s,transform .22s}
+.sheet.off{opacity:0;transform:translateX(16px);pointer-events:none;visibility:hidden}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px 14px;border-bottom:1px solid var(--line)}
+.sh b{font-size:14px}
+.x{border:0;background:rgba(255,255,255,.06);border-radius:9px;width:30px;height:30px;display:grid;place-items:center;color:var(--muted)}
+.sb{overflow-y:auto;padding:12px 14px 14px;display:flex;flex-direction:column;gap:12px;min-height:0;flex:1}
+.lbl{font-size:11.5px;color:var(--muted)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 12px;font-size:12.5px;color:var(--muted)}
+.seg button[aria-pressed="true"]{border-color:var(--brass);color:var(--fg);background:rgba(227,169,75,.14)}
+.btn{border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:12px;padding:9px 12px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:13px}
+.btn svg{width:17px;height:17px}
+.btn.pri{background:var(--brass);color:#1a1206;border-color:transparent}
+.btn.rec{background:var(--rec);color:#fff;border-color:transparent}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{flex:1}
+input[type=search],select,textarea{width:100%;min-width:0;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+textarea{resize:vertical;min-height:58px;line-height:1.6;font-size:13px}
+.cities{display:flex;flex-wrap:wrap;gap:6px}
+.cities button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:5px 11px;font-size:12.5px;color:var(--muted)}
+.cities button:hover{color:var(--fg)}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px}
+.sw input{appearance:none;-webkit-appearance:none;width:38px;height:22px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;cursor:pointer;flex:none;transition:background .2s}
+.sw input::after{content:"";position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.sw input:checked{background:var(--teal)}
+.sw input:checked::after{transform:translateX(-16px)}
+.rng{display:flex;flex-direction:column;gap:2px;font-size:12px}
+.rng div{display:flex;justify-content:space-between;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--brass)}
+.scene{display:flex;flex-direction:column;gap:4px}
+.scene span{font-size:11.5px;color:var(--brass);font-weight:700}
+.note{font-size:11.5px;color:var(--muted);margin:0;line-height:1.7}
+.msg{font-size:12.5px;color:var(--warn);margin:0}
+video{width:100%;border-radius:12px;background:#000}
+.mod{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;align-items:center;font-size:12.5px}
+.mod i{width:9px;height:9px;border-radius:50%}
+.mod .bar{height:6px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
+.mod .bar b{display:block;height:100%;border-radius:3px}
+
+.bar{position:fixed;z-index:4;left:var(--gl);right:calc(var(--gr) + var(--rail) + 14px);bottom:var(--gb);height:var(--bar);border-radius:18px;display:flex;align-items:center;gap:12px;padding:0 10px}
+.play{width:46px;height:46px;border-radius:50%;border:0;background:var(--brass);color:#1a1206;display:grid;place-items:center;flex:none}
+.play svg{width:20px;height:20px}
+.tl{flex:1;display:flex;gap:4px;min-width:0;align-items:center}
+.tl button{flex:1;min-width:0;border:0;background:transparent;padding:6px 0;display:flex;flex-direction:column;gap:5px;align-items:stretch;color:var(--muted);font-size:10.5px}
+.tl button i{display:block;height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden;position:relative}
+.tl button i b{position:absolute;inset:0;width:0;background:var(--brass);border-radius:2px}
+.tl button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl button.cur{color:var(--fg)}
+.loading{position:fixed;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:999px;padding:10px 18px;display:flex;gap:10px;align-items:center;font-size:13px}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--brass);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(1turn)}}
+.err{position:fixed;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:16px;padding:16px 18px;max-width:min(460px,calc(100% - 40px));display:flex;flex-direction:column;gap:10px;font-size:13.5px}
+.prompter{position:fixed;z-index:7;left:var(--gl);right:calc(var(--gr) + var(--rail) + 14px);bottom:calc(var(--gb) + var(--bar) + 12px);border-radius:16px;padding:12px 16px;font-size:clamp(16px,2.2vw,22px);line-height:1.7;font-weight:600;text-align:center}
+.prompter small{display:block;font-size:11px;color:var(--muted);font-weight:500}
+
+@media (max-width:760px){
+  :root{--rail:56px;--bar:58px}
+  .rail button{font-size:9.5px;padding:6px 0 5px}.rail button svg{width:19px;height:19px}
+  .sheet{top:auto;left:var(--gl);right:calc(var(--gr) + var(--rail) + 8px);width:auto;max-height:66%;height:auto}
+  .sheet.off{transform:translateY(16px)}
+  .tl button span{display:none}
+  .stage{right:calc(var(--gr) + var(--rail) + 8px)}
+  .top{right:calc(var(--gr) + var(--rail) + 8px)}
+}
+@media (prefers-reduced-motion:reduce){.sheet,.rail button{transition:none}.spin,.recdot::before{animation:none}}
+</style>
+</head><body>
+
+
+<div class="top"><a href="./" style="color:inherit;text-decoration:none;border:1px solid rgba(226,234,243,.2);border-radius:8px;padding:1px 7px">→ نفاف</a><b>استوديو نشرة نفاف</b><small>NAFAF · BROADCAST</small><span class="place" id="topPlace"></span><span class="recdot" id="recDot" hidden>تسجيل</span></div>
+<div class="stage"><canvas id="cv" width="1280" height="720" aria-label="مسرح النشرة الجوية"></canvas></div>
+
+<nav class="rail glass" aria-label="أدوات الاستوديو">
+  <button data-s="loc" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>الموقع</button>
+  <button data-s="script" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 11h16M4 16h10"/><path d="M17 15l3 3-3 3"/></svg>النص</button>
+  <button data-s="voice" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>الصوت</button>
+  <button data-s="models" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 20V10M10 20V4M15 20v-7M20 20v-11"/></svg>النماذج</button>
+  <button data-s="look" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/></svg>الشكل</button>
+  <button data-s="export" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg>تصدير</button>
+  <button data-s="share" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg>مشاركة</button>
+</nav>
+
+<section class="sheet glass off" id="s-loc" aria-label="الموقع">
+  <div class="sh"><b>الموقع</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <button class="btn pri" id="geo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>موقعي الحالي</button>
+    <div class="row"><input type="search" id="q" placeholder="ابحث عن مدينة أو قرية" aria-label="ابحث عن مكان"><button class="btn" id="qGo" style="flex:none">بحث</button></div>
+    <div class="cities" id="cities"></div>
+    <p class="msg" id="locMsg" hidden></p>
+  </div>
+</section>
+
+<section class="sheet glass off" id="s-script" aria-label="النص">
+  <div class="sh"><b>نص النشرة</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <div class="lbl">اللغة</div>
+    <div class="seg" id="langSeg"><button data-l="om" aria-pressed="true">عُمانية</button><button data-l="msa" aria-pressed="false">فصحى</button><button data-l="en" aria-pressed="false">English</button></div>
+    <div class="lbl">الطول</div>
+    <div class="seg" id="lenSeg"><button data-n="short" aria-pressed="false">قصيرة</button><button data-n="full" aria-pressed="true">كاملة</button></div>
+    <p class="note">النص يُكتب من الأرقام مباشرة، ويمكنك تعديل أي جملة. التعديل يبقى حتى تغيّر اللغة أو الموقع أو تضغط «أعد الكتابة».</p>
+    <div id="scenesEd" style="display:flex;flex-direction:column;gap:10px"></div>
+    <button class="btn" id="regen">أعد الكتابة من البيانات</button>
+  </div>
+</section>
+
+<section class="sheet glass off" id="s-voice" aria-label="الصوت">
+  <div class="sh"><b>الصوت</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <div class="seg" id="vmSeg"><button data-v="tts" aria-pressed="true">صوت آلي</button><button data-v="mic" aria-pressed="false">صوتك</button><button data-v="none" aria-pressed="false">بدون</button></div>
+    <div id="ttsBox" style="display:flex;flex-direction:column;gap:10px">
+      <label class="lbl" for="voiceSel">صوت المذيع</label><select id="voiceSel"></select>
+      <div class="rng"><div><span>السرعة</span><span id="rateO" class="num">1.0</span></div><input type="range" id="rate" min="0.7" max="1.3" step="0.05" value="1"></div>
+      <div class="rng"><div><span>طبقة الصوت</span><span id="pitchO" class="num">1.0</span></div><input type="range" id="pitch" min="0.7" max="1.3" step="0.05" value="1"></div>
+      <p class="note" id="ttsNote"></p>
+    </div>
+    <p class="note" id="micNote" hidden>اقرأ النص الظاهر أسفل المسرح بصوتك ولهجتك. صوتك يُسجَّل مع الرسوم في الفيديو عند «تصدير ← سجّل فيديو». المشاهد تتقدم تلقائيًا حسب طول كل جملة، ويمكنك الضغط على أي مشهد في الشريط للانتقال.</p>
+    <label class="sw" for="music">موسيقى خلفية هادئة<input id="music" type="checkbox" checked></label>
+    <div class="rng"><div><span>مستوى الموسيقى</span><span id="musO" class="num">25%</span></div><input type="range" id="musVol" min="0" max="60" step="5" value="25"></div>
+    <label class="sw" for="caps">نص مكتوب على الشاشة<input id="caps" type="checkbox" checked></label>
+  </div>
+</section>
+
+<section class="sheet glass off" id="s-models" aria-label="النماذج">
+  <div class="sh"><b>النماذج الأربعة</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb" id="modelsBody"><p class="note">اختر موقعًا أولًا.</p></div>
+</section>
+
+<section class="sheet glass off" id="s-look" aria-label="الشكل">
+  <div class="sh"><b>الشكل</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <div class="lbl">المقاس</div>
+    <div class="seg" id="fmtSeg"><button data-f="16:9" aria-pressed="true">أفقي 16:9</button><button data-f="9:16" aria-pressed="false">ستوري 9:16</button><button data-f="1:1" aria-pressed="false">مربع 1:1</button></div>
+    <div class="lbl">الطابع</div>
+    <div class="seg" id="thSeg"><button data-t="nafaf" aria-pressed="true">نفاف</button><button data-t="desert" aria-pressed="false">رملي</button><button data-t="night" aria-pressed="false">ليلي</button></div>
+    <label class="sw" for="ticker">شريط أخبار أسفل الشاشة<input id="ticker" type="checkbox" checked></label>
+    <label class="sw" for="logo">شعار نفاف<input id="logo" type="checkbox" checked></label>
+  </div>
+</section>
+
+<section class="sheet glass off" id="s-export" aria-label="تصدير">
+  <div class="sh"><b>تصدير</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <button class="btn rec" id="recBtn"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>سجّل فيديو</button>
+    <p class="note" id="recNote"></p>
+    <div id="vidOut" hidden style="display:flex;flex-direction:column;gap:8px"><video id="vid" controls playsinline></video><div class="row"><button class="btn" id="vidSave">احفظ الفيديو</button><button class="btn" id="vidShare">شارك</button></div></div>
+    <button class="btn" id="cardBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>بطاقة صورة</button>
+    <div id="cardOut" hidden style="display:flex;flex-direction:column;gap:8px"><img id="cardImg" alt="بطاقة النشرة" style="width:100%;border-radius:12px"><div class="row"><button class="btn" id="cardSave">احفظ الصورة</button><button class="btn" id="cardShare">شارك</button></div></div>
+  </div>
+</section>
+
+<section class="sheet glass off" id="s-share" aria-label="مشاركة">
+  <div class="sh"><b>مشاركة</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <div class="lbl">رابط حي: يفتح نشرة اليوم لنفس المكان واللغة بأحدث بيانات في كل مرة</div>
+    <input type="search" id="liveUrl" readonly aria-label="الرابط الحي">
+    <button class="btn pri" id="copyLink">انسخ الرابط الحي</button>
+    <div class="lbl">نص النشرة للواتساب</div>
+    <textarea id="waText" rows="7" readonly aria-label="نص للنسخ"></textarea>
+    <button class="btn" id="copyText">انسخ النص</button>
+    <button class="btn" id="nativeShare" hidden>شارك من الجهاز</button>
+  </div>
+</section>
+
+<footer class="bar glass">
+  <button class="play" id="playBtn" aria-label="تشغيل النشرة"><svg viewBox="0 0 24 24" fill="currentColor" id="playIc"><path d="M8 5l11 7-11 7z"/></svg></button>
+  <div class="tl" id="tl"></div>
+</footer>
+<div class="prompter glass" id="prompter" hidden></div>
+<div class="loading glass" id="loading" hidden><span class="spin"></span><span id="loadT">أجلب النماذج الأربعة…</span></div>
+<div class="err glass" id="err" hidden></div>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(x,a,b)=>x<a?a:x>b?b:x,lerp=(a,b,t)=>a+(b-a)*t,ease=t=>{t=clamp(t,0,1);return 1-Math.pow(1-t,3)};
+const FONT=getComputedStyle(document.body).fontFamily;
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+
+/* ================= places and models ================= */
+const CITIES=[['صحار',24.347,56.709],['مسقط',23.588,58.408],['صلالة',17.019,54.089],['نزوى',22.933,57.531],['صور',22.567,59.529],['عبري',23.226,56.516],
+ ['البريمي',24.250,55.793],['الرستاق',23.390,57.425],['إبراء',22.690,58.534],['خصب',26.198,56.248],['الدقم',19.662,57.705],['شناص',24.743,56.465],
+ ['دبي',25.204,55.270],['أبوظبي',24.453,54.377],['العين',24.207,55.744],['الدوحة',25.285,51.531],['المنامة',26.228,50.586],['الكويت',29.376,47.977],['الرياض',24.713,46.675]];
+const MODELS=[{id:'ecmwf_ifs025',ar:'الأوروبي',en:'European',code:'ECMWF',c:'#7FB8FF'},{id:'gfs_seamless',ar:'الأمريكي',en:'American',code:'GFS',c:'#F2B84B'},
+  {id:'icon_seamless',ar:'الألماني',en:'German',code:'ICON',c:'#5CC9B0'},{id:'ukmo_seamless',ar:'البريطاني',en:'British',code:'UKMO',c:'#E58AB0'}];
+const hav=(a,b,c,d)=>{const r=Math.PI/180,s=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2;return 12742*Math.asin(Math.sqrt(s))};
+
+/* ================= state ================= */
+let place=null,D=null,lang='om',len='full',voiceMode='tts',fmt='16:9',theme='nafaf',scenes=[],edited=false;
+let playing=false,cur=0,sceneT0=0,sceneDur=6,recording=false;
+
+/* ================= data: four models + current conditions + dust ================= */
+async function getJSON(url,ms=20000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{signal:c.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(t)}}
+async function load(p){
+  place=p;$('topPlace').textContent=p.name;store.set('bc.place',JSON.stringify(p));
+  $('err').hidden=true;$('loading').hidden=false;stop();
+  const ll='latitude='+p.lat.toFixed(3)+'&longitude='+p.lon.toFixed(3);
+  try{
+    const [mm,cc,aq]=await Promise.all([
+      getJSON('https://api.open-meteo.com/v1/forecast?'+ll+'&models='+MODELS.map(m=>m.id).join(',')+'&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_gusts_10m_max,wind_speed_10m_max&hourly=temperature_2m&timezone=auto&forecast_days=4'),
+      getJSON('https://api.open-meteo.com/v1/forecast?'+ll+'&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,is_day,cloud_cover&daily=weather_code,uv_index_max,precipitation_probability_max,sunrise,sunset&timezone=auto&forecast_days=4'),
+      getJSON('https://air-quality-api.open-meteo.com/v1/air-quality?'+ll+'&hourly=dust&timezone=auto&forecast_days=2').catch(()=>null)]);
+    D=digest(mm,cc,aq);edited=false;buildScript();renderModels();renderShare();cur=0;draw(0);
+  }catch(e){showErr()}
+  finally{$('loading').hidden=true}}
+function showErr(){const sandbox=/claude/i.test(location.hostname);const el=$('err');el.hidden=false;
+  el.innerHTML=sandbox?'<b>هذه المعاينة داخل Claude معزولة عن الإنترنت</b><span>لا يمكنها الوصول إلى نماذج الطقس. افتح الملف broadcast.html في متصفحك أو على nafaf.online لتعمل النشرة بالبيانات الحقيقية.</span>'
+    :'<b>تعذّر جلب النماذج من Open-Meteo</b><span>تأكد من الاتصال بالإنترنت ثم أعد المحاولة.</span><button class="btn pri" id="retry">أعد المحاولة</button>';
+  const r=$('retry');if(r)r.onclick=()=>load(place)}
+function digest(mm,cc,aq){
+  const dd=mm.daily,days=[];const g=(o,v,m)=>{const a=o[v+'_'+m];return a!==undefined?a:o[v]};
+  for(let i=0;i<dd.time.length;i++){const m={};
+    for(const M of MODELS){const mx=(g(dd,'temperature_2m_max',M.id)||[])[i],mn=(g(dd,'temperature_2m_min',M.id)||[])[i];if(mx==null)continue;
+      m[M.id]={max:mx,min:mn,pr:(g(dd,'precipitation_sum',M.id)||[])[i]||0,wg:(g(dd,'wind_gusts_10m_max',M.id)||[])[i],ws:(g(dd,'wind_speed_10m_max',M.id)||[])[i]}}
+    const L=Object.values(m),avg=k=>{const v=L.map(x=>x[k]).filter(x=>x!=null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
+    const maxs=L.map(x=>x.max),spread=maxs.length?Math.max(...maxs)-Math.min(...maxs):0,votes=L.filter(x=>x.pr>=1).length;
+    days.push({date:dd.time[i],m,n:L.length,max:avg('max'),min:avg('min'),pr:avg('pr'),wg:avg('wg'),spread,votes,
+      conf:L.length<2?'?':spread<=2?'high':spread<=4?'mid':'low',wc:cc.daily.weather_code[i],uv:cc.daily.uv_index_max[i],pp:cc.daily.precipitation_probability_max[i],sunset:cc.daily.sunset[i]})}
+  // today's hourly temperature: the mean of the models
+  const ht=mm.hourly.time,today=dd.time[0],hours=[];
+  for(let i=0;i<ht.length;i++){if(!ht[i].startsWith(today))continue;const v=MODELS.map(M=>(g(mm.hourly,'temperature_2m',M.id)||[])[i]).filter(x=>x!=null);if(v.length)hours.push(v.reduce((s,x)=>s+x,0)/v.length)}
+  let dust=null;if(aq&&aq.hourly&&aq.hourly.dust){const d=aq.hourly.dust.slice(0,24).filter(x=>x!=null);if(d.length)dust=Math.max(...d)}
+  const c=cc.current;
+  return{cur:{T:c.temperature_2m,AT:c.apparent_temperature,RH:c.relative_humidity_2m,wc:c.weather_code,ws:c.wind_speed_10m,wg:c.wind_gusts_10m,wd:c.wind_direction_10m,day:c.is_day,cc:c.cloud_cover,time:c.time},
+    days,hours,dust,tz:mm.timezone,fetched:Date.now()}}
+
+/* ================= words: the local weather vocabulary from the project's Gulf lexicon ================= */
+const isCool=()=>{const m=new Date().getMonth();return m>=10||m<=2};
+function windName(d,l){const s=((d%360)+360)%360;
+  if(l==='en')return['northerly','north-easterly','easterly','south-easterly','southerly','south-westerly','westerly','north-westerly'][Math.round(s/45)%8];
+  if(l==='msa')return['شمالية','شمالية شرقية','شرقية','جنوبية شرقية','جنوبية','جنوبية غربية','غربية','شمالية غربية'][Math.round(s/45)%8];
+  if(s>=292.5||s<22.5)return'الشمال';if(s<67.5)return isCool()?'النعشي':'الهوا الشمالي الشرقي';if(s<112.5)return'المطلعي';if(s<202.5)return'الكوس';if(s<247.5)return'السهيلي';return'الغربي'}
+function cond(wc,day,l){const n=day===0;
+  const T={om:[n?'صافي':'صحو والسما صافية','غائم جزئيًا','مغيم','ضباب وغبشة','نفاف','مطر','زخات مطر','رعد ومطر'],
+    msa:[n?'صافٍ':'مشمس وصافٍ','غائم جزئيًا','غائم','ضباب','رذاذ','ماطر','زخات مطر','عواصف رعدية'],
+    en:[n?'clear':'sunny and clear','partly cloudy','cloudy','foggy','drizzle','rain','showers','thunderstorms']}[l];
+  return T[wc==null?0:wc===0?0:wc<=2?1:wc===3?2:wc<=48?3:wc<=57?4:wc<=67?5:wc<=82?6:7]}
+function rainWord(mm,l){if(mm<1)return'';
+  if(l==='om')return mm<3?'نفاف':mm<8?'رش':mm<20?'مطر زين':'مطر غزير';
+  if(l==='msa')return mm<3?'رذاذ خفيف':mm<8?'أمطار خفيفة':mm<20?'أمطار متوسطة':'أمطار غزيرة';
+  return mm<3?'light drizzle':mm<8?'light rain':mm<20?'moderate rain':'heavy rain'}
+function dayName(i,l){if(!D)return'';const d=new Date(D.days[i].date+'T12:00:00');
+  if(i===1)return l==='en'?'tomorrow':l==='om'?'باكر':'غدًا';return d.toLocaleDateString(l==='en'?'en-GB':'ar-OM-u-nu-latn',{weekday:'long'})}
+const r0=x=>Math.round(x);
+const mName=(M,l)=>l==='en'?M.en+' ('+M.code+')':M.ar;
+function alerts(){const a=[],t=D.days[0];
+  if(t.max>=45)a.push('heat');if(D.dust!=null&&D.dust>=150)a.push('dust');
+  if(t.votes>=3&&t.pr>=5||t.pr>=10)a.push('rain');if(t.wg!=null&&t.wg>=55)a.push('wind');if(t.uv>=10)a.push('uv');return a}
+
+/* ================= the script, built from the numbers ================= */
+function buildScript(){if(!D)return;const l=lang,c=D.cur,t=D.days[0],P=place.name;
+  const hr=new Date().getHours(),date=new Date(t.date+'T12:00:00').toLocaleDateString(l==='en'?'en-GB':'ar-OM-u-nu-latn',{weekday:'long',day:'numeric',month:'long'});
+  const ws=r0(c.ws),wn=windName(c.wd,l),strength=l==='en'?(ws<15?'light':ws<30?'moderate':'strong'):l==='om'?(ws<15?'خفيف':ws<30?'نشط':'قوي'):(ws<15?'خفيفة':ws<30?'معتدلة':'قوية');
+  const S=[],A=alerts(),conf=t.conf;
+  const modelLine=M=>t.m[M.id]?r0(t.m[M.id].max):null;
+  const ms=MODELS.filter(M=>t.m[M.id]);
+  if(l==='om'){
+    S.push({k:'intro',t:(hr<12?'صباح الخير':'مساكم الله بالخير')+'، معكم نفاف من '+P+'، وهذي نشرة '+date+'.'});
+    S.push({k:'now',t:'الجو الحين '+cond(c.wc,c.day,l)+'، والحرارة '+r0(c.T)+' درجة'+(c.AT-c.T>=3?'، بس تحس فيها '+r0(c.AT):'')+'. '+(ws<6?'والهوا واقف تقريبًا':'و'+wn+' '+(wn==='الكوس'?'يارّ':'هابّ')+' '+strength+'، '+ws+' كم بالساعة')+'.'+(c.RH>=85&&ws<10&&c.T>=28?' والجو خيسة، رطوبة عالية تكتم النفس.':c.RH>=70?' والرطوبة '+r0(c.RH)+' بالمية.':'')});
+    S.push({k:'today',t:'اليوم العظمى توصل '+r0(t.max)+' والصغرى '+r0(t.min)+'. '+(t.votes>=3?'وأغلب النماذج تشوف '+(rainWord(t.pr,l)||'مطر')+'، عسى يكون خير.':t.votes===2?'ونص النماذج تتوقع شي مطر، يعني الاحتمال وارد.':t.votes===1?'ونموذج واحد بس يشوف مطر، فالاحتمال ضعيف.':'وما في مطر متوقع.')+(t.uv>=8&&c.day?' والأشعة قوية حزة الظهر، لا تطولون تحت الشمس.':'')});
+    if(len==='full'&&ms.length>=2)S.push({k:'models',t:'النماذج '+(conf==='high'?'متفقة':conf==='mid'?'متقاربة':'مختلفة شوي، فخذوا التوقع بحذر')+': '+ms.map(M=>M.ar+' '+modelLine(M)).join('، و')+' درجة.'});
+    if(len==='full'&&D.days.length>2)S.push({k:'next',t:[1,2].map(i=>{const d=D.days[i];const wet=d.wc>=51;return dayName(i,l)+' '+(wet?'فيه ':'')+cond(d.wc,1,l)+' والعظمى '+r0(d.max)+(!wet&&d.votes>=2?' مع '+(rainWord(d.pr,l)||'احتمال مطر'):'')}).join('، و')+'.'});
+    S.push({k:'alerts',t:A.length?A.map(a=>({heat:'الحر لاهوب اليوم والعظمى فوق 45، اشربوا ماي وايد وتجنبوا الشمس الظهر.',dust:'في غبار متوقع يقلل الرؤية، انتبهوا على الخطوط.',rain:'أمطار قوية محتملة والأودية ممكن تجري، لا تعبرون وادي جاري.',wind:'هبّات قوية توصل '+r0(t.wg)+' كم بالساعة، ثبتوا الأغراض الخفيفة.',uv:'الأشعة فوق البنفسجية شديدة جدًا اليوم.'})[a]).join(' '):'وما في تنبيهات اليوم، الجو مستقر والحمد لله.'});
+    S.push({k:'outro',t:'هذي كانت نشرة نفاف من '+P+'. دمتوا بخير، والله يحفظكم.'})}
+  else if(l==='msa'){
+    S.push({k:'intro',t:(hr<12?'صباح الخير':'مساء الخير')+'، ومرحبًا بكم في نشرة نفاف الجوية من '+P+' ليوم '+date+'.'});
+    S.push({k:'now',t:'الطقس حاليًا '+cond(c.wc,c.day,l)+'، ودرجة الحرارة '+r0(c.T)+' مئوية'+(c.AT-c.T>=3?'، ويُحَس بها كأنها '+r0(c.AT):'')+'. '+(ws<6?'والرياح ساكنة تقريبًا':'والرياح '+wn+' '+strength+' بسرعة '+ws+' كيلومترًا في الساعة')+'، والرطوبة النسبية '+r0(c.RH)+' بالمئة.'});
+    S.push({k:'today',t:'تبلغ العظمى اليوم '+r0(t.max)+' درجة، والصغرى '+r0(t.min)+'. '+(t.votes>=3?'وتتوقع أغلب النماذج '+(rainWord(t.pr,l)||'أمطارًا')+'.':t.votes===2?'ويتوقع نصف النماذج هطول أمطار، فالاحتمال قائم.':t.votes===1?'ويتوقع نموذج واحد فقط هطول أمطار، فالاحتمال ضعيف.':'ولا يُتوقع هطول أمطار.')+(t.uv>=8&&c.day?' ويُنصح بتجنب التعرض المباشر للشمس وقت الظهيرة.':'')});
+    if(len==='full'&&ms.length>=2)S.push({k:'models',t:'وتُظهر النماذج العالمية '+(conf==='high'?'اتفاقًا كبيرًا':conf==='mid'?'تقاربًا معقولًا':'تباينًا ملحوظًا يستدعي الحذر')+': '+ms.map(M=>'النموذج '+M.ar+' '+modelLine(M)).join('، و')+' درجة.'});
+    if(len==='full'&&D.days.length>2)S.push({k:'next',t:[1,2].map(i=>{const d=D.days[i];return(i===1?'وغدًا':'ويوم '+dayName(i,l))+' '+cond(d.wc,1,l)+' بعظمى '+r0(d.max)+' درجة'+(d.wc<51&&d.votes>=2?' مع '+(rainWord(d.pr,l)||'احتمال أمطار'):'')}).join('، ')+'.'});
+    S.push({k:'alerts',t:A.length?A.map(a=>({heat:'تنبيه: حرارة شديدة تتجاوز 45 درجة، احرصوا على شرب الماء وتجنب الشمس.',dust:'تنبيه: غبار متوقع قد يخفض مدى الرؤية على الطرق.',rain:'تنبيه: أمطار غزيرة محتملة قد تؤدي إلى جريان الأودية، فلا تعبروا الأودية الجارية.',wind:'تنبيه: هبّات رياح قد تصل إلى '+r0(t.wg)+' كيلومترًا في الساعة.',uv:'تنبيه: مؤشر الأشعة فوق البنفسجية مرتفع جدًا.'})[a]).join(' '):'ولا توجد تنبيهات جوية اليوم.'});
+    S.push({k:'outro',t:'كانت معكم نشرة نفاف من '+P+'. نتمنى لكم يومًا طيبًا.'})}
+  else{
+    S.push({k:'intro',t:'Good '+(hr<12?'morning':hr<18?'afternoon':'evening')+', this is the Nafaf weather update for '+cityEn()+', '+date+'.'});
+    S.push({k:'now',t:'Right now it is '+cond(c.wc,c.day,l)+' and '+r0(c.T)+' degrees'+(c.AT-c.T>=3?', feeling like '+r0(c.AT):'')+'. '+(ws<6?'The air is almost still':'Winds are '+strength+' and '+wn+' at '+ws+' kilometres per hour')+', with humidity at '+r0(c.RH)+' percent.'});
+    S.push({k:'today',t:'Today we expect a high of '+r0(t.max)+' and a low of '+r0(t.min)+'. '+(t.votes>=3?'Most models show '+(rainWord(t.pr,l)||'rain')+'.':t.votes===2?'Two of the four models show some rain, so keep an umbrella close.':t.votes===1?'Only one model shows rain, so the chance is low.':'No rain is expected.')+(t.uv>=8&&c.day?' The UV index is very high around midday.':'')});
+    if(len==='full'&&ms.length>=2)S.push({k:'models',t:'The four global models '+(conf==='high'?'agree closely':conf==='mid'?'are fairly close':'disagree, so treat this forecast with care')+': '+ms.map(M=>M.code+' '+modelLine(M)).join(', ')+' degrees.'});
+    if(len==='full'&&D.days.length>2)S.push({k:'next',t:[1,2].map(i=>{const d=D.days[i];const n=dayName(i,l);return n.charAt(0).toUpperCase()+n.slice(1)+', '+cond(d.wc,1,l)+' with a high of '+r0(d.max)+(d.wc<51&&d.votes>=2?' and '+(rainWord(d.pr,l)||'a chance of rain'):'')}).join('. ')+'.'});
+    S.push({k:'alerts',t:A.length?A.map(a=>({heat:'Heat warning: highs above 45 degrees. Drink plenty of water and avoid the midday sun.',dust:'Dust is expected and may reduce visibility on the roads.',rain:'Heavy rain is possible and wadis may flow. Never cross a running wadi.',wind:'Gusts may reach '+r0(t.wg)+' kilometres per hour.',uv:'The UV index is extreme today.'})[a]).join(' '):'There are no weather warnings today.'});
+    S.push({k:'outro',t:'That was Nafaf weather for '+cityEn()+'. Have a good day.'})}
+  scenes=S;renderEditor();renderTL();renderShare();cur=Math.min(cur,scenes.length-1);draw(0)}
+const EN={'صحار':'Sohar','مسقط':'Muscat','صلالة':'Salalah','نزوى':'Nizwa','صور':'Sur','عبري':'Ibri','البريمي':'Buraimi','الرستاق':'Rustaq','إبراء':'Ibra','خصب':'Khasab','الدقم':'Duqm','شناص':'Shinas','دبي':'Dubai','أبوظبي':'Abu Dhabi','العين':'Al Ain','الدوحة':'Doha','المنامة':'Manama','الكويت':'Kuwait City','الرياض':'Riyadh'};
+const cityEn=()=>EN[place.name]||place.en||place.name;
+const SLBL={intro:{ar:'افتتاح',en:'Intro'},now:{ar:'الآن',en:'Now'},today:{ar:'اليوم',en:'Today'},models:{ar:'النماذج',en:'Models'},next:{ar:'الأيام القادمة',en:'Next days'},alerts:{ar:'تنبيهات',en:'Alerts'},outro:{ar:'ختام',en:'Outro'}};
+function renderEditor(){$('scenesEd').innerHTML=scenes.map((s,i)=>'<label class="scene" for="ed'+i+'"><span>'+SLBL[s.k].ar+'</span><textarea id="ed'+i+'" dir="'+(lang==='en'?'ltr':'rtl')+'">'+s.t.replace(/</g,'&lt;')+'</textarea></label>').join('');
+  scenes.forEach((s,i)=>$('ed'+i).addEventListener('input',e=>{s.t=e.target.value;edited=true;renderShare();if(cur===i)draw(0)}))}
+function renderTL(){$('tl').innerHTML=scenes.map((s,i)=>'<button data-i="'+i+'"'+(i===cur?' class="cur"':'')+'><i><b id="pb'+i+'"></b></i><span>'+SLBL[s.k].ar+'</span></button>').join('');
+  $('tl').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{goScene(+b.dataset.i,playing)}))}
+
+/* ================= models sheet ================= */
+function renderModels(){if(!D)return;let h='';
+  D.days.slice(0,3).forEach((d,i)=>{const lab=i===0?'اليوم':i===1?'غدًا':new Date(d.date+'T12:00:00').toLocaleDateString('ar-OM-u-nu-latn',{weekday:'long'});
+    const cf={high:['اتفاق عالٍ','var(--ok)'],mid:['اتفاق متوسط','var(--warn)'],low:['اختلاف واضح','var(--bad)'],'?':['نموذج واحد','var(--muted)']}[d.conf];
+    h+='<div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between"><b>'+lab+'</b><span style="font-size:12px;color:'+cf[1]+'">'+cf[0]+' · فرق '+d.spread.toFixed(1)+'°</span></div><div class="mod">';
+    const lo=Math.min(...Object.values(d.m).map(x=>x.max))-3,hi=Math.max(...Object.values(d.m).map(x=>x.max))+1;
+    MODELS.forEach(M=>{const x=d.m[M.id];if(!x){h+='<i style="background:'+M.c+'"></i><span>'+M.code+'</span><span style="color:var(--muted)">غير متاح</span>';return}
+      h+='<i style="background:'+M.c+'"></i><div><div style="display:flex;justify-content:space-between;font-size:12px"><span>'+M.ar+' · '+M.code+'</span><span class="num">'+(x.pr>=.1?x.pr.toFixed(1)+' ملم':'')+'</span></div><div class="bar"><b style="width:'+clamp((x.max-lo)/(hi-lo||1)*100,6,100)+'%;background:'+M.c+'"></b></div></div><b class="num">'+r0(x.max)+'° / '+r0(x.min)+'°</b>'});
+    h+='</div></div>'});
+  h+='<p class="note">العظمى والصغرى والمطر من كل نموذج كما يقدمه Open-Meteo: ECMWF IFS بدقة 0.25°، وGFS، وICON، وUKMO. الاتفاق يُقاس بالفرق بين أعلى عظمى وأدناها: درجتان فأقل اتفاق عالٍ. المطر في النص يعدّ النماذج التي تتوقع 1 ملم فأكثر.</p>';
+  $('modelsBody').innerHTML=h}
+
+/* ================= sharing ================= */
+function liveURL(){const u=new URL(location.href.split('?')[0].split('#')[0]);u.searchParams.set('lat',place.lat.toFixed(3));u.searchParams.set('lon',place.lon.toFixed(3));u.searchParams.set('n',place.name);u.searchParams.set('l',lang);return u.toString()}
+function renderShare(){if(!D||!place)return;$('liveUrl').value=liveURL();
+  $('waText').value=(lang==='en'?'🌤 Nafaf weather · '+cityEn():'🌤 نشرة نفاف · '+place.name)+'\n\n'+scenes.filter(s=>s.k!=='intro'&&s.k!=='outro').map(s=>s.t).join('\n\n')+'\n\n'+liveURL();
+  $('nativeShare').hidden=!navigator.share}
+async function copy(t,btn){const old=btn.textContent;try{await navigator.clipboard.writeText(t);btn.textContent='نُسخ'}catch(e){btn.textContent='انسخه يدويًا'}setTimeout(()=>btn.textContent=old,1500)}
+$('copyLink').addEventListener('click',e=>{$('liveUrl').select();copy($('liveUrl').value,e.currentTarget)});
+$('copyText').addEventListener('click',e=>{$('waText').select();copy($('waText').value,e.currentTarget)});
+$('nativeShare').addEventListener('click',()=>{navigator.share({title:'نشرة نفاف',text:$('waText').value}).catch(()=>{})});
+
+/* ================= stage drawing ================= */
+const cv=$('cv'),cx=cv.getContext('2d');let W=1280,H=720,U=1;
+const THEMES={nafaf:{d:['#0C2C52','#2E6A96','#9CC6E0'],n:['#040A18','#0B1C36','#1A3150'],acc:'#E3A94B',ink:'#FFFFFF',panel:'rgba(6,14,28,.62)'},
+  desert:{d:['#5A3218','#B9773F','#EBC38D'],n:['#120A06','#2B1A10','#4A2E1A'],acc:'#FFD27A',ink:'#FFFFFF',panel:'rgba(30,16,6,.6)'},
+  night:{d:['#120E2E','#2B2565','#5B4E9E'],n:['#05040F','#100C26','#1E1844'],acc:'#7FD3FF',ink:'#FFFFFF',panel:'rgba(8,6,24,.66)'}};
+function setFormat(f){fmt=f;[W,H]=f==='16:9'?[1280,720]:f==='9:16'?[720,1280]:[1080,1080];cv.width=W;cv.height=H;U=Math.min(W,H)/720;fitStage();draw(0)}
+function fitStage(){const st=document.querySelector('.stage').getBoundingClientRect();const s=Math.min(st.width/W,st.height/H);cv.style.width=Math.floor(W*s)+'px';cv.style.height=Math.floor(H*s)+'px'}
+addEventListener('resize',fitStage);
+const isAr=()=>lang!=='en';
+function txt(s,x,y,size,o={}){cx.font=(o.w||600)+' '+Math.round(size*U)+'px '+FONT;cx.fillStyle=o.c||'#fff';cx.textAlign=o.a||(isAr()?'right':'left');cx.direction=o.dir||(isAr()?'rtl':'ltr');cx.textBaseline=o.b||'alphabetic';cx.globalAlpha=o.al==null?1:o.al;cx.fillText(s,x,y);cx.globalAlpha=1}
+function wrap(s,maxW,size,w){cx.font=(w||600)+' '+Math.round(size*U)+'px '+FONT;const words=s.split(' '),lines=[];let line='';for(const wd of words){const t=line?line+' '+wd:wd;if(cx.measureText(t).width>maxW&&line){lines.push(line);line=wd}else line=t}if(line)lines.push(line);return lines}
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+// weather pictograms drawn in code
+function icon(x,y,s,wc,day,t){const sun=()=>{cx.save();cx.translate(x,y);cx.rotate(t*.2);cx.fillStyle='#FFC94A';cx.beginPath();cx.arc(0,0,s*.32,0,7);cx.fill();cx.strokeStyle='#FFC94A';cx.lineWidth=s*.06;cx.lineCap='round';for(let k=0;k<8;k++){cx.rotate(Math.PI/4);cx.beginPath();cx.moveTo(s*.44,0);cx.lineTo(s*.56,0);cx.stroke()}cx.restore()};
+  const moon=()=>{cx.fillStyle='#E8EEF8';cx.beginPath();cx.arc(x,y,s*.34,0,7);cx.fill();cx.fillStyle='rgba(10,20,40,.9)';cx.beginPath();cx.arc(x+s*.16,y-s*.1,s*.3,0,7);cx.fill()};
+  const cloud=(ox,oy,k,c)=>{cx.fillStyle=c||'#F2F5FA';cx.beginPath();cx.arc(x+ox-s*.2*k,y+oy,s*.2*k,0,7);cx.arc(x+ox+s*.02*k,y+oy-s*.12*k,s*.27*k,0,7);cx.arc(x+ox+s*.25*k,y+oy,s*.19*k,0,7);cx.rect(x+ox-s*.2*k,y+oy,s*.45*k,s*.19*k);cx.fill()};
+  const g=wc==null?0:wc===0?0:wc<=2?1:wc===3?2:wc<=48?3:wc<=67?4:wc<=82?4:5;
+  if(g===0){day?sun():moon();return}
+  if(g===1){cx.save();cx.translate(-s*.14,-s*.14);day?sun():moon();cx.restore();cloud(s*.1,s*.12,1);return}
+  if(g===3){cx.strokeStyle='#DDE6F0';cx.lineWidth=s*.07;cx.lineCap='round';for(let k=0;k<3;k++){cx.beginPath();cx.moveTo(x-s*.35+Math.sin(t+k)*s*.04,y-s*.12+k*s*.15);cx.lineTo(x+s*.35+Math.sin(t+k)*s*.04,y-s*.12+k*s*.15);cx.stroke()}return}
+  cloud(0,-s*.08,1,g>=4?'#C9D3E0':'#F2F5FA');
+  if(g>=4){cx.strokeStyle='#7FB8FF';cx.lineWidth=s*.05;cx.lineCap='round';for(let k=0;k<3;k++){const ph=((t*1.6+k*.33)%1);cx.globalAlpha=1-ph;cx.beginPath();cx.moveTo(x-s*.15+k*s*.15,y+s*.18+ph*s*.25);cx.lineTo(x-s*.19+k*s*.15,y+s*.28+ph*s*.25);cx.stroke()}cx.globalAlpha=1}
+  if(g===5&&Math.sin(t*3)>.6){cx.fillStyle='#FFE27A';cx.beginPath();cx.moveTo(x+s*.02,y+s*.08);cx.lineTo(x-s*.1,y+s*.3);cx.lineTo(x,y+s*.28);cx.lineTo(x-s*.06,y+s*.46);cx.lineTo(x+s*.14,y+s*.2);cx.lineTo(x+s*.04,y+s*.22);cx.closePath();cx.fill()}}
+// the sky behind everything follows the real weather: sun or stars, drifting cloud, rain, dust
+const drops=Array.from({length:160},()=>({x:Math.random(),y:Math.random(),v:.6+Math.random()*.6}));
+const motes=Array.from({length:90},()=>({x:Math.random(),y:Math.random(),v:.2+Math.random()*.5,r:Math.random()}));
+function sky(t){const T=THEMES[theme],c=D?D.cur:{wc:0,day:1,cc:20},day=c.day!==0,P=day?T.d:T.n;
+  const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,P[0]);g.addColorStop(.6,P[1]);g.addColorStop(1,P[2]);cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  if(day&&c.wc<=2){const sx=W*(isAr()?.2:.8),sy=H*.2,rg=cx.createRadialGradient(sx,sy,0,sx,sy,H*.6);rg.addColorStop(0,'rgba(255,220,150,.45)');rg.addColorStop(1,'rgba(255,220,150,0)');cx.fillStyle=rg;cx.fillRect(0,0,W,H)}
+  if(!day){cx.fillStyle='#fff';for(let k=0;k<70;k++){const x=(k*137.5%1000)/1000*W,y=(k*71.3%600)/1000*H;cx.globalAlpha=.3+.4*Math.sin(t*2+k);cx.fillRect(x,y,1.6*U,1.6*U)}cx.globalAlpha=1}
+  const cover=clamp((c.cc||0)/100,0,1);
+  for(let k=0;k<5;k++){const sp=8+k*5,x=((k*311+t*sp*U)%(W+500))-250,y=H*(.12+.07*k);cx.globalAlpha=.08+cover*.18;cx.fillStyle=c.wc>=61?'#9AA7B8':'#FFFFFF';
+    for(const e of[[0,0,170,38],[90,-18,110,40],[-80,8,90,26]]){cx.beginPath();cx.ellipse(x+e[0]*U,y+e[1]*U,e[2]*U,e[3]*U,0,0,7);cx.fill()}}
+  cx.globalAlpha=1;
+  if(c.wc>=51&&c.wc<=82||c.wc>=95){cx.strokeStyle='rgba(190,215,255,.35)';cx.lineWidth=1.4*U;cx.beginPath();for(const d of drops){const y=((d.y+t*d.v)%1)*H,x=(d.x*W+((d.y+t*d.v)%1)*40*U)%W;cx.moveTo(x,y);cx.lineTo(x-6*U,y+22*U)}cx.stroke()}
+  if(D&&D.dust!=null&&D.dust>=100){cx.fillStyle='rgba(210,160,100,'+clamp((D.dust-100)/600,.08,.35)+')';cx.fillRect(0,0,W,H);cx.fillStyle='rgba(235,200,150,.35)';for(const m of motes){const x=((m.x+t*m.v*.05)%1)*W,y=m.y*H+Math.sin(t+m.r*9)*8*U;cx.fillRect(x,y,2*U,2*U)}}
+  const v=cx.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.max(W,H)*.75);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.45)');cx.fillStyle=v;cx.fillRect(0,0,W,H)}
+// layout helpers (mirror for Arabic)
+const PAD=()=>48*U,X0=()=>isAr()?W-PAD():PAD(),dir=()=>isAr()?-1:1;
+function chrome(t){const T=THEMES[theme];
+  if($('logo').checked){const x=isAr()?W-PAD():PAD(),y=PAD()+6*U;cx.fillStyle=T.acc;cx.beginPath();cx.arc(x+dir()*12*U,y-8*U,9*U,0,7);cx.fill();
+    txt(isAr()?'نفاف':'NAFAF',x+dir()*30*U,y,26,{w:800,c:'#fff'});txt(isAr()?'النشرة الجوية':'WEATHER',x+dir()*(isAr()?96:128)*U,y,14,{w:600,c:'rgba(255,255,255,.7)'})}
+  const lab=isAr()?place.name+' · '+new Date().toLocaleTimeString('ar-OM-u-nu-latn',{hour:'2-digit',minute:'2-digit',hour12:false}):cityEn()+' · '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  txt(lab,isAr()?PAD():W-PAD(),PAD()+6*U,16,{w:600,c:'rgba(255,255,255,.8)',a:isAr()?'left':'right'});
+  if($('ticker').checked&&D){const h=34*U,y=H-h;cx.fillStyle='rgba(0,0,0,.45)';cx.fillRect(0,y,W,h);cx.fillStyle=T.acc;cx.fillRect(isAr()?W-110*U:0,y,110*U,h);
+    txt(isAr()?'نفاف':'NAFAF',isAr()?W-55*U:55*U,y+h*.68,15,{w:800,c:'#1a1206',a:'center'});
+    const items=D.days.slice(0,4).map((d,i)=>(i===0?(isAr()?'اليوم':'Today'):new Date(d.date+'T12:00:00').toLocaleDateString(isAr()?'ar-OM-u-nu-latn':'en-GB',{weekday:'short'}))+' '+r0(d.max)+'°/'+r0(d.min)+'°').join('   •   ')+'   •   '+(isAr()?'المصدر: ECMWF · GFS · ICON · UKMO عبر Open-Meteo':'Source: ECMWF · GFS · ICON · UKMO via Open-Meteo')+'   •   ';
+    cx.save();cx.beginPath();cx.rect(isAr()?0:110*U,y,W-110*U,h);cx.clip();cx.font='600 '+Math.round(15*U)+'px '+FONT;const tw=cx.measureText(items).width;let off=(t*60*U)%tw;
+    for(let k=-1;k<4;k++){const xx=isAr()?-tw+off+k*tw:120*U+tw*k-off;txt(items,xx,y+h*.68,15,{w:600,c:'#fff',a:'left',dir:isAr()?'rtl':'ltr'})}cx.restore()}}
+function caption(text,tau){if(!$('caps').checked||!text)return;const T=THEMES[theme],bw=W-2*PAD(),size=fmt==='9:16'?24:22,lines=wrap(text,bw-48*U,size,600).slice(0,4),lh=size*1.55*U;
+  const h=lines.length*lh+30*U,y=H-($('ticker').checked?34*U:0)-h-22*U,a=ease(tau*2.5);
+  cx.globalAlpha=a;cx.fillStyle=T.panel;rr(PAD(),y+(1-a)*20*U,bw,h,16*U);cx.fill();cx.fillStyle=T.acc;cx.fillRect(isAr()?PAD()+bw-5*U:PAD(),y+(1-a)*20*U+12*U,5*U,h-24*U);cx.globalAlpha=1;
+  lines.forEach((l,i)=>txt(l,isAr()?PAD()+bw-24*U:PAD()+24*U,y+(1-a)*20*U+18*U+lh*(i+.72),size,{w:600,al:a}))}
+const big=()=>fmt==='9:16'?1.15:1;
+function sceneIntro(tau,t){const a=ease(tau*1.4),y=H*(fmt==='9:16'?.36:.42);
+  txt(isAr()?'نشرة الطقس':'WEATHER UPDATE',X0(),y-70*U,18,{w:700,c:THEMES[theme].acc,al:a});
+  txt(isAr()?place.name:cityEn(),X0()+dir()*(1-a)*60*U,y+10*U,92*big(),{w:800,al:a});
+  txt(new Date(D.days[0].date+'T12:00:00').toLocaleDateString(isAr()?'ar-OM-u-nu-latn':'en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),X0(),y+60*U,22,{w:500,c:'rgba(255,255,255,.82)',al:ease(tau*1.4-.3)});
+  cx.fillStyle=THEMES[theme].acc;const lw=ease(tau-.2)*260*U;cx.fillRect(isAr()?X0()-lw:X0(),y+82*U,lw,4*U)}
+function sceneNow(tau,t){const c=D.cur,a=ease(tau*1.6),vert=fmt==='9:16',ix=vert?W/2:(isAr()?W*.28:W*.72),iy=vert?H*.24:H*.42;
+  icon(ix,iy,(vert?260:230)*U*(.7+.3*a),c.wc,c.day,t);
+  const tx=vert?W/2:X0(),ty=vert?H*.55:H*.44,al=vert?'center':undefined;
+  txt(isAr()?'الآن':'NOW',tx,ty-118*U,18,{w:700,c:THEMES[theme].acc,a:al,al:a});
+  txt(r0(lerp(c.T-8,c.T,ease(tau*1.2)))+'°',tx,ty,140*big(),{w:800,a:al,al:a,dir:'ltr'});
+  txt(cond(c.wc,c.day,lang),tx,ty+46*U,30,{w:700,a:al,al:ease(tau*1.6-.2)});
+  const chips=[[isAr()?'محسوسة':'Feels',r0(c.AT)+'°'],[isAr()?'الرطوبة':'Humidity',r0(c.RH)+'%'],[isAr()?'الريح':'Wind',r0(c.ws)+(isAr()?' كم/س':' km/h')]];
+  chips.forEach((ch,i)=>{const w=150*U,gap=14*U,total=chips.length*w+(chips.length-1)*gap,x0=vert?W/2-total/2+i*(w+gap):isAr()?X0()-w-i*(w+gap):X0()+i*(w+gap),y=ty+76*U,al2=ease(tau*2-.5-i*.15);
+    cx.globalAlpha=al2;cx.fillStyle=THEMES[theme].panel;rr(x0,y,w,70*U,14*U);cx.fill();cx.globalAlpha=1;
+    txt(ch[0],x0+w/2,y+26*U,14,{w:600,c:'rgba(255,255,255,.7)',a:'center',al:al2});txt(ch[1],x0+w/2,y+56*U,24,{w:800,a:'center',al:al2,dir:i===2&&isAr()?'rtl':'ltr'})});
+  // wind arrow with its local name
+  const wx=vert?W/2:ix,wy=vert?ty+215*U:iy+160*U;cx.save();cx.translate(wx,wy);cx.rotate((c.wd+180)*Math.PI/180);cx.globalAlpha=ease(tau*2-.6);cx.strokeStyle='#fff';cx.lineWidth=4*U;cx.lineCap='round';
+  cx.beginPath();cx.moveTo(0,22*U);cx.lineTo(0,-22*U);cx.moveTo(-10*U,-10*U);cx.lineTo(0,-22*U);cx.lineTo(10*U,-10*U);cx.stroke();cx.restore();
+  txt(windName(c.wd,lang),wx,wy+48*U,18,{w:700,a:'center',al:ease(tau*2-.6)})}
+function sceneToday(tau,t){const d=D.days[0],vert=fmt==='9:16',a=ease(tau*1.5);
+  const tx=vert?W/2:X0(),al=vert?'center':undefined,ty=vert?H*.2:H*.3;
+  txt(isAr()?'اليوم':'TODAY',tx,ty-50*U,18,{w:700,c:THEMES[theme].acc,a:al,al:a});
+  txt('↑ '+r0(d.max)+'°   ↓ '+r0(d.min)+'°',tx,ty+20*U,72*big(),{w:800,a:al,al:a,dir:'ltr'});
+  const rp=d.n?d.votes+'/'+d.n:'—';txt((isAr()?'نماذج تتوقع مطرًا: ':'Models showing rain: ')+rp+(d.uv!=null?(isAr()?'   ·   الأشعة ':'   ·   UV ')+r0(d.uv):''),tx,ty+68*U,20,{w:600,c:'rgba(255,255,255,.85)',a:al,al:ease(tau*1.5-.3)});
+  // the day's temperature curve, drawn as it is spoken
+  const hs=D.hours;if(hs.length>2){const gx=vert?PAD():(isAr()?PAD():W*.5),gw=vert?W-2*PAD():W*.5-PAD(),gy=vert?H*.42:H*.42,gh=vert?H*.2:H*.28;
+    const lo=Math.min(...hs)-1,hi=Math.max(...hs)+1,pr=ease(tau*.9);cx.globalAlpha=ease(tau*2);cx.fillStyle=THEMES[theme].panel;rr(gx-14*U,gy-30*U,gw+28*U,gh+70*U,16*U);cx.fill();cx.globalAlpha=1;
+    const X=i=>gx+gw*i/(hs.length-1),Y=v=>gy+gh-(v-lo)/(hi-lo)*gh;
+    const n=Math.max(2,Math.floor(hs.length*pr));const gr=cx.createLinearGradient(0,gy,0,gy+gh);gr.addColorStop(0,'rgba(227,169,75,.45)');gr.addColorStop(1,'rgba(227,169,75,0)');
+    cx.beginPath();cx.moveTo(X(0),gy+gh);for(let i=0;i<n;i++)cx.lineTo(X(i),Y(hs[i]));cx.lineTo(X(n-1),gy+gh);cx.closePath();cx.fillStyle=gr;cx.fill();
+    cx.beginPath();for(let i=0;i<n;i++)i?cx.lineTo(X(i),Y(hs[i])):cx.moveTo(X(i),Y(hs[i]));cx.strokeStyle=THEMES[theme].acc;cx.lineWidth=4*U;cx.lineJoin='round';cx.stroke();
+    [0,6,12,18].forEach(h=>{if(h<hs.length)txt(String(h).padStart(2,'0')+':00',X(h),gy+gh+26*U,13,{w:600,c:'rgba(255,255,255,.65)',a:'center',dir:'ltr'})});
+    const im=hs.indexOf(Math.max(...hs));if(im<n){cx.fillStyle='#fff';cx.beginPath();cx.arc(X(im),Y(hs[im]),6*U,0,7);cx.fill();txt(r0(hs[im])+'°',X(im),Y(hs[im])-14*U,16,{w:800,a:'center',dir:'ltr'})}}}
+function sceneModels(tau,t){const d=D.days[0],vert=fmt==='9:16',a=ease(tau*1.5),tx=vert?W/2:X0(),al=vert?'center':undefined;
+  txt(isAr()?'النماذج الأربعة':'FOUR MODELS',tx,(vert?H*.16:H*.2),18,{w:700,c:THEMES[theme].acc,a:al,al:a});
+  const cf={high:isAr()?'اتفاق عالٍ':'Strong agreement',mid:isAr()?'اتفاق متوسط':'Fair agreement',low:isAr()?'اختلاف واضح':'Models disagree','?':''}[d.conf];
+  txt(cf,tx,(vert?H*.16:H*.2)+52*U,44,{w:800,a:al,al:a});
+  const ms=MODELS.filter(M=>d.m[M.id]),vals=ms.map(M=>d.m[M.id].max),lo=Math.min(...vals)-4,hi=Math.max(...vals)+1;
+  const bx=PAD(),bw=W-2*PAD(),by=vert?H*.32:H*.36,rowH=(vert?96:72)*U;
+  ms.forEach((M,i)=>{const x=d.m[M.id],y=by+i*rowH,p=ease(tau*1.4-i*.15),w=(bw-260*U)*clamp((x.max-lo)/(hi-lo),.05,1)*p;
+    txt(isAr()?M.ar:M.code,isAr()?bx+bw:bx,y+24*U,22,{w:700,al:p});txt(isAr()?M.code:M.en,isAr()?bx+bw:bx,y+48*U,13,{w:600,c:'rgba(255,255,255,.6)',al:p,dir:'ltr'});
+    const x0=isAr()?bx+bw-170*U-w:bx+170*U;cx.globalAlpha=p;cx.fillStyle=M.c;rr(x0,y+12*U,Math.max(1,w),30*U,8*U);cx.fill();cx.globalAlpha=1;
+    txt(r0(lerp(lo,x.max,p))+'°'+(x.pr>=.1?'  '+x.pr.toFixed(1)+(isAr()?' ملم':' mm'):''),isAr()?x0-12*U:x0+w+12*U,y+36*U,22,{w:800,al:p,dir:'ltr',a:isAr()?'right':'left'})})}
+function sceneNext(tau,t){const vert=fmt==='9:16',n=Math.min(3,D.days.length-1),cw=vert?W-2*PAD():(W-2*PAD()-2*24*U)/3,ch=vert?190*U:300*U;
+  txt(isAr()?'الأيام القادمة':'NEXT DAYS',vert?W/2:X0(),vert?H*.14:H*.2,18,{w:700,c:THEMES[theme].acc,a:vert?'center':undefined,al:ease(tau*2)});
+  for(let k=0;k<n;k++){const d=D.days[k+1],p=ease(tau*1.6-k*.2),x=vert?PAD():isAr()?W-PAD()-cw-k*(cw+24*U):PAD()+k*(cw+24*U),y=(vert?H*.2+k*(ch+20*U):H*.27)+(1-p)*40*U;
+    cx.globalAlpha=p;cx.fillStyle=THEMES[theme].panel;rr(x,y,cw,ch,18*U);cx.fill();cx.globalAlpha=1;
+    const nm=new Date(d.date+'T12:00:00').toLocaleDateString(isAr()?'ar-OM-u-nu-latn':'en-GB',{weekday:'long'});
+    if(vert){txt(nm,isAr()?x+cw-24*U:x+24*U,y+50*U,26,{w:800,al:p});icon(x+cw/2,y+ch/2,110*U,d.wc,1,t);txt(r0(d.max)+'° / '+r0(d.min)+'°',isAr()?x+24*U:x+cw-24*U,y+ch/2+14*U,34,{w:800,al:p,a:isAr()?'left':'right',dir:'ltr'});
+      txt(cond(d.wc,1,lang)+(d.votes?(isAr()?' · مطر في '+d.votes+' من '+d.n:' · rain in '+d.votes+' of '+d.n):''),isAr()?x+cw-24*U:x+24*U,y+ch-30*U,17,{w:600,c:'rgba(255,255,255,.8)',al:p})}
+    else{txt(nm,x+cw/2,y+48*U,26,{w:800,a:'center',al:p});icon(x+cw/2,y+128*U,110*U,d.wc,1,t);txt(r0(d.max)+'° / '+r0(d.min)+'°',x+cw/2,y+222*U,34,{w:800,a:'center',al:p,dir:'ltr'});
+      txt(cond(d.wc,1,lang),x+cw/2,y+258*U,17,{w:600,c:'rgba(255,255,255,.8)',a:'center',al:p});if(d.votes)txt(isAr()?'مطر في '+d.votes+' من '+d.n+' نماذج':'rain in '+d.votes+' of '+d.n+' models',x+cw/2,y+284*U,14,{w:600,c:'#9CC8FF',a:'center',al:p})}}}
+function sceneAlerts(tau,t){const A=alerts(),vert=fmt==='9:16',tx=vert?W/2:X0(),al=vert?'center':undefined;
+  txt(isAr()?'تنبيهات':'ALERTS',tx,vert?H*.18:H*.22,18,{w:700,c:THEMES[theme].acc,a:al,al:ease(tau*2)});
+  if(!A.length){const p=ease(tau*1.5),x=vert?W/2:(isAr()?X0()-60*U:X0()+60*U),y=(vert?H*.32:H*.4);cx.strokeStyle='#6FD39B';cx.lineWidth=10*U;cx.lineCap='round';cx.globalAlpha=p;cx.beginPath();cx.arc(x,y,52*U,0,7);cx.stroke();
+    cx.beginPath();cx.moveTo(x-22*U,y);cx.lineTo(x-6*U,y+18*U);cx.lineTo(x+24*U,y-16*U);cx.stroke();cx.globalAlpha=1;txt(isAr()?'لا تنبيهات اليوم':'No warnings today',vert?W/2:(isAr()?X0()-140*U:X0()+140*U),y+16*U,48,{w:800,a:al,al:p});return}
+  const L={heat:['🔥',isAr()?'حر شديد':'Extreme heat','#F06B5B'],dust:['〰',isAr()?'غبار':'Dust','#E0A060'],rain:['☔',isAr()?'أمطار وأودية':'Heavy rain, wadis','#7FB8FF'],wind:['➶',isAr()?'هبّات قوية':'Strong gusts','#F2B84B'],uv:['☀',isAr()?'أشعة شديدة':'Extreme UV','#B88CFF']};
+  A.forEach((k,i)=>{const p=ease(tau*1.6-i*.2),y=(vert?H*.26:H*.3)+i*96*U,x=PAD(),w=W-2*PAD();cx.globalAlpha=p;cx.fillStyle=THEMES[theme].panel;rr(x,y,w,80*U,16*U);cx.fill();cx.fillStyle=L[k][2];cx.fillRect(isAr()?x+w-8*U:x,y,8*U,80*U);cx.globalAlpha=1;
+    txt(L[k][1],isAr()?x+w-30*U:x+30*U,y+52*U,32,{w:800,al:p})})}
+function sceneOutro(tau,t){const a=ease(tau*1.3);txt(isAr()?'نفاف':'NAFAF',W/2,H*.45,110*big(),{w:900,a:'center',c:THEMES[theme].acc,al:a});
+  txt('nafaf.online',W/2,H*.45+60*U,28,{w:600,a:'center',al:ease(tau*1.3-.3),dir:'ltr'});
+  txt(isAr()?'المصدر: نماذج ECMWF وGFS وICON وUKMO عبر Open-Meteo':'Data: ECMWF, GFS, ICON and UKMO via Open-Meteo',W/2,H*.45+100*U,15,{w:500,a:'center',c:'rgba(255,255,255,.65)',al:ease(tau-.4)})}
+const SCN={intro:sceneIntro,now:sceneNow,today:sceneToday,models:sceneModels,next:sceneNext,alerts:sceneAlerts,outro:sceneOutro};
+let t0=performance.now()/1000;
+function draw(){const t=performance.now()/1000-t0;sky(t);
+  if(!D){txt(isAr()?'اختر موقعك من «الموقع»':'Pick a place',W/2,H/2,28,{w:700,a:'center'});return}
+  const s=scenes[cur],tau=playing?(performance.now()/1000-sceneT0):1.5;
+  SCN[s.k](tau,t);chrome(t);caption(s.t,tau);
+  if(!playing&&!recording){cx.fillStyle='rgba(0,0,0,.28)';cx.fillRect(0,0,W,H);cx.fillStyle=THEMES[theme].acc;cx.beginPath();cx.arc(W/2,H/2,46*U,0,7);cx.fill();cx.fillStyle='#1a1206';cx.beginPath();cx.moveTo(W/2-14*U,H/2-22*U);cx.lineTo(W/2+24*U,H/2);cx.lineTo(W/2-14*U,H/2+22*U);cx.closePath();cx.fill()}}
+function loop(){draw();if(playing){const p=clamp((performance.now()/1000-sceneT0)/sceneDur,0,1);const b=$('pb'+cur);if(b)b.style.width=(p*100)+'%';
+    if(voiceMode!=='tts'||!ttsOK()){if(p>=1)next()}else if(p>=1.7)next()}
+  requestAnimationFrame(loop)}
+cv.addEventListener('click',()=>{if(!recording)toggle()});
+
+/* ================= playback, speech, music ================= */
+const estDur=s=>Math.max(4.5,s.length/(lang==='en'?15:12.5)+1.4);
+const ttsOK=()=>'speechSynthesis' in window&&voiceFor()!=null;
+let voices=[];function loadVoices(){voices=('speechSynthesis' in window)?speechSynthesis.getVoices():[];fillVoices()}
+if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+function voiceList(){const pre=lang==='en'?'en':'ar';return voices.filter(v=>v.lang&&v.lang.toLowerCase().startsWith(pre))}
+function fillVoices(){const L=voiceList(),sel=$('voiceSel'),keep=store.get('bc.voice.'+(lang==='en'?'en':'ar'));
+  sel.innerHTML=L.map(v=>'<option value="'+v.name+'">'+v.name+' ('+v.lang+')</option>').join('')||'<option value="">لا يوجد صوت لهذه اللغة في جهازك</option>';
+  const pref=lang==='en'?['en-GB','en-US']:['ar-OM-u-nu-latn','ar-AE','ar-SA','ar-001'];let pick=L.find(v=>v.name===keep);if(!pick)for(const p of pref){pick=L.find(v=>v.lang===p);if(pick)break}if(pick)sel.value=pick.name;
+  $('ttsNote').textContent=!('speechSynthesis' in window)?'متصفحك لا يدعم النطق الآلي، فاختر «صوتك» أو «بدون».':!L.length?'لا يوجد صوت '+(lang==='en'?'إنجليزي':'عربي')+' مثبت في جهازك. أضفه من إعدادات الجهاز (اللغة والنطق) أو اختر «صوتك».':
+    (lang==='om'?'لا يوجد صوت آلي بلهجة عُمانية في أي جهاز حاليًا، فالصوت العربي سينطق النص العُماني بنبرة فصحى. للهجة حقيقية اختر «صوتك». ':'')+'الصوت الآلي يُسمع أثناء العرض، لكن المتصفح لا يسمح بتسجيله داخل ملف الفيديو.'}
+const voiceFor=()=>voiceList().find(v=>v.name===$('voiceSel').value)||voiceList()[0]||null;
+function speak(text,i){if(!('speechSynthesis' in window))return;speechSynthesis.cancel();const v=voiceFor();if(!v)return;
+  const u=new SpeechSynthesisUtterance(text);u.voice=v;u.lang=v.lang;u.rate=+$('rate').value;u.pitch=+$('pitch').value;
+  u.onend=()=>{if(playing&&cur===i&&voiceMode==='tts')setTimeout(()=>{if(playing&&cur===i)next()},450)};speechSynthesis.speak(u)}
+function startScene(i){cur=i;sceneT0=performance.now()/1000;const s=scenes[i];sceneDur=estDur(s.t);
+  $('tl').querySelectorAll('button').forEach((b,k)=>{b.classList.toggle('cur',k===i);const pb=$('pb'+k);if(pb)pb.style.width=k<i?'100%':'0%'});
+  if(voiceMode==='tts'&&!recording)speak(s.t,i);else if(voiceMode==='tts'&&recording)speak(s.t,i);
+  if(voiceMode==='mic'||recording&&voiceMode!=='tts'){const p=$('prompter');p.hidden=voiceMode!=='mic';p.innerHTML='<small>'+SLBL[s.k].ar+' · اقرأ الآن</small>'+s.t.replace(/</g,'&lt;')}}
+function next(){if(cur<scenes.length-1)startScene(cur+1);else finish()}
+function goScene(i,keepPlaying){if('speechSynthesis' in window)speechSynthesis.cancel();if(keepPlaying)startScene(i);else{cur=i;$('tl').querySelectorAll('button').forEach((b,k)=>{b.classList.toggle('cur',k===i);const pb=$('pb'+k);if(pb)pb.style.width=k<i?'100%':'0%'})}}
+function play(){if(!D)return;ensureAudio();playing=true;setPlayUI();startMusic();startScene(cur>=scenes.length-1?0:cur)}
+function stop(){playing=false;setPlayUI();if('speechSynthesis' in window)speechSynthesis.cancel();stopMusic();$('prompter').hidden=true}
+function toggle(){playing?stop():play()}
+function finish(){stop();cur=0;$('tl').querySelectorAll('i b').forEach(b=>b.style.width='0%');if(recording)endRecording()}
+function setPlayUI(){$('playIc').innerHTML=playing?'<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>':'<path d="M8 5l11 7-11 7z"/>';$('playBtn').setAttribute('aria-label',playing?'إيقاف':'تشغيل النشرة')}
+$('playBtn').addEventListener('click',()=>{if(!recording)toggle();else{finish()}});
+// a quiet generative pad: four slow chords, no audio files
+let AC=null,musBus=null,recDest=null,musTimer=0;
+function ensureAudio(){if(AC){if(AC.state==='suspended')AC.resume();return}AC=new(window.AudioContext||window.webkitAudioContext)();musBus=AC.createGain();musBus.gain.value=0;
+  const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1100;musBus.connect(lp);lp.connect(AC.destination);recDest=AC.createMediaStreamDestination();lp.connect(recDest)}
+const CH=[[220,261.6,329.6],[174.6,220,261.6],[196,246.9,293.7],[164.8,207.7,246.9]];let chI=0;
+function chord(){if(!AC)return;const t=AC.currentTime;CH[chI++%4].forEach((f,k)=>{for(const det of[-3,3]){const o=AC.createOscillator(),g=AC.createGain();o.type=k?'triangle':'sine';o.frequency.value=f;o.detune.value=det;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.06,t+1.4);g.gain.linearRampToValueAtTime(.0001,t+4.6);o.connect(g);g.connect(musBus);o.start(t);o.stop(t+4.8)}})}
+function startMusic(){if(!$('music').checked||!AC)return;musBus.gain.setTargetAtTime(+$('musVol').value/100,AC.currentTime,.4);clearInterval(musTimer);chord();musTimer=setInterval(chord,4000)}
+function stopMusic(){clearInterval(musTimer);if(AC)musBus.gain.setTargetAtTime(0,AC.currentTime,.3)}
+$('musVol').addEventListener('input',e=>{$('musO').textContent=e.target.value+'%';if(AC&&playing&&$('music').checked)musBus.gain.setTargetAtTime(+e.target.value/100,AC.currentTime,.2)});
+$('music').addEventListener('change',()=>{if(playing){$('music').checked?startMusic():stopMusic()}});
+['rate','pitch'].forEach(id=>$(id).addEventListener('input',e=>{$(id+'O').textContent=(+e.target.value).toFixed(2)}));
+$('voiceSel').addEventListener('change',e=>store.set('bc.voice.'+(lang==='en'?'en':'ar'),e.target.value));
+
+/* ================= recording a video: canvas + music + your voice ================= */
+let rec=null,chunks=[],micStream=null,vidBlob=null,vidExt='webm';
+function pickMime(){const c=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];for(const m of c)if(window.MediaRecorder&&MediaRecorder.isTypeSupported(m))return m;return''}
+function recNote(){$('recNote').textContent=!window.MediaRecorder||!cv.captureStream?'متصفحك لا يدعم تسجيل الفيديو. جرّب Chrome أو Safari الحديث.':
+  voiceMode==='mic'?'سيطلب المتصفح إذن الميكروفون. اقرأ النص الظاهر أسفل المسرح، والفيديو يحفظ صوتك مع الرسوم'+($('music').checked?' والموسيقى':'')+'.':
+  voiceMode==='tts'?'الصوت الآلي يُسمع أثناء التسجيل لكنه لا يدخل ملف الفيديو، فالفيديو سيحمل النص المكتوب'+($('music').checked?' والموسيقى':'')+'. لتسجيل صوت داخل الفيديو اختر «صوتك» من الصوت.':
+  'الفيديو يحمل النص المكتوب'+($('music').checked?' والموسيقى':'')+' بلا تعليق صوتي.'}
+async function startRecording(){if(!D||recording)return;if(!window.MediaRecorder||!cv.captureStream){recNote();return}
+  ensureAudio();const tracks=[...cv.captureStream(30).getVideoTracks()];
+  if(voiceMode==='mic'){try{micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});AC.createMediaStreamSource(micStream).connect(recDest)}catch(e){$('recNote').textContent='لم يُمنح إذن الميكروفون، فسيُسجَّل الفيديو بلا صوتك.'}}
+  tracks.push(...recDest.stream.getAudioTracks());
+  const mime=pickMime();vidExt=mime.includes('mp4')?'mp4':'webm';chunks=[];
+  try{rec=new MediaRecorder(new MediaStream(tracks),mime?{mimeType:mime,videoBitsPerSecond:6e6}:undefined)}catch(e){rec=new MediaRecorder(new MediaStream(tracks))}
+  rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  rec.onstop=()=>{vidBlob=new Blob(chunks,{type:rec.mimeType||'video/webm'});const v=$('vid');v.src=URL.createObjectURL(vidBlob);$('vidOut').hidden=false;openSheet('export')};
+  recording=true;$('recDot').hidden=false;$('recBtn').textContent='أوقف التسجيل';openSheet(null);rec.start(500);cur=0;play()}
+function endRecording(){recording=false;$('recDot').hidden=true;$('recBtn').innerHTML='<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>سجّل فيديو';
+  if(rec&&rec.state!=='inactive')setTimeout(()=>rec.stop(),300);if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null}}
+$('recBtn').addEventListener('click',()=>{recording?finish():startRecording()});
+const fname=ext=>'nafaf-'+(EN[place.name]||'weather').replace(/\s+/g,'-').toLowerCase()+'-'+D.days[0].date+'.'+ext;
+function saveBlob(b,name){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
+async function shareBlob(b,name){const f=new File([b],name,{type:b.type});if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'نشرة نفاف'})}catch(e){}}else saveBlob(b,name)}
+$('vidSave').addEventListener('click',()=>vidBlob&&saveBlob(vidBlob,fname(vidExt)));
+$('vidShare').addEventListener('click',()=>vidBlob&&shareBlob(vidBlob,fname(vidExt)));
+
+/* ================= image card 1080×1350 ================= */
+let cardBlob=null;
+function makeCard(){if(!D)return;const c=document.createElement('canvas');c.width=1080;c.height=1350;const g=c.getContext('2d'),T=THEMES[theme],ar=isAr(),R=ar?'right':'left',X=ar?1000:80;
+  const bg=g.createLinearGradient(0,0,0,1350);bg.addColorStop(0,T.d[0]);bg.addColorStop(1,T.d[1]);g.fillStyle=bg;g.fillRect(0,0,1080,1350);
+  const t=(s,x,y,sz,w,col,al)=>{g.font=(w||700)+' '+sz+'px '+FONT;g.fillStyle=col||'#fff';g.textAlign=al||R;g.direction=ar?'rtl':'ltr';g.fillText(s,x,y)};
+  g.fillStyle=T.acc;g.beginPath();g.arc(ar?1000:80,110,14,0,7);g.fill();t(ar?'نفاف · النشرة الجوية':'NAFAF · WEATHER',ar?975:105,122,34,800);
+  t(ar?place.name:cityEn(),X,250,96,900);t(new Date(D.days[0].date+'T12:00:00').toLocaleDateString(ar?'ar-OM-u-nu-latn':'en-GB',{weekday:'long',day:'numeric',month:'long'}),X,310,34,500,'rgba(255,255,255,.85)');
+  const c0=D.cur;g.font='900 220px '+FONT;g.textAlign=R;g.direction='ltr';g.fillStyle='#fff';g.fillText(r0(c0.T)+'°',X,560);
+  t(cond(c0.wc,c0.day,lang),X,630,44,700);t((ar?'محسوسة ':'Feels ')+r0(c0.AT)+'°  ·  '+(ar?'الرطوبة ':'Humidity ')+r0(c0.RH)+'%  ·  '+windName(c0.wd,lang)+' '+r0(c0.ws),X,690,30,500,'rgba(255,255,255,.85)');
+  g.fillStyle='rgba(0,0,0,.25)';g.beginPath();g.roundRect?g.roundRect(60,750,960,330,28):g.rect(60,750,960,330);g.fill();
+  D.days.slice(0,3).forEach((d,i)=>{const x=ar?880-i*320:200+i*320;const nm=i===0?(ar?'اليوم':'Today'):new Date(d.date+'T12:00:00').toLocaleDateString(ar?'ar-OM-u-nu-latn':'en-GB',{weekday:'long'});
+    g.textAlign='center';g.direction=ar?'rtl':'ltr';g.font='800 36px '+FONT;g.fillStyle='#fff';g.fillText(nm,x,820);g.font='900 58px '+FONT;g.direction='ltr';g.fillText(r0(d.max)+'°',x,920);g.font='600 34px '+FONT;g.fillStyle='rgba(255,255,255,.75)';g.fillText(r0(d.min)+'°',x,970);
+    g.font='600 26px '+FONT;g.direction=ar?'rtl':'ltr';g.fillStyle=d.votes?'#9CC8FF':'rgba(255,255,255,.6)';g.fillText(d.votes?(ar?'مطر '+d.votes+'/'+d.n:'rain '+d.votes+'/'+d.n):(ar?'بلا مطر':'dry'),x,1030)});
+  const d0=D.days[0],cf={high:ar?'النماذج الأربعة متفقة':'The four models agree',mid:ar?'النماذج متقاربة':'Models fairly close',low:ar?'النماذج مختلفة: توقع بحذر':'Models disagree',"?":''}[d0.conf];
+  t(cf,X,1150,36,700,T.acc);const A=alerts();t(A.length?(ar?'تنبيه: ':'Alert: ')+A.map(a=>({heat:ar?'حر شديد':'heat',dust:ar?'غبار':'dust',rain:ar?'أمطار وأودية':'heavy rain',wind:ar?'هبّات قوية':'gusts',uv:ar?'أشعة شديدة':'UV'})[a]).join(ar?'، ':', '):(ar?'لا تنبيهات اليوم':'No warnings today'),X,1205,32,600,A.length?'#FFB3A8':'#B4EFCC');
+  g.textAlign='center';g.direction='ltr';g.font='700 30px '+FONT;g.fillStyle='rgba(255,255,255,.9)';g.fillText('nafaf.online',540,1295);g.font='500 20px '+FONT;g.fillStyle='rgba(255,255,255,.55)';g.fillText('ECMWF · GFS · ICON · UKMO via Open-Meteo',540,1325);
+  c.toBlob(b=>{cardBlob=b;$('cardImg').src=URL.createObjectURL(b);$('cardOut').hidden=false},'image/png')}
+$('cardBtn').addEventListener('click',makeCard);
+$('cardSave').addEventListener('click',()=>cardBlob&&saveBlob(cardBlob,fname('png')));
+$('cardShare').addEventListener('click',()=>cardBlob&&shareBlob(cardBlob,fname('png')));
+
+/* ================= sheets and controls ================= */
+let openS=null;
+function openSheet(n){openS=n;document.querySelectorAll('.sheet').forEach(s=>s.classList.toggle('off',s.id!=='s-'+n));document.querySelectorAll('.rail [data-s]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===n?'true':'false'));if(n==='export')recNote()}
+document.querySelectorAll('.rail [data-s]').forEach(b=>b.addEventListener('click',()=>openSheet(openS===b.dataset.s?null:b.dataset.s)));
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>openSheet(null)));
+function seg(id,attr,fn){$(id).querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$(id).querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));fn(b.dataset[attr])}))}
+seg('langSeg','l',v=>{lang=v;store.set('bc.lang',v);stop();fillVoices();buildScript()});
+seg('lenSeg','n',v=>{len=v;stop();buildScript()});
+seg('vmSeg','v',v=>{voiceMode=v;stop();$('ttsBox').hidden=v!=='tts';$('micNote').hidden=v!=='mic';recNote()});
+seg('fmtSeg','f',v=>setFormat(v));
+seg('thSeg','t',v=>{theme=v});
+$('regen').addEventListener('click',()=>{stop();buildScript()});
+$('cities').innerHTML=CITIES.map((c,i)=>'<button data-i="'+i+'">'+c[0]+'</button>').join('');
+$('cities').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{const c=CITIES[+b.dataset.i];load({name:c[0],lat:c[1],lon:c[2]});openSheet(null)}));
+function nearestName(lat,lon){let best=null,bd=1e9;for(const c of CITIES){const d=hav(lat,lon,c[1],c[2]);if(d<bd){bd=d;best=c}}return bd<15?best[0]:bd<60?(lang==='en'?'near '+(EN[best[0]]||best[0]):'قرب '+best[0]):(lat.toFixed(2)+', '+lon.toFixed(2))}
+$('geo').addEventListener('click',()=>{const m=$('locMsg');m.hidden=true;if(!navigator.geolocation){m.textContent='جهازك لا يتيح تحديد الموقع.';m.hidden=false;return}
+  navigator.geolocation.getCurrentPosition(p=>{const la=p.coords.latitude,lo=p.coords.longitude;load({name:nearestName(la,lo),lat:la,lon:lo});openSheet(null)},
+    e=>{m.textContent=e.code===1?'لم يُسمح بالوصول إلى موقعك. اختر مدينة من القائمة.':'تعذّر تحديد موقعك. اختر مدينة من القائمة.';m.hidden=false},{timeout:12000,maximumAge:600000})});
+async function search(){const q=$('q').value.trim(),m=$('locMsg');if(!q)return;m.hidden=true;
+  try{const j=await getJSON('https://geocoding-api.open-meteo.com/v1/search?count=1&language=ar&format=json&name='+encodeURIComponent(q),10000);if(!j.results||!j.results.length)throw 0;const r=j.results[0];load({name:r.name,lat:r.latitude,lon:r.longitude});openSheet(null)}
+  catch(e){m.textContent='لم أجد «'+q+'». جرّب اسمًا آخر أو اختر من القائمة.';m.hidden=false}}
+$('qGo').addEventListener('click',search);$('q').addEventListener('keydown',e=>{if(e.key==='Enter')search()});
+addEventListener('keydown',e=>{if(e.key==='Escape')openSheet(null);if(e.key===' '&&document.activeElement===document.body){e.preventDefault();if(!recording)toggle()}});
+
+/* ================= start: a shared live link, the last place, or Sohar ================= */
+const qp=new URLSearchParams(location.search);
+if(qp.get('l')&&['om','msa','en'].includes(qp.get('l')))lang=qp.get('l');else if(store.get('bc.lang'))lang=store.get('bc.lang');
+$('langSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===lang?'true':'false'));
+let start={name:'صحار',lat:24.347,lon:56.709};
+if(qp.get('lat')&&qp.get('lon'))start={name:qp.get('n')||'موقع مشترك',lat:+qp.get('lat'),lon:+qp.get('lon')};else{try{const s=JSON.parse(store.get('bc.place')||'null');if(s&&s.lat)start=s}catch(e){}}
+const f0=innerWidth<760?'9:16':'16:9';$('fmtSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===f0?'true':'false'));setFormat(f0);fillVoices();requestAnimationFrame(loop);load(start);
+})();
+</script>
+
+<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{})</script>
+</body></html>

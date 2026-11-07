@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<!-- i18n --><script>try{if(localStorage.getItem("lang")==="en")document.write('<script src="i18n/nafaf-i18n.js"><\/script>')}catch(e){}</script><!-- /i18n --><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#05080F">
+<title>مدرب نفاف البيئي</title>
+<style>
+/* Layout: an animated athlete in today's air fills the screen; the readings float in one glass column; the rail on the right opens the athlete and session sheets; a 48-hour strip along the bottom shows when the air is kindest. */
+:root{
+  --bg:#05080F;--glass:rgba(9,15,27,.86);--line:rgba(226,234,243,.10);
+  --fg:#E8EEF5;--muted:#93A3B7;--brass:#E3A94B;--teal:#5CC9B0;--sky:#7FB8FF;
+  --ok:#6FD39B;--warn:#F2B84B;--bad:#F06B5B;--ext:#C2457A;
+  --f:system-ui,-apple-system,"Segoe UI",Tahoma,"Geeza Pro","Noto Sans Arabic",Arial,sans-serif;
+  --gl:max(16px,env(safe-area-inset-left,0px));--gr:max(16px,env(safe-area-inset-right,0px));
+  --gt:max(12px,env(safe-area-inset-top,0px));--gb:max(12px,env(safe-area-inset-bottom,0px));
+  --rail:66px;--strip:96px;color-scheme:dark}
+html,body{height:100%;overflow:hidden;margin:0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);font-size:14px;line-height:1.5;direction:rtl;padding-left:var(--gl);padding-right:var(--gr);padding-block:0;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.glass{background:var(--glass);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+.top{position:fixed;z-index:4;top:var(--gt);left:var(--gl);display:flex;flex-direction:column;gap:6px;max-width:calc(100% - var(--gl) - var(--gr) - var(--rail) - 16px)}
+.name{font-size:13px;font-weight:800;display:flex;gap:8px;align-items:center}
+.name small{font-size:9.5px;letter-spacing:.2em;color:var(--brass);direction:ltr;font-weight:600}
+.where{font-size:12.5px;color:var(--muted)}
+.read{position:fixed;z-index:3;top:calc(var(--gt) + 56px);left:var(--gl);width:300px;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:12px;max-height:calc(100% - var(--gt) - var(--gb) - var(--strip) - 80px);overflow:auto}
+.verdict{display:flex;gap:10px;align-items:center}
+.verdict i{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 0 4px rgba(255,255,255,.06)}
+.verdict b{font-size:16px;text-wrap:balance}
+.pace{display:flex;align-items:baseline;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.pace small{color:var(--muted);font-size:11.5px;display:block}
+.pace b{font-size:34px;font-weight:800;line-height:1}
+.pace b small{display:inline;font-size:13px;color:var(--muted);font-weight:600}
+.pace em{font-style:normal;font-size:12px;color:var(--warn)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv div{background:rgba(255,255,255,.04);border-radius:12px;padding:8px 10px}
+.kv small{display:block;font-size:10.5px;color:var(--muted)}
+.kv b{font-size:17px}
+.kv span{font-size:10.5px;color:var(--muted)}
+.gauge{display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--muted)}
+.gauge .bar{height:8px;border-radius:4px;background:linear-gradient(to left,var(--ok) 0%,var(--ok) 35%,var(--warn) 58%,var(--bad) 72%,var(--ext) 100%);position:relative}
+.gauge .bar i{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.4);transition:right .4s}
+.gauge .row{display:flex;justify-content:space-between}
+.rail{position:fixed;z-index:6;right:var(--gr);top:50%;transform:translateY(-50%);width:var(--rail);border-radius:18px;padding:6px;display:flex;flex-direction:column;gap:2px}
+.rail button{border:0;background:transparent;border-radius:12px;padding:7px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:10.5px;font-weight:700}
+.rail button svg{width:21px;height:21px}
+.rail button:hover{color:var(--fg);background:rgba(255,255,255,.05)}
+.rail button[aria-pressed="true"]{background:rgba(227,169,75,.16);color:var(--brass)}
+.sheet{position:fixed;z-index:5;top:var(--gt);right:calc(var(--gr) + var(--rail) + 10px);bottom:calc(var(--gb) + var(--strip) + 12px);width:350px;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;transition:opacity .22s,transform .22s}
+.sheet.off{opacity:0;transform:translateX(16px);pointer-events:none;visibility:hidden}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px 14px;border-bottom:1px solid var(--line)}
+.sh b{font-size:14px}
+.x{border:0;background:rgba(255,255,255,.06);border-radius:9px;width:30px;height:30px;display:grid;place-items:center;color:var(--muted)}
+.sb{overflow-y:auto;padding:12px 14px 14px;display:flex;flex-direction:column;gap:12px;min-height:0;flex:1}
+.lbl{font-size:11.5px;color:var(--muted)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 12px;font-size:12.5px;color:var(--muted)}
+.seg button[aria-pressed="true"]{border-color:var(--brass);color:var(--fg);background:rgba(227,169,75,.14)}
+.rng{display:flex;flex-direction:column;gap:2px;font-size:12.5px}
+.rng div{display:flex;justify-content:space-between}
+.rng output{color:var(--brass);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--brass)}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px}
+.sw input{appearance:none;-webkit-appearance:none;width:38px;height:22px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;cursor:pointer;flex:none}
+.sw input::after{content:"";position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.sw input:checked{background:var(--teal)}.sw input:checked::after{transform:translateX(-16px)}
+.btn{border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:12px;padding:9px 12px;font-weight:700;font-size:13px}
+.btn.pri{background:var(--brass);color:#1a1206;border-color:transparent}
+.cities{display:flex;flex-wrap:wrap;gap:6px}
+.cities button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:5px 11px;font-size:12.5px;color:var(--muted)}
+.plan{display:flex;flex-direction:column;gap:8px}
+.step{display:grid;grid-template-columns:62px 1fr;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.04);font-size:12.5px}
+.step b{color:var(--brass)}
+.note{font-size:11.5px;color:var(--muted);margin:0;line-height:1.7}
+.msg{font-size:12.5px;color:var(--warn);margin:0}
+.strip{position:fixed;z-index:4;left:var(--gl);right:calc(var(--gr) + var(--rail) + 10px);bottom:var(--gb);height:var(--strip);border-radius:16px;padding:6px 10px 4px}
+.strip canvas{width:100%;height:100%;display:block;cursor:pointer;touch-action:none}
+.center{position:fixed;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:16px;padding:14px 18px;max-width:min(460px,calc(100% - 40px));display:flex;flex-direction:column;gap:10px;font-size:13.5px}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--brass);animation:sp 1s linear infinite;display:inline-block;vertical-align:middle;margin-inline-end:8px}
+@keyframes sp{to{transform:rotate(1turn)}}
+@media (max-width:760px){
+  :root{--rail:56px;--strip:84px}
+  .rail button{font-size:9.5px;padding:6px 0 5px}.rail button svg{width:19px;height:19px}
+  .read{top:auto;bottom:calc(var(--gb) + var(--strip) + 10px);right:calc(var(--gr) + var(--rail) + 8px);width:auto;max-height:46%;padding:12px;gap:10px}
+  .pace b{font-size:28px}
+  .sheet{top:auto;left:var(--gl);right:calc(var(--gr) + var(--rail) + 8px);width:auto;max-height:66%;height:auto}
+  .sheet.off{transform:translateY(16px)}
+  .strip{right:calc(var(--gr) + var(--rail) + 8px)}
+}
+@media (prefers-reduced-motion:reduce){.sheet{transition:none}.spin{animation:none}}
+</style>
+</head><body>
+
+
+<canvas id="cv" aria-label="رياضي يتحرك في جو موقعك الحالي"></canvas>
+<div class="top"><div class="name"><a href="./" style="color:inherit;text-decoration:none;border:1px solid rgba(226,234,243,.2);border-radius:8px;padding:1px 7px;font-weight:600">→ نفاف</a>مدرب نفاف البيئي<small>NAFAF · BIO-WEATHER COACH</small></div><div class="where" id="where"></div></div>
+
+<aside class="read glass" id="read" aria-live="polite">
+  <div class="verdict"><i id="vDot"></i><b id="vText">—</b></div>
+  <div class="pace"><div><small id="paceL">الإيقاع المقترح</small><b id="paceV">—</b></div><div style="text-align:left"><small>هدفك</small><span class="num" id="paceT">—</span><br><em id="paceD"></em></div></div>
+  <div class="kv">
+    <div><small>العرق</small><b class="num" id="sweat">—</b><span> لتر/ساعة</span></div>
+    <div><small>الفقد في الجلسة</small><b class="num" id="loss">—</b><span id="lossP"></span></div>
+    <div><small>الصوديوم المفقود</small><b class="num" id="na">—</b><span> ملغ</span></div>
+    <div><small>اشرب</small><b class="num" id="drink">—</b><span> مل/15 د</span></div>
+  </div>
+  <div class="gauge"><div class="row"><span>قدرة الجسم على التبريد</span><span id="gT"></span></div><div class="bar"><i id="gI"></i></div><div class="row"><span>يتبرد براحة</span><span>لا يلحق</span></div></div>
+  <div class="kv">
+    <div><small>المحسوسة</small><b class="num" id="at">—</b></div>
+    <div><small>نقطة الندى</small><b class="num" id="td">—</b></div>
+    <div><small>WBGT</small><b class="num" id="wbgt">—</b><span id="flag"></span></div>
+    <div><small>الريح</small><b class="num" id="wind">—</b><span> كم/س</span></div>
+  </div>
+</aside>
+
+<nav class="rail glass" aria-label="أدوات">
+  <button data-s="sess" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="14" cy="4.5" r="2"/><path d="M8 21l3-6 3 2v5M6 12l3-4 5 1 3 4M11 15l-2-4"/></svg>الجلسة</button>
+  <button data-s="me" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>الرياضي</button>
+  <button data-s="plan" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>الخطة</button>
+  <button data-s="loc" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>الموقع</button>
+  <button data-s="how" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>الحساب</button>
+</nav>
+
+<section class="sheet glass off" id="s-sess" aria-label="الجلسة">
+  <div class="sh"><b>الجلسة</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <div class="seg" id="actSeg"><button data-a="run" aria-pressed="true">جري</button><button data-a="walk" aria-pressed="false">مشي</button><button data-a="bike" aria-pressed="false">دراجة</button></div>
+    <div class="rng"><div><label for="tgt" id="tgtL">الإيقاع المستهدف</label><output id="tgtO" class="num"></output></div><input type="range" id="tgt"></div>
+    <div class="rng"><div><label for="dur">المدة</label><output id="durO" class="num"></output></div><input type="range" id="dur" min="15" max="240" step="5" value="60"></div>
+    <div class="rng"><div><label for="grade">الميل</label><output id="gradeO" class="num"></output></div><input type="range" id="grade" min="-6" max="12" step="1" value="0"></div>
+    <div class="lbl">مكان التمرين</div>
+    <div class="seg" id="sunSeg"><button data-u="sun" aria-pressed="true">تحت الشمس</button><button data-u="shade" aria-pressed="false">ظل أو ليل</button></div>
+    <div class="rng"><div><label for="hour">وقت البدء</label><output id="hourO" class="num"></output></div><input type="range" id="hour" min="0" max="47" step="1" value="0"></div>
+    <p class="note">أو اضغط أي ساعة في الشريط السفلي.</p>
+  </div>
+</section>
+<section class="sheet glass off" id="s-me" aria-label="الرياضي">
+  <div class="sh"><b>الرياضي</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <div class="rng"><div><label for="mass">الوزن</label><output id="massO" class="num"></output></div><input type="range" id="mass" min="40" max="130" step="1" value="72"></div>
+    <div class="rng"><div><label for="ht">الطول</label><output id="htO" class="num"></output></div><input type="range" id="ht" min="140" max="205" step="1" value="172"></div>
+    <div class="lbl">ملوحة العرق</div>
+    <div class="seg" id="naSeg"><button data-n="25" aria-pressed="false">خفيفة</button><button data-n="45" aria-pressed="true">متوسطة</button><button data-n="70" aria-pressed="false">عالية</button></div>
+    <p class="note">إذا لاحظت بقعًا بيضاء مالحة على ملابسك بعد التمرين، فعرقك غالبًا عالي الملوحة.</p>
+    <div class="lbl">الملابس</div>
+    <div class="seg" id="clSeg"><button data-c="0.92" aria-pressed="true">خفيفة رياضية</button><button data-c="0.75" aria-pressed="false">عادية أو طويلة</button></div>
+    <label class="sw" for="accl">متأقلم مع الحر (تتمرن فيه أسبوعين فأكثر)<input id="accl" type="checkbox"></label>
+  </div>
+</section>
+<section class="sheet glass off" id="s-plan" aria-label="الخطة">
+  <div class="sh"><b>خطة السوائل والأملاح</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb"><div class="plan" id="planBody"></div></div>
+</section>
+<section class="sheet glass off" id="s-loc" aria-label="الموقع">
+  <div class="sh"><b>الموقع</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <button class="btn pri" id="geo">موقعي الحالي</button>
+    <div class="cities" id="cities"></div>
+    <p class="msg" id="locMsg" hidden></p>
+  </div>
+</section>
+<section class="sheet glass off" id="s-how" aria-label="الحساب">
+  <div class="sh"><b>كيف يُحسب؟</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <p class="note"><b>الحرارة التي ينتجها جسمك:</b> من سرعتك وميل الطريق بمعادلات ACSM للجري والمشي. وللدراجة من القدرة اللازمة لمقاومة الهواء والطريق، بكفاءة عضلية 22٪.</p>
+    <p class="note"><b>ما يأخذه الجو منك أو يعطيك:</b> الحمل الحراري يتغير مع سرعة الهواء على جسمك (سرعتك وريح الموقع)، وتعزله الملابس (0.3 أو 0.6 كلو)، ويُضاف إشعاع الشمس من بيانات الإشعاع الحقيقية عندما تتمرن تحت الشمس.</p>
+    <p class="note"><b>قدرة العرق على التبريد:</b> تعتمد على الفرق بين ضغط بخار الماء على جلدك (35°) وضغطه في الهواء، وهذا يُحسب من نقطة الندى. كلما ارتفعت نقطة الندى ضعف التبريد بالعرق، ولهذا يرهقك جو الساحل الرطب أكثر من جو الداخل الحار والجاف.</p>
+    <p class="note"><b>معدل العرق:</b> كمية العرق اللازمة لتحقيق التبريد المطلوب حسب المعيار الدولي ISO 7933 (الإجهاد الحراري المتوقع). كفاءة التبخر تنخفض كلما اقترب التبريد المطلوب من الحد الممكن، فيسيل عرق أكثر مما يتبخر. الحد الأعلى 2 لتر في الساعة، و2.5 للمتأقلم مع الحر.</p>
+    <p class="note"><b>الإيقاع المقترح:</b> أسرع سرعة لا تتجاوز سرعتك المستهدفة، ويبقى فيها التبريد المطلوب تحت 85٪ من التبريد الممكن (95٪ للمتأقلم)، والعرق تحت 1.6 لتر/ساعة (2 للمتأقلم).</p>
+    <p class="note"><b>WBGT:</b> تحت الشمس يُحسب بتقريب مكتب الأرصاد الأسترالي، وفي الظل أو الليل من 0.7 × الحرارة الرطبة (معادلة Stull) + 0.3 × حرارة الهواء. التصنيف حسب رايات الكلية الأمريكية للطب الرياضي (ACSM).</p>
+    <p class="note"><b>الشرب:</b> الهدف أن يبقى فقد الوزن تحت 2٪، بحد أقصى نحو 1.2 لتر في الساعة. الصوديوم المقترح 460 إلى 690 ملغ لكل لتر، حسب توصيات ACSM لعام 2007.</p>
+    <p class="note">هذه تقديرات للأشخاص الأصحاء، وتختلف بين الأفراد بنحو ±25٪. الطريقة الأدق: زِن نفسك قبل التمرين وبعده بلا ملابس، فكل كيلو تفقده يساوي لترًا من العرق تقريبًا. إذا كانت عندك حالة صحية فاستشر طبيبك.</p>
+  </div>
+</section>
+
+<div class="strip glass"><canvas id="strip" aria-label="48 ساعة: متى يكون الجو ألطف للتمرين"></canvas></div>
+<div class="center glass" id="center" hidden></div>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(x,a,b)=>x<a?a:x>b?b:x,lerp=(a,b,t)=>a+(b-a)*t;
+const FONT=getComputedStyle(document.body).fontFamily;
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const CITIES=[['صحار',24.347,56.709],['مسقط',23.588,58.408],['صلالة',17.019,54.089],['نزوى',22.933,57.531],['صور',22.567,59.529],['عبري',23.226,56.516],['البريمي',24.250,55.793],['الرستاق',23.390,57.425],['جبل شمس',23.237,57.263],['الجبل الأخضر',23.074,57.668],['دبي',25.204,55.270],['أبوظبي',24.453,54.377],['العين',24.207,55.744],['الدوحة',25.285,51.531]];
+const hav=(a,b,c,d)=>{const r=Math.PI/180,s=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2;return 12742*Math.asin(Math.sqrt(s))};
+
+/* ================= state ================= */
+const S={act:'run',tgt:{run:330,walk:600,bike:28},dur:60,grade:0,sun:true,hour:0,mass:72,ht:172,na:45,cl:.92,accl:false};
+try{Object.assign(S,JSON.parse(store.get('coach.s')||'{}'))}catch(e){}
+let place=null,WX=null,R=null;
+
+/* ================= physiology ================= */
+const es=T=>.6112*Math.exp(17.67*T/(T+243.5));            // kPa
+const BSA=()=>.007184*Math.pow(S.mass,.425)*Math.pow(S.ht,.725);
+function speedOf(act,tgt){return act==='bike'?tgt/3.6:1000/tgt}                 // m/s; run/walk target is seconds per km
+function metabolic(act,v,g){   // returns [metabolic W, external work W]
+  if(act==='bike'){const m=S.mass+9,P=Math.max(0,.005*m*9.81*v+.5*1.2*.35*v*v*v+m*9.81*g*v);return[P/.22+1.2*S.mass,P]}
+  const vm=v*60,vo2=act==='run'?.2*vm+.9*vm*Math.max(g,-.05)+3.5:.1*vm+1.8*vm*Math.max(g,-.05)+3.5;   // ACSM, ml/kg/min
+  return[vo2*S.mass/1000*348,Math.max(0,S.mass*9.81*g*v)]}
+function heat(w,act,v){   // one hour of weather → heat balance at speed v
+  const A=BSA(),g=S.grade/100,[M,Wk]=metabolic(act,v,g),H=M-Wk;
+  const wind=w.ws/3.6*.7,vair=Math.sqrt(v*v+wind*wind),hc=8.3*Math.sqrt(Math.max(vair,.2)),Icl=S.cl>.85?.0465:.093,h=1/(1/(hc+4.7)+Icl),Tsk=act==='walk'?34:35;   // clothing insulation 0.3 or 0.6 clo
+  const dry=h*(Tsk-w.T)*A,sun=S.sun&&w.day?.7*.25*A*(w.sw||0):0;
+  const Ereq=Math.max(0,H-dry+sun),Emax=16.5*hc*Math.max(.05,5.62-es(w.Td))*A*S.cl;
+  const wr=Ereq/Emax,eff=wr<=1?1-wr*wr/2:.5;let sw=(wr<=1?Ereq:Emax)/eff*3.6/2430;sw=clamp(sw,.05,S.accl?2.5:2);   // ISO 7933 required sweat rate, L/h
+  return{M,H,Ereq,Emax,ratio:Ereq/Emax,sweat:sw}}
+function twb(T,RH){return T*Math.atan(.151977*Math.sqrt(RH+8.313659))+Math.atan(T+RH)-Math.atan(RH-1.676331)+.00391838*Math.pow(RH,1.5)*Math.atan(.023101*RH)-4.686035}   // Stull 2011
+const wbgtOf=w=>S.sun&&w.day&&(w.sw||0)>150?.567*w.T+.393*es(w.Td)*10+3.94:.7*twb(w.T,w.RH)+.3*w.T;    // sun: BoM approximation; shade or night: 0.7 wet bulb + 0.3 air
+const FLAGS=[[18,'منخفض','var(--ok)'],[23,'متوسط','var(--warn)'],[28,'مرتفع','var(--bad)'],[99,'شديد: أجّل','var(--ext)']];
+const flagOf=v=>FLAGS.find(f=>v<f[0]);
+function hoursOf(i0){const n=Math.max(1,Math.ceil(S.dur/60));const L=[];for(let k=0;k<n;k++){const w=WX.h[Math.min(WX.h.length-1,i0+k)];if(w)L.push(w)}return L}
+function avgW(L){const a={};for(const k of['T','AT','Td','RH','ws','sw','uv'])a[k]=L.reduce((s,w)=>s+(w[k]||0),0)/L.length;a.day=L.some(w=>w.day)?1:0;a.wd=L[0].wd;return a}
+function assess(i0){const act=S.act,tgt=S.tgt[act],vT=speedOf(act,tgt),w=avgW(hoursOf(i0));
+  const lim=S.accl?.95:.85,swLim=S.accl?2:1.6,ok=v=>{const r=heat(w,act,v);return r.ratio<=lim&&r.sweat<=swLim};
+  let v=vT,limited=false;
+  if(!ok(vT)){limited=true;let lo=vT*.35,hi=vT;if(!ok(lo))v=null;else{for(let k=0;k<30;k++){const m=(lo+hi)/2;ok(m)?lo=m:hi=m}v=lo}}
+  const at=heat(w,act,v||vT*.35),tg=heat(w,act,vT);
+  const loss=at.sweat*S.dur/60,pct=loss/S.mass*100,na=loss*S.na*23;
+  const keep=.015*S.mass,need=Math.max(0,loss-keep),rate=Math.min(300,need/(S.dur/15)*1000);
+  return{w,v,vT,limited,at,tg,loss,pct,na,need,rate,capped:need/(S.dur/15)*1000>300,wbgt:wbgtOf(w)}}
+const fmtPace=v=>{if(S.act==='bike')return(v*3.6).toFixed(1);const s=Math.round(1000/v);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+const unit=()=>S.act==='bike'?'كم/س':'د/كم';
+
+/* ================= data ================= */
+async function getJSON(u,ms=20000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(u,{signal:c.signal});if(!r.ok)throw 0;return await r.json()}finally{clearTimeout(t)}}
+async function load(p){place=p;store.set('coach.place',JSON.stringify(p));$('where').textContent=p.name+' · أجلب الجو…';
+  const c=$('center');c.hidden=false;c.innerHTML='<span><span class="spin"></span>أجلب حرارة الساعات القادمة ونقطة الندى والريح والإشعاع…</span>';
+  try{const j=await getJSON('https://api.open-meteo.com/v1/forecast?latitude='+p.lat.toFixed(3)+'&longitude='+p.lon.toFixed(3)+'&hourly=temperature_2m,apparent_temperature,dew_point_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,shortwave_radiation,uv_index,is_day&timezone=auto&forecast_days=3');
+    const H=j.hourly,now=Date.now();let i0=0;const t=H.time.map(s=>new Date(s+(j.utc_offset_seconds!=null?'':'')).getTime());
+    // the API gives local wall time; find the current hour by offset
+    const off=(j.utc_offset_seconds||0)*1000,nowLocal=now+off+new Date().getTimezoneOffset()*60000;
+    for(let i=0;i<t.length;i++)if(t[i]<=nowLocal)i0=i;
+    WX={h:[]};for(let i=i0;i<Math.min(H.time.length,i0+48);i++)WX.h.push({time:H.time[i],T:H.temperature_2m[i],AT:H.apparent_temperature[i],Td:H.dew_point_2m[i],RH:H.relative_humidity_2m[i],ws:H.wind_speed_10m[i],wd:H.wind_direction_10m[i],sw:H.shortwave_radiation[i],uv:H.uv_index[i],day:H.is_day[i]});
+    c.hidden=true;S.hour=0;$('hour').value=0;$('where').textContent=p.name+' · Open-Meteo';update()}
+  catch(e){const sb=/claude/i.test(location.hostname);c.innerHTML=sb?'<b>هذه المعاينة داخل Claude معزولة عن الإنترنت</b><span>افتح الملف coach.html في متصفحك أو على nafaf.online ليعمل بجو موقعك الحقيقي.</span>':'<b>تعذّر جلب الجو</b><span>تأكد من الاتصال ثم أعد المحاولة.</span><button class="btn pri" id="retry">أعد المحاولة</button>';const r=$('retry');if(r)r.onclick=()=>load(place)}}
+
+/* ================= readout ================= */
+function hLabel(i){const s=WX.h[i].time,d=new Date(s);const today=new Date(WX.h[0].time).getDate();const dd=d.getDate()-today;return(dd===0?'اليوم ':dd===1?'غدًا ':'بعد غد ')+s.slice(11,16)}
+function update(){if(!WX)return;store.set('coach.s',JSON.stringify(S));R=assess(S.hour);const r=R,w=r.w,f=flagOf(r.wbgt);
+  const bad=!r.v||r.wbgt>=28,mid=r.limited||r.wbgt>=23;
+  $('vDot').style.background=bad?'var(--ext)':mid?'var(--warn)':'var(--ok)';
+  $('vText').textContent=!r.v?'الجو أقوى من قدرة جسمك على التبريد. اختر وقتًا آخر أو تمرّن داخليًا.':r.wbgt>=28?'خطر حراري: الأفضل تأجيل التمرين أو تخفيفه جدًا.':r.limited?'خفّف الإيقاع ليبقى جسمك قادرًا على التبريد.':'الجو مناسب لإيقاعك المستهدف.';
+  $('paceL').textContent=S.act==='bike'?'السرعة المقترحة':'الإيقاع المقترح';
+  $('paceV').innerHTML=r.v?'<span class="num">'+fmtPace(r.v)+'</span> <small>'+unit()+'</small>':'—';$('paceT').innerHTML='<span class="num">'+fmtPace(r.vT)+'</span> '+unit();
+  $('paceD').textContent=!r.v?'':r.limited?(S.act==='bike'?'أبطأ بـ '+((r.vT-r.v)*3.6).toFixed(1)+' كم/س':'أبطأ بـ '+Math.round(1000/r.v-1000/r.vT)+' ث/كم'):'';
+  $('sweat').textContent=r.at.sweat.toFixed(2);$('loss').textContent=r.loss.toFixed(1)+' ل';$('lossP').textContent=' · '+r.pct.toFixed(1)+'٪ من وزنك';
+  $('na').textContent=Math.round(r.na/10)*10;$('drink').textContent=Math.round(r.rate/10)*10;
+  const ratio=r.at.ratio;$('gI').style.right=clamp(ratio/1.4*100,1,99)+'%';$('gT').textContent=Math.round(ratio*100)+'٪ من قدرة التبريد';
+  $('at').textContent=Math.round(w.AT)+'°';$('td').textContent=Math.round(w.Td)+'°';$('wbgt').textContent=r.wbgt.toFixed(1)+'°';$('flag').textContent=' '+f[1];$('flag').style.color=f[2];$('wind').textContent=Math.round(w.ws);
+  $('hourO').textContent=hLabel(S.hour);renderPlan();drawStrip()}
+function renderPlan(){const r=R,steps=[];const pre=Math.round(S.mass*6/50)*50;
+  steps.push(['قبل 4 س','اشرب نحو '+pre+' مل (5 إلى 7 مل لكل كيلو من وزنك)، وإذا لم تتبول أو كان بولك داكنًا فأضف كوبًا بعد ساعتين.']);
+  steps.push(['أثناء',r.need<.15?'لا تحتاج شربًا أثناء الجلسة. اشرب حسب العطش.':'اشرب '+Math.round(r.rate/10)*10+' مل كل 15 دقيقة، بمجموع '+(r.need).toFixed(1)+' لتر تقريبًا.'+(r.capped?' جسمك سيفقد أكثر مما يمكنه امتصاصه (نحو 1.2 لتر/ساعة)، فقصّر الجلسة أو خفّف الإيقاع.':'')]);
+  steps.push(['الأملاح',S.dur>60||r.na>1200?'اجعل شرابك بالكهارل: 460 إلى 690 ملغ صوديوم لكل لتر. ستفقد نحو '+Math.round(r.na/10)*10+' ملغ صوديوم.':'الماء يكفي لهذه الجلسة. ستفقد نحو '+Math.round(r.na/10)*10+' ملغ صوديوم، وتعوّضها وجبتك القادمة.']);
+  steps.push(['بعد','اشرب 1.25 إلى 1.5 لتر لكل كيلو نقص في وزنك خلال الساعات التالية، مع وجبة فيها ملح.']);
+  if(R.wbgt>=23)steps.push(['انتبه','علامات الإجهاد الحراري: صداع، دوار، قشعريرة رغم الحر، توقف التعرق، تشوش. إذا ظهرت توقف فورًا، وتبرّد في الظل بماء بارد، واطلب المساعدة.']);
+  $('planBody').innerHTML=steps.map(s=>'<div class="step"><b>'+s[0]+'</b><span>'+s[1]+'</span></div>').join('')+'<p class="note">أدق طريقة لمعرفة عرقك: زِن نفسك قبل التمرين وبعده بلا ملابس. كل كيلو تفقده يساوي لترًا من العرق تقريبًا، وأضف إليه ما شربت أثناء الجلسة.</p>'}
+
+/* ================= the athlete, animated ================= */
+const cv=$('cv'),cx=cv.getContext('2d');let W=0,H=0,DPR=1;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;sresize()}
+addEventListener('resize',resize);
+const drops=[];let ph=0,last=performance.now();
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;cx.setTransform(DPR,0,0,DPR,0,0);
+  const w=R?R.w:{T:30,Td:15,day:1,sw:500},hot=clamp(((R?R.wbgt:20)-14)/18,0,1),day=w.day;
+  const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,day?lerp3('#123A63','#5B3420',hot):'#060B18');g.addColorStop(.7,day?lerp3('#3E7FB0','#C2703B',hot):'#0E1B33');g.addColorStop(1,day?lerp3('#2B4A3A','#5A3A22',hot):'#0A1220');cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  // heat shimmer and humid haze from the real numbers
+  const hum=clamp((w.Td-10)/18,0,1);cx.fillStyle='rgba(220,230,240,'+(hum*.18)+')';cx.fillRect(0,H*.45,W,H*.55);
+  if(day){const sx=W*.72,sy=H*.18,rg=cx.createRadialGradient(sx,sy,0,sx,sy,H*.5);rg.addColorStop(0,'rgba(255,214,140,'+(.25+.35*clamp((w.sw||0)/900,0,1))+')');rg.addColorStop(1,'rgba(255,214,140,0)');cx.fillStyle=rg;cx.fillRect(0,0,W,H)}
+  else{cx.fillStyle='#fff';for(let k=0;k<60;k++){cx.globalAlpha=.25+.35*Math.sin(now/700+k);cx.fillRect((k*197%997)/997*W,(k*83%541)/541*H*.5,1.5,1.5)}cx.globalAlpha=1}
+  // the ground moving under the athlete
+  const gy=H*.74,v=R&&R.v?R.v:1.5;ph+=dt*v*(S.act==='walk'?1.2:S.act==='bike'?.5:1);
+  cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(0,gy,W,H-gy);cx.strokeStyle='rgba(255,255,255,.18)';cx.lineWidth=2;cx.setLineDash([24,30]);cx.lineDashOffset=ph*60;cx.beginPath();cx.moveTo(0,gy+24);cx.lineTo(W,gy+24);cx.stroke();cx.setLineDash([]);
+  const narrow=W<760,ax=narrow?W*.36:W*.62,s=Math.min(H,W)*(narrow?.2:.26);
+  // body heat glow: green when cooling keeps up, red when it can't
+  const ratio=R?clamp(R.at.ratio,0,1.4):.5,col=ratio<.6?'111,211,155':ratio<.85?'242,184,75':ratio<1?'240,107,91':'194,69,122';
+  const bg=cx.createRadialGradient(ax,gy-s*.55,s*.1,ax,gy-s*.55,s*.9);bg.addColorStop(0,'rgba('+col+',.38)');bg.addColorStop(1,'rgba('+col+',0)');cx.fillStyle=bg;cx.fillRect(ax-s,gy-s*1.6,s*2,s*1.6);
+  figure(ax,gy,s,ph,col);
+  // sweat: one drop per ~0.05 L/h
+  const rate=R?R.at.sweat:.5;if(Math.random()<dt*rate*14){drops.push({x:ax+(Math.random()-.5)*s*.25,y:gy-s*(.75+Math.random()*.25),vy:0,vx:-v*12-Math.random()*20,life:1})}
+  cx.fillStyle='rgba(160,210,255,.85)';for(const d of drops){d.vy+=500*dt;d.y+=d.vy*dt;d.x+=d.vx*dt;d.life-=dt*.8;cx.beginPath();cx.ellipse(d.x,d.y,2.2,3.4,0,0,7);cx.fill()}
+  for(let i=drops.length-1;i>=0;i--)if(drops[i].y>gy+8||drops[i].life<=0)drops.splice(i,1);
+  // wind streaks at the athlete's real relative airflow
+  const wv=R?R.w.ws:10;cx.strokeStyle='rgba(255,255,255,.12)';cx.lineWidth=1.2;for(let k=0;k<14;k++){const y=gy-s*1.4+k*s*.1,x=((k*157+now*.12*(1+wv/20+v))%(W+200))-100;cx.beginPath();cx.moveTo(W-x,y);cx.lineTo(W-x+30+wv,y);cx.stroke()}
+  requestAnimationFrame(frame)}
+function lerp3(a,b,t){const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),A=p(a),B=p(b);return'rgb('+A.map((v,i)=>Math.round(lerp(v,B[i],t))).join(',')+')'}
+function figure(x,gy,s,ph,col){const c=cx;c.strokeStyle='#F4F6FA';c.fillStyle='#F4F6FA';c.lineCap='round';c.lineJoin='round';c.lineWidth=s*.07;
+  if(S.act==='bike'){const r=s*.28,b1=[x-s*.42,gy-r],b2=[x+s*.42,gy-r];c.lineWidth=s*.035;for(const b of[b1,b2]){c.beginPath();c.arc(b[0],b[1],r,0,7);c.stroke();c.save();c.translate(b[0],b[1]);c.rotate(-ph*4);c.beginPath();c.moveTo(-r,0);c.lineTo(r,0);c.moveTo(0,-r);c.lineTo(0,r);c.globalAlpha=.4;c.stroke();c.restore()}
+    const crank=[x,gy-r*.95],seat=[x-s*.12,gy-s*.72],bar=[x+s*.3,gy-s*.78];c.beginPath();c.moveTo(b1[0],b1[1]);c.lineTo(crank[0],crank[1]);c.lineTo(seat[0],seat[1]);c.lineTo(bar[0],bar[1]);c.lineTo(b2[0],b2[1]);c.moveTo(crank[0],crank[1]);c.lineTo(bar[0]-s*.05,bar[1]+s*.05);c.stroke();
+    c.lineWidth=s*.07;const hip=[seat[0],seat[1]-s*.04],sh=[x+s*.18,gy-s*1.08],hd=[x+s*.3,gy-s*1.24];c.beginPath();c.moveTo(hip[0],hip[1]);c.lineTo(sh[0],sh[1]);c.lineTo(bar[0],bar[1]);c.stroke();c.beginPath();c.arc(hd[0],hd[1],s*.09,0,7);c.fill();
+    for(const o of[0,Math.PI]){const a=-ph*4+o,pd=[crank[0]+Math.cos(a)*s*.13,crank[1]+Math.sin(a)*s*.13],kn=[(hip[0]+pd[0])/2+s*.12,(hip[1]+pd[1])/2-s*.08];c.globalAlpha=o?.55:1;c.beginPath();c.moveTo(hip[0],hip[1]);c.lineTo(kn[0],kn[1]);c.lineTo(pd[0],pd[1]);c.stroke()}c.globalAlpha=1;return}
+  const run=S.act==='run',amp=run?.9:.5,cyc=ph*(run?4.2:3.4),bob=Math.abs(Math.sin(cyc))*s*(run?.05:.02);
+  const hip=[x,gy-s*.62-bob],sh=[x+s*(run?.08:.03),gy-s*1.08-bob],hd=[x+s*(run?.12:.05),gy-s*1.25-bob];
+  const leg=(o,al)=>{const a=Math.sin(cyc+o)*amp*.6,k=[hip[0]+Math.sin(a)*s*.3,hip[1]+Math.cos(a)*s*.3],bend=run?Math.max(0,-Math.cos(cyc+o))*1.2:.25,f=[k[0]+Math.sin(a-bend)*s*.32,k[1]+Math.cos(a-bend)*s*.32];c.globalAlpha=al;c.beginPath();c.moveTo(hip[0],hip[1]);c.lineTo(k[0],k[1]);c.lineTo(f[0],f[1]);c.stroke()};
+  const arm=(o,al)=>{const a=-Math.sin(cyc+o)*amp*.7,e=[sh[0]+Math.sin(a)*s*.22,sh[1]+Math.cos(a)*s*.22],hnd=[e[0]+Math.sin(a+(run?1.6:.3))*s*.2,e[1]+Math.cos(a+(run?1.6:.3))*s*.2*(run?-1:1)];c.globalAlpha=al;c.beginPath();c.moveTo(sh[0],sh[1]);c.lineTo(e[0],e[1]);c.lineTo(hnd[0],hnd[1]);c.stroke()};
+  leg(Math.PI,.5);arm(0,.5);c.globalAlpha=1;c.beginPath();c.moveTo(hip[0],hip[1]);c.lineTo(sh[0],sh[1]);c.stroke();c.beginPath();c.arc(hd[0],hd[1],s*.1,0,7);c.fill();leg(0,1);arm(Math.PI,1);c.globalAlpha=1}
+
+/* ================= 48-hour strip ================= */
+const sc=$('strip'),sx=sc.getContext('2d');let SW=0,SH=0;
+function sresize(){const r=sc.getBoundingClientRect();SW=r.width;SH=r.height;sc.width=Math.max(1,SW*DPR);sc.height=Math.max(1,SH*DPR);drawStrip()}
+const sX=i=>SW-8-(SW-16)*(i+.5)/(WX?WX.h.length:48);
+function drawStrip(){const c=sx;c.setTransform(DPR,0,0,DPR,0,0);c.clearRect(0,0,SW,SH);if(!WX)return;const n=WX.h.length,bw=(SW-16)/n,Y0=SH-18,Ht=SH-30;
+  let best=-1,bs=1e9;const sc=[];
+  for(let i=0;i<n;i++){const a=assess(i),val=(a.v?0:2)+a.at.ratio+(a.wbgt>=28?1:0)+(a.limited&&a.v?(a.vT-a.v)/a.vT*2:0);sc.push([a,val]);if(i+Math.ceil(S.dur/60)<=n&&val<bs){bs=val;best=i}}
+  for(let i=0;i<n;i++){const[a]=sc[i],h=clamp(a.at.ratio/1.3,.06,1)*Ht,f=flagOf(a.wbgt);c.fillStyle=getComputedStyle(document.documentElement).getPropertyValue(f[2].slice(4,-1)).trim()||'#888';c.globalAlpha=i===S.hour?1:.75;c.fillRect(sX(i)-bw/2+1,Y0-h,Math.max(1,bw-2),h)}
+  c.globalAlpha=1;
+  // night shading
+  for(let i=0;i<n;i++)if(!WX.h[i].day){c.fillStyle='rgba(0,0,0,.25)';c.fillRect(sX(i)-bw/2,4,bw,Y0-4)}
+  c.font='10.5px '+FONT;c.fillStyle='#93A3B7';c.textAlign='center';for(let i=0;i<n;i+=Math.max(3,Math.ceil(n/(SW/48))))c.fillText(WX.h[i].time.slice(11,13),sX(i),SH-4);
+  c.textAlign='left';c.direction='rtl';c.fillStyle='#E8EEF5';c.fillText('أخف وقت للتمرين: '+hLabel(best),8,12);
+  if(best>=0){c.strokeStyle='#6FD39B';c.lineWidth=2;c.strokeRect(sX(best)-bw/2,4,bw*Math.ceil(S.dur/60),Y0-2)}
+  c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.moveTo(sX(S.hour),16);c.lineTo(sX(S.hour),Y0+3);c.stroke()}
+function pickHour(e){if(!WX)return;const r=sc.getBoundingClientRect(),x=e.clientX-r.left,n=WX.h.length;S.hour=clamp(Math.round((SW-8-x)/((SW-16)/n)-.5),0,n-1);$('hour').value=S.hour;update()}
+let drag=false;sc.addEventListener('pointerdown',e=>{drag=true;sc.setPointerCapture(e.pointerId);pickHour(e)});sc.addEventListener('pointermove',e=>{if(drag)pickHour(e)});sc.addEventListener('pointerup',()=>drag=false);
+
+/* ================= controls ================= */
+let openS=null;
+function openSheet(n){openS=n;document.querySelectorAll('.sheet').forEach(s=>s.classList.toggle('off',s.id!=='s-'+n));document.querySelectorAll('.rail [data-s]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===n?'true':'false'))}
+document.querySelectorAll('.rail [data-s]').forEach(b=>b.addEventListener('click',()=>openSheet(openS===b.dataset.s?null:b.dataset.s)));
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>openSheet(null)));
+function seg(id,attr,val,fn){$(id).querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset[attr])===String(val)?'true':'false');b.addEventListener('click',()=>{$(id).querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));fn(b.dataset[attr]);update()})})}
+function tgtRange(){const t=$('tgt');if(S.act==='bike'){t.min=12;t.max=45;t.step=1;$('tgtL').textContent='السرعة المستهدفة'}else if(S.act==='run'){t.min=180;t.max=480;t.step=5;$('tgtL').textContent='الإيقاع المستهدف'}else{t.min=420;t.max=900;t.step=15;$('tgtL').textContent='إيقاع المشي'}t.value=S.tgt[S.act];outs()}
+function outs(){$('tgtO').textContent=S.act==='bike'?S.tgt.bike+' كم/س':fmtPace(speedOf(S.act,S.tgt[S.act]))+' د/كم';$('durO').textContent=S.dur+' دقيقة';$('gradeO').textContent=S.grade+'٪';$('massO').textContent=S.mass+' كغ';$('htO').textContent=S.ht+' سم'}
+seg('actSeg','a',S.act,v=>{S.act=v;tgtRange()});seg('sunSeg','u',S.sun?'sun':'shade',v=>{S.sun=v==='sun'});seg('naSeg','n',S.na,v=>{S.na=+v});seg('clSeg','c',S.cl,v=>{S.cl=+v});
+$('accl').checked=S.accl;$('accl').addEventListener('change',e=>{S.accl=e.target.checked;update()});
+$('tgt').addEventListener('input',e=>{S.tgt[S.act]=+e.target.value;outs();update()});
+for(const k of['dur','grade','mass','ht']){$(k).value=S[k];$(k).addEventListener('input',e=>{S[k]=+e.target.value;outs();update()})}
+$('hour').addEventListener('input',e=>{S.hour=+e.target.value;update()});
+$('cities').innerHTML=CITIES.map((c,i)=>'<button data-i="'+i+'">'+c[0]+'</button>').join('');
+$('cities').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{const c=CITIES[+b.dataset.i];load({name:c[0],lat:c[1],lon:c[2]});openSheet(null)}));
+$('geo').addEventListener('click',()=>{const m=$('locMsg');m.hidden=true;if(!navigator.geolocation){m.textContent='جهازك لا يتيح تحديد الموقع.';m.hidden=false;return}
+  navigator.geolocation.getCurrentPosition(p=>{const la=p.coords.latitude,lo=p.coords.longitude;let b=null,bd=1e9;for(const c of CITIES){const d=hav(la,lo,c[1],c[2]);if(d<bd){bd=d;b=c}}load({name:bd<15?b[0]:'قرب '+b[0],lat:la,lon:lo});openSheet(null)},
+    e=>{m.textContent=e.code===1?'لم يُسمح بالوصول إلى موقعك. اختر مدينة.':'تعذّر تحديد موقعك. اختر مدينة.';m.hidden=false},{timeout:12000,maximumAge:600000})});
+addEventListener('keydown',e=>{if(e.key==='Escape')openSheet(null)});
+tgtRange();outs();resize();requestAnimationFrame(frame);
+let p0={name:'صحار',lat:24.347,lon:56.709};try{const s=JSON.parse(store.get('coach.place')||'null');if(s&&s.lat)p0=s}catch(e){}
+load(p0);
+})();
+</script>
+
+<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{})</script>
+</body></html>

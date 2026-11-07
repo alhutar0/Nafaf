@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<!-- i18n --><script>try{if(localStorage.getItem("lang")==="en")document.write('<script src="i18n/nafaf-i18n.js"><\/script>')}catch(e){}</script><!-- /i18n --><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06101C">
+<title>مخطط مسار نفاف</title>
+<style>
+/* Layout: the drawn map of Oman owns the whole screen; a floating rail of icon+word buttons on the right opens one small sheet at a time; a slim journey strip along the bottom scrubs the trip in time. Nothing sits on the map unless asked for. */
+:root{
+  --bg:#06101C;--glass:rgba(9,16,28,.84);--glass2:rgba(9,16,28,.92);--line:rgba(226,234,243,.10);
+  --fg:#E8EEF5;--muted:#93A3B7;--brass:#E3A94B;--teal:#5CC9B0;--sky:#7FB8FF;
+  --ok:#6FD39B;--warn:#F2B84B;--bad:#F06B5B;
+  --f:system-ui,-apple-system,"Segoe UI",Tahoma,"Geeza Pro","Noto Sans Arabic",Arial,sans-serif;
+  --gl:max(16px,env(safe-area-inset-left,0px));--gr:max(16px,env(safe-area-inset-right,0px));
+  --gt:max(12px,env(safe-area-inset-top,0px));--gb:max(12px,env(safe-area-inset-bottom,0px));
+  --rail:66px;--strip:84px;
+  color-scheme:dark}
+html,body{height:100%;overflow:hidden;margin:0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);font-size:14px;line-height:1.5;direction:rtl;padding-left:var(--gl);padding-right:var(--gr);padding-block:0;-webkit-tap-highlight-color:transparent}
+#map{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.glass{background:var(--glass);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+
+/* corner: name + one-line trip status */
+.top{position:fixed;z-index:4;top:var(--gt);left:var(--gl);display:flex;flex-direction:column;gap:6px;align-items:flex-start;max-width:calc(100% - var(--gl) - var(--gr) - var(--rail) - 12px);pointer-events:none}
+.top>*{pointer-events:auto}
+.name{font-size:13px;font-weight:800;letter-spacing:.01em;display:flex;gap:8px;align-items:center;opacity:.9}
+.name small{font-size:9.5px;letter-spacing:.2em;color:var(--brass);font-weight:600;direction:ltr}
+.pill{border-radius:999px;padding:6px 12px 6px 14px;display:flex;align-items:center;gap:8px;font-size:12.5px;border:1px solid var(--line);max-width:100%}
+.pill i{width:9px;height:9px;border-radius:50%;flex:none}
+.pill b{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill span{color:var(--muted);white-space:nowrap}
+.dpill{border-radius:999px;padding:3px 10px;font-size:11px;color:#ffd892;border:1px solid rgba(242,184,75,.4);background:rgba(242,184,75,.1)}
+.dnote{border-radius:12px;padding:8px 12px;font-size:12px;color:#ffe2b0;max-width:420px}
+
+/* floating rail */
+.rail{position:fixed;z-index:6;right:var(--gr);top:50%;transform:translateY(-50%);width:var(--rail);border-radius:18px;padding:6px;display:flex;flex-direction:column;gap:2px}
+.rail button{border:0;background:transparent;border-radius:12px;padding:7px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:10.5px;font-weight:700;transition:background .2s,color .2s}
+.rail button svg{width:21px;height:21px}
+.rail button:hover{color:var(--fg);background:rgba(255,255,255,.05)}
+.rail button[aria-pressed="true"]{background:rgba(227,169,75,.16);color:var(--brass)}
+.rail hr{border:0;border-top:1px solid var(--line);margin:3px 6px}
+.rail .dot{position:relative}
+.rail .dot::after{content:"";position:absolute;top:6px;left:12px;width:7px;height:7px;border-radius:50%;background:var(--sev,transparent)}
+
+/* sheets: one at a time, beside the rail */
+.sheet{position:fixed;z-index:5;top:var(--gt);right:calc(var(--gr) + var(--rail) + 10px);bottom:calc(var(--gb) + var(--strip) + 12px);width:360px;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;transition:opacity .22s,transform .22s}
+.sheet.off{opacity:0;transform:translateX(16px);pointer-events:none;visibility:hidden}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px 14px;border-bottom:1px solid var(--line)}
+.sh b{font-size:14px}
+.x{border:0;background:rgba(255,255,255,.06);border-radius:9px;width:30px;height:30px;display:grid;place-items:center;color:var(--muted)}
+.sb{overflow-y:auto;padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px;min-height:0;flex:1}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:rgba(255,255,255,.04);border-radius:12px;padding:4px}
+.modes button{border:0;background:transparent;border-radius:9px;padding:8px 4px;color:var(--muted);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px}
+.modes button svg{width:17px;height:17px}
+.modes button[aria-selected="true"]{background:var(--brass);color:#1a1206}
+.field{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center}
+.field i{width:11px;height:11px;border-radius:50%;justify-self:center}
+.field input{width:100%;min-width:0;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.ib{border:1px solid var(--line);background:transparent;border-radius:10px;width:36px;height:36px;display:grid;place-items:center;color:var(--muted)}
+.ib svg{width:16px;height:16px}
+.vias{display:flex;flex-wrap:wrap;gap:6px;font-size:12px}
+.vias span{background:rgba(255,255,255,.06);border-radius:999px;padding:3px 6px 3px 10px;display:flex;align-items:center;gap:6px}
+.vias button{border:0;background:transparent;color:var(--muted);padding:0 2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid2 label,.lbl{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:var(--muted);min-width:0}
+.grid2 input,.grid2 select{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;padding:7px 8px;min-width:0;width:100%}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px}
+.sw input{appearance:none;-webkit-appearance:none;width:38px;height:22px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;cursor:pointer;flex:none;transition:background .2s}
+.sw input::after{content:"";position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.sw input:checked{background:var(--teal)}
+.sw input:checked::after{transform:translateX(-16px)}
+.go{border:0;border-radius:12px;padding:11px;background:var(--brass);color:#1a1206;font-weight:800;font-size:14px}
+.go[disabled]{opacity:.55;cursor:progress}
+.hint{font-size:11.5px;color:var(--muted);margin:0}
+.msg{font-size:12px;color:var(--warn);margin:0}
+.sum{display:flex;flex-direction:column;gap:8px}
+.sum h3{margin:0;font-size:16px;display:flex;align-items:center;gap:8px;text-wrap:balance}
+.sum h3 i{width:10px;height:10px;border-radius:50%;flex:none}
+.sum p{margin:0;font-size:12.5px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.kv div{background:rgba(255,255,255,.04);border-radius:10px;padding:6px 4px;text-align:center}
+.kv small{display:block;font-size:10px;color:var(--muted);white-space:nowrap}
+.kv b{font-size:14px}
+.best{border-radius:12px;padding:10px 12px;font-size:12.5px;border:1px dashed rgba(92,201,176,.5);background:rgba(92,201,176,.08);display:flex;gap:10px;align-items:center;justify-content:space-between}
+.best button,.ai button{border:1px solid currentColor;background:transparent;border-radius:9px;padding:5px 10px;font-size:12px;flex:none}
+.best button{color:var(--teal)}
+.ai{display:flex;flex-direction:column;gap:8px}
+.ai p{margin:0;white-space:pre-wrap;line-height:1.8;font-size:13.5px}
+.ai button{color:var(--sky);align-self:flex-start}
+.pts{display:flex;flex-direction:column;gap:5px}
+.pt{display:grid;grid-template-columns:4px 50px 1fr;gap:10px;padding:8px 10px 8px 8px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid transparent;text-align:start;width:100%}
+.pt:hover,.pt.sel{border-color:var(--line);background:rgba(255,255,255,.07)}
+.pt .s{border-radius:4px}
+.pt .tm{display:flex;flex-direction:column;justify-content:center}
+.pt .tm b{font-size:14.5px}
+.pt .tm small{font-size:10.5px;color:var(--muted)}
+.pt .bd{display:flex;flex-direction:column;gap:4px;min-width:0}
+.pt .l1{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.c{font-size:11px;border-radius:999px;padding:1px 8px;background:rgba(255,255,255,.06);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.c svg{width:11px;height:11px}
+.c.w{background:rgba(242,184,75,.16);color:#ffd892}.c.b{background:rgba(240,107,91,.18);color:#ffb3a8}.c.g{background:rgba(111,211,155,.12);color:#b4efcc}
+.meter{height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;flex:1}
+.meter i{display:block;height:100%;border-radius:3px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 12px;font-size:12.5px;color:var(--muted)}
+.seg button[aria-pressed="true"]{border-color:var(--brass);color:var(--fg);background:rgba(227,169,75,.14)}
+.scale{height:8px;border-radius:4px}
+.scl{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted)}
+details{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
+details summary{cursor:pointer;color:var(--fg);font-size:12.5px}
+details p{margin:6px 0 0;line-height:1.7}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:16px 4px}
+
+/* things that float on the map only when needed */
+.tip{position:fixed;z-index:4;border-radius:14px;padding:8px 10px;font-size:12px;min-width:170px;max-width:240px;pointer-events:auto;transform:translate(-50%,calc(-100% - 16px))}
+.tip b{font-size:13.5px}
+.tip .r{display:flex;justify-content:space-between;gap:10px;color:var(--muted)}
+.tip .r span:last-child{color:var(--fg)}
+.ctx{position:fixed;z-index:7;border-radius:14px;padding:5px;display:flex;flex-direction:column;min-width:170px;background:var(--glass2)}
+.ctx button{border:0;background:transparent;text-align:start;padding:8px 10px;border-radius:9px;display:flex;align-items:center;gap:10px;font-size:13px}
+.ctx button:hover{background:rgba(255,255,255,.07)}
+.ctx i{width:10px;height:10px;border-radius:50%}
+.ctx small{color:var(--muted);font-size:10.5px;padding:2px 10px 4px;direction:ltr;text-align:right}
+.hud{position:fixed;z-index:4;top:var(--gt);left:50%;transform:translateX(-50%);border-radius:999px;padding:6px 14px;display:flex;gap:12px;align-items:center;font-size:12.5px;white-space:nowrap}
+.hud b{font-size:14px}
+.hud span{color:var(--muted)}
+.hud i{width:8px;height:8px;border-radius:50%}
+
+/* journey strip */
+.strip{position:fixed;z-index:4;left:var(--gl);right:calc(var(--gr) + var(--rail) + 10px);bottom:var(--gb);height:var(--strip);border-radius:16px;padding:6px 10px 4px;transition:transform .25s,opacity .25s}
+.strip.off{transform:translateY(calc(100% + 20px));opacity:0;pointer-events:none}
+.strip canvas{width:100%;height:100%;display:block;cursor:ew-resize;touch-action:none}
+.load{position:fixed;z-index:8;left:50%;bottom:calc(var(--gb) + var(--strip) + 20px);transform:translateX(-50%);border-radius:999px;padding:8px 16px;font-size:12.5px;display:flex;gap:10px;align-items:center}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--brass);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(1turn)}}
+
+@media (max-width:760px){
+  :root{--rail:56px;--strip:74px}
+  .rail button{font-size:9.5px;padding:6px 0 5px}.rail button svg{width:19px;height:19px}
+  .sheet{top:auto;left:var(--gl);right:calc(var(--gr) + var(--rail) + 8px);width:auto;max-height:64%;height:auto}
+  .sheet.off{transform:translateY(16px)}
+  .strip{right:calc(var(--gr) + var(--rail) + 8px)}
+  .kv{grid-template-columns:repeat(2,1fr)}
+  .hud{top:auto;bottom:calc(var(--gb) + var(--strip) + 10px);font-size:11.5px;gap:8px}
+}
+@media (prefers-reduced-motion:reduce){.sheet,.strip,.rail button{transition:none}.spin{animation:none}}
+</style>
+</head><body>
+
+
+<canvas id="map" aria-label="خريطة عُمان وعليها مسار الرحلة"></canvas>
+
+<div class="top">
+  <div class="name"><a href="./" style="color:inherit;text-decoration:none;border:1px solid rgba(226,234,243,.2);border-radius:8px;padding:1px 7px;font-weight:600">→ نفاف</a>مخطط مسار نفاف<small>NAFAF · ROUTE</small></div>
+  <button class="pill glass" id="pill" hidden><i id="pillDot"></i><b id="pillT"></b><span class="num" id="pillS"></span></button>
+  <div class="dnote glass" id="dnote" hidden></div>
+</div>
+
+<nav class="rail glass" aria-label="أدوات">
+  <button data-s="plan" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5"/></svg>رحلة</button>
+  <button data-s="pts" aria-pressed="false" class="dot" id="rPts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>النقاط</button>
+  <button data-s="brief" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>إحاطة</button>
+  <button data-s="layers" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"/></svg>طبقات</button>
+  <hr>
+  <button id="bPlay" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor" id="playIc"><path d="M8 5l11 7-11 7z"/></svg><span id="playL">تشغيل</span></button>
+  <button id="bFit" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>احتواء</button>
+  <button id="bStrip" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 17l5-6 4 3 5-7 4 5"/><path d="M3 21h18"/></svg>الشريط</button>
+</nav>
+
+<!-- plan -->
+<section class="sheet glass off" id="s-plan" aria-label="الرحلة">
+  <div class="sh"><b>الرحلة</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <div class="modes" role="tablist" aria-label="نوع الرحلة">
+      <button role="tab" data-m="road" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 16h14l-1.5-5.5A2 2 0 0 0 15.6 9H8.4a2 2 0 0 0-1.9 1.5zM5 16v3M19 16v3"/></svg>برية</button>
+      <button role="tab" data-m="hike" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 20l6-11 4 6 3-4 5 9z"/></svg>جبلية</button>
+      <button role="tab" data-m="sea" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 6 0M6 14l1-6h10l1 6M12 4v4"/></svg>بحرية</button>
+    </div>
+    <div class="field"><i style="background:var(--teal)"></i><input id="inA" list="places" placeholder="من أين؟" autocomplete="off" aria-label="نقطة الانطلاق"><button class="ib" id="swap" aria-label="بدّل الانطلاق والوجهة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4"/></svg></button></div>
+    <div class="field"><i style="background:var(--brass)"></i><input id="inB" list="places" placeholder="إلى أين؟" autocomplete="off" aria-label="الوجهة"><button class="ib" id="clrV" aria-label="امسح نقاط المرور"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg></button></div>
+    <div class="vias" id="vias" hidden></div>
+    <div class="grid2">
+      <label for="dep">الانطلاق<input id="dep" type="datetime-local"></label>
+      <label for="pace"><span id="paceL">أسلوب القيادة</span><select id="pace"></select></label>
+      <label for="opt"><span id="optL">المركبة</span><select id="opt"></select></label>
+      <label for="stay">العودة<select id="stay"><option value="-1">ذهاب فقط</option><option value="0">عودة فورية</option><option value="1">بعد ساعة</option><option value="2">بعد ساعتين</option><option value="3">بعد 3 ساعات</option><option value="5">بعد 5 ساعات</option><option value="8">بعد 8 ساعات</option></select></label>
+    </div>
+    <label class="sw" for="dayOnly">اقترح مواعيد في ضوء النهار فقط<input id="dayOnly" type="checkbox" checked></label>
+    <button class="go" id="go">احسب طقس الرحلة</button>
+    <p class="msg" id="msg" hidden></p>
+    <p class="hint">انقر الخريطة لتحديد الانطلاق أو الوجهة أو نقطة مرور، واسحب أي نقطة لتعديل المسار فيُعاد الحساب.</p>
+  </div>
+</section>
+
+<!-- points -->
+<section class="sheet glass off" id="s-pts" aria-label="النقاط">
+  <div class="sh"><b>الطقس على الطريق</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb" id="ptsBody"><p class="empty">احسب رحلة أولًا من «رحلة».</p></div>
+</section>
+
+<!-- brief -->
+<section class="sheet glass off" id="s-brief" aria-label="الإحاطة">
+  <div class="sh"><b>إحاطة نفاف</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb" id="briefBody"><p class="empty">احسب رحلة أولًا من «رحلة».</p></div>
+</section>
+
+<!-- layers -->
+<section class="sheet glass off" id="s-layers" aria-label="الطبقات">
+  <div class="sh"><b>الطبقات</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <div class="lbl">لوّن المسار حسب</div>
+    <div class="seg" id="metric"></div>
+    <div><div class="scale" id="scaleBar"></div><div class="scl"><span id="scMin"></span><span id="scMax"></span></div></div>
+    <label class="sw" for="lyWind">أسهم الريح<input id="lyWind" type="checkbox" checked></label>
+    <label class="sw" for="lyDots">نقاط القياس<input id="lyDots" type="checkbox" checked></label>
+    <label class="sw" for="lyNames">أسماء المدن<input id="lyNames" type="checkbox" checked></label>
+    <label class="sw" for="lyFollow">تتبّع العلامة أثناء التشغيل<input id="lyFollow" type="checkbox" checked></label>
+    <details><summary>كيف يُحسب؟</summary>
+      <p>الطقس من نموذج Open-Meteo عند كل نقطة في الدقيقة التي تصلها فيها، والموج من نموذجه البحري، والطرق من OSRM. المسار الجبلي والبحري خط مستقيم بين النقاط التي تحددها، والمشي يتباطأ مع الانحدار حسب معادلة Tobler.</p>
+      <p>مؤشر الأودية تقدير من مطر الساعات الست الماضية عند النقطة، ومطر 12 ساعة على المرتفعات حولها حتى 7 كم، مع وزن أكبر للمنخفضات. ليس نموذجًا هيدرولوجيًا: الوادي قد يجري من مطر سقط أبعد من ذلك، فلا تعبر واديًا جاريًا مهما كان الرقم.</p>
+    </details>
+  </div>
+</section>
+
+<datalist id="places"></datalist>
+<div class="tip glass" id="tip" hidden></div>
+<div class="ctx glass" id="ctx" hidden role="menu">
+  <small class="num" id="ctxC"></small>
+  <button data-c="A" role="menuitem"><i style="background:var(--teal)"></i>انطلق من هنا</button>
+  <button data-c="B" role="menuitem"><i style="background:var(--brass)"></i>الوجهة هنا</button>
+  <button data-c="V" role="menuitem"><i style="background:var(--muted)"></i>أضف نقطة مرور</button>
+</div>
+<div class="hud glass" id="hud" hidden></div>
+<div class="strip glass" id="stripBox"><canvas id="strip" aria-label="شريط الرحلة: اسحب لتتنقل عبر الزمن"></canvas></div>
+<div class="load glass" id="load" hidden><span class="spin"></span><span id="loadT">جارٍ الحساب…</span></div>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(x,a,b)=>x<a?a:x>b?b:x,lerp=(a,b,t)=>a+(b-a)*t,sst=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
+const R2D=180/Math.PI,D2R=Math.PI/180;
+const LAND=[{"n":"Oman","r":[56.26,25.331,56.292,25.328,56.31,25.301,56.35,25.294,56.346,25.267,56.234,25.211,56.206,25.231,56.209,25.255,56.245,25.279,56.234,25.312]},{"n":"Oman","r":[56.076,26.06,56.09,26.106,56.191,26.255,56.209,26.263,56.22,26.228,56.213,26.207,56.267,26.228,56.292,26.212,56.296,26.194,56.303,26.206,56.328,26.201,56.357,26.219,56.404,26.214,56.404,26.233,56.368,26.244,56.31,26.221,56.317,26.29,56.357,26.265,56.364,26.28,56.321,26.31,56.357,26.337,56.364,26.386,56.382,26.359,56.404,26.373,56.411,26.346,56.422,26.352,56.44,26.337,56.486,26.331,56.479,26.352,56.501,26.359,56.512,26.334,56.508,26.324,56.454,26.319,56.407,26.285,56.4,26.268,56.432,26.239,56.476,26.249,56.486,26.236,56.461,26.202,56.454,26.221,56.432,26.221,56.432,26.194,56.479,26.146,56.411,26.158,56.404,26.187,56.378,26.174,56.378,26.192,56.393,26.201,56.368,26.204,56.328,26.174,56.335,26.111,56.364,26.146,56.364,26.104,56.472,26.099,56.45,26.074,56.378,26.038,56.382,26.022,56.407,26.035,56.422,26.023,56.404,25.981,56.422,25.957,56.454,25.947,56.44,25.925,56.407,25.937,56.382,25.925,56.4,25.902,56.364,25.837,56.364,25.807,56.317,25.75,56.303,25.741,56.303,25.763,56.274,25.709,56.267,25.672,56.278,25.628,56.206,25.618,56.18,25.652,56.155,25.655,56.144,25.67,56.141,25.733,56.173,25.765,56.141,25.822,56.17,25.876,56.184,26.015,56.162,26.074,56.101,26.062]},{"n":"Oman","r":[56.382,24.978,56.407,24.897,56.479,24.765,56.494,24.699,56.612,24.497,56.803,24.303,56.843,24.223,56.94,24.115,57.152,23.953,57.325,23.884,57.509,23.84,57.646,23.791,57.797,23.782,57.826,23.747,57.887,23.722,58.042,23.725,58.132,23.713,58.229,23.679,58.265,23.644,58.319,23.62,58.452,23.624,58.499,23.658,58.585,23.647,58.661,23.563,58.679,23.563,58.708,23.536,58.722,23.549,58.729,23.529,58.74,23.543,58.762,23.543,58.794,23.495,58.819,23.403,58.931,23.318,58.956,23.259,59.003,23.212,59.01,23.153,59.075,23.094,59.082,23.055,59.233,22.943,59.298,22.793,59.352,22.761,59.41,22.671,59.536,22.584,59.532,22.57,59.514,22.575,59.518,22.562,59.55,22.555,59.626,22.58,59.694,22.541,59.723,22.541,59.726,22.508,59.752,22.494,59.762,22.499,59.741,22.524,59.744,22.538,59.802,22.535,59.824,22.509,59.845,22.445,59.813,22.237,59.734,22.123,59.687,22.082,59.644,21.925,59.604,21.91,59.579,21.856,59.5,21.756,59.449,21.624,59.356,21.486,59.345,21.445,59.194,21.38,59.053,21.277,58.837,21.045,58.808,20.991,58.794,20.927,58.736,20.883,58.74,20.863,58.679,20.829,58.661,20.797,58.661,20.782,58.686,20.76,58.729,20.787,58.729,20.767,58.7,20.741,58.668,20.746,58.646,20.691,58.603,20.664,58.517,20.417,58.474,20.397,58.466,20.37,58.445,20.358,58.358,20.382,58.276,20.368,58.279,20.385,58.204,20.405,58.214,20.466,58.218,20.441,58.236,20.424,58.229,20.488,58.265,20.588,58.254,20.61,58.207,20.613,58.092,20.567,58.067,20.512,58.078,20.48,57.995,20.442,57.955,20.4,57.955,20.377,57.973,20.353,57.966,20.331,57.887,20.291,57.854,20.26,57.822,20.201,57.847,20.112,57.815,20.02,57.815,19.976,57.775,19.868,57.689,19.728,57.692,19.698,57.721,19.652,57.703,19.549,57.761,19.455,57.775,19.409,57.75,19.267,57.811,19.157,57.8,19.095,57.84,19.016,57.8,18.98,57.754,18.973,57.721,18.946,57.502,18.953,57.206,18.909,57.084,18.877,56.915,18.81,56.785,18.729,56.767,18.696,56.659,18.595,56.641,18.56,56.645,18.479,56.609,18.389,56.602,18.305,56.548,18.19,56.562,18.149,56.526,18.114,56.461,18.085,56.432,18.033,56.357,17.97,56.357,17.94,56.188,17.957,56.116,17.937,56.033,17.943,55.91,17.906,55.655,17.896,55.446,17.84,55.37,17.697,55.262,17.607,55.234,17.558,55.23,17.489,55.295,17.438,55.302,17.417,55.302,17.371,55.248,17.276,55.266,17.248,55.212,17.202,55.19,17.145,55.144,17.128,55.126,17.092,55.028,17.011,55.01,17.026,54.974,16.998,54.917,16.991,54.902,16.974,54.809,16.952,54.697,16.971,54.676,17.02,54.593,17.038,54.499,17.038,54.463,17.025,54.391,17.04,54.37,17.025,54.085,17.011,54.013,16.978,54.01,16.937,53.981,16.908,53.83,16.888,53.772,16.863,53.754,16.868,53.686,16.814,53.668,16.783,53.617,16.758,53.34,16.734,53.174,16.684,53.092,16.643,52.793,17.281,52.721,17.298,52.732,17.3,51.979,18.995,54.978,19.995,55.637,21.979,55.626,22.023,55.187,22.703,55.194,23.024,55.226,23.121,55.32,23.276,55.374,23.47,55.446,23.553,55.478,23.676,55.54,23.771,55.532,23.875,55.46,23.931,55.457,23.963,55.648,24.026,55.763,24.027,55.806,24.007,55.986,24.066,55.997,24.081,55.932,24.222,55.903,24.232,55.846,24.211,55.756,24.23,55.763,24.264,55.802,24.326,55.81,24.389,55.774,24.426,55.759,24.559,55.817,24.644,55.792,24.723,55.799,24.779,55.788,24.855,55.799,24.887,55.896,24.968,55.936,24.978,55.979,24.971,56.004,24.956,56.018,24.927,56.029,24.861,55.979,24.887,55.961,24.882,55.964,24.853,56,24.823,56.033,24.753,56.062,24.731,56.098,24.73,56.119,24.735,56.17,24.824,56.242,24.843,56.31,24.895,56.328,24.973]},{"n":"Oman","r":[55.835,17.491,55.831,17.503,55.864,17.52,55.892,17.504,55.846,17.496]},{"n":"Oman","r":[56.054,17.56,56.069,17.533,56.094,17.52,56.047,17.493,55.986,17.493,55.972,17.498,55.964,17.52,56.029,17.548]},{"n":"Oman","r":[58.906,20.627,58.949,20.508,58.862,20.453,58.819,20.404,58.787,20.314,58.787,20.28,58.726,20.215,58.69,20.208,58.664,20.171,58.643,20.187,58.636,20.25,58.65,20.368,58.693,20.405,58.7,20.431,58.769,20.451,58.787,20.481,58.794,20.539,58.852,20.613,58.891,20.694,58.906,20.697,58.92,20.682,58.909,20.645]},{"n":"United Arab Emirates","r":[56.278,25.628,56.35,25.593,56.371,25.525,56.36,25.368,56.382,25.302,56.36,25.057,56.382,24.978,56.328,24.973,56.31,24.895,56.242,24.843,56.17,24.824,56.119,24.735,56.098,24.73,56.062,24.731,56.033,24.753,56,24.823,55.964,24.853,55.961,24.882,55.979,24.887,56.029,24.861,56.018,24.927,56.004,24.956,55.979,24.971,55.936,24.978,55.896,24.968,55.799,24.887,55.788,24.855,55.799,24.779,55.792,24.723,55.817,24.644,55.759,24.559,55.774,24.426,55.81,24.389,55.802,24.326,55.763,24.264,55.756,24.23,55.846,24.211,55.903,24.232,55.932,24.222,55.997,24.081,55.986,24.066,55.806,24.007,55.763,24.027,55.648,24.026,55.457,23.963,55.46,23.931,55.532,23.875,55.54,23.771,55.478,23.676,55.446,23.553,55.374,23.47,55.32,23.276,55.226,23.121,55.19,22.996,55.198,22.849,55.187,22.703,55.122,22.624,52.559,22.938,51.594,24.078,51.572,24.129,51.569,24.257,51.59,24.284,51.59,24.328,51.572,24.365,51.594,24.385,51.623,24.34,51.634,24.227,51.648,24.218,51.673,24.277,51.688,24.235,51.709,24.222,51.76,24.291,51.781,24.262,51.77,24.176,51.799,24.019,51.81,24,51.882,23.994,51.929,23.965,51.94,23.97,51.932,23.988,52.019,23.99,52.069,23.963,52.156,23.967,52.224,23.973,52.278,24.002,52.343,24.007,52.573,24.152,52.58,24.2,52.602,24.21,52.681,24.14,52.721,24.152,52.782,24.137,52.84,24.152,52.948,24.137,52.998,24.161,53.012,24.162,53.066,24.122,53.106,24.137,53.146,24.122,53.164,24.125,53.149,24.132,53.142,24.166,53.164,24.171,53.214,24.142,53.254,24.098,53.444,24.12,53.48,24.093,53.52,24.097,53.588,24.048,53.628,24.058,53.657,24.049,53.704,24.071,53.88,24.064,53.952,24.103,54.121,24.146,54.186,24.203,54.254,24.222,54.323,24.27,54.384,24.255,54.445,24.316,54.485,24.389,54.485,24.426,54.499,24.433,54.485,24.448,54.539,24.433,54.514,24.475,54.575,24.448,54.571,24.473,54.499,24.488,54.416,24.536,54.452,24.556,54.467,24.536,54.467,24.554,54.485,24.569,54.492,24.542,54.539,24.498,54.56,24.502,54.539,24.515,54.582,24.509,54.636,24.598,54.611,24.613,54.614,24.622,54.643,24.63,54.65,24.659,54.672,24.666,54.64,24.733,54.643,24.748,54.708,24.804,54.74,24.789,54.769,24.801,54.758,24.831,54.87,24.888,54.967,24.959,55.05,24.993,55.046,25.013,55.082,25.017,55.259,25.216,55.262,25.245,55.284,25.26,55.298,25.258,55.32,25.225,55.302,25.194,55.327,25.201,55.334,25.219,55.302,25.284,55.338,25.321,55.363,25.324,55.367,25.358,55.388,25.358,55.439,25.412,55.45,25.4,55.464,25.42,55.471,25.412,55.507,25.474,55.493,25.481,55.55,25.579,55.568,25.584,55.547,25.53,55.565,25.523,55.626,25.537,55.658,25.598,55.698,25.635,55.734,25.647,55.759,25.68,55.878,25.74,55.961,25.824,55.936,25.777,55.95,25.768,55.964,25.834,56.036,25.915,56.033,25.934,56.008,25.907,56.054,25.989,56.076,26.06,56.162,26.074,56.177,26.035,56.184,26.015,56.17,25.876,56.141,25.822,56.173,25.765,56.141,25.733,56.144,25.67,56.155,25.655,56.18,25.652,56.206,25.618,56.238,25.616]},{"n":"United Arab Emirates","r":[56.263,25.25,56.26,25.275,56.274,25.282,56.288,25.272,56.285,25.255]},{"n":"United Arab Emirates","r":[53.657,24.159,53.628,24.173,53.722,24.23,53.772,24.227,53.848,24.276,53.848,24.255,53.887,24.22,53.956,24.201,53.966,24.173,53.952,24.149,53.884,24.14,53.855,24.152,53.851,24.174,53.837,24.178,53.826,24.159,53.833,24.152,53.776,24.13,53.686,24.157]},{"n":"United Arab Emirates","r":[54.19,24.227,54.182,24.245,54.114,24.272,54.103,24.297,54.114,24.318,54.143,24.323,54.2,24.254]},{"n":"United Arab Emirates","r":[52.573,24.345,52.613,24.373,52.634,24.367,52.652,24.325,52.627,24.284,52.591,24.254,52.555,24.308,52.559,24.326]},{"n":"United Arab Emirates","r":[53.322,24.262,53.275,24.289,53.268,24.274,53.185,24.276,53.185,24.287,53.196,24.303,53.243,24.297,53.329,24.336,53.365,24.319,53.362,24.352,53.416,24.412,53.423,24.392,53.448,24.38,53.441,24.341,53.333,24.289,53.333,24.277]},{"n":"United Arab Emirates","r":[54.384,24.439,54.334,24.453,54.334,24.47,54.391,24.522,54.398,24.483,54.47,24.436,54.456,24.421,54.431,24.426]},{"n":"United Arab Emirates","r":[54.265,24.294,54.229,24.281,54.179,24.321,54.193,24.346,54.233,24.358,54.272,24.303]},{"n":"United Arab Emirates","r":[54.326,24.373,54.337,24.35,54.326,24.321,54.308,24.314,54.28,24.365,54.298,24.363,54.312,24.355,54.29,24.385,54.305,24.385]},{"n":"United Arab Emirates","r":[52.31,24.539,52.332,24.525,52.339,24.502,52.325,24.48,52.296,24.488,52.282,24.51,52.3,24.534]},{"n":"Iran","r":[44.808,39.64,44.873,39.625,44.865,39.618,44.898,39.584,44.927,39.488,44.963,39.454,44.955,39.434,45.006,39.419,45.089,39.351,45.135,39.279,45.153,39.213,45.179,39.219,45.283,39.192,45.312,39.201,45.312,39.176,45.348,39.164,45.355,39.154,45.344,39.138,45.38,39.111,45.395,39.073,45.431,39.059,45.427,39.015,45.438,39.005,45.535,38.968,45.719,38.954,46.136,38.863,46.201,38.87,46.291,38.914,46.367,38.924,46.514,38.882,46.554,38.89,46.601,38.919,46.651,38.993,46.745,39.04,46.773,39.086,46.813,39.108,46.867,39.165,46.899,39.172,46.953,39.16,47.022,39.191,47.101,39.309,47.292,39.38,47.407,39.476,47.555,39.522,47.609,39.564,47.745,39.623,47.825,39.68,47.922,39.684,47.958,39.707,47.972,39.704,48.051,39.65,48.289,39.446,48.339,39.378,48.152,39.319,48.105,39.268,48.116,39.208,48.141,39.181,48.199,39.138,48.271,39.108,48.307,39.046,48.285,38.993,48.242,38.975,48.059,38.948,48.051,38.927,47.99,38.892,47.994,38.85,48.012,38.821,48.077,38.78,48.224,38.721,48.228,38.662,48.311,38.6,48.415,38.618,48.433,38.569,48.609,38.395,48.66,38.392,48.779,38.444,48.876,38.434,48.865,38.316,48.894,38.206,48.908,38.083,48.948,37.967,48.944,37.904,48.987,37.843,48.984,37.816,49.016,37.739,49.131,37.624,49.365,37.516,49.441,37.495,49.826,37.453,49.934,37.475,49.97,37.46,49.934,37.453,50.197,37.389,50.226,37.365,50.222,37.33,50.291,37.193,50.356,37.127,50.431,37.083,50.478,37.034,50.658,36.955,50.705,36.918,50.86,36.85,51.004,36.768,51.09,36.737,51.367,36.693,51.911,36.582,52.094,36.602,52.26,36.651,52.778,36.741,53.117,36.822,53.448,36.882,53.887,36.906,53.959,36.92,54.006,36.953,54.006,36.915,53.948,36.899,53.819,36.876,53.776,36.884,53.718,36.871,53.61,36.877,53.617,36.866,53.664,36.864,53.635,36.857,53.66,36.832,53.7,36.817,53.891,36.793,54.013,36.822,54.035,36.845,54.035,36.948,54.028,36.967,53.995,36.979,54.02,37.028,53.995,37.058,53.927,37.244,53.912,37.343,54.208,37.325,54.262,37.355,54.366,37.362,54.532,37.441,54.654,37.44,54.784,37.517,54.809,37.58,54.809,37.61,54.787,37.631,54.787,37.652,54.827,37.735,55.007,37.843,55.068,37.909,55.104,37.919,55.129,37.953,55.219,37.97,55.23,37.985,55.309,38.009,55.446,38.083,55.709,38.119,55.799,38.108,55.853,38.086,55.907,38.086,55.964,38.066,56.123,38.086,56.213,38.07,56.299,38.08,56.317,38.09,56.328,38.124,56.296,38.166,56.303,38.179,56.436,38.255,56.53,38.257,56.584,38.235,56.731,38.27,56.814,38.228,57.037,38.188,57.116,38.232,57.134,38.26,57.163,38.277,57.217,38.265,57.278,38.162,57.311,38.135,57.35,38.063,57.329,37.994,57.354,37.968,57.498,37.923,57.692,37.921,57.728,37.899,57.764,37.899,57.8,37.867,57.883,37.865,58.042,37.806,58.157,37.788,58.182,37.774,58.178,37.754,58.2,37.722,58.207,37.679,58.373,37.631,58.481,37.644,58.531,37.7,58.567,37.695,58.618,37.659,58.682,37.642,58.726,37.659,58.78,37.659,58.801,37.695,58.862,37.668,59.046,37.62,59.212,37.516,59.291,37.536,59.312,37.531,59.352,37.494,59.363,37.44,59.348,37.409,59.37,37.32,59.471,37.24,59.46,37.208,59.5,37.19,59.557,37.198,59.604,37.124,59.654,37.149,59.798,37.112,59.899,37.051,60.018,37.026,60.133,36.874,60.259,36.742,60.31,36.653,60.342,36.638,61.076,36.648,61.166,36.636,61.188,36.565,61.166,36.514,61.174,36.487,61.152,36.406,61.152,36.315,61.181,36.295,61.224,36.118,61.206,36.099,61.199,36.06,61.174,36.048,61.174,36.006,61.13,35.971,61.188,35.954,61.242,35.895,61.256,35.77,61.249,35.722,61.228,35.699,61.231,35.672,61.278,35.609,61.285,35.527,61.246,35.484,61.195,35.39,61.188,35.3,61.123,35.288,61.102,35.256,61.112,35.202,61.098,35.194,61.141,35.14,61.134,35.12,61.148,35.103,61.116,35.06,61.076,34.934,61.066,34.814,61.033,34.806,61.008,34.762,60.961,34.723,60.958,34.65,60.947,34.638,60.907,34.635,60.839,34.571,60.738,34.549,60.698,34.517,60.72,34.512,60.734,34.48,60.788,34.444,60.889,34.319,60.644,34.307,60.652,34.285,60.551,34.22,60.493,34.139,60.486,34.095,60.529,33.841,60.526,33.802,60.486,33.711,60.511,33.639,60.576,33.588,60.655,33.559,60.846,33.556,60.896,33.541,60.922,33.514,60.896,33.497,60.832,33.485,60.828,33.416,60.756,33.367,60.569,33.151,60.562,33.058,60.832,32.249,60.81,32.072,60.774,32.028,60.792,32.011,60.788,31.874,60.806,31.734,60.792,31.66,60.821,31.494,61.688,31.373,61.75,31.302,61.742,31.239,61.789,31.158,61.825,31.015,61.8,30.961,61.804,30.847,60.846,29.858,61.278,29.407,61.336,29.375,61.346,29.329,61.332,29.275,61.386,29.206,61.397,29.159,61.436,29.14,61.462,29.093,61.487,29.081,61.469,29.036,61.512,29.007,61.566,28.87,61.652,28.757,61.894,28.543,62.048,28.487,62.149,28.475,62.232,28.443,62.362,28.419,62.39,28.406,62.419,28.369,62.466,28.35,62.491,28.301,62.574,28.229,62.74,28.259,62.761,28.247,62.736,27.995,62.779,27.83,62.815,27.496,62.808,27.453,62.758,27.349,62.779,27.317,62.776,27.286,62.743,27.266,62.801,27.225,62.83,27.234,62.891,27.214,63.168,27.259,63.262,27.214,63.319,27.117,63.262,27.116,63.229,27.053,63.236,26.942,63.265,26.889,63.262,26.873,63.19,26.846,63.175,26.685,63.164,26.645,63.143,26.626,63.107,26.638,62.754,26.645,62.704,26.604,62.639,26.606,62.596,26.58,62.426,26.565,62.398,26.538,62.354,26.537,62.297,26.51,62.297,26.474,62.25,26.417,62.264,26.361,62.243,26.351,62.124,26.374,62.095,26.315,62.034,26.304,61.832,26.226,61.811,26.167,61.76,25.837,61.739,25.804,61.681,25.795,61.66,25.77,61.678,25.692,61.674,25.658,61.642,25.613,61.62,25.285,61.588,25.203,61.58,25.233,61.555,25.255,61.537,25.221,61.559,25.201,61.505,25.209,61.483,25.194,61.516,25.182,61.519,25.164,61.49,25.118,61.422,25.096,61.436,25.088,61.411,25.059,61.184,25.123,61.17,25.164,61.03,25.209,60.634,25.275,60.616,25.284,60.634,25.295,60.608,25.328,60.601,25.405,60.551,25.447,60.446,25.429,60.396,25.378,60.403,25.344,60.439,25.334,60.454,25.317,60.443,25.317,60.472,25.304,60.468,25.29,60.364,25.331,60.32,25.329,60.292,25.351,60.302,25.371,60.27,25.38,60.191,25.361,60.216,25.338,60.209,25.319,60.115,25.339,60.083,25.366,59.942,25.355,59.903,25.329,59.863,25.343,59.82,25.38,59.773,25.39,59.615,25.383,59.539,25.4,59.453,25.461,59.194,25.422,59.118,25.393,59.093,25.407,59.042,25.4,58.996,25.42,58.924,25.513,58.884,25.53,58.848,25.528,58.826,25.561,58.729,25.564,58.546,25.594,58.43,25.588,58.412,25.596,58.42,25.611,58.358,25.604,58.322,25.581,58.29,25.584,58.261,25.566,58.247,25.574,58.207,25.549,58.171,25.544,58.045,25.576,57.962,25.694,57.883,25.692,57.772,25.635,57.782,25.696,57.772,25.731,57.736,25.748,57.631,25.734,57.588,25.748,57.52,25.743,57.458,25.768,57.311,25.783,57.3,25.849,57.253,25.959,57.221,25.995,57.196,26,57.163,26.094,57.214,26.167,57.199,26.199,57.134,26.263,57.12,26.364,57.08,26.415,57.091,26.619,57.026,26.851,56.976,26.895,56.965,26.927,56.926,26.955,56.972,26.969,56.972,27.003,56.933,26.989,56.89,27.018,56.864,27.011,56.864,27.03,56.843,27.04,56.886,27.079,56.832,27.095,56.81,27.139,56.756,27.126,56.717,27.153,56.591,27.161,56.584,27.153,56.353,27.202,56.26,27.192,56.216,27.168,56.123,27.161,56.094,27.126,55.986,27.067,55.939,27.026,55.763,26.996,55.666,26.996,55.554,26.9,55.583,26.913,55.579,26.859,55.554,26.81,55.522,26.785,55.442,26.759,55.27,26.793,55.234,26.776,55.205,26.726,55.104,26.702,54.931,26.572,54.791,26.496,54.751,26.51,54.622,26.508,54.56,26.584,54.427,26.589,54.391,26.606,54.337,26.694,54.308,26.716,54.172,26.705,54.017,26.749,53.93,26.717,53.844,26.702,53.75,26.716,53.714,26.709,53.491,26.854,53.477,26.871,53.462,26.957,53.444,26.976,53.412,26.994,53.03,27.104,52.991,27.146,52.933,27.16,52.915,27.192,52.847,27.215,52.732,27.301,52.602,27.352,52.58,27.372,52.588,27.406,52.667,27.415,52.678,27.425,52.67,27.448,52.598,27.486,52.566,27.541,52.458,27.632,52.206,27.698,52.091,27.796,52.012,27.833,51.893,27.832,51.86,27.845,51.724,27.825,51.684,27.83,51.587,27.849,51.569,27.877,51.497,27.892,51.454,27.948,51.428,27.962,51.421,27.933,51.4,27.931,51.382,27.992,51.346,28.053,51.27,28.141,51.284,28.24,51.14,28.401,51.079,28.534,51.072,28.693,51.036,28.772,50.978,28.816,50.878,28.831,50.813,28.914,50.802,28.985,50.824,28.997,50.842,28.99,50.888,28.941,50.899,28.95,50.896,28.977,50.928,29.01,50.932,29.054,50.921,29.069,50.903,29.064,50.888,29.105,50.874,29.113,50.852,29.105,50.842,29.14,50.737,29.14,50.694,29.123,50.644,29.144,50.636,29.208,50.658,29.25,50.669,29.257,50.683,29.243,50.69,29.291,50.662,29.319,50.669,29.382,50.644,29.47,50.608,29.5,50.608,29.47,50.572,29.519,50.521,29.556,50.489,29.605,50.456,29.633,50.399,29.655,50.244,29.866,50.143,29.937,50.132,29.983,50.154,29.991,50.132,30.005,50.143,30.039,50.122,30.094,50.129,30.121,50.096,30.148,50.075,30.196,49.988,30.219,49.916,30.204,49.599,30.03,49.563,30.017,49.531,30.023,49.502,30.059,49.502,30.12,49.481,30.157,49.427,30.169,49.383,30.162,49.351,30.175,49.247,30.157,49.236,30.165,49.236,30.206,49.214,30.224,49.221,30.265,49.211,30.272,49.193,30.238,49.16,30.224,49.124,30.256,49.016,30.299,48.98,30.361,48.923,30.381,48.948,30.402,48.991,30.395,49.063,30.408,49.175,30.373,49.203,30.346,49.265,30.449,49.229,30.454,49.211,30.506,49.167,30.478,49.167,30.508,49.135,30.498,49.11,30.518,48.98,30.515,48.951,30.5,48.944,30.479,49.005,30.464,49.031,30.451,49.038,30.432,49.016,30.415,48.933,30.419,48.861,30.346,48.872,30.336,48.858,30.316,48.869,30.295,48.923,30.25,48.937,30.211,48.941,30.152,48.926,30.121,48.933,30.079,48.915,30.042,48.876,30.025,48.793,30.025,48.703,30.032,48.642,30.056,48.66,30.007,48.653,29.974,48.609,29.958,48.537,29.969,48.53,29.961,48.458,29.995,48.422,30.086,48.383,30.138,48.383,30.157,48.411,30.192,48.404,30.213,48.307,30.312,48.285,30.324,48.199,30.324,48.181,30.385,48.141,30.442,48.012,30.464,48.012,30.989,47.673,30.994,47.681,31.408,47.832,31.761,47.835,31.805,47.767,31.864,47.753,31.898,47.717,31.923,47.67,32.013,47.634,32.026,47.58,32.104,47.49,32.149,47.508,32.2,47.504,32.227,47.403,32.323,47.396,32.342,47.418,32.387,47.342,32.458,47.267,32.485,47.151,32.455,47.09,32.475,46.716,32.756,46.478,32.892,46.273,32.96,46.154,32.948,46.097,32.955,46.075,32.994,46.118,33.031,46.122,33.061,46.028,33.093,46.05,33.115,46.104,33.119,46.169,33.168,46.176,33.181,46.158,33.206,46.165,33.244,46.154,33.26,46.035,33.369,46.021,33.438,45.971,33.493,45.899,33.477,45.852,33.495,45.927,33.551,45.92,33.573,45.881,33.6,45.884,33.63,45.798,33.62,45.733,33.583,45.722,33.64,45.657,33.681,45.618,33.769,45.575,33.804,45.485,33.939,45.423,33.939,45.38,33.973,45.42,33.995,45.456,34.069,45.546,34.14,45.528,34.189,45.549,34.216,45.564,34.289,45.557,34.312,45.521,34.343,45.481,34.329,45.459,34.341,45.416,34.444,45.427,34.458,45.481,34.468,45.499,34.486,45.499,34.591,45.603,34.561,45.701,34.551,45.708,34.579,45.693,34.598,45.686,34.654,45.668,34.691,45.629,34.721,45.661,34.763,45.675,34.819,45.744,34.841,45.755,34.91,45.834,34.89,45.852,34.907,45.87,34.968,45.855,35.022,45.873,35.042,45.899,35.047,45.913,35.088,46.01,35.06,46.068,35.089,46.133,35.094,46.151,35.111,46.129,35.131,46.169,35.216,46.1,35.234,46.129,35.288,46.122,35.319,46.043,35.381,45.963,35.494,45.985,35.532,45.96,35.579,45.999,35.572,45.992,35.641,46.003,35.673,46.035,35.692,46.107,35.69,46.179,35.716,46.237,35.716,46.313,35.771,46.327,35.803,46.302,35.827,46.28,35.829,46.226,35.805,46.165,35.797,46.129,35.815,46.115,35.846,46.079,35.857,46.007,35.837,45.877,35.836,45.834,35.81,45.787,35.82,45.747,35.81,45.729,35.815,45.647,35.933,45.539,35.994,45.481,36.013,45.359,35.977,45.319,35.994,45.319,36.031,45.348,36.087,45.305,36.141,45.297,36.227,45.258,36.263,45.283,36.275,45.258,36.312,45.24,36.403,45.222,36.421,45.11,36.403,45.071,36.423,45.038,36.494,44.991,36.533,44.995,36.55,45.013,36.558,45.024,36.614,45.045,36.649,45.035,36.69,44.995,36.742,44.923,36.776,44.829,36.791,44.822,36.81,44.833,36.833,44.883,36.888,44.883,36.933,44.869,36.967,44.887,37.016,44.84,37.048,44.801,37.043,44.754,37.104,44.772,37.161,44.754,37.215,44.797,37.261,44.801,37.293,44.721,37.343,44.696,37.381,44.66,37.376,44.639,37.413,44.585,37.424,44.567,37.446,44.581,37.477,44.57,37.539,44.588,37.583,44.585,37.602,44.541,37.632,44.545,37.663,44.588,37.695,44.595,37.717,44.559,37.752,44.505,37.779,44.437,37.767,44.433,37.806,44.405,37.809,44.369,37.86,44.318,37.877,44.221,37.875,44.203,37.897,44.225,37.929,44.221,37.968,44.235,37.994,44.297,38.08,44.329,38.095,44.325,38.129,44.361,38.147,44.376,38.201,44.372,38.25,44.437,38.297,44.459,38.338,44.426,38.377,44.408,38.382,44.365,38.365,44.289,38.382,44.297,38.622,44.282,38.645,44.243,38.659,44.261,38.679,44.25,38.721,44.279,38.814,44.275,38.843,44.221,38.863,44.192,38.89,44.174,38.946,44.138,38.993,44.178,39.035,44.171,39.074,44.196,39.12,44.185,39.145,44.077,39.201,44.084,39.236,44.066,39.263,44.07,39.287,44.048,39.338,44.016,39.375,44.045,39.397,44.178,39.412,44.297,39.382,44.387,39.415,44.405,39.434,44.419,39.574,44.459,39.638,44.459,39.699,44.567,39.767,44.592,39.772,44.646,39.719,44.725,39.686]},{"n":"Iran","r":[54.528,26.31,54.546,26.29,54.528,26.251,54.499,26.26,54.488,26.298,54.499,26.317,54.517,26.319]},{"n":"Iran","r":[54.038,26.489,53.956,26.493,53.923,26.506,53.902,26.537,53.945,26.565,54.035,26.547,54.049,26.494]},{"n":"Iran","r":[53.318,26.8,53.279,26.79,53.221,26.8,53.149,26.847,53.16,26.854,53.336,26.829,53.383,26.803,53.329,26.803]},{"n":"Iran","r":[56.321,26.834,56.342,26.879,56.404,26.893,56.411,26.862,56.342,26.827]},{"n":"Iran","r":[56.213,27.003,56.281,26.974,56.288,26.955,56.195,26.925,56.09,26.793,55.946,26.697,55.878,26.743,55.774,26.689,55.687,26.69,55.504,26.596,55.37,26.564,55.338,26.569,55.32,26.548,55.298,26.543,55.284,26.56,55.288,26.614,55.273,26.65,55.284,26.66,55.352,26.648,55.572,26.719,55.64,26.761,55.774,26.797,55.766,26.81,55.784,26.846,55.781,26.889,55.734,26.94,55.759,26.954,55.896,26.906,55.936,26.915,56.04,26.976,56.173,27.003]},{"n":"Iran","r":[56.472,27.106,56.504,27.089,56.494,27.052,56.465,27.043,56.436,27.055,56.436,27.08,56.454,27.102]},{"n":"Iran","r":[54.546,25.927,54.553,25.9,54.528,25.897,54.51,25.913,54.524,25.92]},{"n":"Iran","r":[55.896,26.68,55.903,26.645,55.871,26.613,55.853,26.621,55.856,26.645,55.885,26.678]},{"n":"Iran","r":[53.639,26.689,53.66,26.668,53.628,26.66,53.603,26.68,53.628,26.692]},{"n":"Iran","r":[55.05,25.886,55.054,25.864,55.032,25.854,55.025,25.863,55.01,25.881,55.043,25.893]},{"n":"Qatar","r":[50.809,24.747,50.852,24.77,50.852,24.89,50.798,24.988,50.809,25.069,50.777,25.091,50.759,25.186,50.766,25.344,50.752,25.42,50.762,25.483,50.752,25.495,50.777,25.527,50.798,25.53,50.82,25.471,50.849,25.468,50.827,25.525,50.834,25.579,50.82,25.596,50.784,25.604,50.795,25.618,50.838,25.628,50.852,25.653,50.878,25.631,50.867,25.567,50.881,25.535,50.899,25.532,50.91,25.598,50.921,25.608,50.95,25.598,50.978,25.647,50.924,25.631,50.903,25.64,50.888,25.68,50.896,25.733,50.91,25.745,50.903,25.79,50.917,25.787,50.932,25.81,50.95,25.775,50.975,25.797,50.971,25.831,50.964,25.824,50.95,25.837,50.95,25.859,50.978,25.917,50.986,25.981,51.004,25.967,51.047,26.054,51.133,26.082,51.176,26.14,51.194,26.133,51.252,26.16,51.346,26.104,51.346,26.038,51.378,26.023,51.389,25.967,51.403,25.954,51.511,25.946,51.547,25.925,51.576,25.881,51.594,25.758,51.583,25.741,51.565,25.763,51.544,25.738,51.554,25.721,51.572,25.734,51.59,25.713,51.558,25.682,51.554,25.707,51.504,25.687,51.547,25.664,51.551,25.631,51.504,25.611,51.493,25.618,51.493,25.549,51.472,25.522,51.518,25.441,51.518,25.297,51.59,25.284,51.608,25.255,51.612,25.022,51.587,24.953,51.529,24.875,51.504,24.865,51.443,24.679,51.382,24.635,51.378,24.612,51.342,24.569,51.328,24.585,51.346,24.635,51.32,24.649,51.284,24.645,51.284,24.662,51.22,24.644,51.216,24.625,51.148,24.576,51.097,24.561,50.978,24.568,50.928,24.588,50.881,24.637]},{"n":"Saudi Arabia","r":[50.809,24.747,50.881,24.637,50.928,24.588,50.978,24.568,51.097,24.561,51.148,24.576,51.216,24.625,51.27,24.625,51.295,24.603,51.306,24.612,51.292,24.578,51.302,24.517,51.335,24.532,51.36,24.576,51.389,24.596,51.396,24.632,51.443,24.62,51.457,24.595,51.497,24.583,51.443,24.554,51.396,24.488,51.335,24.448,51.306,24.406,51.299,24.346,51.277,24.34,51.277,24.308,51.346,24.297,51.414,24.323,51.479,24.311,51.526,24.269,51.569,24.257,51.572,24.129,51.594,24.078,52.559,22.938,55.104,22.621,55.122,22.624,55.187,22.703,55.626,22.023,55.637,21.979,54.978,19.995,51.979,18.995,49.128,18.612,49.034,18.58,48.163,18.149,47.591,17.464,47.457,17.131,47.429,17.092,47.162,16.947,46.982,16.949,46.748,17.254,46.709,17.275,46.323,17.224,45.431,17.312,45.222,17.418,44.999,17.43,44.646,17.432,44.563,17.405,44.405,17.418,44.232,17.391,44.149,17.405,44.106,17.352,44.059,17.347,44.005,17.368,43.94,17.305,43.915,17.302,43.893,17.312,43.886,17.354,43.847,17.346,43.731,17.352,43.62,17.459,43.505,17.513,43.436,17.523,43.389,17.513,43.303,17.459,43.166,17.33,43.224,17.308,43.253,17.271,43.249,17.253,43.155,17.211,43.152,17.167,43.119,17.086,43.137,17.01,43.112,16.91,43.145,16.834,43.213,16.797,43.209,16.773,43.17,16.738,43.188,16.684,43.181,16.665,43.083,16.672,43.076,16.62,43.037,16.537,42.972,16.496,42.907,16.479,42.9,16.419,42.788,16.371,42.781,16.42,42.795,16.452,42.723,16.567,42.738,16.672,42.72,16.675,42.727,16.682,42.702,16.723,42.713,16.731,42.637,16.815,42.597,16.837,42.576,16.832,42.543,16.878,42.554,16.922,42.543,17.005,42.511,17.037,42.446,17.048,42.41,17.157,42.356,17.182,42.385,17.121,42.363,17.109,42.374,17.043,42.363,17.025,42.309,17.351,42.309,17.444,42.273,17.46,42.259,17.486,42.155,17.574,42.14,17.572,42.093,17.651,42.054,17.653,42,17.717,41.978,17.71,41.939,17.763,41.87,17.82,41.849,17.812,41.809,17.837,41.787,17.834,41.777,17.861,41.676,17.96,41.672,18.009,41.654,18.016,41.651,18.04,41.593,18.095,41.604,18.114,41.561,18.168,41.561,18.19,41.521,18.197,41.535,18.21,41.517,18.229,41.492,18.224,41.507,18.273,41.471,18.279,41.435,18.474,41.417,18.482,41.413,18.506,41.37,18.536,41.355,18.57,41.327,18.588,41.309,18.573,41.276,18.592,41.215,18.686,41.211,18.73,41.247,18.835,41.24,18.848,41.172,18.872,41.161,18.909,41.136,18.936,41.175,19.068,41.15,19.093,41.067,19.125,41.039,19.183,41.049,19.218,41.035,19.264,41.017,19.274,41.01,19.304,40.956,19.343,40.938,19.419,40.959,19.456,40.945,19.505,40.837,19.546,40.761,19.608,40.794,19.602,40.797,19.693,40.743,19.777,40.675,19.796,40.646,19.784,40.657,19.76,40.643,19.77,40.621,19.821,40.527,19.911,40.542,19.944,40.524,19.973,40.445,20.01,40.394,20.064,40.315,20.091,40.232,20.164,40.239,20.177,40.164,20.201,40.085,20.279,40.045,20.285,39.991,20.267,39.905,20.309,39.941,20.258,39.761,20.351,39.746,20.382,39.645,20.461,39.588,20.552,39.566,20.567,39.595,20.589,39.566,20.598,39.537,20.63,39.527,20.67,39.494,20.706,39.505,20.746,39.458,20.76,39.469,20.741,39.422,20.772,39.422,20.814,39.458,20.794,39.447,20.827,39.415,20.846,39.411,20.829,39.361,20.863,39.339,20.888,39.339,20.91,39.361,20.897,39.354,20.92,39.329,20.932,39.296,20.924,39.267,20.969,39.26,21.023,39.239,21.062,39.174,21.109,39.156,21.167,39.17,21.192,39.08,21.315,39.159,21.38,39.174,21.435,39.149,21.481,39.159,21.508,39.141,21.542,39.12,21.516,39.091,21.577,39.077,21.692,39.098,21.712,39.109,21.748,39.102,21.76,39.087,21.731,39.062,21.731,39.033,21.802,38.979,21.863,38.951,21.922,38.933,22.006,38.933,22.025,38.958,22.035,38.987,22.003,39.005,22.003,39.012,22.055,39.033,22.072,39.048,22.151,39.026,22.118,39.019,22.131,39.041,22.236,39.073,22.271,39.084,22.313,39.141,22.403,39.127,22.421,39.116,22.418,39.095,22.371,39.069,22.366,39.084,22.437,39.073,22.491,39.08,22.546,38.987,22.724,39.015,22.759,38.947,22.832,38.936,22.827,38.965,22.795,38.979,22.754,38.972,22.747,38.85,22.93,38.85,22.943,38.882,22.928,38.915,22.862,38.951,22.852,38.965,22.871,38.911,22.928,38.893,22.965,38.835,22.987,38.814,22.982,38.799,22.999,38.778,23.041,38.807,23.094,38.799,23.149,38.785,23.154,38.778,23.139,38.691,23.273,38.648,23.401,38.63,23.507,38.605,23.536,38.601,23.568,38.576,23.556,38.558,23.563,38.562,23.546,38.594,23.521,38.562,23.524,38.54,23.543,38.54,23.592,38.493,23.644,38.454,23.784,38.389,23.825,38.364,23.87,38.31,23.894,38.259,23.945,38.184,23.977,38.079,24.071,38.047,24.068,37.935,24.139,37.957,24.162,37.982,24.166,37.975,24.174,37.939,24.161,37.939,24.211,37.914,24.191,37.925,24.164,37.917,24.149,37.867,24.151,37.766,24.222,37.759,24.242,37.676,24.291,37.64,24.292,37.626,24.281,37.629,24.249,37.586,24.247,37.547,24.274,37.521,24.267,37.428,24.367,37.417,24.4,37.428,24.421,37.457,24.407,37.457,24.441,37.23,24.738,37.226,24.799,37.197,24.789,37.179,24.799,37.147,24.851,37.244,24.855,37.28,24.964,37.251,25.052,37.251,25.155,37.23,25.194,37.104,25.322,37.086,25.385,37.061,25.42,37.079,25.431,37.017,25.495,36.945,25.635,36.881,25.672,36.816,25.758,36.794,25.76,36.805,25.726,36.791,25.721,36.733,25.748,36.701,25.78,36.697,25.817,36.675,25.831,36.661,25.88,36.704,25.944,36.697,26.022,36.639,26.06,36.535,26.082,36.513,26.111,36.449,26.246,36.384,26.334,36.308,26.498,36.229,26.626,36.099,26.754,36.031,26.906,35.999,26.913,35.977,26.949,35.912,26.999,35.833,27.092,35.801,27.15,35.808,27.204,35.7,27.325,35.653,27.354,35.559,27.455,35.509,27.545,35.502,27.619,35.459,27.663,35.394,27.778,35.351,27.801,35.333,27.862,35.257,27.953,35.163,28.009,35.217,28.038,35.228,28.033,35.217,28.055,35.163,28.058,35.145,28.077,35.109,28.078,35.052,28.119,35.019,28.114,35.03,28.098,34.998,28.114,34.937,28.092,34.929,28.078,34.861,28.085,34.847,28.071,34.843,28.1,34.865,28.112,34.836,28.117,34.803,28.071,34.793,28.078,34.818,28.098,34.818,28.112,34.771,28.093,34.771,28.105,34.735,28.105,34.71,28.141,34.695,28.127,34.681,28.136,34.674,28.112,34.652,28.104,34.667,28.071,34.649,28.071,34.634,28.033,34.613,28.031,34.605,28.097,34.573,28.093,34.573,28.112,34.627,28.161,34.627,28.176,34.659,28.171,34.649,28.201,34.667,28.208,34.674,28.271,34.688,28.264,34.688,28.277,34.674,28.277,34.713,28.328,34.775,28.483,34.803,28.527,34.778,28.664,34.839,28.828,34.832,28.847,34.843,28.89,34.825,28.901,34.857,28.963,34.865,29.007,34.854,29.046,34.908,29.23,34.944,29.25,34.933,29.289,34.937,29.304,34.955,29.306,34.944,29.336,34.951,29.351,36.017,29.189,36.071,29.199,36.477,29.495,36.729,29.853,37.471,29.995,37.493,30.012,37.647,30.331,37.982,30.498,37.482,31.008,36.96,31.491,38.965,31.994,39.116,32.102,39.159,32.121,40.031,31.994,40.369,31.938,40.423,31.92,42.075,31.081,42.86,30.495,44.693,29.201,46.356,29.063,46.532,29.096,47.436,28.995,47.493,28.904,47.551,28.771,47.558,28.691,47.58,28.632,47.659,28.559,47.67,28.534,48.433,28.541,48.498,28.494,48.509,28.416,48.498,28.394,48.476,28.401,48.469,28.387,48.505,28.389,48.523,28.414,48.534,28.407,48.516,28.342,48.523,28.318,48.624,28.205,48.602,28.168,48.606,28.127,48.656,28.061,48.653,28.046,48.793,28.007,48.786,27.989,48.746,27.982,48.743,27.962,48.879,27.837,48.876,27.769,48.84,27.729,48.854,27.818,48.804,27.756,48.825,27.811,48.822,27.83,48.811,27.828,48.779,27.72,48.793,27.715,48.811,27.742,48.815,27.688,48.84,27.708,48.847,27.668,48.858,27.663,48.879,27.688,48.879,27.651,48.858,27.641,48.872,27.612,48.851,27.624,48.833,27.612,48.872,27.605,48.901,27.632,48.908,27.619,48.89,27.589,48.897,27.572,48.915,27.572,48.915,27.609,48.969,27.621,49.056,27.568,49.063,27.556,49.045,27.545,49.059,27.538,49.077,27.546,49.07,27.558,49.106,27.546,49.146,27.545,49.178,27.558,49.239,27.545,49.301,27.491,49.311,27.448,49.293,27.453,49.286,27.475,49.265,27.453,49.207,27.459,49.182,27.442,49.175,27.459,49.157,27.459,49.121,27.442,49.207,27.394,49.239,27.426,49.265,27.415,49.229,27.379,49.225,27.332,49.279,27.359,49.311,27.345,49.304,27.325,49.322,27.205,49.34,27.209,49.344,27.183,49.365,27.193,49.369,27.219,49.409,27.215,49.398,27.163,49.365,27.161,49.376,27.15,49.409,27.133,49.434,27.166,49.43,27.143,49.524,27.133,49.488,27.175,49.517,27.188,49.545,27.173,49.571,27.193,49.56,27.155,49.571,27.104,49.614,27.072,49.707,26.952,49.873,26.862,49.941,26.859,49.974,26.842,50.068,26.729,50.158,26.665,50.161,26.64,50.093,26.689,50.024,26.7,50.006,26.748,49.988,26.724,49.985,26.683,50.006,26.648,50.003,26.57,50.032,26.494,50.057,26.464,50.161,26.427,50.19,26.403,50.215,26.324,50.212,26.192,50.183,26.16,50.176,26.18,50.154,26.167,50.161,26.141,50.143,26.037,50.125,26.047,50.114,26.103,50.075,26.131,50.071,26.167,50.032,26.201,49.977,26.14,50.01,26.086,49.988,26.06,49.988,26.001,50.021,26.005,50.024,26.037,50.064,26.013,50.068,25.996,50.1,25.989,50.129,25.94,50.107,25.915,50.118,25.868,50.161,25.783,50.248,25.679,50.258,25.631,50.226,25.687,50.186,25.704,50.176,25.721,50.143,25.733,50.15,25.699,50.183,25.672,50.197,25.687,50.233,25.615,50.374,25.461,50.363,25.503,50.381,25.513,50.41,25.464,50.471,25.437,50.521,25.314,50.518,25.245,50.55,25.176,50.546,25.118,50.561,25.056,50.572,25.042,50.579,25.062,50.608,25.042,50.662,24.98,50.683,24.914,50.726,24.882,50.741,24.77,50.773,24.726,50.788,24.728]},{"n":"Yemen","r":[51.979,18.995,52.732,17.3,52.721,17.298,52.793,17.281,53.092,16.643,53.023,16.62,52.984,16.628,52.85,16.555,52.534,16.447,52.292,16.263,52.22,16.16,52.224,16.113,52.156,15.985,52.188,15.919,52.177,15.878,52.224,15.846,52.22,15.716,52.246,15.657,52.235,15.622,52.048,15.569,52.026,15.551,51.914,15.515,51.875,15.492,51.864,15.449,51.828,15.468,51.76,15.446,51.666,15.392,51.677,15.34,51.529,15.318,51.475,15.27,51.367,15.23,51.342,15.238,51.27,15.201,51.068,15.15,50.662,15.059,50.554,15.049,50.431,14.995,50.359,14.933,50.302,14.917,50.179,14.843,50.147,14.85,50.042,14.818,50.032,14.85,49.941,14.838,49.578,14.737,49.419,14.657,49.351,14.641,49.189,14.549,49.182,14.517,49.139,14.532,49.092,14.519,49.009,14.401,49.002,14.325,48.941,14.294,48.937,14.271,48.887,14.25,48.854,14.168,48.797,14.141,48.739,14.068,48.696,14.043,48.566,14.046,48.469,13.989,48.451,14.011,48.339,14.016,48.347,14.002,48.303,14.002,48.188,13.968,48.192,13.994,48.141,14.031,48.134,14.023,48.015,14.058,47.933,14.031,47.868,13.962,47.821,13.938,47.645,13.874,47.565,13.789,47.4,13.654,47.166,13.585,46.91,13.533,46.824,13.477,46.701,13.43,46.604,13.442,46.521,13.413,46.313,13.413,46.233,13.437,46.111,13.406,45.942,13.399,45.877,13.379,45.816,13.379,45.665,13.342,45.632,13.325,45.495,13.195,45.481,13.158,45.402,13.07,45.193,13.013,45.117,12.962,45.092,12.927,45.056,12.817,45.06,12.763,45.017,12.759,44.981,12.783,44.981,12.797,45.035,12.803,45.042,12.82,45.017,12.859,45.002,12.834,44.945,12.834,44.916,12.8,44.873,12.803,44.873,12.77,44.919,12.771,44.912,12.748,44.88,12.729,44.786,12.773,44.729,12.743,44.718,12.78,44.693,12.803,44.61,12.82,44.541,12.797,44.415,12.67,44.408,12.685,44.289,12.64,44.228,12.638,44.171,12.618,44.138,12.64,44.189,12.633,44.199,12.653,44.153,12.656,44.034,12.604,43.991,12.613,43.947,12.597,43.908,12.645,43.796,12.695,43.753,12.7,43.681,12.736,43.645,12.734,43.602,12.756,43.512,12.683,43.469,12.683,43.461,12.694,43.483,12.812,43.472,12.847,43.4,12.944,43.386,13.008,43.335,13.075,43.31,13.139,43.249,13.212,43.227,13.285,43.249,13.349,43.253,13.526,43.296,13.585,43.281,13.617,43.281,13.722,43.242,13.795,43.235,13.876,43.163,13.953,43.119,14.053,43.094,14.083,43.076,14.195,42.99,14.48,42.961,14.514,42.965,14.531,42.983,14.521,43.022,14.441,43.015,14.497,43.029,14.538,42.986,14.634,43.001,14.662,42.961,14.708,42.943,14.789,42.896,14.848,42.885,14.884,42.882,14.916,42.893,14.914,42.9,14.862,42.947,14.811,42.954,14.88,42.932,14.961,42.885,15.009,42.882,15.103,42.864,15.137,42.734,15.21,42.691,15.215,42.673,15.186,42.637,15.191,42.619,15.208,42.612,15.243,42.655,15.237,42.684,15.247,42.691,15.28,42.677,15.308,42.713,15.367,42.716,15.336,42.698,15.311,42.774,15.26,42.777,15.221,42.795,15.21,42.788,15.23,42.81,15.267,42.806,15.345,42.777,15.422,42.781,15.468,42.72,15.569,42.734,15.593,42.705,15.644,42.716,15.679,42.713,15.694,42.691,15.703,42.741,15.753,42.752,15.816,42.821,15.875,42.835,15.915,42.839,16.098,42.803,16.353,42.788,16.371,42.9,16.419,42.907,16.479,42.972,16.496,43.037,16.537,43.076,16.62,43.083,16.672,43.181,16.665,43.188,16.684,43.17,16.738,43.209,16.773,43.213,16.797,43.145,16.834,43.112,16.91,43.137,17.01,43.119,17.086,43.152,17.167,43.155,17.211,43.249,17.253,43.253,17.271,43.224,17.308,43.166,17.33,43.303,17.459,43.389,17.513,43.487,17.518,43.62,17.459,43.731,17.352,43.847,17.346,43.886,17.354,43.893,17.312,43.915,17.302,43.94,17.305,44.005,17.368,44.059,17.347,44.106,17.352,44.149,17.405,44.232,17.391,44.405,17.418,44.563,17.405,44.646,17.432,44.999,17.43,45.222,17.418,45.431,17.312,46.323,17.224,46.709,17.275,46.748,17.254,46.982,16.949,47.162,16.947,47.429,17.092,47.457,17.131,47.591,17.464,48.163,18.149,49.034,18.58,49.128,18.612,51.821,18.975]},{"n":"Bahrain","r":[50.55,26.194,50.593,26.16,50.618,26.185,50.633,26.146,50.647,26.146,50.636,26.116,50.615,26.111,50.618,25.964,50.604,25.854,50.564,25.79,50.532,25.885,50.467,25.957,50.46,25.986,50.485,26.033,50.485,26.086,50.449,26.162,50.46,26.226,50.482,26.243,50.546,26.228,50.586,26.243,50.608,26.212,50.604,26.197,50.564,26.199]}];
+const FONT=getComputedStyle(document.body).fontFamily;
+
+/* ================= places ================= */
+const PLACES=[
+ ['صحار',24.347,56.709,1],['مسقط',23.588,58.408,1],['مطرح',23.618,58.565,0],['نزوى',22.933,57.531,1],['الحمراء',23.120,57.290,0],
+ ['جبل شمس',23.237,57.263,0],['مسفاة العبريين',23.137,57.284,0],['الجبل الأخضر (سيق)',23.074,57.668,0],['بركة الموز',22.955,57.671,0],
+ ['عبري',23.226,56.516,1],['البريمي',24.250,55.793,1],['الرستاق',23.390,57.425,0],['إبراء',22.690,58.534,0],['صور',22.567,59.529,1],
+ ['وادي شاب',22.837,59.243,0],['وادي بني خالد',22.613,59.089,0],['رأس الحد',22.532,59.798,0],['شناص',24.743,56.465,0],['خصب',26.198,56.248,1],
+ ['جزر الديمانيات',23.858,58.085,0],['ميناء صحار',24.505,56.620,0],['مصيرة',20.679,58.873,1],['الدقم',19.662,57.705,1],['صلالة',17.019,54.089,1],
+ ['هيماء',19.958,56.322,0],['دبي',25.204,55.270,1],['أبوظبي',24.453,54.377,1]];
+$('places').innerHTML=PLACES.map(p=>'<option value="'+p[0]+'"></option>').join('');
+
+/* ================= state ================= */
+let mode='road',A=null,B=null,VIA=[],trip=null,sel=-1,metric='risk';
+const PACE={road:[['عادية',1],['متأنية',1.15],['سريعة',.93]],hike:[['عادية',1],['متمهّلة',.72],['سريعة',1.2]],sea:[['قارب صيد 12 عقدة',12],['قارب سريع 22 عقدة',22],['يخت 8 عقد',8],['كاياك 3 عقد',3]]};
+// what the trip is made with changes the thresholds: crosswind gusts that bother this vehicle, how much a wet wadi matters, how early heat bites
+const OPTS={road:{l:'المركبة',v:[['سيارة صغيرة',{g:[45,85],wd:1.1}],['دفع رباعي',{g:[50,92],wd:1}],['شاحنة أو كرفان',{g:[35,65],wd:.95}],['دراجة نارية',{g:[25,50],wd:1.3,heat:1}]]},
+  hike:{l:'المجموعة',v:[['بالغون',{hs:0}],['مع أطفال',{hs:4}],['كبار سن',{hs:5}]]},
+  sea:{l:'الخبرة',v:[['متوسطة',{wv:[1,2.6]}],['مبتدئ',{wv:[.6,1.8]}],['متمرّس',{wv:[1.4,3.2]}]]}};
+function setPace(){$('paceL').textContent={road:'القيادة',hike:'سرعة المشي',sea:'القارب'}[mode];$('pace').innerHTML=PACE[mode].map((p,i)=>'<option value="'+i+'">'+p[0]+'</option>').join('');
+  $('optL').textContent=OPTS[mode].l;$('opt').innerHTML=OPTS[mode].v.map((p,i)=>'<option value="'+i+'">'+p[0]+'</option>').join('');
+  $('dayOnly').checked=mode!=='road';renderMetric()}
+const OPT=()=>OPTS[mode].v[+$('opt').value||0][1];
+function nowRounded(){const d=new Date();d.setMinutes(0,0,0);d.setHours(d.getHours()+1);return d}
+function toLocalInput(d){const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes())}
+const fmtHM=d=>d.toLocaleTimeString('ar-OM-u-nu-latn',{hour:'2-digit',minute:'2-digit',hour12:false});
+const fmtDay=d=>d.toLocaleDateString('ar-OM-u-nu-latn',{weekday:'long',day:'numeric',month:'long'});
+const fmtDur=s=>{const m=Math.round(s/60);return Math.floor(m/60)+':'+String(m%60).padStart(2,'0')};
+
+/* ================= geometry ================= */
+function hav(a,b){const dLa=(b[0]-a[0])*D2R,dLo=(b[1]-a[1])*D2R,s=Math.sin(dLa/2)**2+Math.cos(a[0]*D2R)*Math.cos(b[0]*D2R)*Math.sin(dLo/2)**2;return 6371*2*Math.asin(Math.min(1,Math.sqrt(s)))}
+function brg(a,b){const y=Math.sin((b[1]-a[1])*D2R)*Math.cos(b[0]*D2R),x=Math.cos(a[0]*D2R)*Math.sin(b[0]*D2R)-Math.sin(a[0]*D2R)*Math.cos(b[0]*D2R)*Math.cos((b[1]-a[1])*D2R);return (Math.atan2(y,x)*R2D+360)%360}
+function dest(p,bdeg,km){const d=km/6371,b=bdeg*D2R,la=p[0]*D2R,lo=p[1]*D2R;const la2=Math.asin(Math.sin(la)*Math.cos(d)+Math.cos(la)*Math.sin(d)*Math.cos(b));const lo2=lo+Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(la),Math.cos(d)-Math.sin(la)*Math.sin(la2));return[la2*R2D,lo2*R2D]}
+function densify(pts,stepKm){const out=[pts[0]];for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],n=Math.max(1,Math.ceil(hav(a,b)/stepKm));for(let k=1;k<=n;k++)out.push([lerp(a[0],b[0],k/n),lerp(a[1],b[1],k/n)])}return out}
+
+/* ================= network ================= */
+async function getJSON(url,ms=15000){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{signal:c.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(t)}}
+async function geocode(q){const j=await getJSON('https://geocoding-api.open-meteo.com/v1/search?count=1&language=ar&format=json&name='+encodeURIComponent(q),8000);if(!j.results||!j.results.length)throw new Error('nf');const r=j.results[0];return{lat:r.latitude,lon:r.longitude,name:r.name}}
+async function resolvePlace(v){v=v.trim();if(!v)return null;const p=PLACES.find(x=>x[0]===v);if(p)return{lat:p[1],lon:p[2],name:p[0]};
+  const m=v.match(/^\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)\s*$/);if(m)return{lat:+m[1],lon:+m[2],name:v};
+  try{return await geocode(v)}catch(e){return null}}
+
+/* ================= path: road (OSRM), hike (Tobler), sea (constant speed) ================= */
+// real routing on the OpenStreetMap road and path network; two public OSRM servers, the second as a fallback
+const ROUTERS={car:['https://router.project-osrm.org/route/v1/driving/','https://routing.openstreetmap.de/routed-car/route/v1/driving/'],
+  foot:['https://routing.openstreetmap.de/routed-foot/route/v1/foot/']};
+async function osrm(kind,wps){const coords=wps.map(p=>p.lon.toFixed(5)+','+p.lat.toFixed(5)).join(';');let err;
+  for(const base of ROUTERS[kind]){try{const j=await getJSON(base+coords+'?overview=full&geometries=geojson&annotations=duration',20000);
+      if(j.code==='Ok'&&j.routes&&j.routes.length)return j.routes[0];err=new Error(j.code==='NoRoute'?'noroute':'route')}catch(e){err=e}}
+  throw err||new Error('route')}
+async function roadPath(wps){
+  const r=await osrm('car',wps),g=r.geometry.coordinates.map(c=>[c[1],c[0]]);
+  const ann=[];for(const l of r.legs){if(l.annotation&&l.annotation.duration)ann.push(...l.annotation.duration)}
+  const T=[0];
+  if(ann.length===g.length-1){for(let i=0;i<ann.length;i++)T.push(T[i]+ann[i])}
+  else{const dd=[0];for(let i=1;i<g.length;i++)dd.push(dd[i-1]+hav(g[i-1],g[i]));for(let i=1;i<g.length;i++)T.push(dd[i]/dd[g.length-1]*r.duration)}
+  const f=PACE.road[+$('pace').value][1];return{pts:g,T:T.map(t=>t*f),km:r.distance/1000,how:'roads'}}
+async function elevations(pts){const out=[];for(let i=0;i<pts.length;i+=100){const s=pts.slice(i,i+100);
+    const j=await getJSON('https://api.open-meteo.com/v1/elevation?latitude='+s.map(p=>p[0].toFixed(4)).join(',')+'&longitude='+s.map(p=>p[1].toFixed(4)).join(','));out.push(...j.elevation)}return out}
+function resample(g,n){const dd=[0];for(let i=1;i<g.length;i++)dd.push(dd[i-1]+hav(g[i-1],g[i]));const L=dd[dd.length-1];if(g.length<=n||!L)return g;
+  const out=[];let j=0;for(let k=0;k<n;k++){const t=L*k/(n-1);while(j<dd.length-2&&dd[j+1]<t)j++;const f=dd[j+1]>dd[j]?(t-dd[j])/(dd[j+1]-dd[j]):0;out.push([lerp(g[j][0],g[j+1][0],f),lerp(g[j][1],g[j+1][1],f)])}return out}
+async function hikePath(wps){
+  // follow real footpaths and tracks where OpenStreetMap has them; otherwise a straight line between your points
+  let g,how='trails';
+  try{const r=await osrm('foot',wps);g=r.geometry.coordinates.map(c=>[c[1],c[0]]);
+    const crow=wps.slice(1).reduce((s,p,i)=>s+hav([wps[i].lat,wps[i].lon],[p.lat,p.lon]),0);
+    if(r.distance/1000>crow*4+3){g=null}}catch(e){g=null}
+  if(!g){g=densify(wps.map(p=>[p.lat,p.lon]),.05);how='line'}
+  g=resample(g,200);const el=await elevations(g);
+  let km=0;const f=PACE.hike[+$('pace').value][1],T=[0];
+  for(let i=1;i<g.length;i++){const d=hav(g[i-1],g[i]);km+=d;const s=clamp((el[i]-el[i-1])/(d*1000||1),-1,1);const v=Math.max(.6,6*Math.exp(-3.5*Math.abs(s+.05)))*f;T.push(T[i-1]+d/v*3600*1.15)}  // Tobler + 15% rests
+  return{pts:g,T,km,el,how}}
+function seaPath(wps){const base=wps.map(p=>[p.lat,p.lon]);let km=0;for(let i=1;i<base.length;i++)km+=hav(base[i-1],base[i]);
+  const g=densify(base,Math.max(.5,km/150)),kn=PACE.sea[+$('pace').value][1],v=kn*1.852,T=[0];
+  for(let i=1;i<g.length;i++)T.push(T[i-1]+hav(g[i-1],g[i])/v*3600);return{pts:g,T,km,how:'line'}}
+function posAt(path,t){const T=path.T;let lo=0,hi=T.length-1;if(t<=0)return 0;if(t>=T[hi])return hi;while(hi-lo>1){const m=(lo+hi)>>1;if(T[m]<=t)lo=m;else hi=m}return lo}
+
+/* ================= weather ================= */
+const VARS='temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,visibility,cape,is_day';
+const ymd=d=>d.toISOString().slice(0,10);
+async function forecast(points,vars,t0,t1){const out=[];
+  for(let i=0;i<points.length;i+=50){const s=points.slice(i,i+50);
+    const u='https://api.open-meteo.com/v1/forecast?latitude='+s.map(p=>p[0].toFixed(3)).join(',')+'&longitude='+s.map(p=>p[1].toFixed(3)).join(',')+
+      '&hourly='+vars+'&wind_speed_unit=kmh&timeformat=unixtime&timezone=GMT&start_date='+ymd(t0)+'&end_date='+ymd(t1);
+    const j=await getJSON(u,20000);out.push(...(Array.isArray(j)?j:[j]))}return out}
+async function marine(points,t0,t1){const out=[];
+  for(let i=0;i<points.length;i+=50){const s=points.slice(i,i+50);
+    const u='https://marine-api.open-meteo.com/v1/marine?latitude='+s.map(p=>p[0].toFixed(3)).join(',')+'&longitude='+s.map(p=>p[1].toFixed(3)).join(',')+
+      '&hourly=wave_height,wave_direction,wave_period,swell_wave_height&timeformat=unixtime&timezone=GMT&start_date='+ymd(t0)+'&end_date='+ymd(t1);
+    const j=await getJSON(u,20000);out.push(...(Array.isArray(j)?j:[j]))}return out}
+// value of an hourly series at unix time t (linear), direction-safe variant, and sums over a window
+function at(h,k,t){const T=h.time,v=h[k];if(!v)return null;let i=0;while(i<T.length-1&&T[i+1]<=t)i++;if(i>=T.length-1)return v[T.length-1];const f=clamp((t-T[i])/(T[i+1]-T[i]),0,1);
+  if(v[i]==null||v[i+1]==null)return v[i]??v[i+1];return lerp(v[i],v[i+1],f)}
+function atDir(h,k,t){const T=h.time,v=h[k];let i=0;while(i<T.length-1&&T[i+1]<=t)i++;const j=Math.min(i+1,T.length-1),f=clamp((t-T[i])/((T[j]-T[i])||1),0,1);
+  const x=lerp(Math.cos(v[i]*D2R),Math.cos(v[j]*D2R),f),y=lerp(Math.sin(v[i]*D2R),Math.sin(v[j]*D2R),f);return(Math.atan2(y,x)*R2D+360)%360}
+function near(h,k,t){const T=h.time;let b=0;for(let i=0;i<T.length;i++)if(Math.abs(T[i]-t)<Math.abs(T[b]-t))b=i;return h[k][b]}
+function sumWin(h,k,t,hrs){let s=0;const T=h.time,v=h[k];for(let i=0;i<T.length;i++){if(T[i]>t-hrs*3600&&T[i]<=t+1800)s+=v[i]||0}return s}
+
+
+/* ================= analysis ================= */
+const WC=c=>c==null?'—':c===0?'صحو':c<=2?'غائم جزئيًا':c===3?'غائم':c===45||c===48?'ضباب':c<=57?'رذاذ':c<=67?'مطر':c<=77?'ثلج':c<=82?'زخات':'عاصفة رعدية';
+const UVL=u=>u<3?['منخفضة','g']:u<6?['متوسطة','']:u<8?['عالية','w']:u<11?['عالية جدًا','b']:['شديدة','b'];
+const HEAT=a=>a<27?['مريح','g']:a<32?['دافئ','']:a<41?['حار','w']:a<54?['خطر','b']:['خطر شديد','b'];
+const WADI=i=>i<10?['جافة','g']:i<30?['احتمال ضعيف','']:i<55?['جريان محتمل','w']:i<75?['لا تعبر','b']:['خطر سيول','b'];
+const SEA=h=>h<.5?['هادئ','g']:h<1.25?['خفيف','']:h<2.5?['متوسط','w']:h<4?['مضطرب','b']:['عالٍ','b'];
+const DIRS=['شمالية','شمالية شرقية','شرقية','جنوبية شرقية','جنوبية','جنوبية غربية','غربية','شمالية غربية'];
+const dirName=d=>DIRS[Math.round(d/45)%8];
+function relWind(from,bear){const d=((from-bear+540)%360)-180;const a=Math.abs(d);return a<45?'معاكسة':a>135?'خلفية':'جانبية'}
+function analyse(path,samples,W,RING,M,shift){
+  const dep=trip.dep+shift*3600,res=[],op=trip.opt;
+  for(let s=0;s<samples.length;s++){const sm=samples[s],w=W[s].hourly,ut=dep+sm.t,p=path.pts[sm.i];
+    const nx=path.pts[Math.min(path.pts.length-1,sm.i+3)],pv=path.pts[Math.max(0,sm.i-3)],bear=brg(pv,nx);
+    const o={t:ut,rt:sm.t,p,el:W[s].elevation??(path.el?path.el[sm.i]:0),bear,
+      T:at(w,'temperature_2m',ut),AT:at(w,'apparent_temperature',ut),RH:at(w,'relative_humidity_2m',ut),pr:at(w,'precipitation',ut)||0,pp:at(w,'precipitation_probability',ut)||0,
+      wc:near(w,'weather_code',ut),ws:at(w,'wind_speed_10m',ut)||0,wd:atDir(w,'wind_direction_10m',ut),wg:at(w,'wind_gusts_10m',ut)||0,uv:at(w,'uv_index',ut)||0,vis:at(w,'visibility',ut),cape:at(w,'cape',ut)||0,day:near(w,'is_day',ut)};
+    o.wadi=0;
+    if(trip.mode!=='sea'){
+      // rain in the last 6 h here, plus the last 12 h on higher ground within 7 km, weighted by how much of a hollow the point sits in
+      const L6=sumWin(w,'precipitation',ut,6);let Umax=0,ringEl=0,n=0;
+      for(const r of RING[s]){const re=r.elevation??o.el;ringEl+=re;n++;if(re>=o.el-10)Umax=Math.max(Umax,sumWin(r.hourly,'precipitation',ut,12))}
+      const v=n?clamp((ringEl/n-o.el)/200,0,1):.3;let idx=100*(1-Math.exp(-((.5*L6+.8*Umax)*(.5+v))/12));
+      if(o.pp>60&&o.cape>800)idx=Math.max(idx,25);o.wadi=Math.round(idx)}
+    if(M&&M[s]&&M[s].hourly){const m=M[s].hourly;o.wv=at(m,'wave_height',ut);o.wvp=at(m,'wave_period',ut)}
+    const R={},cross=Math.abs(Math.sin((o.wd-bear)*D2R)),hs=op.hs||0;
+    R.heat=sst(32-hs,48-hs,o.AT)*(trip.mode==='hike'?1:trip.mode==='sea'?.7:op.heat?.8:.35);
+    R.uv=(o.day?sst(6,11.5,o.uv):0)*(trip.mode==='hike'?.6:trip.mode==='sea'?.5:op.heat?.4:.05);
+    R.wind=trip.mode==='sea'?sst(22,45,o.ws):trip.mode==='hike'?sst(35,70,o.wg):sst(op.g[0],op.g[1],o.wg*(.4+.6*cross));
+    R.rain=(o.wc>=95?(trip.mode==='hike'?1:.7):0)+sst(1,15,o.pr)*.6;
+    R.vis=o.vis!=null?1-sst(800,6000,o.vis):0;
+    R.wadi=trip.mode==='sea'?0:clamp(o.wadi/100*(trip.mode==='hike'?1.15:op.wd||1),0,1);
+    R.sea=trip.mode==='sea'&&o.wv!=null?sst(op.wv[0],op.wv[1],o.wv):0;
+    R.dark=o.day?0:trip.mode==='hike'?.75:trip.mode==='sea'?.35:0;
+    o.R=R;o.risk=Math.min(1,Math.max(...Object.values(R)));
+    res.push(o)}
+  return res}
+const sev=r=>r<.3?0:r<.6?1:2;
+const SEVC=['var(--ok)','var(--warn)','var(--bad)'],SEVH=['#6FD39B','#F2B84B','#F06B5B'];
+
+/* ================= metrics for colouring ================= */
+const RAMP=['#5CC9B0','#B9D36A','#F2B84B','#F06B5B','#B23A8F'],HRAMP=['#4F86C6','#5CC9B0','#F2B84B','#F06B5B','#B23A8F'];
+const METRICS={risk:{l:'الخطر',f:o=>o.risk,a:0,b:1,r:['#6FD39B','#6FD39B','#F2B84B','#F06B5B','#F06B5B'],u:''},
+  heat:{l:'الحرارة',f:o=>o.AT,a:18,b:46,r:HRAMP,u:'°'},wind:{l:'الهبّات',f:o=>o.wg,a:0,b:80,r:RAMP,u:' كم/س'},
+  rain:{l:'المطر',f:o=>o.pr,a:0,b:12,r:['#2A3A4C','#4F86C6','#7FB8FF','#B88CFF','#F06B5B'],u:' ملم'},wadi:{l:'الأودية',f:o=>o.wadi,a:0,b:100,r:RAMP,u:''},
+  uv:{l:'الأشعة',f:o=>o.day?o.uv:0,a:0,b:11,r:RAMP,u:''},sea:{l:'الموج',f:o=>o.wv||0,a:0,b:3,r:RAMP,u:' م'}};
+function hex(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]}
+function ramp(t,r){t=clamp(t,0,1)*(r.length-1);const i=Math.min(r.length-2,Math.floor(t)),f=t-i,a=hex(r[i]),b=hex(r[i+1]);return'rgb('+a.map((v,k)=>Math.round(lerp(v,b[k],f))).join(',')+')'}
+const mcol=(m,v)=>ramp((v-METRICS[m].a)/(METRICS[m].b-METRICS[m].a),METRICS[m].r);
+function availMetrics(){return Object.keys(METRICS).filter(k=>mode==='sea'?k!=='wadi':k!=='sea')}
+function renderMetric(){if(!availMetrics().includes(metric))metric='risk';
+  $('metric').innerHTML=availMetrics().map(k=>'<button data-k="'+k+'" aria-pressed="'+(k===metric)+'">'+METRICS[k].l+'</button>').join('');
+  $('metric').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{metric=b.dataset.k;renderMetric();drawMap();drawStrip()}));
+  const M=METRICS[metric];$('scaleBar').style.background='linear-gradient(to left,'+M.r.join(',')+')';
+  $('scMin').textContent=metric==='risk'?'آمن':M.a+M.u;$('scMax').textContent=metric==='risk'?'خطر':M.b+M.u}
+
+/* ================= the trip ================= */
+async function run(){
+  $('msg').hidden=true;
+  const [a,b]=await Promise.all([A?Promise.resolve(A):resolvePlace($('inA').value),B?Promise.resolve(B):resolvePlace($('inB').value)]);
+  if(!a||!b){showMsg('لم أجد '+(!a?'نقطة الانطلاق':'الوجهة')+'. اختر من القائمة، أو اكتب إحداثيات مثل 23.59, 58.41، أو انقر الخريطة.');openSheet('plan');return}
+  A=a;B=b;$('inA').value=a.name;$('inB').value=b.name;
+  const dep=new Date($('dep').value);if(isNaN(dep)){showMsg('حدّد وقت الانطلاق.');openSheet('plan');return}
+  const wps=[a,...VIA,b];stopPlay();
+  busy(true,'أرسم المسار…');
+  try{
+    let path;
+    try{path=mode==='road'?await roadPath(wps):mode==='hike'?await hikePath(wps):seaPath(wps)}
+    catch(e){throw{user:e&&e.message==='noroute'?'لا يوجد طريق بري يصل بين هذه النقاط. جرّب نقطة أقرب إلى شارع أو أضف نقطة مرور.':'تعذّر الوصول إلى خادم الطرق.',net:!(e&&e.message==='noroute')}}
+    const out=path.T[path.T.length-1],stay=+$('stay').value;
+    if(stay>=0){const st=stay*3600;path={pts:path.pts.concat(path.pts.slice().reverse()),T:path.T.concat(path.T.slice().reverse().map(t=>out+st+(out-t))),km:path.km*2,el:path.el?path.el.concat(path.el.slice().reverse()):null,how:path.how}}
+    const total=path.T[path.T.length-1];
+    if(mode==='hike'&&total>16*3600)showMsg('المسار طويل للمشي في يوم واحد ('+fmtDur(total)+'). قسّمه إلى مراحل.');
+    if(!(total>0)||total>4*86400)throw{user:'الرحلة أطول من 4 أيام أو تعذّر حساب زمنها. قسّمها إلى مراحل.'};
+    const step=Math.max(clamp(Math.ceil(total/36/900)*900,900,3600),Math.ceil(total/60));const samples=[];for(let t=0;t<total;t+=step)samples.push({t,i:posAt(path,t)});samples.push({t:total,i:path.pts.length-1});
+    const pts=samples.map(s=>path.pts[s.i]);
+    const t0=new Date(dep.getTime()-86400000),t1=new Date(dep.getTime()+(total+11*3600)*1000);
+    if((t1-Date.now())/86400000>15.5)throw{user:'التوقع متاح لنحو 16 يومًا قادمة فقط. اختر موعدًا أقرب.'};
+    busy(true,'أجلب الطقس عند '+samples.length+' نقطة…');
+    trip={dep:dep.getTime()/1000,path,samples,mode,wps,km:path.km,dur:total,out,stay,opt:OPT()};
+    let W,RING=[],M=null;
+    try{
+      const rings=[];if(mode!=='sea')for(const p of pts)for(const b0 of [0,120,240])rings.push(dest(p,b0,7));
+      const [w,r,m]=await Promise.all([forecast(pts,VARS,t0,t1),mode!=='sea'?forecast(rings,'precipitation',t0,t1):Promise.resolve([]),mode==='sea'?marine(pts,t0,t1):Promise.resolve(null)]);
+      W=w;for(let s=0;s<pts.length;s++)RING.push(r.slice(s*3,s*3+3));M=m}catch(e){trip=null;throw{user:'تعذّر جلب الطقس من Open-Meteo.',net:true}}
+    $('dnote').hidden=true;
+    Object.assign(trip,{W,RING,M});
+    trip.res=analyse(path,samples,W,RING,M,0);
+    // best departure: −2 h … +8 h on the same data, optionally daylight only
+    const score=r=>r.reduce((s,o)=>s+o.risk*o.risk,0)/r.length+Math.max(...r.map(o=>o.risk))*.5;
+    const dayOnly=$('dayOnly').checked,base=score(trip.res);let best={sh:0,sc:base};
+    for(let sh=-2;sh<=8;sh++){if(!sh||(trip.dep+sh*3600)*1000<Date.now()-1800000)continue;const r=analyse(path,samples,W,RING,M,sh);if(dayOnly&&r.some(o=>!o.day))continue;const sc=score(r);if(sc<best.sc-.02)best={sh,sc}}
+    trip.best=best.sh&&best.sc<base*.75?best:null;trip.base=base;
+    sel=-1;cursorT=null;hideTip();renderAll();fitRoute(true);reveal=0;revealStart=performance.now();animate();
+    if(innerWidth>760&&openS==='plan')openSheet('pts');else if(openS==='plan')openSheet(null)
+  }catch(e){const t=e&&e.user?e.user:'تعذّر حساب الرحلة.';
+    if(e&&e.net){const sandbox=/claude/i.test(location.hostname);$('dnote').innerHTML=sandbox?'هذه المعاينة داخل Claude معزولة عن الإنترنت، فلا تصل إلى خوادم الطرق والطقس. افتح الملف route.html في متصفحك أو على nafaf.online لتعمل بالبيانات الحقيقية.':t+' تأكد من اتصالك بالإنترنت ثم أعد المحاولة. <button id="retry" style="border:1px solid currentColor;background:transparent;color:inherit;border-radius:8px;padding:2px 10px;margin-inline-start:6px">أعد المحاولة</button>';$('dnote').hidden=false;$('retry').onclick=()=>{$('dnote').hidden=true;run()}}
+    else{showMsg(t);openSheet('plan')}}
+  finally{busy(false)}}
+function busy(on,t){$('load').hidden=!on;if(t)$('loadT').textContent=t;$('go').disabled=on}
+function showMsg(t){$('msg').textContent=t;$('msg').hidden=false}
+let rerunT=0;function rerun(){clearTimeout(rerunT);if(A&&B)rerunT=setTimeout(run,350)}
+
+/* ================= sheets ================= */
+let openS=null;
+function openSheet(n){openS=n;document.querySelectorAll('.sheet').forEach(s=>s.classList.toggle('off',s.id!=='s-'+n));
+  document.querySelectorAll('.rail [data-s]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===n?'true':'false'));drawMap()}
+document.querySelectorAll('.rail [data-s]').forEach(b=>b.addEventListener('click',()=>openSheet(openS===b.dataset.s?null:b.dataset.s)));
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>openSheet(null)));
+
+/* ================= results ================= */
+const ARROW='<svg viewBox="0 0 12 12"><path d="M6 1v10M2.5 7.5L6 11l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+function summary(r){
+  const maxBy=k=>r.reduce((m,o)=>o[k]!=null&&o[k]>m?o[k]:m,-1e9);const worst=r.reduce((m,o)=>o.risk>m.risk?o:m,r[0]);const s=sev(worst.risk);
+  const top=Object.entries(worst.R).sort((a,b)=>b[1]-a[1])[0][0];
+  const nm={heat:'حرارة محسوسة '+Math.round(worst.AT)+'°',uv:'أشعة '+UVL(worst.uv)[0],wind:'هبّات '+Math.round(worst.wg)+' كم/س',rain:WC(worst.wc),vis:'رؤية '+((worst.vis||0)/1000).toFixed(1)+' كم',wadi:'الأودية: '+WADI(worst.wadi)[0],sea:'موج '+(worst.wv||0).toFixed(1)+' م',dark:'ظلام بعد الغروب'}[top];
+  const head=s===0?'رحلة آمنة جويًا':s===1?'ممكنة مع انتباه':(top==='wadi'||top==='sea'||top==='rain'?'أجّل أو غيّر المسار':'رحلة صعبة جويًا');
+  return{s,head,top,why:s?'أصعب لحظة '+fmtHM(new Date(worst.t*1000))+': '+nm:'لا خطر جوي ملحوظ في وقت مرورك.',worst,maxAT:maxBy('AT'),maxG:maxBy('wg'),maxUV:maxBy('uv'),maxWadi:maxBy('wadi'),maxWv:maxBy('wv')}}
+function renderAll(){
+  const r=trip.res,S=summary(r);trip.S=S;
+  $('pill').hidden=false;$('pillDot').style.background=SEVC[S.s];$('pillT').textContent=S.head;$('pillS').textContent=Math.round(trip.km)+' كم · '+fmtDur(trip.dur);
+  $('rPts').style.setProperty('--sev',SEVC[S.s]);
+  const dep=new Date(trip.dep*1000),arr=new Date((trip.dep+trip.out)*1000);
+  let h='<div class="sum"><h3><i style="background:'+SEVC[S.s]+'"></i>'+S.head+'</h3><p>'+S.why+'</p>'+
+    '<div class="kv"><div><small>المسافة</small><b class="num">'+Math.round(trip.km)+' كم</b></div><div><small>'+(trip.stay>=0?'المدة الكلية':'المدة')+'</small><b class="num">'+fmtDur(trip.dur)+'</b></div>'+
+    '<div><small>الوصول</small><b class="num">'+fmtHM(arr)+'</b></div><div><small>أعلى محسوسة</small><b class="num">'+Math.round(S.maxAT)+'°</b></div>'+
+    '<div><small>أقوى هبّة</small><b class="num">'+Math.round(S.maxG)+'</b></div><div><small>أعلى UV</small><b class="num">'+S.maxUV.toFixed(0)+'</b></div>'+
+    (trip.mode==='sea'?'<div><small>أعلى موج</small><b class="num">'+(S.maxWv>-1e8?S.maxWv.toFixed(1)+' م':'—')+'</b></div>':'<div><small>الأودية</small><b class="num">'+S.maxWadi+'</b></div>')+
+    '<div><small>النقاط</small><b class="num">'+r.length+'</b></div></div><p class="hint">'+({roads:'المسار على الطرق الفعلية',trails:'المسار على الدروب المسجلة في OpenStreetMap',line:'المسار خط مستقيم بين نقاطك'})[trip.path.how||'line']+' · '+fmtDay(dep)+' · انطلاق '+fmtHM(dep)+(trip.stay>=0?' · عودة '+fmtHM(new Date((trip.dep+trip.out+trip.stay*3600)*1000)):'')+'</p></div>';
+  h+=bestHTML();
+  h+='<div class="pts">';
+  r.forEach((o,k)=>{const d=new Date(o.t*1000),s=sev(o.risk),ch=[];
+    const he=HEAT(o.AT);ch.push('<span class="c '+he[1]+'">محسوسة '+Math.round(o.AT)+'°</span>');
+    ch.push('<span class="c'+(o.R.wind>.3?' w':'')+'"><span style="display:inline-flex;transform:rotate('+o.wd+'deg)">'+ARROW+'</span>'+Math.round(o.ws)+'–'+Math.round(o.wg)+' '+relWind(o.wd,o.bear)+'</span>');
+    if(o.day&&o.uv>=3){const u=UVL(o.uv);ch.push('<span class="c '+u[1]+'">UV '+o.uv.toFixed(0)+'</span>')}
+    if(o.pr>.1||o.pp>=30)ch.push('<span class="c'+(o.pr>2||o.wc>=95?' b':'')+'">'+(o.pr>.1?o.pr.toFixed(1)+' ملم':'احتمال '+Math.round(o.pp)+'٪')+'</span>');
+    if(o.vis!=null&&o.vis<5000)ch.push('<span class="c w">رؤية '+(o.vis/1000).toFixed(1)+' كم</span>');
+    if(!o.day&&trip.mode!=='road')ch.push('<span class="c w">ليل</span>');
+    if(trip.mode==='sea'&&o.wv!=null){const q=SEA(o.wv);ch.push('<span class="c '+q[1]+'">موج '+o.wv.toFixed(1)+' م</span>')}
+    let wadi='';if(trip.mode!=='sea'&&o.wadi>=5){const q=WADI(o.wadi);wadi='<div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)"><span style="white-space:nowrap">الأودية: '+q[0]+'</span><div class="meter"><i style="width:'+o.wadi+'%;background:'+mcol('wadi',o.wadi)+'"></i></div></div>'}
+    const leg=trip.stay>=0&&o.rt>trip.out+1?(o.rt<trip.out+trip.stay*3600?' · توقف':' · عودة'):'';
+    h+='<button class="pt'+(k===sel?' sel':'')+'" data-k="'+k+'"><span class="s" style="background:'+SEVC[s]+'"></span><span class="tm"><b class="num">'+fmtHM(d)+'</b><small class="num">'+fmtDur(o.rt)+leg+'</small></span>'+
+      '<span class="bd"><span class="l1"><span><b>'+WC(o.wc)+'</b> · <span class="num">'+Math.round(o.T)+'°</span></span><span style="color:var(--muted);font-size:11px" class="num">'+(trip.mode==='sea'?'':Math.round(o.el)+' م')+'</span></span><span class="chips">'+ch.join('')+'</span>'+wadi+'</span></button>'});
+  h+='</div>';
+  $('ptsBody').innerHTML=h;
+  $('ptsBody').querySelectorAll('.pt').forEach(b=>b.addEventListener('click',()=>select(+b.dataset.k,true)));
+  $('briefBody').innerHTML='<div class="sum"><h3><i style="background:'+SEVC[S.s]+'"></i>'+S.head+'</h3></div>'+bestHTML()+'<div class="ai"><p id="aiTxt">'+ruleBrief(S)+'</p><button id="aiBtn">اكتبها بالذكاء الاصطناعي</button></div>';
+  $('aiBtn').addEventListener('click',aiBrief);
+  document.querySelectorAll('.useBest').forEach(b=>b.addEventListener('click',()=>{$('dep').value=toLocalInput(new Date((trip.dep+trip.best.sh*3600)*1000));run()}));
+  drawStrip();drawMap()}
+function bestHTML(){if(!trip.best)return'';const d=new Date((trip.dep+trip.best.sh*3600)*1000);
+  return'<div class="best"><span>انطلق '+(trip.best.sh>0?'بعد '+trip.best.sh+' س':'قبل '+(-trip.best.sh)+' س')+' (<b class="num">'+fmtHM(d)+'</b>): المخاطر أقل بنحو '+Math.round((1-trip.best.sc/trip.base)*100)+'٪</span><button class="useBest">اعتمده</button></div>'}
+function ruleBrief(S){const r=trip.res,parts=[];
+  parts.push(S.s===0?'الطريق صافي جويًا، وما فيه شي يقلق.':S.why+'.');
+  if(S.maxAT>=41)parts.push('الحر قوي، خذ ماي وايد'+(trip.mode==='hike'?' وابدأ المشي قبل طلوع الشمس.':'.'));
+  if(trip.mode!=='sea'&&S.maxWadi>=55)parts.push('لا تعبر أي وادي جاري، حتى لو بدا ضحل.');
+  else if(trip.mode!=='sea'&&S.maxWadi>=30)parts.push('في احتمال جريان، راقب مجاري الأودية قبل العبور.');
+  if(trip.mode==='sea'&&S.maxWv>=1.25)parts.push('البحر مو مريح للقوارب الصغيرة، خلك قريب من الساحل.');
+  if(S.maxUV>=8&&trip.mode!=='road')parts.push('الأشعة عالية جدًا، غطاء رأس وواقي شمس.');
+  if(trip.mode==='hike'&&r.some(o=>!o.day))parts.push('جزء من المسار بعد الغروب، خذ كشاف واحسب وقت النزول.');
+  if(trip.best)parts.push('لو تقدر تغيّر الموعد، الانطلاق الساعة '+fmtHM(new Date((trip.dep+trip.best.sh*3600)*1000))+' أريح.');
+  return parts.join(' ')}
+let sampleNS;
+async function aiBrief(){const btn=$('aiBtn'),out=$('aiTxt');
+  if(sampleNS===undefined){try{sampleNS=window.claude&&window.claude.use?await window.claude.use('sample'):null}catch(e){sampleNS=null}}
+  if(!sampleNS){out.textContent=ruleBrief(trip.S);btn.hidden=true;return}
+  btn.disabled=true;btn.textContent='يكتب…';
+  const r=trip.res.map(o=>({وقت:fmtHM(new Date(o.t*1000)),ارتفاع_م:Math.round(o.el),محسوسة:Math.round(o.AT),طقس:WC(o.wc),مطر_ملم:+o.pr.toFixed(1),احتمال:Math.round(o.pp),هبات:Math.round(o.wg),الريح_بالنسبة_للرحلة:relWind(o.wd,o.bear),uv:+o.uv.toFixed(0),نهار:!!o.day,مؤشر_الأودية:o.wadi,موج_م:o.wv!=null?+o.wv.toFixed(1):undefined,خطر:+o.risk.toFixed(2)}));
+  const prompt='أنت «نفاف»، مرشد طقس عُماني. اكتب إحاطة قصيرة (4 إلى 6 جمل) باللهجة العُمانية البيضاء لرحلة '+({road:'برية',hike:'مشي جبلي',sea:'بحرية'})[trip.mode]+' ('+$('opt').selectedOptions[0].textContent+') من '+trip.wps[0].name+' إلى '+trip.wps[trip.wps.length-1].name+(trip.stay>=0?' مع العودة':'')+'. انطلاق '+fmtHM(new Date(trip.dep*1000))+'، المسافة '+Math.round(trip.km)+' كم، المدة '+fmtDur(trip.dur)+'.'+
+    (trip.best?' أفضل موعد بديل حسب الحساب: '+fmtHM(new Date((trip.dep+trip.best.sh*3600)*1000))+'.':'')+
+    ' حالة الطقس عند كل نقطة لحظة الوصول:\n'+JSON.stringify(r)+'\nركّز على أخطر لحظة ووقتها، والأودية إن وُجدت، والحر والأشعة والريح، ونصيحة عملية واحدة. لا تخترع أرقامًا غير الموجودة. نص عادي بلا عناوين أو نقاط.';
+  try{out.textContent='';await sampleNS(prompt,{modelTier:'quick',onText:({text})=>{out.textContent=text}});btn.textContent='أعد الكتابة'}
+  catch(e){out.textContent=ruleBrief(trip.S);btn.textContent='اكتبها بالذكاء الاصطناعي'}
+  finally{btn.disabled=false}}
+
+/* ================= interpolation along the trip ================= */
+function sampleAt(rt){const r=trip.res;let k=0;while(k<r.length-2&&r[k+1].rt<=rt)k++;const a=r[k],b=r[Math.min(k+1,r.length-1)],f=b.rt>a.rt?clamp((rt-a.rt)/(b.rt-a.rt),0,1):0;
+  const L=x=>a[x]==null?b[x]:b[x]==null?a[x]:lerp(a[x],b[x],f);
+  return{k:f<.5?k:Math.min(k+1,r.length-1),T:L('T'),AT:L('AT'),ws:L('ws'),wg:L('wg'),uv:L('uv'),wadi:L('wadi'),wv:L('wv'),pr:L('pr'),risk:L('risk'),wc:(f<.5?a:b).wc,day:(f<.5?a:b).day,wd:(f<.5?a:b).wd,bear:(f<.5?a:b).bear}}
+function posAtTime(rt){const P=trip.path,i=posAt(P,rt),j=Math.min(i+1,P.pts.length-1);const f=P.T[j]>P.T[i]?clamp((rt-P.T[i])/(P.T[j]-P.T[i]),0,1):0;
+  return[lerp(P.pts[i][0],P.pts[j][0],f),lerp(P.pts[i][1],P.pts[j][1],f),brg(P.pts[i],P.pts[j]===P.pts[i]?P.pts[Math.min(j+1,P.pts.length-1)]:P.pts[j])]}
+
+/* ================= map (drawn, no tiles) ================= */
+const mc=$('map'),mx=mc.getContext('2d');let MW=0,MH=0,DPR=1,reveal=1,revealStart=0,cursorT=null;
+const view={lat:23.1,lon:57.4,k:140};
+function vpRect(){const nar=MW<=760,sheet=openS&&!nar?370:0;return{l:0,r:MW-(nar?60:76)-sheet,t:nar?70:60,b:MH-(nar?90:104)-(openS&&nar?MH*.45:0)}}
+const P2=(la,lo)=>{const c=Math.cos(view.lat*D2R),R=vpRect();return[(R.l+R.r)/2+(lo-view.lon)*c*view.k,(R.t+R.b)/2-(la-view.lat)*view.k]};
+const P2inv=(x,y)=>{const c=Math.cos(view.lat*D2R),R=vpRect();return[view.lat-(y-(R.t+R.b)/2)/view.k,view.lon+(x-(R.l+R.r)/2)/(c*view.k)]};
+function mresize(){DPR=Math.min(devicePixelRatio||1,2);MW=innerWidth;MH=innerHeight;mc.width=MW*DPR;mc.height=MH*DPR;sresize();drawMap()}
+let mapQ=false;function drawMap(){if(mapQ)return;mapQ=true;requestAnimationFrame(()=>{mapQ=false;paintMap()})}
+let goal=null;   // eased camera moves
+function flyTo(la,lo,k){goal={la,lo,k:k||view.k};animate()}
+let animOn=false;function animate(){if(animOn)return;animOn=true;requestAnimationFrame(tick)}
+let lastTick=performance.now();
+function tick(now){const dt=Math.min(.05,(now-lastTick)/1000);lastTick=now;let more=false;
+  if(goal){const a=1-Math.exp(-dt*7);view.lat=lerp(view.lat,goal.la,a);view.lon=lerp(view.lon,goal.lo,a);view.k=lerp(view.k,goal.k,a);if(Math.abs(view.lat-goal.la)+Math.abs(view.lon-goal.lo)<1e-4&&Math.abs(view.k-goal.k)<.5)goal=null;more=true}
+  if(reveal<1){reveal=clamp((now-revealStart)/900,0,1);more=true}
+  if(playing){cursorT=Math.min(trip.dur,cursorT+dt*trip.dur/16);onCursor(true);if(cursorT>=trip.dur)stopPlay();more=true}
+  paintMap();if(playing||cursorT!=null)drawStrip();
+  if(more)requestAnimationFrame(tick);else animOn=false}
+function paintMap(){
+  const c=mx;c.setTransform(DPR,0,0,DPR,0,0);
+  const sg=c.createRadialGradient(MW*.4,MH*.4,0,MW*.4,MH*.4,Math.max(MW,MH));sg.addColorStop(0,'#0C2033');sg.addColorStop(1,'#071422');c.fillStyle=sg;c.fillRect(0,0,MW,MH);
+  c.strokeStyle='rgba(226,234,243,.045)';c.lineWidth=1;c.beginPath();const st=view.k>400?.25:1;
+  for(let g=10;g<=30;g+=st){const y=P2(g,view.lon)[1];c.moveTo(0,y);c.lineTo(MW,y)}for(let g=48;g<=64;g+=st){const x=P2(view.lat,g)[0];c.moveTo(x,0);c.lineTo(x,MH)}c.stroke();
+  // land with a soft coastal glow
+  for(const pass of[0,1])for(const L of LAND){c.beginPath();const r=L.r;for(let i=0;i<r.length;i+=2){const p=P2(r[i+1],r[i]);i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1])}c.closePath();
+    if(!pass){c.strokeStyle='rgba(127,184,255,.07)';c.lineWidth=8;c.stroke()}else{c.fillStyle=L.n==='Oman'?'#1E2B38':'#16212C';c.fill();c.strokeStyle='rgba(127,184,255,.3)';c.lineWidth=1;c.stroke()}}
+  c.lineCap='round';c.lineJoin='round';
+  // city names, quietly
+  c.textAlign='center';c.direction='rtl';
+  if($('lyNames').checked&&view.k>60){c.font='11px '+FONT;for(const p of PLACES){if(!p[3]&&view.k<260)continue;const q=P2(p[1],p[2]);if(q[0]<-30||q[0]>MW+30||q[1]<-30||q[1]>MH+30)continue;if([A,B].some(w=>w&&Math.hypot(w.lat-p[1],w.lon-p[2])<.02))continue;
+    c.fillStyle='rgba(226,234,243,.35)';c.beginPath();c.arc(q[0],q[1],1.8,0,7);c.fill();c.fillStyle='rgba(226,234,243,.42)';c.fillText(p[0],q[0],q[1]-7)}}
+  if(trip){const P=trip.path.pts,T=trip.path.T,n=P.length,lim=Math.floor(n*reveal);
+    c.strokeStyle='rgba(0,0,0,.5)';c.lineWidth=8;c.beginPath();for(let i=0;i<lim;i++){const q=P2(P[i][0],P[i][1]);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])}c.stroke();
+    const M=METRICS[metric],chunk=Math.max(1,Math.floor(n/400));c.lineWidth=4.5;
+    for(let i=0;i<lim-1;i+=chunk){const j=Math.min(lim-1,i+chunk);const v=M.f(sampleAt(T[i]));c.strokeStyle=mcol(metric,v);c.beginPath();for(let k=i;k<=j;k++){const q=P2(P[k][0],P[k][1]);k===i?c.moveTo(q[0],q[1]):c.lineTo(q[0],q[1])}c.stroke()}
+    if(reveal>=1)trip.res.forEach((o,k)=>{const q=P2(o.p[0],o.p[1]);if(q[0]<-20||q[0]>MW+20||q[1]<-20||q[1]>MH+20)return;const on=k===sel;
+      if($('lyWind').checked){const a=(o.wd+180)*D2R,L=7+Math.min(20,o.ws*.4);c.strokeStyle=on?'#fff':'rgba(226,234,243,.55)';c.lineWidth=1.4;c.beginPath();
+        const ex=q[0]+Math.sin(a)*L,ey=q[1]-Math.cos(a)*L;c.moveTo(q[0],q[1]);c.lineTo(ex,ey);c.lineTo(ex-Math.sin(a-.5)*4.5,ey+Math.cos(a-.5)*4.5);c.moveTo(ex,ey);c.lineTo(ex-Math.sin(a+.5)*4.5,ey+Math.cos(a+.5)*4.5);c.stroke()}
+      if($('lyDots').checked||on){c.fillStyle=mcol(metric,M.f(o));c.strokeStyle='#071422';c.lineWidth=2;c.beginPath();c.arc(q[0],q[1],on?7.5:4.2,0,7);c.fill();c.stroke();if(on){c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=1.5;c.beginPath();c.arc(q[0],q[1],11,0,7);c.stroke()}}});
+    // the traveller during play or scrub
+    if(cursorT!=null){const[la,lo,b]=posAtTime(cursorT),q=P2(la,lo),now=performance.now()/1000;
+      c.fillStyle='rgba(227,169,75,.22)';c.beginPath();c.arc(q[0],q[1],14+3*Math.sin(now*4),0,7);c.fill();
+      c.save();c.translate(q[0],q[1]);c.rotate(b*D2R);c.fillStyle='#E3A94B';c.strokeStyle='#071422';c.lineWidth=2;c.beginPath();c.moveTo(0,-10);c.lineTo(7,7);c.lineTo(0,3);c.lineTo(-7,7);c.closePath();c.fill();c.stroke();c.restore()}}
+  const wp=(p,col,t,r)=>{if(!p)return;const q=P2(p.lat,p.lon);c.fillStyle=col;c.strokeStyle='#fff';c.lineWidth=2.2;c.beginPath();c.arc(q[0],q[1],r,0,7);c.fill();c.stroke();
+    if(t){c.font='700 12px '+FONT;c.lineWidth=3;c.strokeStyle='rgba(7,20,34,.85)';c.strokeText(t,q[0],q[1]+r+13);c.fillStyle='#fff';c.fillText(t,q[0],q[1]+r+13)}};
+  VIA.forEach(v=>wp(v,'#93A3B7','',5));wp(A,'#5CC9B0',A&&shortName(A.name),7.5);wp(B,'#E3A94B',B&&shortName(B.name),7.5);
+  placeTip()}
+const shortName=n=>/^-?\d/.test(n)?'':n;
+function fitRoute(fly){let pts=trip?trip.path.pts:[A,B,...VIA].filter(Boolean).map(p=>[p.lat,p.lon]);if(!pts.length)return;let a=90,b=-90,c=180,d=-180;for(const p of pts){a=Math.min(a,p[0]);b=Math.max(b,p[0]);c=Math.min(c,p[1]);d=Math.max(d,p[1])}
+  const R=vpRect(),la=(a+b)/2,lo=(c+d)/2,cs=Math.cos(la*D2R);const k=clamp(Math.min((R.b-R.t-80)/Math.max(.03,b-a),(R.r-R.l-90)/(Math.max(.03,d-c)*cs)),40,4000);
+  if(fly)flyTo(la,lo,k);else{view.lat=la;view.lon=lo;view.k=k;drawMap()}}
+
+/* ================= map gestures: pan, pinch, wheel, tap menu, drag waypoints ================= */
+const ptrs=new Map();let pan=null,moved=0,pinch=null,dragWp=null;
+function hitWp(x,y){const all=[A,B,...VIA].filter(Boolean);for(const p of all){const q=P2(p.lat,p.lon);if(Math.hypot(q[0]-x,q[1]-y)<16)return p}return null}
+function hitPt(x,y){if(!trip)return-1;let b=-1,bd=18;trip.res.forEach((o,k)=>{const q=P2(o.p[0],o.p[1]);const d=Math.hypot(q[0]-x,q[1]-y);if(d<bd){bd=d;b=k}});return b}
+mc.addEventListener('pointerdown',e=>{mc.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,[e.clientX,e.clientY]);moved=0;goal=null;
+  if(ptrs.size===1){dragWp=hitWp(e.clientX,e.clientY);pan={x:e.clientX,y:e.clientY,lat:view.lat,lon:view.lon}}
+  else if(ptrs.size===2){const[p1,p2]=[...ptrs.values()];pinch={d:Math.hypot(p1[0]-p2[0],p1[1]-p2[1]),k:view.k};pan=null;dragWp=null}});
+mc.addEventListener('pointermove',e=>{
+  if(!ptrs.has(e.pointerId)){mc.style.cursor=hitWp(e.clientX,e.clientY)?'move':hitPt(e.clientX,e.clientY)>=0?'pointer':'';return}
+  ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+  if(pinch&&ptrs.size===2){const[p1,p2]=[...ptrs.values()];view.k=clamp(pinch.k*Math.hypot(p1[0]-p2[0],p1[1]-p2[1])/pinch.d,40,4000);moved=99;drawMap();return}
+  if(!pan)return;const dx=e.clientX-pan.x,dy=e.clientY-pan.y;moved=Math.max(moved,Math.hypot(dx,dy));if(moved<5)return;
+  hideCtx();
+  if(dragWp){const[la,lo]=P2inv(e.clientX,e.clientY);dragWp.lat=la;dragWp.lon=lo;dragWp.name=dragWp.name&&dragWp.name.startsWith('مرور')?dragWp.name:la.toFixed(3)+', '+lo.toFixed(3);syncInputs();drawMap();return}
+  mc.style.cursor='grabbing';view.lat=pan.lat+dy/view.k;view.lon=pan.lon-dx/(view.k*Math.cos(view.lat*D2R));drawMap()});
+function endPtr(e){ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;if(ptrs.size)return;mc.style.cursor='';
+  if(dragWp&&moved>=5){dragWp=null;rerun();pan=null;return}
+  if(pan&&moved<5)mapTap(e.clientX,e.clientY);pan=null;dragWp=null}
+mc.addEventListener('pointerup',endPtr);mc.addEventListener('pointercancel',e=>{ptrs.delete(e.pointerId);pan=null;pinch=null;dragWp=null});
+mc.addEventListener('wheel',e=>{e.preventDefault();goal=null;const before=P2inv(e.clientX,e.clientY);view.k=clamp(view.k*Math.exp(-e.deltaY*.0015),40,4000);const after=P2inv(e.clientX,e.clientY);view.lat+=before[0]-after[0];view.lon+=before[1]-after[1];drawMap()},{passive:false});
+mc.addEventListener('dblclick',e=>{const[la,lo]=P2inv(e.clientX,e.clientY);flyTo(la,lo,Math.min(4000,view.k*2))});
+let ctxAt=null;
+function mapTap(x,y){
+  if(!$('ctx').hidden||!$('tip').hidden){hideCtx();hideTip();if(sel>=0){sel=-1;markSel()}return}
+  const k=hitPt(x,y);if(k>=0){select(k,false);return}
+  ctxAt=P2inv(x,y);const m=$('ctx');m.hidden=false;$('ctxC').textContent=ctxAt[0].toFixed(3)+'°, '+ctxAt[1].toFixed(3)+'°';
+  const w=m.offsetWidth,h=m.offsetHeight;m.style.left=clamp(x-w/2,8,MW-w-8)+'px';m.style.top=clamp(y+12,8,MH-h-8)+'px'}
+function hideCtx(){$('ctx').hidden=true}
+$('ctx').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{const[la,lo]=ctxAt,nm=la.toFixed(3)+', '+lo.toFixed(3),p={lat:la,lon:lo,name:nm};
+  if(b.dataset.c==='A')A=p;else if(b.dataset.c==='B')B=p;else VIA.push({...p,name:'مرور '+(VIA.length+1)});
+  syncInputs();renderVias();hideCtx();drawMap();if(A&&B)rerun();else openSheet('plan')}));
+function syncInputs(){if(A)$('inA').value=A.name;if(B)$('inB').value=B.name}
+function renderVias(){const v=$('vias');v.hidden=!VIA.length;v.innerHTML=VIA.map((p,i)=>'<span>'+p.name+'<button data-i="'+i+'" aria-label="احذف">✕</button></span>').join('');
+  v.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{VIA.splice(+b.dataset.i,1);VIA.forEach((p,i)=>p.name='مرور '+(i+1));renderVias();drawMap()}))}
+
+/* ================= selection, tip, HUD ================= */
+function markSel(){$('ptsBody').querySelectorAll('.pt').forEach(b=>b.classList.toggle('sel',+b.dataset.k===sel));drawMap();drawStrip()}
+function select(k,fly){sel=k;markSel();const o=trip.res[k];
+  const el=$('ptsBody').querySelector('.pt[data-k="'+k+'"]');if(el&&!fly)el.scrollIntoView({block:'nearest',behavior:'smooth'});
+  if(fly){const q=P2(o.p[0],o.p[1]),R=vpRect();if(q[0]<R.l+60||q[0]>R.r-60||q[1]<R.t+80||q[1]>R.b-30)flyTo(o.p[0],o.p[1])}
+  if(MW<=760&&openS){hideTip();return}
+  showTip(o)}
+function showTip(o){const t=$('tip');const d=new Date(o.t*1000);
+  const rows=[['محسوسة',Math.round(o.AT)+'° · '+HEAT(o.AT)[0]],['الريح',Math.round(o.ws)+'–'+Math.round(o.wg)+' كم/س · '+relWind(o.wd,o.bear)]];
+  if(o.day&&o.uv>=1)rows.push(['الأشعة',o.uv.toFixed(0)+' · '+UVL(o.uv)[0]]);
+  if(o.pr>.1||o.pp>=20)rows.push(['المطر',o.pr.toFixed(1)+' ملم · '+Math.round(o.pp)+'٪']);
+  if(trip.mode!=='sea')rows.push(['الأودية',WADI(o.wadi)[0]]);else if(o.wv!=null)rows.push(['الموج',o.wv.toFixed(1)+' م · '+SEA(o.wv)[0]]);
+  t.innerHTML='<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:4px"><b class="num">'+fmtHM(d)+'</b><b>'+WC(o.wc)+' '+Math.round(o.T)+'°</b></div>'+rows.map(r=>'<div class="r"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join('');
+  t.hidden=false;t._o=o;placeTip()}
+function placeTip(){const t=$('tip');if(t.hidden||!t._o)return;const q=P2(t._o.p[0],t._o.p[1]);t.style.left=clamp(q[0],110,MW-110)+'px';t.style.top=Math.max(q[1],t.offsetHeight+30)+'px'}
+function hideTip(){$('tip').hidden=true;$('tip')._o=null}
+function onCursor(follow){if(cursorT==null||!trip){$('hud').hidden=true;return}
+  const s=sampleAt(cursorT),d=new Date((trip.dep+cursorT)*1000),M=METRICS[metric];
+  const mv=M.f(s);let extra=trip.mode==='sea'?'موج '+(s.wv||0).toFixed(1)+' م':s.wadi>=10?'أودية '+WADI(s.wadi)[0]:'';
+  $('hud').hidden=false;$('hud').innerHTML='<i style="background:'+SEVH[sev(s.risk)]+'"></i><b class="num">'+fmtHM(d)+'</b><span>'+WC(s.wc)+'</span><b class="num">'+Math.round(s.AT)+'°</b><span class="num">ريح '+Math.round(s.wg)+'</span>'+(extra?'<span>'+extra+'</span>':'');
+  if(follow&&$('lyFollow').checked){const[la,lo]=posAtTime(cursorT),q=P2(la,lo),R=vpRect();if(q[0]<R.l+80||q[0]>R.r-80||q[1]<R.t+80||q[1]>R.b-60){view.lat=lerp(view.lat,la,.08);view.lon=lerp(view.lon,lo,.08)}}
+  if(sel!==s.k&&playing){sel=s.k;$('ptsBody').querySelectorAll('.pt').forEach(b=>b.classList.toggle('sel',+b.dataset.k===sel))}}
+
+/* ================= play ================= */
+let playing=false;
+function setPlayUI(){$('bPlay').setAttribute('aria-pressed',playing?'true':'false');$('playL').textContent=playing?'إيقاف':'تشغيل';$('playIc').innerHTML=playing?'<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>':'<path d="M8 5l11 7-11 7z"/>'}
+function stopPlay(){playing=false;setPlayUI()}
+$('bPlay').addEventListener('click',()=>{if(!trip)return;if(playing){stopPlay();return}hideTip();if(cursorT==null||cursorT>=trip.dur)cursorT=0;playing=true;setPlayUI();animate()});
+
+/* ================= journey strip: scrub through time ================= */
+const sc=$('strip'),sx=sc.getContext('2d');let SW=0,SH=0;
+function sresize(){const r=sc.getBoundingClientRect();SW=r.width;SH=r.height;sc.width=Math.max(1,SW*DPR);sc.height=Math.max(1,SH*DPR);drawStrip()}
+const sX=rt=>SW-8-(SW-16)*(rt/(trip.dur||1)),sT=x=>clamp((SW-8-x)/(SW-16),0,1)*trip.dur;
+function drawStrip(){const c=sx;c.setTransform(DPR,0,0,DPR,0,0);c.clearRect(0,0,SW,SH);
+  if(!trip){c.fillStyle='rgba(147,163,183,.8)';c.font='12px '+FONT;c.textAlign='center';c.fillText('هنا يمتد زمن رحلتك',SW/2,SH/2);return}
+  const r=trip.res,M=METRICS[metric],Y0=SH-16,Ht=SH-22;
+  if(trip.stay>0){c.fillStyle='rgba(255,255,255,.04)';c.fillRect(sX(trip.out+trip.stay*3600),4,sX(trip.out)-sX(trip.out+trip.stay*3600),Y0-4)}
+  if(trip.mode!=='sea'){const emax=Math.max(200,...r.map(o=>o.el));c.beginPath();c.moveTo(sX(0),Y0);r.forEach(o=>c.lineTo(sX(o.rt),Y0-o.el/emax*Ht*.75));c.lineTo(sX(trip.dur),Y0);c.closePath();c.fillStyle='rgba(120,140,165,.16)';c.fill()}
+  // chosen metric as a coloured ribbon line
+  const nrm=v=>clamp((v-M.a)/(M.b-M.a),0,1);
+  c.lineWidth=3;c.lineCap='round';for(let k=0;k<r.length-1;k++){const a=r[k],b=r[k+1];c.strokeStyle=mcol(metric,(M.f(a)+M.f(b))/2);c.beginPath();c.moveTo(sX(a.rt),Y0-4-nrm(M.f(a))*(Ht-8));c.lineTo(sX(b.rt),Y0-4-nrm(M.f(b))*(Ht-8));c.stroke()}
+  c.font='10.5px '+FONT;c.fillStyle='#93A3B7';const every=Math.max(1,Math.ceil(r.length/(SW/60)));let lastX=-1e9;
+  r.forEach((o,k)=>{if(k%every&&k!==r.length-1)return;const x=sX(o.rt);if(Math.abs(x-lastX)<46)return;lastX=x;c.textAlign=k===0?'right':k===r.length-1?'left':'center';c.fillText(fmtHM(new Date(o.t*1000)),x,SH-2)});
+  c.textAlign='left';c.fillStyle='rgba(147,163,183,.8)';c.fillText(M.l,2,9);
+  const ct=cursorT!=null?cursorT:sel>=0?r[sel].rt:null;
+  if(ct!=null){const x=sX(ct);c.strokeStyle='#E3A94B';c.lineWidth=2;c.beginPath();c.moveTo(x,2);c.lineTo(x,Y0+2);c.stroke();c.fillStyle='#E3A94B';c.beginPath();c.arc(x,Y0+2,4,0,7);c.fill()}}
+let scrub=false;
+sc.addEventListener('pointerdown',e=>{if(!trip)return;sc.setPointerCapture(e.pointerId);scrub=true;stopPlay();hideTip();scrubTo(e)});
+sc.addEventListener('pointermove',e=>{if(scrub)scrubTo(e)});
+sc.addEventListener('pointerup',()=>{scrub=false});
+function scrubTo(e){const r=sc.getBoundingClientRect();cursorT=sT(e.clientX-r.left);onCursor(true);const s=sampleAt(cursorT);sel=s.k;$('ptsBody').querySelectorAll('.pt').forEach(b=>b.classList.toggle('sel',+b.dataset.k===sel));drawMap();drawStrip()}
+
+/* ================= wiring ================= */
+document.querySelectorAll('.modes button').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.m;document.querySelectorAll('.modes button').forEach(x=>x.setAttribute('aria-selected',x===b?'true':'false'));setPace()}));
+$('inA').addEventListener('input',()=>{A=null});$('inB').addEventListener('input',()=>{B=null});
+$('swap').addEventListener('click',()=>{[A,B]=[B,A];const t=$('inA').value;$('inA').value=$('inB').value;$('inB').value=t;VIA.reverse();renderVias();drawMap()});
+$('clrV').addEventListener('click',()=>{VIA=[];renderVias();drawMap()});
+$('go').addEventListener('click',()=>run());
+$('pill').addEventListener('click',()=>openSheet(openS==='pts'?null:'pts'));
+$('bFit').addEventListener('click',()=>fitRoute(true));
+$('bStrip').addEventListener('click',()=>{const off=!$('stripBox').classList.toggle('off');$('bStrip').setAttribute('aria-pressed',off?'true':'false');if(!off){cursorT=null;$('hud').hidden=true;stopPlay()}});
+['lyWind','lyDots','lyNames'].forEach(id=>$(id).addEventListener('change',drawMap));
+addEventListener('keydown',e=>{if(e.key==='Escape'){hideCtx();hideTip();openSheet(null)}if(e.key===' '&&trip&&document.activeElement===document.body){e.preventDefault();$('bPlay').click()}});
+addEventListener('resize',mresize);
+// opening state: an afternoon drive from Sohar to Jebel Shams, computed straight away
+setPace();const d0=nowRounded();if(d0.getHours()>15||d0.getHours()<6){d0.setDate(d0.getDate()+(d0.getHours()>15?1:0));d0.setHours(13)}$('dep').value=toLocalInput(d0);
+$('inA').value='صحار';$('inB').value='جبل شمس';
+mresize();run();
+})();
+</script>
+
+<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{})</script>
+</body></html>

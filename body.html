@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<!-- i18n --><script>try{if(localStorage.getItem("lang")==="en")document.write('<script src="i18n/nafaf-i18n.js"><\/script>')}catch(e){}</script><!-- /i18n --><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#05080F">
+<title>المجسم الحراري الحيوي</title>
+<style>
+/* Layout: a living thermal map of the body stands in the middle of the screen; the heat ledger in watts and the countdown clocks float on the left; the rail opens body, clothing and weather sheets; a three-hour timeline along the bottom scrubs core temperature and water loss second by second. */
+:root{
+  --bg:#05080F;--glass:rgba(9,15,27,.86);--line:rgba(226,234,243,.10);
+  --fg:#E8EEF5;--muted:#93A3B7;--brass:#E3A94B;--teal:#5CC9B0;--sky:#7FB8FF;
+  --ok:#6FD39B;--warn:#F2B84B;--bad:#F06B5B;--ext:#C2457A;
+  --f:system-ui,-apple-system,"Segoe UI",Tahoma,"Geeza Pro","Noto Sans Arabic",Arial,sans-serif;
+  --gl:max(16px,env(safe-area-inset-left,0px));--gr:max(16px,env(safe-area-inset-right,0px));
+  --gt:max(12px,env(safe-area-inset-top,0px));--gb:max(12px,env(safe-area-inset-bottom,0px));
+  --rail:66px;--strip:100px;color-scheme:dark}
+html,body{height:100%;overflow:hidden;margin:0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);font-size:14px;line-height:1.5;direction:rtl;padding-left:var(--gl);padding-right:var(--gr);padding-block:0;-webkit-tap-highlight-color:transparent}
+button,input{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.glass{background:var(--glass);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+.top{position:fixed;z-index:4;top:var(--gt);right:calc(var(--gr) + var(--rail) + 14px);display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.top b{font-size:13px;font-weight:800}.top small{font-size:9.5px;letter-spacing:.2em;color:var(--brass);direction:ltr}
+.ledger{position:fixed;z-index:4;top:var(--gt);left:var(--gl);width:310px;max-height:calc(100% - var(--gt) - var(--gb) - var(--strip) - 24px);overflow:auto;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.clock{display:grid;grid-template-columns:10px 1fr auto;gap:8px;align-items:center;font-size:12.5px}
+.clock i{width:9px;height:9px;border-radius:50%}
+.clock b{font-size:16px}
+.bal{display:flex;flex-direction:column;gap:5px;font-size:12px;border-top:1px solid var(--line);padding-top:10px}
+.bal .r{display:grid;grid-template-columns:92px 1fr 62px;gap:8px;align-items:center}
+.bal .bar{height:8px;border-radius:4px;background:rgba(255,255,255,.06);position:relative;overflow:hidden}
+.bal .bar b{position:absolute;top:0;bottom:0;border-radius:4px}
+.bal .r span:last-child{text-align:left}
+.core{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);padding-top:10px}
+.core b{font-size:30px;font-weight:800}
+.core small{color:var(--muted);font-size:11.5px;display:block}
+.rail{position:fixed;z-index:6;right:var(--gr);top:50%;transform:translateY(-50%);width:var(--rail);border-radius:18px;padding:6px;display:flex;flex-direction:column;gap:2px}
+.rail button{border:0;background:transparent;border-radius:12px;padding:7px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:10.5px;font-weight:700}
+.rail button svg{width:21px;height:21px}
+.rail button:hover{color:var(--fg);background:rgba(255,255,255,.05)}
+.rail button[aria-pressed="true"]{background:rgba(227,169,75,.16);color:var(--brass)}
+.sheet{position:fixed;z-index:5;top:var(--gt);right:calc(var(--gr) + var(--rail) + 10px);bottom:calc(var(--gb) + var(--strip) + 12px);width:340px;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;transition:opacity .22s,transform .22s}
+.sheet.off{opacity:0;transform:translateX(16px);pointer-events:none;visibility:hidden}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px 14px;border-bottom:1px solid var(--line)}
+.sh b{font-size:14px}
+.x{border:0;background:rgba(255,255,255,.06);border-radius:9px;width:30px;height:30px;display:grid;place-items:center;color:var(--muted)}
+.sb{overflow-y:auto;padding:12px 14px 14px;display:flex;flex-direction:column;gap:12px;min-height:0;flex:1}
+.lbl{font-size:11.5px;color:var(--muted)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 12px;font-size:12.5px;color:var(--muted)}
+.seg button[aria-pressed="true"]{border-color:var(--brass);color:var(--fg);background:rgba(227,169,75,.14)}
+.rng{display:flex;flex-direction:column;gap:2px;font-size:12.5px}
+.rng div{display:flex;justify-content:space-between}
+.rng output{color:var(--brass);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--brass)}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px}
+.sw input{appearance:none;-webkit-appearance:none;width:38px;height:22px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;cursor:pointer;flex:none}
+.sw input::after{content:"";position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.sw input:checked{background:var(--teal)}.sw input:checked::after{transform:translateX(-16px)}
+.btn{border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:12px;padding:9px 12px;font-weight:700;font-size:13px}
+.btn.pri{background:var(--brass);color:#1a1206;border-color:transparent}
+.note{font-size:11.5px;color:var(--muted);margin:0;line-height:1.7}
+.msg{font-size:12px;color:var(--warn);margin:0}
+.strip{position:fixed;z-index:4;left:var(--gl);right:calc(var(--gr) + var(--rail) + 10px);bottom:var(--gb);height:var(--strip);border-radius:16px;padding:6px 10px 4px;display:flex;gap:10px;align-items:center}
+.strip canvas{flex:1;height:100%;display:block;cursor:ew-resize;touch-action:none;min-width:0}
+.play{width:44px;height:44px;border-radius:50%;border:0;background:var(--brass);color:#1a1206;display:grid;place-items:center;flex:none}
+.play svg{width:18px;height:18px}
+.scale{position:fixed;z-index:3;bottom:calc(var(--gb) + var(--strip) + 14px);right:calc(var(--gr) + var(--rail) + 14px);width:200px;font-size:10.5px;color:var(--muted)}
+.scale i{display:block;height:8px;border-radius:4px;background:linear-gradient(to left,#3B6FD1,#3FB6C9 25%,#6FD39B 45%,#F2B84B 65%,#F06B5B 82%,#C2457A);margin-bottom:2px}
+.scale div{display:flex;justify-content:space-between}
+@media (max-width:760px){
+  :root{--rail:56px;--strip:84px}
+  .rail button{font-size:9.5px;padding:6px 0 5px}.rail button svg{width:19px;height:19px}
+  .top{display:none}
+  .ledger{top:auto;bottom:calc(var(--gb) + var(--strip) + 10px);right:calc(var(--gr) + var(--rail) + 8px);width:auto;max-height:40%;padding:10px;gap:8px}
+  .core b{font-size:24px}
+  .sheet{top:auto;left:var(--gl);right:calc(var(--gr) + var(--rail) + 8px);width:auto;max-height:66%;height:auto}
+  .sheet.off{transform:translateY(16px)}
+  .strip{right:calc(var(--gr) + var(--rail) + 8px)}
+  .scale{display:none}
+}
+@media (prefers-reduced-motion:reduce){.sheet{transition:none}}
+</style>
+</head><body>
+<a href="./" style="position:fixed;z-index:20;top:max(12px,env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);font-size:12px;color:#EDF1F6;text-decoration:none;background:rgba(8,13,26,.85);border:1px solid rgba(237,241,246,.15);border-radius:999px;padding:4px 12px;opacity:.85">→ نفاف</a>
+
+
+<canvas id="cv" aria-label="خريطة حرارية حية لجسم الإنسان"></canvas>
+<div class="top"><b>المجسم الحراري الحيوي</b><small>NAFAF · BIO-THERMAL AVATAR</small></div>
+
+<aside class="ledger glass" aria-live="polite">
+  <div class="clock"><i style="background:var(--warn)"></i><span>يبدأ الإجهاد الحراري (38°)</span><b class="num" id="c38">—</b></div>
+  <div class="clock"><i style="background:var(--bad)"></i><span>حرارة داخلية خطرة (39.5°)</span><b class="num" id="c395">—</b></div>
+  <div class="clock"><i style="background:var(--sky)"></i><span>جفاف 2٪ من الوزن</span><b class="num" id="cd2">—</b></div>
+  <div class="core"><div><small>الحرارة الداخلية عند <span class="num" id="tNow">00:00:00</span></small><b class="num" id="tre">37.0°</b></div><div style="text-align:left"><small>الجلد</small><span class="num" id="tsk">—</span><small>العرق المفقود</small><span class="num" id="lost">—</span></div></div>
+  <div class="bal" id="bal"></div>
+</aside>
+
+<nav class="rail glass" aria-label="أدوات">
+  <button data-s="me" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="7" r="3.5"/><path d="M5 21c1-4.5 3.8-7 7-7s6 2.5 7 7"/></svg>الجسم</button>
+  <button data-s="cl" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M8 3l4 2 4-2 4 4-3 3v11H7V10L4 7z"/></svg>الملابس</button>
+  <button data-s="wx" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="4"/><path d="M9 1v2M2 9h2M3.8 3.8l1.4 1.4M14 15h6a3 3 0 0 0 0-6 4 4 0 0 0-7 1"/></svg>الجو</button>
+  <button data-s="how" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>الحساب</button>
+</nav>
+
+<section class="sheet glass off" id="s-me" aria-label="الجسم">
+  <div class="sh"><b>الجسم</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <div class="seg" id="sexSeg"><button data-x="m" aria-pressed="true">ذكر</button><button data-x="f" aria-pressed="false">أنثى</button></div>
+    <div class="rng"><div><label for="hr">معدل النبض</label><output id="hrO"></output></div><input type="range" id="hr" min="60" max="185" step="1" value="125"></div>
+    <div class="rng"><div><label for="age">العمر</label><output id="ageO"></output></div><input type="range" id="age" min="16" max="75" step="1" value="35"></div>
+    <div class="rng"><div><label for="mass">الوزن</label><output id="massO"></output></div><input type="range" id="mass" min="40" max="130" step="1" value="75"></div>
+    <div class="rng"><div><label for="ht">الطول</label><output id="htO"></output></div><input type="range" id="ht" min="140" max="205" step="1" value="172"></div>
+    <div class="rng"><div><label for="drink">الشرب أثناء النشاط</label><output id="drinkO"></output></div><input type="range" id="drink" min="0" max="1200" step="50" value="0"></div>
+    <label class="sw" for="accl">متأقلم مع الحر<input id="accl" type="checkbox"></label>
+  </div>
+</section>
+<section class="sheet glass off" id="s-cl" aria-label="الملابس">
+  <div class="sh"><b>الملابس</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <div class="seg" id="cloSeg"><button data-c="0.3" aria-pressed="false">رياضية خفيفة</button><button data-c="0.5" aria-pressed="true">صيفية عادية</button><button data-c="0.7" aria-pressed="false">ثوب طويل</button><button data-c="1.1" aria-pressed="false">زي عمل كامل</button></div>
+    <p class="note">قيم العزل بالكلو تقديرية من جداول ISO 9920 للملابس المشابهة: الملابس الرياضية نحو 0.3، والملابس الصيفية 0.5، والثوب الطويل الخفيف نحو 0.7، وزي العمل الكامل نحو 1.1. الملابس تعزل الحرارة وتعيق تبخر العرق معًا.</p>
+    <label class="sw" for="move">يتحرك (مشي أو جري)<input id="move" type="checkbox" checked></label>
+  </div>
+</section>
+<section class="sheet glass off" id="s-wx" aria-label="الجو">
+  <div class="sh"><b>الجو</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <button class="btn pri" id="live">جو موقعي الآن</button>
+    <p class="msg" id="liveMsg" hidden></p>
+    <div class="rng"><div><label for="ta">حرارة الهواء</label><output id="taO"></output></div><input type="range" id="ta" min="10" max="50" step="0.5" value="36"></div>
+    <div class="rng"><div><label for="rh">الرطوبة النسبية</label><output id="rhO"></output></div><input type="range" id="rh" min="5" max="95" step="1" value="45"></div>
+    <div class="rng"><div><label for="ws">الريح</label><output id="wsO"></output></div><input type="range" id="ws" min="0" max="50" step="1" value="10"></div>
+    <div class="rng"><div><label for="sol">أشعة الشمس</label><output id="solO"></output></div><input type="range" id="sol" min="0" max="1000" step="25" value="750"></div>
+    <p class="note">ضع أشعة الشمس صفرًا إذا كنت في الظل أو الليل.</p>
+  </div>
+</section>
+<section class="sheet glass off" id="s-how" aria-label="الحساب">
+  <div class="sh"><b>كيف يُحسب؟</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <p class="note"><b>الحرارة التي تنتجها:</b> من نبضك ووزنك وعمرك وجنسك بمعادلة Keytel وزملائه (2005). النبض يعكس شدة النشاط، فلا تحتاج أن تخبرنا ماذا تفعل.</p>
+    <p class="note"><b>ما يأخذه الجو منك أو يعطيك:</b> حمل حراري يزيد مع الريح والحركة، وإشعاع من الشمس والأرض الحارة (حرارة الإشعاع المتوسطة)، وتنفس. كلها تمر عبر عزل الملابس.</p>
+    <p class="note"><b>حرارة الجلد والتعرق:</b> على طريقة المعيار الدولي ISO 7933 (الإجهاد الحراري المتوقع):
+      <br>• التبريد الممكن بالتبخر يحدده فرق ضغط البخار بين جلدك والهواء ومقاومة الملابس.
+      <br>• كلما اقترب المطلوب من الممكن قلت كفاءة العرق، فيسيل أكثر مما يتبخر.</p>
+    <p class="note"><b>الحرارة الداخلية:</b> تُحسب ثانية بثانية. ما لا يتخلص منه الجسم يُخزَّن فيرفعها (السعة الحرارية 3.49 كيلوجول لكل كغ لكل درجة). وفي الظروف المحتملة تستقر عند قيمة توازن تزيد مع الجهد.</p>
+    <p class="note"><b>الخريطة الحرارية:</b> توزيع تقريبي. الأطراف أبرد من الجذع في الجو المعتدل، ويتقارب الجسم كله مع اشتداد الحر. الجهة المواجهة للشمس أدفأ.</p>
+    <p class="note">هذا نموذج تعليمي لشخص سليم، وليس جهازًا طبيًا. الاختلافات بين الأفراد كبيرة. إذا شعرت بدوار أو صداع أو تشوش فتوقف وتبرّد فورًا.</p>
+  </div>
+</section>
+
+<div class="scale glass" style="padding:8px 10px;border-radius:12px"><i></i><div><span>28°</span><span>حرارة الجلد</span><span>38°</span></div></div>
+<div class="strip glass"><button class="play" id="play" aria-label="شغّل الزمن"><svg viewBox="0 0 24 24" fill="currentColor" id="playIc"><path d="M8 5l11 7-11 7z"/></svg></button><canvas id="strip" aria-label="ثلاث ساعات: الحرارة الداخلية وفقد الماء. اسحب لتتنقل"></canvas></div>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(x,a,b)=>x<a?a:x>b?b:x,lerp=(a,b,t)=>a+(b-a)*t;
+const FONT=getComputedStyle(document.body).fontFamily;
+const P={sex:'m',hr:125,age:35,mass:75,ht:172,drink:0,accl:false,clo:.5,move:true,ta:36,rh:45,ws:10,sol:750};
+const es=T=>.6112*Math.exp(17.67*T/(T+243.5));   // kPa
+const DUR=3*3600,DT=5;let SIM=null,tCur=0,playing=false;
+
+/* ================= heat balance, second by second ================= */
+function simulate(){
+  const A=.007184*Math.pow(P.mass,.425)*Math.pow(P.ht,.725);
+  // Keytel et al. 2005: energy expenditure from heart rate (kJ/min)
+  const kj=P.sex==='m'?-55.0969+.6309*P.hr+.1988*P.mass+.2017*P.age:-20.4022+.4472*P.hr-.1263*P.mass+.074*P.age;
+  const M=Math.max(1.2*A*58,kj*1000/60);    // W, never below quiet sitting
+  const va=Math.max(.2,P.ws/3.6*.7+(P.move?Math.min(3,(P.hr-70)/30):0)),hc=8.3*Math.sqrt(va),hr=4.7,Icl=P.clo*.155,fcl=1+.31*P.clo;
+  // mean radiant temperature in the sun: about 30% of the body faces the beam, skin and cloth absorb ~70%
+  const Ta=P.ta,TaK=Ta+273.15,Tmrt=Math.pow(Math.pow(TaK,4)+.3*.7*P.sol/(.95*5.67e-8),.25)-273.15;
+  const To=(hc*Ta+hr*Tmrt)/(hc+hr),Pa=es(Ta)*P.rh/100;
+  const corr=clamp(1-.18*(va-.15),.45,1);   // wind and movement pump air through clothing (ISO 7933 dynamic correction, simplified)
+  const Rt=Icl*corr+1/(fcl*(hc+hr)),Re=Icl*corr/(.38*16.5)+1/(fcl*16.5*hc);
+  const Cres=.0014*M*(34-Ta),Eres=.0173*M*(5.87-Pa);
+  const SWmax=(P.accl?2.5:1.8)*2430e3/3600;    // W of sweat
+  const cp=3490,mb=P.mass,TcrEq=36.6+.0036*M/A;
+  let Tre=37,lost=0,out={t:[],tre:[],tsk:[],lost:[],L:[]};
+  for(let t=0;t<=DUR;t+=DT){
+    const Tsk=clamp(12.165+.02017*Ta+.04361*Tmrt+.19354*Pa-.25315*va+.005346*M/A+.51274*Tre,30,Tre-.2);   // ISO 7933, clothed
+    const dry=(Tsk-To)/Rt*A,C=dry*hc/(hc+hr),R=dry*hr/(hc+hr);
+    const Emax=Math.max(1,(es(Tsk)-Pa)/Re*A);
+    const allow=Tre<TcrEq?mb*cp*(TcrEq-Tre)/1500:0;     // the core is allowed to settle a little higher during work
+    const Ereq=Math.max(0,M-dry-Cres-Eres-allow),w=Ereq/Emax,eff=w<=1?1-w*w/2:.5;
+    const SW=Math.min(SWmax,Ereq/eff),E=Math.min(SW*eff,Emax);
+    const S=M-dry-Cres-Eres-E;
+    out.t.push(t);out.tre.push(Tre);out.tsk.push(Tsk);out.lost.push(lost);out.L.push({M,C,R,E,res:Cres+Eres,S,SW});
+    Tre+=S*DT/(mb*cp);lost=Math.max(0,lost+(SW/2430e3*DT)-(P.drink/3600*DT/1000));}   // kg
+  const when=(arr,v)=>{for(let i=1;i<arr.length;i++)if(arr[i]>=v)return out.t[i-1]+DT*(v-arr[i-1])/((arr[i]-arr[i-1])||1e-9);return null};
+  SIM={out,A,M,Tmrt,t38:when(out.tre,38),t395:when(out.tre,39.5),td2:when(out.lost,.02*mb)};
+  readout()}
+const hms=s=>s==null?'لا يحدث خلال 3 ساعات':[Math.floor(s/3600),Math.floor(s%3600/60),Math.floor(s%60)].map(n=>String(n).padStart(2,'0')).join(':');
+function idx(){return Math.min(SIM.out.t.length-1,Math.round(tCur/DT))}
+function readout(){if(!SIM)return;const i=idx(),o=SIM.out,L=o.L[i];
+  $('c38').textContent=hms(SIM.t38);$('c395').textContent=hms(SIM.t395);$('cd2').textContent=hms(SIM.td2);
+  $('tNow').textContent=hms(tCur);$('tre').textContent=o.tre[i].toFixed(2)+'°';$('tre').style.color=o.tre[i]>=39.5?'var(--ext)':o.tre[i]>=38.5?'var(--bad)':o.tre[i]>=38?'var(--warn)':'var(--fg)';
+  $('tsk').textContent=o.tsk[i].toFixed(1)+'°';$('lost').textContent=o.lost[i].toFixed(2)+' كغ ('+(o.lost[i]/P.mass*100).toFixed(1)+'٪)';
+  const rows=[['الإنتاج الأيضي',L.M,'#F2B84B'],['الحمل الحراري',-L.C,'#7FB8FF'],['الإشعاع',-L.R,'#F08A4B'],['تبخر العرق',-L.E,'#5CC9B0'],['التنفس',-L.res,'#B9D36A'],['يُخزَّن في الجسم',L.S,'#F06B5B']];
+  const mx=Math.max(...rows.map(r=>Math.abs(r[1])),1);
+  $('bal').innerHTML='<div class="r" style="color:var(--muted)"><span>واط</span><span style="display:flex;justify-content:space-between"><span>يكسب الجسم</span><span>يفقد</span></span><span></span></div>'+rows.map(r=>{const w=Math.abs(r[1])/mx*50;return'<div class="r"><span>'+r[0]+'</span><span class="bar"><b style="background:'+r[2]+';'+(r[1]>=0?'right:50%;':'left:'+(50-w)+'%;')+'width:'+w+'%"></b><b style="left:50%;width:1px;background:rgba(255,255,255,.3)"></b></span><span class="num">'+(r[1]>=0?'+':'')+Math.round(r[1])+'</span></div>'}).join('')+
+    '<div class="r" style="color:var(--muted)"><span>العرق</span><span></span><span class="num">'+(L.SW/2430e3*3600).toFixed(2)+' ل/س</span></div>';
+  drawStrip()}
+
+/* ================= the avatar ================= */
+const cv=$('cv'),cx=cv.getContext('2d');let W=0,H=0,DPR=1;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;sresize()}
+addEventListener('resize',resize);
+const RAMP=[[59,111,209],[63,182,201],[111,211,155],[242,184,75],[240,107,91],[194,69,122]];
+const tcol=T=>{const u=clamp((T-28)/10,0,1)*(RAMP.length-1),i=Math.min(RAMP.length-2,Math.floor(u)),f=u-i;return RAMP[i].map((v,k)=>Math.round(lerp(v,RAMP[i+1][k],f)))};
+// body regions: offset from mean skin temperature in a mild climate, and how much the region faces the sun
+const REG={head:[.9,1],neck:[.6,.6],torso:[.6,.8],uarm:[-.2,.7],farm:[-.7,.7],hand:[-1.7,.6],thigh:[-.1,.6],calf:[-.8,.6],foot:[-2,.4]};
+function regT(r,Tsk){const k=clamp((35.2-Tsk)/3.5,.15,1),sun=P.sol>0?REG[r][1]*P.sol/1000*1.2:0;return Tsk+REG[r][0]*k+sun}
+function frame(now){const c=cx;c.setTransform(DPR,0,0,DPR,0,0);const g=c.createRadialGradient(W/2,H*.45,0,W/2,H*.45,Math.max(W,H)*.7);g.addColorStop(0,'#0E1A2C');g.addColorStop(1,'#05080F');c.fillStyle=g;c.fillRect(0,0,W,H);
+  if(playing&&SIM){tCur=Math.min(DUR,tCur+(now-(frame.l||now))/1000*120);if(tCur>=DUR){playing=false;setPlay()}readout()}frame.l=now;
+  if(SIM)avatar(c,now);requestAnimationFrame(frame)}
+function avatar(c,now){const i=idx(),Tsk=SIM.out.tsk[i],Tre=SIM.out.tre[i],narrow=W<760;
+  const cxp=narrow?W*.42:W*.52,top=narrow?H*.06:H*.08,hgt=narrow?H*.5:H-top-130,s=hgt/8;   // body is ~8 heads tall
+  const seg=(r,draw)=>{const col=tcol(regT(r,Tsk));c.fillStyle='rgb('+col.join(',')+')';c.beginPath();draw();c.fill()};
+  const pulse=1+.012*Math.sin(now/1000*Math.PI*2*P.hr/60);
+  c.save();c.translate(cxp,top);c.scale(pulse,pulse);
+  const glow=c.createRadialGradient(0,s*3,0,0,s*3,s*4);const cc=tcol(Tre);glow.addColorStop(0,'rgba('+cc.join(',')+',.25)');glow.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=glow;c.fillRect(-s*4,-s,s*8,s*9);
+  const cap=(x1,y1,x2,y2,r)=>{const a=Math.atan2(y2-y1,x2-x1);c.moveTo(x1+Math.cos(a+Math.PI/2)*r,y1+Math.sin(a+Math.PI/2)*r);c.arc(x2,y2,r,a+Math.PI/2,a-Math.PI/2,true);c.arc(x1,y1,r,a-Math.PI/2,a+Math.PI/2,true)};
+  seg('head',()=>c.ellipse(0,s*.5,s*.42,s*.52,0,0,7));seg('neck',()=>c.rect(-s*.16,s*.95,s*.32,s*.35));
+  seg('torso',()=>{c.moveTo(-s*.95,s*1.35);c.quadraticCurveTo(0,s*1.15,s*.95,s*1.35);c.lineTo(s*.8,s*3.1);c.quadraticCurveTo(s*.75,s*3.9,s*.55,s*4.1);c.lineTo(-s*.55,s*4.1);c.quadraticCurveTo(-s*.75,s*3.9,-s*.8,s*3.1);c.closePath()});
+  for(const d of[-1,1]){seg('uarm',()=>cap(d*s*.95,s*1.5,d*s*1.15,s*2.75,s*.22));seg('farm',()=>cap(d*s*1.15,s*2.8,d*s*1.25,s*3.95,s*.18));seg('hand',()=>c.ellipse(d*s*1.28,s*4.25,s*.15,s*.25,0,0,7));
+    seg('thigh',()=>cap(d*s*.32,s*4.15,d*s*.36,s*5.7,s*.3));seg('calf',()=>cap(d*s*.36,s*5.8,d*s*.36,s*7.2,s*.21));seg('foot',()=>c.ellipse(d*s*.42,s*7.5,s*.26,s*.12,0,0,7))}
+  // the core: a glowing heart of the reactor
+  const cr=s*(.28+.04*Math.sin(now/300));c.fillStyle='rgba('+cc.join(',')+',.9)';c.beginPath();c.arc(0,s*2.3,cr,0,7);c.fill();c.strokeStyle='rgba(255,255,255,.6)';c.lineWidth=1.5;c.stroke();
+  c.font='700 '+Math.round(s*.22)+'px '+FONT;c.fillStyle='#0B1220';c.textAlign='center';c.direction='ltr';c.fillText(Tre.toFixed(1)+'°',0,s*2.38);
+  // sweat drops when sweating hard
+  const sw=SIM.out.L[i].SW/2430e3*3600;c.fillStyle='rgba(160,210,255,.8)';for(let k=0;k<Math.round(sw*8);k++){const y=((now/12+k*97)%(s*6))+s*1.2,x=Math.sin(k*7.3)*s*.8;c.beginPath();c.ellipse(x,y,2,3,0,0,7);c.fill()}
+  c.restore();
+  if(!narrow){c.font='600 11px '+FONT;c.fillStyle='rgba(226,234,243,.7)';c.textAlign='left';c.direction='rtl';const lx=cxp+s*1.7;
+    for(const[r,y]of[['head',.5],['torso',2.6],['hand',4.25],['calf',6.5],['foot',7.5]])c.fillText(({head:'الرأس',torso:'الجذع',hand:'اليد',calf:'الساق',foot:'القدم'})[r]+' '+regT(r,Tsk).toFixed(1)+'°',lx,top+s*y)}}
+
+/* ================= timeline ================= */
+const sc=$('strip'),sx=sc.getContext('2d');let SW=0,SH=0;
+function sresize(){const r=sc.getBoundingClientRect();SW=r.width;SH=r.height;sc.width=Math.max(1,SW*DPR);sc.height=Math.max(1,SH*DPR);drawStrip()}
+const X=t=>SW-8-(SW-16)*t/DUR;
+function drawStrip(){const c=sx;c.setTransform(DPR,0,0,DPR,0,0);c.clearRect(0,0,SW,SH);if(!SIM)return;const o=SIM.out,Y0=SH-14,Ht=SH-26;
+  const Yt=v=>Y0-clamp((v-36.8)/(40.5-36.8),0,1)*Ht,Yl=v=>Y0-clamp(v/(.05*P.mass),0,1)*Ht;
+  for(const[v,col]of[[38,'rgba(242,184,75,.35)'],[39.5,'rgba(240,107,91,.4)']]){c.strokeStyle=col;c.setLineDash([3,4]);c.beginPath();c.moveTo(8,Yt(v));c.lineTo(SW-8,Yt(v));c.stroke()}c.setLineDash([]);
+  c.strokeStyle='#7FB8FF';c.lineWidth=2;c.beginPath();o.t.forEach((t,i)=>{i?c.lineTo(X(t),Yl(o.lost[i])):c.moveTo(X(t),Yl(o.lost[i]))});c.stroke();
+  for(let i=1;i<o.t.length;i++){const col=tcol(o.tre[i]+(o.tre[i]-37)*.8);c.strokeStyle='rgb('+col.join(',')+')';c.lineWidth=2.5;c.beginPath();c.moveTo(X(o.t[i-1]),Yt(o.tre[i-1]));c.lineTo(X(o.t[i]),Yt(o.tre[i]));c.stroke()}
+  c.font='10.5px '+FONT;c.fillStyle='#93A3B7';c.textAlign='center';for(let m=0;m<=180;m+=30)c.fillText(m?m+' د':'الآن',X(m*60),SH-2);
+  c.textAlign='right';c.direction='rtl';c.fillStyle='#E8EEF5';c.fillText('الحرارة الداخلية (ملونة) · فقد الماء (أزرق، حتى 5٪)',SW-8,10);
+  const x=X(tCur);c.strokeStyle='#fff';c.lineWidth=1.5;c.beginPath();c.moveTo(x,12);c.lineTo(x,Y0+2);c.stroke()}
+let drag=false;const seek=e=>{const r=sc.getBoundingClientRect();tCur=clamp((SW-8-(e.clientX-r.left))/(SW-16),0,1)*DUR;readout()};
+sc.addEventListener('pointerdown',e=>{drag=true;sc.setPointerCapture(e.pointerId);playing=false;setPlay();seek(e)});sc.addEventListener('pointermove',e=>{if(drag)seek(e)});sc.addEventListener('pointerup',()=>drag=false);
+function setPlay(){$('playIc').innerHTML=playing?'<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>':'<path d="M8 5l11 7-11 7z"/>'}
+$('play').addEventListener('click',()=>{if(tCur>=DUR)tCur=0;playing=!playing;setPlay()});
+
+/* ================= controls ================= */
+let openS=null;
+function openSheet(n){openS=n;document.querySelectorAll('.sheet').forEach(s=>s.classList.toggle('off',s.id!=='s-'+n));document.querySelectorAll('.rail [data-s]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===n?'true':'false'))}
+document.querySelectorAll('.rail [data-s]').forEach(b=>b.addEventListener('click',()=>openSheet(openS===b.dataset.s?null:b.dataset.s)));
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>openSheet(null)));
+const OUT={hr:v=>v+' نبضة/د',age:v=>v+' سنة',mass:v=>v+' كغ',ht:v=>v+' سم',drink:v=>v?v+' مل/ساعة':'لا يشرب',ta:v=>v+'°م',rh:v=>v+'٪',ws:v=>v+' كم/س',sol:v=>v?v+' واط/م²':'ظل'};
+for(const k in OUT){const el=$(k);el.value=P[k];const u=()=>{P[k]=+el.value;$(k+'O').textContent=OUT[k](P[k])};el.addEventListener('input',()=>{u();simulate()});u()}
+function seg(id,attr,key,num){$(id).querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$(id).querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));P[key]=num?+b.dataset[attr]:b.dataset[attr];simulate()}))}
+seg('sexSeg','x','sex',false);seg('cloSeg','c','clo',true);
+$('accl').addEventListener('change',e=>{P.accl=e.target.checked;simulate()});$('move').addEventListener('change',e=>{P.move=e.target.checked;simulate()});
+$('live').addEventListener('click',()=>{const m=$('liveMsg');m.hidden=true;
+  const go=(la,lo)=>fetch('https://api.open-meteo.com/v1/forecast?latitude='+la.toFixed(3)+'&longitude='+lo.toFixed(3)+'&current=temperature_2m,relative_humidity_2m,wind_speed_10m,shortwave_radiation,is_day').then(r=>r.json()).then(j=>{const c=j.current;
+    const set=(k,v)=>{$(k).value=v;P[k]=+$(k).value;$(k+'O').textContent=OUT[k](P[k])};set('ta',Math.round(c.temperature_2m*2)/2);set('rh',Math.round(c.relative_humidity_2m));set('ws',Math.round(c.wind_speed_10m));set('sol',c.is_day?Math.round((c.shortwave_radiation||0)/25)*25:0);tCur=0;simulate();m.textContent='تم: جو موقعك الآن من Open-Meteo.';m.hidden=false})
+    .catch(()=>{m.textContent=/claude/i.test(location.hostname)?'هذه المعاينة معزولة عن الإنترنت. استخدم الأشرطة، أو افتح الملف على nafaf.online لجو موقعك الحي.':'تعذّر جلب الجو. استخدم الأشرطة.';m.hidden=false});
+  if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>go(p.coords.latitude,p.coords.longitude),()=>go(24.347,56.709),{timeout:10000,maximumAge:600000});else go(24.347,56.709)});
+addEventListener('keydown',e=>{if(e.key==='Escape')openSheet(null)});
+resize();simulate();requestAnimationFrame(frame);
+})();
+</script>
+
+<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{})</script>
+</body></html>

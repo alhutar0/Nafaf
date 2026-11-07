@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#060B16"><link rel="manifest" href="manifest.json"><link rel="icon" type="image/png" href="icons/icon-192.png"><title>مختبرات نفاف</title></head><body>
+<style>
+:root{--bg:#060B16;--card:rgba(14,24,44,.72);--line:rgba(237,241,246,.09);--fg:#EDF1F6;--muted:#93A1B8;--gold:#E3A94B;
+  --f:system-ui,-apple-system,"Segoe UI",Tahoma,"Geeza Pro","Noto Sans Arabic",Arial,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f);direction:rtl;min-height:100vh;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(900px 500px at 80% -10%,rgba(227,169,75,.16),transparent 60%),radial-gradient(800px 600px at 0% 30%,rgba(79,179,232,.12),transparent 60%),var(--bg)}
+a{color:inherit}
+.wrap{max-width:1080px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;padding-top:max(16px,env(safe-area-inset-top,0px));gap:12px}
+.home{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-size:13px;border:1px solid var(--line);border-radius:999px;padding:6px 14px;background:rgba(255,255,255,.04)}
+.hero{padding:42px 0 18px}
+.hero small{font-size:10.5px;letter-spacing:.24em;color:var(--gold);direction:ltr;display:block;text-align:right}
+.hero h1{margin:6px 0 8px;font-size:clamp(28px,5vw,44px);font-weight:800;text-wrap:balance}
+.hero p{margin:0;color:var(--muted);max-width:62ch;line-height:1.8;font-size:15px}
+h2{font-size:15px;color:var(--gold);margin:30px 0 12px;font-weight:800;display:flex;align-items:center;gap:10px}
+h2::after{content:"";flex:1;height:1px;background:var(--line)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.card{position:relative;display:flex;gap:14px;align-items:flex-start;text-decoration:none;padding:16px;border-radius:18px;background:var(--card);border:1px solid var(--line);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:transform .25s cubic-bezier(.34,1.5,.5,1),border-color .25s,box-shadow .25s;min-width:0}
+.card:active{transform:scale(.98)}
+.card:hover,.card:focus-visible{transform:translateY(-3px);border-color:var(--lc);box-shadow:0 0 0 1px color-mix(in srgb,var(--lc) 35%,transparent),0 14px 40px -10px color-mix(in srgb,var(--lc) 55%,transparent);outline:none}
+.orb{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:var(--lc);background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--lc) 35%,transparent),rgba(255,255,255,.02) 70%);border:1px solid color-mix(in srgb,var(--lc) 45%,transparent);box-shadow:0 0 18px color-mix(in srgb,var(--lc) 35%,transparent)}
+.orb svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.card b{display:block;font-size:15.5px;margin-bottom:3px}
+.card span{display:block;font-size:13px;color:var(--muted);line-height:1.6}
+.card i{display:inline-block;margin-top:8px;font-style:normal;font-size:10.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:#C9D3E0}
+.card i.off{border-color:rgba(111,211,155,.4);color:#B4EFCC}
+footer{margin-top:36px;color:var(--muted);font-size:12px;line-height:1.8}
+</style>
+<div class="wrap">
+  <header><a class="home" href="./" id="home">→ نفاف</a><span style="display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:var(--muted)" id="count"></span><button class="home" id="lng" type="button" style="font:inherit;font-size:13px;color:inherit;cursor:pointer">English</button></span></header>
+  <section class="hero"><small>NAFAF LABS</small><h1 id="h1">مختبرات نفاف</h1><p id="lead">أدوات تفاعلية تشرح الطقس بالفيزياء الحقيقية: السيول والأفلاج والأعاصير، وجسمك تحت الشمس، وطريقك قبل أن تمشيه. كل رقم فيها محسوب من معادلات منشورة أو من بيانات Open-Meteo الحية، وكل أداة تقول لك حدودها.</p></section>
+  <div id="groups"></div>
+  <footer id="foot">المختبرات أدوات تعليمية وتخطيطية وليست إنذارًا رسميًا. للتحذيرات الرسمية في عُمان تابع المديرية العامة للأرصاد الجوية.</footer>
+</div>
+<script>
+/* the fourteen Nafaf labs: id, name ar/en, one line ar/en, file, glow colour, group, needs net, icon path */
+var NAFAF_LABS=[
+ {id:'wadi',n:'مختبر الوادي',e:'Wadi Lab',s:'احمِ المدينة من السيل في محاكاة ثلاثية الأبعاد',se:'Defend a town from a flash flood in 3D',f:'wadi.html',c:'#4FB3E8',g:'water',net:0,star:1,p:'M3 19l5-9 4 5 3-3 6 7zM5 21c3-1.5 6-1.5 9 0s5 1.5 7 0'},
+ {id:'falaj',n:'محرك الأفلاج',e:'Falaj Engine',s:'تدفق الفلج والخزان الجوفي وشبكة الري',se:'Falaj flow, aquifer and irrigation shares',f:'falaj.html',c:'#5CC9B0',g:'water',net:1,p:'M3 17h18M6 17V9M10 17v-5M14 17v-3M18 17v-6M3 21c3-1.5 6-1.5 9 0s6 1.5 9 0'},
+ {id:'seeding',n:'مفاعل الاستمطار',e:'Cloud Seeding Reactor',s:'داخل السحابة: يوديد الفضة والأملاح',se:'Inside a cloud: silver iodide and salt',f:'seeding.html',c:'#9CC8FF',g:'water',net:0,p:'M7 15a4 4 0 0 1 .5-8 5 5 0 0 1 9.5 1.5A3.5 3.5 0 0 1 17 15zM9 18v2M13 18v3M17 18v2'},
+ {id:'atmo',n:'مختبر الغلاف الجوي',e:'Atmosphere Lab',s:'احقن الرطوبة وابنِ عاصفة رعدية',se:'Inject moisture and build a thunderstorm',f:'atmo.html',c:'#B88CFF',g:'air',net:0,p:'M12 3l1.5 5h-3zM6 21h12M8 21l2-9h4l2 9M4 9h16'},
+ {id:'cyclone',n:'مفاعل الأعاصير',e:'Cyclone Reactor',s:'ست معادلات تصنع إعصارًا في بحر العرب',se:'Six equations build an Arabian Sea cyclone',f:'cyclone.html',c:'#F08A4B',g:'air',net:0,p:'M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0M12 3c5 0 7 4 4 6M21 12c0 5-4 7-6 4M12 21c-5 0-7-4-4-6M3 12c0-5 4-7 6-4'},
+ {id:'trajectory',n:'بصمة الهواء',e:'Air Fingerprint',s:'من أين جاءت رطوبتك وغبارك؟',se:'Where did your humidity and dust come from?',f:'trajectory.html',c:'#7FB8FF',g:'air',net:1,p:'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0M3 12h18M12 3c3 3 3 15 0 18M17 7c-3 2-6 3-9 9'},
+ {id:'worlds',n:'نافذة العوالم',e:'Window to Worlds',s:'جزيرة العرب الخضراء والمريخ وتيتان',se:'Green Arabia, Mars and Titan',f:'worlds.html',c:'#E3A94B',g:'air',net:0,p:'M12 12m-6 0a6 6 0 1 0 12 0a6 6 0 1 0-12 0M2.5 14.5c3 2 15 -1 19-5'},
+ {id:'route',n:'مخطط المسار',e:'Route Planner',s:'طقس طريقك لحظة وصولك لكل نقطة',se:'Weather at each point the moment you arrive',f:'route.html',c:'#6FD39B',g:'you',net:1,p:'M6 18m-2.5 0a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0M18 6m-2.5 0a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5'},
+ {id:'coach',n:'المدرب البيئي',e:'Bio-Weather Coach',s:'إيقاعك وسوائلك حسب جو موقعك',se:'Pace and fluids for your local weather',f:'coach.html',c:'#F2B84B',g:'you',net:1,p:'M14 4.5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0M8 21l3-6 3 2v5M6 12l3-4 5 1 3 4'},
+ {id:'body',n:'المجسم الحراري',e:'Thermal Body',s:'توازن حرارة جسمك بالواط وبالثانية',se:'Your heat balance, watt by watt',f:'body.html',c:'#F06B5B',g:'you',net:0,p:'M12 6m-2.5 0a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0M8 21v-6l-2-1 2-5h8l2 5-2 1v6'},
+ {id:'sky',n:'البوصلة السماوية',e:'Sky Compass',s:'ارفع هاتفك: القمر والريح والمطر أمامك',se:'Raise your phone: moon, wind and rain ahead',f:'sky.html',c:'#CFE8FF',g:'you',net:1,p:'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0M15.5 8.5l-2 5-5 2 2-5z'},
+ {id:'broadcast',n:'استوديو النشرة',e:'Broadcast Studio',s:'نشرة متحركة بلهجتك من أربعة نماذج',se:'An animated bulletin from four models',f:'broadcast.html',c:'#E58AB0',g:'make',net:1,p:'M3 6h18v11H3zM8 21h8M12 17v4M10 9.5v4l3.5-2z'},
+ {id:'scent',n:'قارورة الجو',e:'Weather Flask',s:'امزج روائح طقسك وأهدها لصديق',se:'Blend the scents of your weather',f:'scent.html',c:'#D9A066',g:'make',net:0,p:'M10 3h4v3l3 3v10a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V9l3-3z'},
+ {id:'village',n:'قرية نفاف',e:'Nafaf Village',s:'فلج وفوانيس ونخيل تكبر مع أيامك',se:'A falaj village that grows with your days',f:'village.html',c:'#B9D36A',g:'make',net:1,p:'M3 21V11l5-4 5 4v10M13 21v-7h8v7M6 21v-4h4v4M17 14V9'}];
+var NAFAF_GROUPS={water:['الماء والسيول','Water & floods'],air:['الجو والكواكب','Air & planets'],you:['رحلتك وجسمك','Your trip & body'],make:['إبداع ولعب','Create & play']};
+function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){return false}}
+
+(function(){var en=nafafEN(),$=function(i){return document.getElementById(i)};
+  document.documentElement.lang=en?'en':'ar';document.documentElement.dir=en?'ltr':'rtl';document.body.style.direction=en?'ltr':'rtl';
+  if(en){document.title='Nafaf Labs';$('home').textContent='← Nafaf';$('h1').textContent='Nafaf Labs';
+    $('lead').textContent='Interactive tools that explain weather with real physics: floods, aflaj and cyclones, your body under the sun, and your route before you take it. Every number comes from published equations or live Open-Meteo data, and every tool tells you its limits.';
+    $('foot').textContent='The labs are teaching and planning tools, not official warnings. For official warnings follow your national meteorological service; in Oman, the Directorate General of Meteorology.'}
+  $('lng').textContent=en?'العربية':'English';
+  $('lng').onclick=function(){try{localStorage.setItem('lang',en?'dial':'en')}catch(e){}location.reload()};
+  var h='';for(var g in NAFAF_GROUPS){h+='<h2>'+NAFAF_GROUPS[g][en?1:0]+'</h2><div class="grid">';
+  NAFAF_LABS.filter(function(l){return l.g===g}).forEach(function(l){h+='<a class="card" href="'+l.f+'" style="--lc:'+l.c+'"><span class="orb"><svg viewBox="0 0 24 24"><path d="'+l.p+'"/></svg></span><span style="min-width:0"><b>'+(en?l.e:l.n)+(l.star?' <em style="font-style:normal;font-size:10px;color:#E3A94B;border:1px solid rgba(227,169,75,.5);border-radius:999px;padding:1px 7px;vertical-align:middle">'+(en?'Featured':'مميّز')+'</em>':'')+'</b><span>'+(en?l.se:l.s)+'</span><i class="'+(l.net?'':'off')+'">'+(l.net?(en?'Needs a connection':'يحتاج اتصالًا'):(en?'Works offline':'يعمل بلا إنترنت'))+'</i></span></a>'});h+='</div>'}
+  $('groups').innerHTML=h;$('count').textContent=NAFAF_LABS.length+(en?' labs':' مختبرًا وأداة');
+  if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0)navigator.serviceWorker.register('./sw.js').catch(function(){})})();
+</script>
+
+</body></html>

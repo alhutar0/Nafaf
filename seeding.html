@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<!-- i18n --><script>try{if(localStorage.getItem("lang")==="en")document.write('<script src="i18n/nafaf-i18n.js"><\/script>')}catch(e){}</script><!-- /i18n --><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#05080F">
+<title>مفاعل الاستمطار</title>
+<style>
+/* Layout: a microscope view inside the cloud fills the screen (droplets, ice, raindrops); the cloud column with its rain-onset height sits at the right edge; one glass console on the left holds the dials and the natural-versus-seeded verdict. */
+:root{--bg:#04070D;--glass:rgba(8,14,26,.86);--line:rgba(226,234,243,.10);--fg:#E8EEF5;--muted:#93A3B7;--brass:#E3A94B;--teal:#5CC9B0;--sky:#7FB8FF;--ice:#CFE8FF;--ok:#6FD39B;--warn:#F2B84B;--bad:#F06B5B;
+  --f:system-ui,-apple-system,"Segoe UI",Tahoma,"Geeza Pro","Noto Sans Arabic",Arial,sans-serif;
+  --gl:max(16px,env(safe-area-inset-left,0px));--gr:max(16px,env(safe-area-inset-right,0px));--gt:max(12px,env(safe-area-inset-top,0px));--gb:max(12px,env(safe-area-inset-bottom,0px));color-scheme:dark}
+html,body{height:100%;overflow:hidden;margin:0}*{box-sizing:border-box}[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);font-size:14px;line-height:1.5;direction:rtl;padding-left:var(--gl);padding-right:var(--gr);padding-block:0}
+button,input{font:inherit;color:inherit}button{cursor:pointer}:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.glass{background:var(--glass);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+.con{position:fixed;z-index:4;top:var(--gt);left:var(--gl);bottom:var(--gb);width:330px;border-radius:18px;display:flex;flex-direction:column;overflow:hidden}
+.ch{padding:12px 14px 10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.ch b{font-size:14px}.ch small{font-size:9.5px;letter-spacing:.2em;color:var(--brass);direction:ltr}
+.cb{overflow-y:auto;padding:10px 14px 14px;display:flex;flex-direction:column;gap:10px;flex:1;min-height:0}
+.rng{display:flex;flex-direction:column;gap:2px;font-size:12.5px}.rng div{display:flex;justify-content:space-between;gap:8px}.rng output{color:var(--brass);font-variant-numeric:tabular-nums;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--brass)}
+.lbl{font-size:11.5px;color:var(--muted)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}.seg button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 11px;font-size:12.5px;color:var(--muted)}
+.seg button[aria-pressed="true"]{border-color:var(--brass);color:var(--fg);background:rgba(227,169,75,.14)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cmp div{border-radius:12px;background:rgba(255,255,255,.04);padding:8px 10px}
+.cmp small{display:block;font-size:10.5px;color:var(--muted)}.cmp b{font-size:20px}
+.delta{border-radius:12px;padding:10px;font-size:13px;line-height:1.7;background:rgba(92,201,176,.08);border:1px solid rgba(92,201,176,.3)}
+.delta b{font-size:18px}
+.kv{font-size:12px;display:flex;flex-direction:column;gap:3px}.kv div{display:flex;justify-content:space-between}.kv span:first-child{color:var(--muted)}
+.note{font-size:11.5px;color:var(--muted);margin:0;line-height:1.7}
+details{font-size:11.5px;color:var(--muted)}details summary{cursor:pointer;color:var(--fg);font-size:12.5px}details p{margin:6px 0 0;line-height:1.7}
+@media (max-width:760px){.con{top:auto;right:var(--gr);width:auto;height:52%}}
+</style>
+</head><body>
+<a href="./" style="position:fixed;z-index:20;top:max(12px,env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);font-size:12px;color:#EDF1F6;text-decoration:none;background:rgba(8,13,26,.85);border:1px solid rgba(237,241,246,.15);border-radius:999px;padding:4px 12px">→ نفاف</a>
+
+<canvas id="cv" aria-label="داخل السحابة: قطيرات وبلورات جليد وقطرات مطر"></canvas>
+<aside class="con glass">
+  <div class="ch"><b>مفاعل الاستمطار</b><small>SEEDING REACTOR</small></div>
+  <div class="cb">
+    <div class="rng"><div><label for="tb">حرارة قاعدة السحابة</label><output id="tbO"></output></div><input type="range" id="tb" min="2" max="26" step="0.5" value="18"></div>
+    <div class="rng"><div><label for="tt">حرارة قمة السحابة</label><output id="ttO"></output></div><input type="range" id="tt" min="-35" max="12" step="0.5" value="-12"></div>
+    <div class="rng"><div><label for="w">التيار الصاعد</label><output id="wO"></output></div><input type="range" id="w" min="0.5" max="12" step="0.5" value="3"></div>
+    <div class="rng"><div><label for="ccn">نويات التكاثف الطبيعية</label><output id="ccnO"></output></div><input type="range" id="ccn" min="50" max="2000" step="25" value="800"></div>
+    <div class="lbl">مادة الاستمطار</div>
+    <div class="seg" id="agent"><button data-a="none" aria-pressed="true">بلا</button><button data-a="salt" aria-pressed="false">أملاح استرطابية</button><button data-a="agi" aria-pressed="false">يوديد الفضة</button></div>
+    <div class="rng"><div><label for="dose">تركيز الرش</label><output id="doseO"></output></div><input type="range" id="dose" min="0" max="100" step="1" value="50"></div>
+    <div class="cmp"><div><small>بلا استمطار</small><b class="num" id="rn">—</b></div><div><small>مع الاستمطار</small><b class="num" id="rs">—</b></div></div>
+    <div class="delta" id="delta"></div>
+    <div class="kv" id="kv"></div>
+    <details><summary>المعادلات وحدود الأدلة</summary>
+      <p><b>القطيرات:</b> عددها يقترب من عدد نويات التكاثف التي تنشط بالتيار الصاعد. والماء السائل يتكثف تكيّفيًا مع الارتفاع، ويزيد في السحب الأدفأ.</p>
+      <p><b>المطر الدافئ:</b> يبدأ التصادم والالتحام بكفاءة حين يبلغ نصف القطر الفعال للقطيرات نحو 14 ميكرون (Rosenfeld وGutman 1994). ويُحسب المطر بمعادلتي Khairoutdinov وKogan (2000): التحول الذاتي ∝ qc^2.47·Nc^−1.79، والتجميع ∝ (qc·qr)^1.15. كثرة النويات تصغّر القطيرات فتؤخر المطر، ولهذا يقل مطر السحب الملوثة.</p>
+      <p><b>عملية بيرجيرون:</b> تحت الصفر يكون ضغط بخار الماء فوق الجليد أقل منه فوق الماء، فتنمو البلورات على حساب القطيرات. نويات الجليد الطبيعية تُحسب بصيغة Fletcher (1962). يوديد الفضة ينشط تحت −5° تقريبًا ويزيد فاعلية كلما برد الجو.</p>
+      <p><b>الأملاح الاسترطابية:</b> تضيف نويات عملاقة تبدأ منها قطرات المطر مبكرًا في السحب الدافئة.</p>
+      <p><b>حدود الأدلة:</b> تقرير المنظمة العالمية للأرصاد الجوية يصف آثار الاستمطار بأنها غير مؤكدة إحصائيًا في كثير من الحالات. أفضل الأدلة تخص الاستمطار الجليدي للسحب الجبلية، بزيادات من بضعة بالمئة حتى نحو 15٪ في الظروف المناسبة. أما الأملاح في السحب الركامية فأدلتها أضعف. لذلك يعرض المفاعل نتيجة الفيزياء ثم يضعها في نطاق الأدلة الميدانية.</p>
+    </details>
+  </div>
+</aside>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(x,a,b)=>x<a?a:x>b?b:x,lerp=(a,b,t)=>a+(b-a)*t;
+const FONT=getComputedStyle(document.body).fontFamily;
+const P={tb:18,tt:-12,w:3,ccn:800,agent:'none',dose:50};
+let NAT=null,SEED=null;
+
+/* ================= parcel microphysics, base to top ================= */
+function run(seed){const depth=Math.max(400,(P.tb-P.tt)/6*1000),dz=25,rho=1.0;   // moist lapse ≈ 6 °C/km
+  const Gl=Math.max(.0006,.0015+.0001*(P.tb-10))/1000;                           // kg/m³ of liquid per metre of ascent
+  const Nc=P.ccn*clamp(.35+.15*Math.log(P.w+1),.2,1);                             // activated droplets, cm⁻³
+  const giant=seed&&P.agent==='salt'?P.dose*.02:0;                                // giant nuclei, cm⁻³
+  let qc=0,qr=0,qi=0,prec=0,cond=0,onset=null,frz=null,Nice=0,z=0;const prof=[];
+  while(z<depth){const T=P.tb-z/1000*6,dt=dz/P.w;const dq=Gl*dz/rho;qc+=dq;cond+=dq;
+    // warm rain: Khairoutdinov & Kogan (2000), plus embryos from giant salt nuclei
+    let au=1350*Math.pow(Math.max(qc,1e-9),2.47)*Math.pow(Nc,-1.79)*dt+giant*2e-3*qc*dt/10;au=Math.min(au,qc);qc-=au;qr+=au;
+    let ac=67*Math.pow(Math.max(qc*qr,1e-18),1.15)*dt;ac=Math.min(ac,qc);qc-=ac;qr+=ac;
+    // cold rain: Fletcher ice nuclei, plus silver iodide below about −5 °C; Bergeron growth peaks near −15 °C
+    if(T<0){if(frz==null)frz=z;let nIN=Math.min(1e5,.01*Math.exp(.6*(-T)));if(seed&&P.agent==='agi')nIN+=P.dose*1000*clamp((-T-5)/10,0,1);Nice=Math.max(Nice,nIN);
+      const mdot=3e-11*Math.exp(-Math.pow((T+15)/6,2))+4e-12;let dep=Nice*mdot*dt/rho;dep=Math.min(dep,qc*.6);qc-=dep;qi+=dep;
+      let rime=qi>1e-7?15*qc*Math.pow(qi,.75)*dt:0;rime=Math.min(rime,qc);qc-=rime;qi+=rime}
+    // rain and snow fall out
+    const outR=qr*Math.min(1,dt/900),outI=qi*Math.min(1,dt/500);qr-=outR;qi-=outI;prec+=outR+outI;
+    const rv=Math.cbrt(3*qc*rho/(4*Math.PI*1000*Nc*1e6))*1e6,reff=rv*1.08;
+    if(onset==null&&(reff>=14||qr>1e-4))onset=z;
+    if(z%250<dz)prof.push({z,T,qc,qr,qi,reff,Nice});
+    z+=dz}
+  const PE=prec/Math.max(cond,1e-9),CWP=cond*rho*depth/2,cycles=clamp(45*60*P.w/depth,1,5);   // kg/m² of water condensed per ascent
+  const rain=PE*CWP*cycles;   // mm for one storm cell
+  const view=prof[Math.floor(prof.length*.7)]||prof[prof.length-1];
+  return{depth,Nc,PE,rain,onset,frz,prof,view,Nice}}
+function evaluate(){NAT=run(false);SEED=P.agent==='none'||P.dose===0?NAT:run(true);
+  const f=v=>v.toFixed(1)+' ملم';$('rn').textContent=f(NAT.rain);$('rs').textContent=f(SEED.rain);
+  const pct=NAT.rain>.05?(SEED.rain/NAT.rain-1)*100:SEED.rain>.05?999:0,wil=(SEED.rain-NAT.rain)*.25;
+  let h='';
+  if(P.agent==='none')h='اختر مادة استمطار لترى أثرها.';
+  else if(P.agent==='agi'&&P.tt>-5)h='<b>لا أثر تقريبًا.</b> قمة السحابة أدفأ من −5°، ويوديد الفضة لا ينشط إلا في السحب الباردة.';
+  else if(P.agent==='salt'&&P.ccn<250)h='<b>أثر ضئيل.</b> السحابة بحرية نظيفة قطيراتها كبيرة أصلًا، فالأملاح لا تضيف كثيرًا.';
+  else{h='الفيزياء هنا تعطي '+(pct>=0?'زيادة':'نقصًا')+' <b class="num">'+(Math.abs(pct)>500?(pct>=0?'كبيرة جدًا':'كبيرًا جدًا'):Math.round(Math.abs(pct))+'٪')+'</b> في مطر الخلية الواحدة، أي نحو <b class="num">'+wil.toFixed(1)+' ملم</b> على متوسط الولاية إذا غطت الخلايا ربع مساحتها.';
+    if(pct>15)h+='<br><span style="color:var(--warn)">هذا أكثر مما أثبتته التجارب الميدانية (حتى نحو 15٪ في أفضل الظروف). النموذج بسيط ويتجاهل تبخر المطر وتعقيد السحب الحقيقية.</span>';
+    if(pct<0)h+='<br><span style="color:var(--warn)">الإفراط في الرش قد يقلل المطر: بلورات كثيرة تتقاسم الماء فتبقى صغيرة ولا تسقط.</span>'}
+  $('delta').innerHTML=h;
+  const on=x=>x==null?'لا يبدأ':(x/1000).toFixed(1)+' كم فوق القاعدة';
+  $('kv').innerHTML=[['عمق السحابة',(NAT.depth/1000).toFixed(1)+' كم'],['القطيرات النشطة',Math.round(NAT.Nc)+' /سم³'],['يبدأ المطر طبيعيًا',on(NAT.onset)],['ومع الاستمطار',on(SEED.onset)],['مستوى التجمد',NAT.frz==null?'السحابة كلها فوق الصفر':(NAT.frz/1000).toFixed(1)+' كم'],['كفاءة الهطول',Math.round(NAT.PE*100)+'٪ ← '+Math.round(SEED.PE*100)+'٪']].map(r=>'<div><span>'+r[0]+'</span><span class="num">'+r[1]+'</span></div>').join('')}
+
+/* ================= microscope ================= */
+const cv=$('cv'),cx=cv.getContext('2d');let W=0,H=0,DPR=1;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR}
+addEventListener('resize',resize);
+const drops=[],ice=[],rain=[],agents=[];let last=performance.now();
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;const c=cx;c.setTransform(DPR,0,0,DPR,0,0);
+  const narrow=W<760,L=narrow?0:350,R=W-(narrow?70:110),T=0,B=narrow?H*.48:H;
+  const g=c.createRadialGradient((L+R)/2,(T+B)/2,0,(L+R)/2,(T+B)/2,Math.max(R-L,B-T)*.7);g.addColorStop(0,'#16263C');g.addColorStop(1,'#04070D');c.fillStyle=g;c.fillRect(0,0,W,H);
+  const S=SEED||NAT;if(!S){requestAnimationFrame(frame);return}const v=S.view;
+  // populations follow the physics at 70% of the cloud depth
+  const nD=Math.round(clamp(40+Math.log(S.Nc)*25,40,260)),rD=clamp(v.reff,3,30),nI=Math.round(clamp(Math.log10(1+v.Nice)*8,0,60)),nR=Math.round(clamp(v.qr*2e5,0,40));
+  while(drops.length<nD)drops.push({x:L+Math.random()*(R-L),y:Math.random()*B,p:Math.random()*6});drops.length=nD;
+  while(ice.length<nI)ice.push({x:L+Math.random()*(R-L),y:Math.random()*B,s:.3,a:Math.random()*6});ice.length=nI;
+  while(rain.length<nR)rain.push({x:L+Math.random()*(R-L),y:Math.random()*B*.3,v:40+Math.random()*60});rain.length=nR;
+  const scale=narrow?.7:1;
+  for(const d of drops){d.p+=dt;d.x+=Math.sin(d.p*3)*.3;d.y-=P.w*2*dt;if(d.y<T)d.y=B;const r=rD*.55*scale*(.7+.3*Math.sin(d.p));
+    c.fillStyle='rgba(170,210,255,.55)';c.beginPath();c.arc(d.x,d.y,r,0,7);c.fill();c.fillStyle='rgba(255,255,255,.6)';c.beginPath();c.arc(d.x-r*.3,d.y-r*.3,r*.3,0,7);c.fill()}
+  for(const k of ice){k.s=Math.min(1.6,k.s+dt*.05);k.a+=dt*.3;k.y+=dt*(10+k.s*20);if(k.y>B){k.y=0;k.s=.3}c.save();c.translate(k.x,k.y);c.rotate(k.a);c.strokeStyle='rgba(207,232,255,.9)';c.lineWidth=1.5;const s=10*k.s*scale;
+    for(let a=0;a<6;a++){c.rotate(Math.PI/3);c.beginPath();c.moveTo(0,0);c.lineTo(s,0);c.moveTo(s*.6,0);c.lineTo(s*.8,s*.2);c.moveTo(s*.6,0);c.lineTo(s*.8,-s*.2);c.stroke()}c.restore()}
+  for(const r of rain){r.y+=r.v*dt*3;if(r.y>B){r.y=-20;r.x=L+Math.random()*(R-L)}c.fillStyle='rgba(120,180,255,.85)';c.beginPath();c.ellipse(r.x,r.y,6*scale,8*scale,0,0,7);c.fill()}
+  // seeding particles drifting in
+  if(P.agent!=='none'&&P.dose>0){if(Math.random()<P.dose/100*.6)agents.push({x:L,y:Math.random()*B,life:1});c.fillStyle=P.agent==='agi'?'rgba(242,214,120,.9)':'rgba(255,255,255,.9)';
+    for(const a of agents){a.x+=80*dt;a.life-=dt*.25;P.agent==='salt'?c.fillRect(a.x,a.y,4,4):(c.beginPath(),c.arc(a.x,a.y,2,0,7),c.fill())}for(let i=agents.length-1;i>=0;i--)if(agents[i].life<=0||agents[i].x>R)agents.splice(i,1)}
+  c.font='600 12px '+FONT;c.fillStyle='rgba(226,234,243,.7)';c.textAlign='center';c.direction='rtl';
+  c.fillText('عدسة مجهرية عند '+(v.z/1000).toFixed(1)+' كم داخل السحابة · '+v.T.toFixed(0)+'° · نصف قطر القطيرات '+v.reff.toFixed(1)+' ميكرون',(L+R)/2,B-14);
+  column(c,R+12,narrow?40:60,(narrow?60:90)-24,B-(narrow?90:130));
+  requestAnimationFrame(frame)}
+function column(c,x,y,w,h){const S=NAT,Sd=SEED,d=S.depth,Y=z=>y+h-z/d*h;
+  const g=c.createLinearGradient(0,y,0,y+h);g.addColorStop(0,'rgba(220,235,255,.9)');g.addColorStop(1,'rgba(140,160,190,.9)');c.fillStyle=g;c.beginPath();c.roundRect?c.roundRect(x,y,w,h,10):c.rect(x,y,w,h);c.fill();
+  if(S.frz!=null){c.strokeStyle='#7FB8FF';c.setLineDash([3,3]);c.beginPath();c.moveTo(x-4,Y(S.frz));c.lineTo(x+w+4,Y(S.frz));c.stroke();c.setLineDash([])}
+  const mk=(z,col,dash)=>{if(z==null)return;c.strokeStyle=col;c.lineWidth=3;c.setLineDash(dash);c.beginPath();c.moveTo(x-6,Y(z));c.lineTo(x+w+6,Y(z));c.stroke();c.setLineDash([])};
+  mk(S.onset,'#F2B84B',[5,4]);if(Sd!==S)mk(Sd.onset,'#5CC9B0',[]);
+  c.font='600 10.5px '+FONT;c.fillStyle='#E8EEF5';c.textAlign='center';c.fillText('القمة '+P.tt+'°',x+w/2,y-6);c.fillText('القاعدة '+P.tb+'°',x+w/2,y+h+14);
+  c.fillStyle='#F2B84B';c.fillText('— — مطر طبيعي',x+w/2,y+h+30);if(Sd!==S){c.fillStyle='#5CC9B0';c.fillText('— مع الاستمطار',x+w/2,y+h+44)}}
+
+/* ================= controls ================= */
+const OUT={tb:v=>v+'°م',tt:v=>v+'°م',w:v=>v+' م/ث',ccn:v=>v+' /سم³'+(v<250?' (بحرية)':v>900?' (ملوثة)':''),dose:v=>v+'٪'};
+for(const k in OUT){const e=$(k);e.value=P[k];const u=()=>{P[k]=+e.value;if(k==='tt'&&P.tt>P.tb-3){P.tt=P.tb-3;e.value=P.tt}$(k+'O').textContent=OUT[k](P[k])};e.addEventListener('input',()=>{u();evaluate()});u()}
+$('agent').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$('agent').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));P.agent=b.dataset.a;agents.length=0;evaluate()}));
+resize();evaluate();requestAnimationFrame(frame);
+})();
+</script>
+
+<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{})</script>
+</body></html>

@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<!-- i18n --><script>try{if(localStorage.getItem("lang")==="en")document.write('<script src="i18n/nafaf-i18n.js"><\/script>')}catch(e){}</script><!-- /i18n --><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#05080F">
+<title>محرك الأفلاج</title>
+<style>
+/* Layout: a living cross-section (mountain, aquifer, falaj tunnel, shari'a, palm plots) fills the screen; one glass column carries the falaj's vital numbers; the rail opens the falaj, irrigation and drought sheets; a strip along the bottom charts a year back and twelve weeks ahead. */
+:root{
+  --bg:#05080F;--glass:rgba(9,15,27,.86);--line:rgba(226,234,243,.10);
+  --fg:#E8EEF5;--muted:#93A3B7;--brass:#E3A94B;--teal:#5CC9B0;--sky:#7FB8FF;--water:#4FB3E8;
+  --ok:#6FD39B;--warn:#F2B84B;--bad:#F06B5B;
+  --f:system-ui,-apple-system,"Segoe UI",Tahoma,"Geeza Pro","Noto Sans Arabic",Arial,sans-serif;
+  --gl:max(16px,env(safe-area-inset-left,0px));--gr:max(16px,env(safe-area-inset-right,0px));
+  --gt:max(12px,env(safe-area-inset-top,0px));--gb:max(12px,env(safe-area-inset-bottom,0px));
+  --rail:66px;--strip:118px;color-scheme:dark}
+html,body{height:100%;overflow:hidden;margin:0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);font-size:14px;line-height:1.5;direction:rtl;padding-left:var(--gl);padding-right:var(--gr);padding-block:0;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.glass{background:var(--glass);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+.top{position:fixed;z-index:4;top:var(--gt);left:var(--gl);display:flex;flex-direction:column;gap:4px;max-width:calc(100% - var(--gl) - var(--gr) - var(--rail) - 16px)}
+.name{font-size:13px;font-weight:800;display:flex;gap:8px;align-items:center}
+.name small{font-size:9.5px;letter-spacing:.2em;color:var(--brass);direction:ltr;font-weight:600}
+.where{font-size:12.5px;color:var(--muted)}
+.read{position:fixed;z-index:3;top:calc(var(--gt) + 54px);left:var(--gl);width:290px;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:12px;max-height:calc(100% - var(--gt) - var(--gb) - var(--strip) - 76px);overflow:auto}
+.flow small{display:block;font-size:11.5px;color:var(--muted)}
+.flow b{font-size:38px;font-weight:800;line-height:1.05}
+.flow b span{font-size:14px;color:var(--muted);font-weight:600}
+.flow em{font-style:normal;font-size:12.5px;display:block}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv div{background:rgba(255,255,255,.04);border-radius:12px;padding:8px 10px}
+.kv small{display:block;font-size:10.5px;color:var(--muted)}
+.kv b{font-size:16px}
+.meter{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:4px;background:var(--water);transition:width .5s}
+.say{font-size:12.5px;line-height:1.7;margin:0;border-top:1px solid var(--line);padding-top:10px}
+.rail{position:fixed;z-index:6;right:var(--gr);top:50%;transform:translateY(-50%);width:var(--rail);border-radius:18px;padding:6px;display:flex;flex-direction:column;gap:2px}
+.rail button{border:0;background:transparent;border-radius:12px;padding:7px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:10.5px;font-weight:700}
+.rail button svg{width:21px;height:21px}
+.rail button:hover{color:var(--fg);background:rgba(255,255,255,.05)}
+.rail button[aria-pressed="true"]{background:rgba(227,169,75,.16);color:var(--brass)}
+.sheet{position:fixed;z-index:5;top:var(--gt);right:calc(var(--gr) + var(--rail) + 10px);bottom:calc(var(--gb) + var(--strip) + 12px);width:360px;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;transition:opacity .22s,transform .22s}
+.sheet.off{opacity:0;transform:translateX(16px);pointer-events:none;visibility:hidden}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 8px 14px;border-bottom:1px solid var(--line)}
+.sh b{font-size:14px}
+.x{border:0;background:rgba(255,255,255,.06);border-radius:9px;width:30px;height:30px;display:grid;place-items:center;color:var(--muted)}
+.sb{overflow-y:auto;padding:12px 14px 14px;display:flex;flex-direction:column;gap:12px;min-height:0;flex:1}
+.lbl{font-size:11.5px;color:var(--muted)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 12px;font-size:12.5px;color:var(--muted)}
+.seg button[aria-pressed="true"]{border-color:var(--brass);color:var(--fg);background:rgba(227,169,75,.14)}
+.rng{display:flex;flex-direction:column;gap:2px;font-size:12.5px}
+.rng div{display:flex;justify-content:space-between;gap:8px}
+.rng output{color:var(--brass);font-variant-numeric:tabular-nums;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--brass)}
+input[type=number],select{width:100%;min-width:0;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;padding:7px 9px}
+.btn{border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:12px;padding:9px 12px;font-weight:700;font-size:13px}
+.btn.pri{background:var(--brass);color:#1a1206;border-color:transparent}
+.aflaj{display:flex;flex-direction:column;gap:6px}
+.aflaj button{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:12px;padding:8px 10px;text-align:start;display:flex;flex-direction:column;gap:1px}
+.aflaj button[aria-pressed="true"]{border-color:var(--brass);background:rgba(227,169,75,.1)}
+.aflaj small{color:var(--muted);font-size:11px}
+.blk{display:grid;grid-template-columns:1fr 92px 30px;gap:6px;align-items:center}
+.blk .x{width:30px;height:34px}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl td,.tbl th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:start}
+.tbl th{color:var(--muted);font-weight:600;font-size:11.5px}
+.note{font-size:11.5px;color:var(--muted);margin:0;line-height:1.7}
+.big{font-size:22px;font-weight:800}
+.strip{position:fixed;z-index:4;left:var(--gl);right:calc(var(--gr) + var(--rail) + 10px);bottom:var(--gb);height:var(--strip);border-radius:16px;padding:6px 10px 4px}
+.strip canvas{width:100%;height:100%;display:block}
+.center{position:fixed;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:16px;padding:14px 18px;max-width:min(460px,calc(100% - 40px));display:flex;flex-direction:column;gap:10px;font-size:13.5px}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--brass);animation:sp 1s linear infinite;display:inline-block;vertical-align:middle;margin-inline-end:8px}
+@keyframes sp{to{transform:rotate(1turn)}}
+@media (max-width:760px){
+  :root{--rail:56px;--strip:100px}
+  .rail button{font-size:9.5px;padding:6px 0 5px}.rail button svg{width:19px;height:19px}
+  .read{top:auto;bottom:calc(var(--gb) + var(--strip) + 10px);right:calc(var(--gr) + var(--rail) + 8px);width:auto;max-height:42%;padding:12px;gap:10px}
+  .flow b{font-size:30px}
+  .sheet{top:auto;left:var(--gl);right:calc(var(--gr) + var(--rail) + 8px);width:auto;max-height:66%;height:auto}
+  .sheet.off{transform:translateY(16px)}
+  .strip{right:calc(var(--gr) + var(--rail) + 8px)}
+}
+@media (prefers-reduced-motion:reduce){.sheet{transition:none}.spin{animation:none}}
+</style>
+</head><body>
+
+
+<canvas id="cv" aria-label="مقطع حي: الجبل والخزان الجوفي ونفق الفلج والشريعة والمزارع"></canvas>
+<div class="top"><div class="name"><a href="./" style="color:inherit;text-decoration:none;border:1px solid rgba(226,234,243,.2);border-radius:8px;padding:1px 7px;font-weight:600">→ نفاف</a>محرك الأفلاج والمياه الجوفية<small>NAFAF · FALAJ ENGINE</small></div><div class="where" id="where"></div></div>
+
+<aside class="read glass" aria-live="polite">
+  <div class="flow"><small>تدفق الفلج المقدّر اليوم</small><b class="num" id="fNow">—</b><em id="fCmp"></em></div>
+  <div><div class="lbl" style="display:flex;justify-content:space-between"><span>مخزون الخزان الجوفي</span><span id="sPct" class="num"></span></div><div class="meter"><i id="sBar"></i></div></div>
+  <div class="kv">
+    <div><small>بعد 4 أسابيع</small><b class="num" id="w4">—</b></div>
+    <div><small>بعد 12 أسبوعًا</small><b class="num" id="w12">—</b></div>
+    <div><small>مطر آخر 30 يومًا</small><b class="num" id="r30">—</b></div>
+    <div><small>مطر 16 يومًا قادمة</small><b class="num" id="r16">—</b></div>
+  </div>
+  <p class="say" id="say"></p>
+</aside>
+
+<nav class="rail glass" aria-label="أدوات">
+  <button data-s="falaj" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 18h18M5 18V9M9 18v-6M13 18v-4M17 18v-2"/><path d="M3 21c3-1.5 6-1.5 9 0s6 1.5 9 0"/></svg>الفلج</button>
+  <button data-s="irr" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 21V9M12 9c-4 0-6-3-6-6 3 0 6 2 6 6zM12 9c4 0 6-3 6-6-3 0-6 2-6 6z"/><path d="M5 21h14"/></svg>الري</button>
+  <button data-s="dry" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M12 1v2M4.9 3.9l1.4 1.4M19.1 3.9l-1.4 1.4M3 15l3-2 3 3 3-3 3 3 3-3 3 2M3 20l3-2 3 3 3-3 3 3 3-3 3 2"/></svg>الجفاف</button>
+  <button data-s="cal" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>المعايرة</button>
+  <button data-s="how" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>الحساب</button>
+</nav>
+
+<section class="sheet glass off" id="s-falaj" aria-label="الفلج">
+  <div class="sh"><b>الفلج</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <div class="lbl">الأفلاج الخمسة المسجلة في التراث العالمي لليونسكو (2006)</div>
+    <div class="aflaj" id="aflaj"></div>
+    <button class="btn" id="geo">فلج قريب من موقعي</button>
+    <p class="note" id="locMsg" hidden></p>
+    <div class="lbl">نوع الفلج</div>
+    <div class="seg" id="typeSeg"><button data-t="daudi" aria-pressed="true">داوودي</button><button data-t="ghaili" aria-pressed="false">غيلي</button><button data-t="aini" aria-pressed="false">عيني</button></div>
+    <p class="note" id="typeNote"></p>
+  </div>
+</section>
+
+<section class="sheet glass off" id="s-irr" aria-label="الري">
+  <div class="sh"><b>شبكة الري</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <div class="lbl">طريقة التوزيع</div>
+    <div class="seg" id="sysSeg"><button data-y="trad" aria-pressed="true">سواقي ترابية وغمر</button><button data-y="lined" aria-pressed="false">سواقي مبطّنة</button><button data-y="drip" aria-pressed="false">تنقيط</button><button data-y="spr" aria-pressed="false">رش</button></div>
+    <div class="lbl">المزروعات</div>
+    <div id="blocks" style="display:flex;flex-direction:column;gap:6px"></div>
+    <div class="row" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" data-add="palm">+ نخيل</button><button class="btn" data-add="lime">+ ليمون ومانجو</button><button class="btn" data-add="alf">+ برسيم</button><button class="btn" data-add="veg">+ خضروات</button></div>
+    <div class="rng"><div><label for="dawran">الدوران (أيام الدورة الكاملة للماء)</label><output id="dawranO"></output></div><input type="range" id="dawran" min="4" max="14" step="1" value="7"></div>
+    <div id="irrOut"></div>
+  </div>
+</section>
+
+<section class="sheet glass off" id="s-dry" aria-label="الجفاف">
+  <div class="sh"><b>اختبار الجفاف</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <div class="rng"><div><label for="dMonths">انقطاع المطر من اليوم</label><output id="dMonthsO"></output></div><input type="range" id="dMonths" min="0" max="36" step="1" value="0"></div>
+    <div class="rng"><div><label for="pump">ضخ الآبار من نفس الخزان</label><output id="pumpO"></output></div><input type="range" id="pump" min="0" max="20000" step="500" value="0"></div>
+    <div id="dryOut"></div>
+    <p class="note">الآبار القريبة تسحب من نفس المخزون الذي يغذي الفلج، ولهذا يجف كثير من الأفلاج قبل أن يتوقف المطر تمامًا.</p>
+  </div>
+</section>
+
+<section class="sheet glass off" id="s-cal" aria-label="المعايرة">
+  <div class="sh"><b>معايرة النموذج</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <div class="rng"><div><label for="area">مساحة مستجمع الفلج</label><output id="areaO"></output></div><input type="range" id="area" min="2" max="200" step="1" value="40"></div>
+    <div class="rng"><div><label for="alpha">نسبة المطر التي تتسرب إلى الخزان</label><output id="alphaO"></output></div><input type="range" id="alpha" min="0.03" max="0.35" step="0.01" value="0.15"></div>
+    <div class="rng"><div><label for="tau">بطء الخزان (زمن نصف التفريغ)</label><output id="tauO"></output></div><input type="range" id="tau" min="30" max="1500" step="10" value="290"></div>
+    <label class="lbl" for="obs">التدفق الذي قسته فعلًا اليوم (لتر/ثانية)، اتركه فارغًا إن لم تعرفه</label>
+    <input type="number" id="obs" min="0" step="1" inputmode="decimal" placeholder="مثال: 120">
+    <p class="note" id="calNote"></p>
+  </div>
+</section>
+
+<section class="sheet glass off" id="s-how" aria-label="الحساب">
+  <div class="sh"><b>كيف يُحسب؟</b><button class="x" data-close aria-label="إغلاق">✕</button></div>
+  <div class="sb">
+    <p class="note"><b>المطر:</b> سجل يومي حقيقي لثلاث سنوات من إعادة التحليل ERA5 عبر Open-Meteo، ومعه توقع الأيام الستة عشر القادمة. البخر-نتح المرجعي (ET0) من نفس المصدر.</p>
+    <p class="note"><b>التغذية:</b> أول 4 ملم من كل يوم ممطر تضيع بالتبلل والتبخر. يتسرب جزء مما يزيد عليها (النسبة قابلة للتعديل، ودراسات الحجر تقدّرها غالبًا بين 5٪ و25٪) إلى خزانين: سريع في حصى الوادي، وبطيء في الصخر والطبقات العميقة.</p>
+    <p class="note"><b>نوع الفلج يحدد الاقتسام:</b> الغيلي يأخذ أغلب مائه من الخزان السريع، فيرتفع بعد المطر بأيام ويهبط بسرعة. الداوودي يأخذ أغلبه من الخزان البطيء، فيتأخر ويستمر شهورًا. العيني شبه ثابت ويتغذى من العمق.</p>
+    <p class="note"><b>التصريف:</b> كل خزان يفرغ بنسبة ثابتة من مخزونه يوميًا (منحنى انحسار أُسّي)، والفلج يلتقط جزءًا من هذا التصريف. إذا أدخلت تدفقًا مقيسًا، يُضبط هذا الجزء ليطابق قياسك.</p>
+    <p class="note"><b>السيناريوهات:</b> «جاف» يعني لا مطر بعد الأيام الستة عشر المتوقعة. «معتاد» يعني مطرًا بمتوسط نفس الشهر في السنوات الثلاث الماضية.</p>
+    <p class="note"><b>الري:</b> حاجة كل محصول = ET0 × معامل المحصول (FAO-56) × المساحة، مقسومة على كفاءة الطريقة. وتُضاف خسائر النقل في السواقي.</p>
+    <p class="note">هذا نموذج تعليمي مبسّط، لا يحل محل قياسات وزارة الثروة الزراعية والسمكية وموارد المياه. أرقام التدفق تقديرية حتى تعايره بقياس فعلي. ومواقع الأفلاج المعروضة تقريبية.</p>
+  </div>
+</section>
+
+<div class="strip glass"><canvas id="strip" aria-label="تدفق الفلج: سنة مضت واثنا عشر أسبوعًا قادمة"></canvas></div>
+<div class="center glass" id="center" hidden></div>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(x,a,b)=>x<a?a:x>b?b:x,lerp=(a,b,t)=>a+(b-a)*t;
+const FONT=getComputedStyle(document.body).fontFamily;
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const hav=(a,b,c,d)=>{const r=Math.PI/180,s=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2;return 12742*Math.asin(Math.sqrt(s))};
+const nDays=n=>n===1?'يوم':n===2?'يومين':n<=10?n+' أيام':n+' يومًا',nMonths=n=>n===1?'شهر':n===2?'شهرين':n<=10?n+' أشهر':n+' شهرًا';
+const fmtN=n=>n>=100?Math.round(n).toLocaleString('en-US'):n>=10?n.toFixed(0):n.toFixed(1);
+
+/* ================= the five UNESCO aflaj (locations approximate) ================= */
+const AFLAJ=[{id:'daris',n:'فلج دارس',w:'نزوى',lat:22.95,lon:57.53},{id:'khatmeen',n:'فلج الخطمين',w:'بركة الموز، نزوى',lat:22.92,lon:57.67},
+  {id:'malki',n:'فلج الملكي',w:'إزكي',lat:22.93,lon:57.77},{id:'mayassar',n:'فلج الميسر',w:'الرستاق',lat:23.40,lon:57.42},{id:'jeela',n:'فلج الجيلة',w:'صور',lat:22.43,lon:59.33}];
+const TYPES={daudi:{fq:.25,tq:15,ts:290,note:'داوودي: يحفر نفقه تحت الأرض حتى يبلغ الماء الجوفي في المرتفعات. يتأخر تجاوبه مع المطر ويستمر شهورًا.'},
+  ghaili:{fq:.85,tq:8,ts:80,note:'غيلي: يأخذ الماء من جريان الوادي والطبقة الحصوية القريبة. يرتفع بعد المطر بأيام وينخفض بسرعة.'},
+  aini:{fq:.05,tq:15,ts:760,note:'عيني: يخرج من نبع طبيعي من الأعماق. تدفقه الأكثر ثباتًا والأبطأ تأثرًا بالمطر.'}};
+const CROPS={palm:{n:'نخيل',u:'نخلة',a:64,kc:.95,def:150},lime:{n:'ليمون ومانجو',u:'شجرة',a:36,kc:.7,def:60},alf:{n:'برسيم',u:'م²',a:1,kc:1,def:2000},veg:{n:'خضروات',u:'م²',a:1,kc:.85,def:1000}};
+const SYS={trad:{n:'سواقي ترابية وغمر',eff:.5,conv:.25},lined:{n:'سواقي مبطّنة',eff:.55,conv:.08},drip:{n:'تنقيط',eff:.9,conv:.03},spr:{n:'رش',eff:.75,conv:.05}};
+
+/* ================= state ================= */
+const P={falaj:'daris',name:'فلج دارس',lat:22.95,lon:57.53,type:'daudi',area:40,alpha:.15,thalf:290,obs:null,sys:'trad',dawran:7,dMonths:0,pump:0,blocks:[{c:'palm',v:400},{c:'alf',v:3000}]};
+try{Object.assign(P,JSON.parse(store.get('falaj.p')||'{}'))}catch(e){}
+let DATA=null,M=null;
+
+/* ================= rainfall: three years of ERA5 plus the 16-day forecast ================= */
+async function getJSON(u,ms=25000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(u,{signal:c.signal});if(!r.ok)throw 0;return await r.json()}finally{clearTimeout(t)}}
+const ymd=d=>d.toISOString().slice(0,10);
+async function load(){const ll='latitude='+P.lat.toFixed(3)+'&longitude='+P.lon.toFixed(3);$('where').textContent=P.name+' · أجلب سجل المطر…';
+  const c=$('center');c.hidden=false;c.innerHTML='<span><span class="spin"></span>أجلب مطر ثلاث سنوات وتوقع ستة عشر يومًا…</span>';
+  const end=new Date(Date.now()-6*864e5),start=new Date(end.getTime()-3*365*864e5);
+  try{const[a,f]=await Promise.all([getJSON('https://archive-api.open-meteo.com/v1/archive?'+ll+'&start_date='+ymd(start)+'&end_date='+ymd(end)+'&daily=precipitation_sum,et0_fao_evapotranspiration&timezone=auto'),
+      getJSON('https://api.open-meteo.com/v1/forecast?'+ll+'&daily=precipitation_sum,et0_fao_evapotranspiration&past_days=7&forecast_days=16&timezone=auto')]);
+    const days=[],map=new Map();
+    a.daily.time.forEach((t,i)=>map.set(t,[a.daily.precipitation_sum[i]||0,a.daily.et0_fao_evapotranspiration[i]||0]));
+    f.daily.time.forEach((t,i)=>map.set(t,[f.daily.precipitation_sum[i]||0,f.daily.et0_fao_evapotranspiration[i]||0]));
+    [...map.keys()].sort().forEach(t=>days.push({t,p:map.get(t)[0],e:map.get(t)[1]}));
+    const today=f.daily.time[7];const iT=days.findIndex(d=>d.t===today);
+    // monthly climatology from the archive years
+    const cm=Array.from({length:12},()=>[0,0,0]);a.daily.time.forEach((t,i)=>{const m=+t.slice(5,7)-1;cm[m][0]+=a.daily.precipitation_sum[i]||0;cm[m][1]+=a.daily.et0_fao_evapotranspiration[i]||0;cm[m][2]++});
+    DATA={days,iT:iT<0?days.length-17:iT,clim:cm.map(x=>({p:x[0]/(x[2]||1),e:x[1]/(x[2]||1)}))};
+    c.hidden=true;$('where').textContent=P.name+' · مطر ERA5 وتوقع Open-Meteo';run()}
+  catch(e){const sb=/claude/i.test(location.hostname);c.innerHTML=sb?'<b>هذه المعاينة داخل Claude معزولة عن الإنترنت</b><span>افتح الملف falaj.html في متصفحك أو على nafaf.online ليعمل بسجل المطر الحقيقي.</span>':'<b>تعذّر جلب سجل المطر</b><span>تأكد من الاتصال ثم أعد المحاولة.</span><button class="btn pri" id="retry">أعد المحاولة</button>';const r=$('retry');if(r)r.onclick=load}}
+
+/* ================= two-reservoir aquifer ================= */
+function params(){const T=TYPES[P.type];return{fq:T.fq,kq:Math.LN2/T.tq,ks:Math.LN2/P.thalf,alpha:P.alpha}}
+function step(st,p,pr,pumpMm){const pe=Math.max(0,p-4),rch=pr.alpha*pe;st.q+=rch*pr.fq;st.s+=rch*(1-pr.fq);
+  const oq=st.q*pr.kq,os=st.s*pr.ks;st.q-=oq;st.s=Math.max(0,st.s-os-pumpMm);return oq+os}
+const toLs=mm=>mm*P.area*11.574;    // mm/day over the catchment → L/s
+function run(){if(!DATA)return;store.set('falaj.p',JSON.stringify(P));const pr=params(),d=DATA.days,iT=DATA.iT;
+  let mr=0;for(const x of d.slice(0,iT))mr+=pr.alpha*Math.max(0,x.p-4);mr/=Math.max(1,iT);
+  const st={q:mr*pr.fq/pr.kq,s:mr*(1-pr.fq)/pr.ks},hist=[],sto=[];
+  for(let i=0;i<=iT;i++){hist.push(step(st,d[i].p,pr,0));sto.push(st.s)}
+  const meanS=sto.reduce((a,b)=>a+b,0)/sto.length||1,meanQ=hist.reduce((a,b)=>a+b,0)/hist.length||1e-9;
+  // capture fraction: from a measured flow if given, otherwise half of what drains
+  let cap=.5,capNote='';if(P.obs>0){cap=P.obs/Math.max(1e-6,toLs(hist[iT]));if(cap>1){capNote='التدفق الذي أدخلته أكبر مما يستطيع هذا المستجمع إنتاجه. كبّر مساحة المستجمع أو نسبة التسرب.';cap=1}else if(cap<.01){cap=.01}}
+  const fwd=(mode,days,pumpM3)=>{const s={q:st.q,s:st.s},out=[],so=[],pm=pumpM3/(P.area*1000);
+    for(let k=1;k<=days;k++){const j=iT+k,dt=new Date(Date.now()+k*864e5),cl=DATA.clim[dt.getMonth()];let p;
+      if(mode==='drought')p=0;else if(j<d.length)p=d[j].p;else p=mode==='avg'?cl.p:0;out.push(step(s,p,pr,pm));so.push(s.s)}return{out,so}};
+  const dry=fwd('dry',84,P.pump),avg=fwd('avg',84,P.pump),drought=fwd('drought',Math.max(84,P.dMonths*30.4+60|0),P.pump);
+  const longDry=fwd(P.dMonths>0?'drought':'dry',1100,P.pump);
+  M={pr,hist,sto,meanS,meanQ,cap,capNote,dry,avg,drought,longDry,st};
+  render()}
+const flowLs=mm=>toLs(mm)*M.cap;
+
+/* ================= irrigation ================= */
+function etNow(){const d=DATA.days,iT=DATA.iT;let s=0,n=0;for(let i=iT+1;i<Math.min(d.length,iT+17);i++){s+=d[i].e;n++}return n?s/n:5}
+function demand(et){const sy=SYS[P.sys];let tot=0;const rows=P.blocks.map(b=>{const c=CROPS[b.c],m3=et*c.kc*c.a*b.v/1000/sy.eff/(1-sy.conv);tot+=m3;return{b,c,m3}});return{rows,tot}}
+function renderIrr(){const et=etNow(),D=demand(et),sup=flowLs(M.hist[M.hist.length-1])*86.4,cov=D.tot?sup/D.tot:9;
+  const sy=SYS[P.sys],palmNeed=et*CROPS.palm.kc*CROPS.palm.a/1000/sy.eff/(1-sy.conv),canPalms=Math.floor(sup/palmNeed);
+  const athar=1800,perAthar=flowLs(M.hist[M.hist.length-1])*athar/1000,avail=P.dawran*48;
+  let h='<div class="kv" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div style="background:rgba(255,255,255,.04);border-radius:12px;padding:8px 10px"><small style="color:var(--muted);font-size:10.5px">ماء الفلج اليوم</small><div class="big num">'+fmtN(sup)+'</div><small style="color:var(--muted)">م³ في اليوم</small></div>'+
+    '<div style="background:rgba(255,255,255,.04);border-radius:12px;padding:8px 10px"><small style="color:var(--muted);font-size:10.5px">حاجة مزرعتك</small><div class="big num">'+fmtN(D.tot)+'</div><small style="color:var(--muted)">م³ في اليوم (ET0 '+et.toFixed(1)+' ملم)</small></div></div>';
+  h+='<p class="note" style="color:'+(cov>=1?'var(--ok)':cov>=.6?'var(--warn)':'var(--bad)')+';font-size:13px">'+(cov>=1?'الفلج يغطي حاجتك كاملة اليوم، ويفيض '+Math.round((cov-1)*100)+'٪.':'الفلج يغطي '+Math.round(cov*100)+'٪ فقط من حاجتك اليوم.')+' بطريقة «'+sy.n+'» يكفي ماء الفلج نحو '+canPalms.toLocaleString('en-US')+' نخلة.</p>';
+  h+='<table class="tbl"><tr><th>المزروعات</th><th>م³/يوم</th><th>آثار في الدوران</th></tr>';
+  let used=0;D.rows.forEach(r=>{const need=r.m3*P.dawran/Math.max(1e-6,perAthar);used+=need;h+='<tr><td>'+r.c.n+' · '+r.b.v.toLocaleString('en-US')+' '+r.c.u+'</td><td class="num">'+fmtN(r.m3)+'</td><td class="num">'+(perAthar>0?Math.ceil(need):'—')+'</td></tr>'});
+  h+='</table><p class="note">الأثر نصف ساعة من ماء الفلج كاملًا، وفي الدوران الواحد ('+nDays(P.dawran)+') '+avail+' أثرًا. مزرعتك تحتاج '+Math.ceil(used)+' منها ('+Math.round(used/avail*100)+'٪ من الفلج كله). مع كل جفاف تقل كمية الماء في الأثر الواحد، فتحتاج آثارًا أكثر لنفس الزرع.</p>';
+  // compare systems at a glance
+  h+='<table class="tbl"><tr><th>الطريقة</th><th>الحاجة م³/يوم</th><th>نخيل يكفيه الفلج</th></tr>'+Object.entries(SYS).map(([k,s])=>{const t=D.tot*(SYS[P.sys].eff*(1-SYS[P.sys].conv))/(s.eff*(1-s.conv)),pn=et*CROPS.palm.kc*CROPS.palm.a/1000/s.eff/(1-s.conv);return'<tr'+(k===P.sys?' style="color:var(--brass)"':'')+'><td>'+s.n+'</td><td class="num">'+fmtN(t)+'</td><td class="num">'+Math.floor(sup/pn).toLocaleString('en-US')+'</td></tr>'}).join('')+'</table>';
+  $('irrOut').innerHTML=h;M.cov=cov}
+function renderBlocks(){$('blocks').innerHTML=P.blocks.map((b,i)=>'<div class="blk"><label for="bk'+i+'">'+CROPS[b.c].n+' ('+CROPS[b.c].u+')</label><input type="number" id="bk'+i+'" min="0" step="'+(CROPS[b.c].a>1?10:100)+'" value="'+b.v+'"><button class="x" data-rm="'+i+'" aria-label="احذف">✕</button></div>').join('');
+  P.blocks.forEach((b,i)=>$('bk'+i).addEventListener('input',e=>{b.v=Math.max(0,+e.target.value||0);renderIrr();store.set('falaj.p',JSON.stringify(P))}));
+  $('blocks').querySelectorAll('[data-rm]').forEach(x=>x.addEventListener('click',()=>{P.blocks.splice(+x.dataset.rm,1);renderBlocks();renderIrr()}))}
+document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{P.blocks.push({c:b.dataset.add,v:CROPS[b.dataset.add].def});renderBlocks();if(M)renderIrr()}));
+
+/* ================= readout ================= */
+function daysBelow(series,thr){for(let i=0;i<series.length;i++)if(flowLs(series[i])<thr)return i+1;return null}
+function render(){const now=flowLs(M.hist[M.hist.length-1]),mean=flowLs(M.meanQ),d=DATA.days,iT=DATA.iT;
+  $('fNow').innerHTML=fmtN(now)+' <span>لتر/ث</span>';const rel=now/mean-1;
+  $('fCmp').textContent=(rel>=0?'أعلى':'أقل')+' من متوسط السنوات الثلاث بـ '+Math.abs(Math.round(rel*100))+'٪';$('fCmp').style.color=rel>=-.15?'var(--ok)':rel>=-.4?'var(--warn)':'var(--bad)';
+  const sp=M.st.s/M.meanS*100;$('sPct').textContent=Math.round(sp)+'٪ من المعتاد';$('sBar').style.width=clamp(sp/2,2,100)+'%';
+  $('w4').textContent=fmtN(flowLs(M.avg.out[27]))+' ل/ث';$('w12').textContent=fmtN(flowLs(M.avg.out[83]))+' ل/ث';
+  let r30=0,r16=0;for(let i=Math.max(0,iT-29);i<=iT;i++)r30+=d[i].p;for(let i=iT+1;i<Math.min(d.length,iT+17);i++)r16+=d[i].p;$('r30').textContent=r30.toFixed(0)+' ملم';$('r16').textContent=r16.toFixed(0)+' ملم';
+  const half=daysBelow(M.longDry.out,now/2);
+  $('say').textContent=(r16>=10?'مطر الأيام القادمة سيغذي الخزان، وأثره على الفلج يظهر بعد '+(P.type==='ghaili'?'أيام قليلة':P.type==='aini'?'شهور':'أسابيع')+'. ':'')+
+    (half?'إذا لم يأتِ مطر جديد'+(P.pump?' واستمر الضخ':'')+'، ينخفض تدفق الفلج إلى النصف بعد نحو '+(half>60?nMonths(Math.round(half/30.4)):nDays(half))+'.':'الفلج يحافظ على أكثر من نصف تدفقه لثلاث سنوات حتى بلا مطر.');
+  $('typeNote').textContent=TYPES[P.type].note;$('calNote').textContent=M.capNote||(P.obs>0?'عايرتُ النموذج على قياسك: يلتقط الفلج '+Math.round(M.cap*100)+'٪ مما يصرّفه المستجمع.':'بلا قياس فعلي، يفترض النموذج أن الفلج يلتقط نصف ما يصرّفه المستجمع، فالأرقام تقديرية.');
+  renderIrr();renderDry();drawStrip()}
+function renderDry(){const dm=P.dMonths,now=flowLs(M.hist[M.hist.length-1]);if(!dm&&!P.pump){$('dryOut').innerHTML='<p class="note">حرّك الشريط لترى كيف يصمد الفلج ومزرعتك أمام انقطاع المطر.</p>';return}
+  const s=M.drought.out,et=etNow(),need=demand(et).tot,end=Math.min(s.length-1,Math.round(dm*30.4)||s.length-1),fEnd=flowLs(s[end]);
+  const covDay=th=>{for(let i=0;i<s.length;i++){const sup=flowLs(s[i])*86.4;if(need&&sup/need<th)return i+1}return null};
+  const c100=covDay(1),c50=covDay(.5),h=daysBelow(s,now/2),t10=daysBelow(s,now*.1);
+  const L=x=>x==null?'لا يحدث في الفترة':x>60?'بعد '+nMonths(Math.round(x/30.4)):'بعد '+nDays(x);
+  $('dryOut').innerHTML='<table class="tbl"><tr><td>تدفق الفلج في نهاية الجفاف</td><td class="num">'+fmtN(fEnd)+' ل/ث ('+Math.round(fEnd/now*100)+'٪)</td></tr><tr><td>ينخفض إلى النصف</td><td>'+L(h)+'</td></tr><tr><td>ينخفض إلى العُشر</td><td>'+L(t10)+'</td></tr><tr><td>يبدأ عجز مزرعتك</td><td>'+(need?L(c100):'—')+'</td></tr><tr><td>تفقد نصف حاجتها</td><td>'+(need?L(c50):'—')+'</td></tr></table>'+
+    (need&&c50?'<p class="note">عند العجز يُسقى النخيل أولًا عادةً ويُترك البرسيم والخضروات. التحول إلى التنقيط يؤخر العجز لأنه يقلل الحاجة بنحو '+Math.round((1-(SYS.trad.eff*(1-SYS.trad.conv))/(SYS.drip.eff*(1-SYS.drip.conv)))*100)+'٪ مقارنة بالسواقي الترابية.</p>':'');drawStrip()}
+
+/* ================= strip: a year back, twelve weeks ahead ================= */
+const sc=$('strip'),sx=sc.getContext('2d');let SW=0,SH=0,DPR=1;
+function sresize(){const r=sc.getBoundingClientRect();SW=r.width;SH=r.height;sc.width=Math.max(1,SW*DPR);sc.height=Math.max(1,SH*DPR);drawStrip()}
+function drawStrip(){const c=sx;c.setTransform(DPR,0,0,DPR,0,0);c.clearRect(0,0,SW,SH);if(!M)return;
+  const back=365,ahead=P.dMonths?Math.min(M.drought.out.length,Math.round(P.dMonths*30.4)+30):84,iT=DATA.iT,n=back+ahead,X=k=>SW-10-(SW-20)*k/n,Y0=SH-18,Ht=SH-36;
+  const hist=M.hist.slice(-back),all=[...hist.map(flowLs),...M.avg.out.map(flowLs),...M.dry.out.map(flowLs)],mx=Math.max(...all,1)*1.1;
+  const Y=v=>Y0-v/mx*Ht;
+  // rainfall bars, top-down
+  const rd=DATA.days;let pm=1;for(let k=0;k<n;k++){const j=iT-back+k;if(rd[j])pm=Math.max(pm,rd[j].p)}
+  c.fillStyle='rgba(127,184,255,.45)';for(let k=0;k<n;k++){const j=iT-back+k;if(!rd[j]||j>iT+16)continue;const h=Math.sqrt(rd[j].p/pm)*Ht*.45;c.fillRect(X(k)-1,16,2,h)}
+  c.fillStyle='rgba(255,255,255,.04)';c.fillRect(X(n),14,X(back)-X(n),Y0-14);
+  const line=(arr,k0,col,w,dash)=>{c.strokeStyle=col;c.lineWidth=w;c.setLineDash(dash||[]);c.beginPath();arr.forEach((v,i)=>{const x=X(k0+i),y=Y(flowLs(v));i?c.lineTo(x,y):c.moveTo(x,y)});c.stroke();c.setLineDash([])};
+  c.beginPath();hist.forEach((v,i)=>{const x=X(i),y=Y(flowLs(v));i?c.lineTo(x,y):c.moveTo(x,y)});c.lineTo(X(back),Y0);c.lineTo(X(0),Y0);c.closePath();c.fillStyle='rgba(79,179,232,.18)';c.fill();
+  line(hist,0,'#4FB3E8',2);
+  if(P.dMonths)line(M.drought.out.slice(0,ahead),back,'#F06B5B',2,[5,4]);else{line(M.avg.out,back,'#5CC9B0',2);line(M.dry.out,back,'#F2B84B',2,[5,4])}
+  c.strokeStyle='#fff';c.lineWidth=1.5;c.beginPath();c.moveTo(X(back),12);c.lineTo(X(back),Y0+3);c.stroke();
+  c.font='10.5px '+FONT;c.fillStyle='#93A3B7';c.textAlign='center';c.direction='rtl';
+  for(let m=0;m<=12;m+=(SW<500?6:3)){const k=back-Math.round(m*30.4);c.fillText(m?(m===12?'قبل سنة':'قبل '+m+' أشهر'):'اليوم',X(k),SH-3)}
+  c.fillText('+12 أسبوعًا',X(Math.min(n,back+84)),SH-3);
+  if(SW>=500){c.textAlign='right';c.fillStyle='#E8EEF5';c.fillText('تدفق الفلج (ل/ث) والمطر اليومي',SW-10,11)}
+  c.textAlign='left';c.fillStyle=P.dMonths?'#F06B5B':'#5CC9B0';c.fillText(P.dMonths?'— — اختبار الجفاف':'— مطر معتاد',10,11);if(!P.dMonths){c.fillStyle='#F2B84B';c.fillText('- - بلا مطر',100,11)}
+  c.fillStyle='#93A3B7';c.fillText(fmtN(mx/1.1),10,Y(mx/1.1)+4)}
+
+/* ================= the living cross-section ================= */
+const cv=$('cv'),cx=cv.getContext('2d');let W=0,H=0;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;sresize()}
+addEventListener('resize',resize);
+const parts=Array.from({length:220},()=>({u:Math.random(),o:Math.random()}));let last=performance.now(),flowT=0;
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;const c=cx;c.setTransform(DPR,0,0,DPR,0,0);
+  const narrow=W<760,gy=H*(narrow?.4:.56),R=narrow?W:W-80,Hb=H-(narrow?110:140),left=narrow?0:330;
+  const g=c.createLinearGradient(0,0,0,gy);g.addColorStop(0,'#0F2A47');g.addColorStop(1,'#5C86A8');c.fillStyle=g;c.fillRect(0,0,W,gy);
+  // rain over the mountain when the record or forecast says so
+  let recent=0,soon=0;if(DATA){for(let i=DATA.iT-2;i<=DATA.iT;i++)recent+=DATA.days[i]?DATA.days[i].p:0;for(let i=DATA.iT+1;i<DATA.iT+4;i++)soon+=DATA.days[i]?DATA.days[i].p:0}
+  const rain=clamp((recent+soon)/15,0,1);
+  const mtn=[[R*.55,gy],[R*.7,gy-H*.2],[R*.78,gy-H*.15],[R*.88,gy-H*.33],[R*.97,gy-H*.22],[W+20,gy-H*.28],[W+20,gy]];
+  if(rain>.05){c.fillStyle='rgba(60,70,90,.85)';for(let k=0;k<4;k++){c.beginPath();c.ellipse(R*(.72+k*.07),gy-H*(.38+(k%2)*.04),70,24,0,0,7);c.fill()}
+    c.strokeStyle='rgba(170,200,240,'+(.25+rain*.4)+')';c.lineWidth=1.2;c.beginPath();for(let k=0;k<60*rain;k++){const x=R*.68+((k*53)%(R*.32)),y=gy-H*.36+((now*.4+k*37)%(H*.2));c.moveTo(x,y);c.lineTo(x-3,y+12)}c.stroke()}
+  c.fillStyle='#5A4636';c.beginPath();c.moveTo(mtn[0][0],mtn[0][1]);for(const p of mtn)c.lineTo(p[0],p[1]);c.closePath();c.fill();
+  c.fillStyle='rgba(255,255,255,.05)';c.beginPath();c.moveTo(R*.7,gy-H*.2);c.lineTo(R*.88,gy-H*.33);c.lineTo(R*.8,gy-H*.12);c.closePath();c.fill();
+  // ground and soil
+  const sg=c.createLinearGradient(0,gy,0,H);sg.addColorStop(0,'#6B5442');sg.addColorStop(1,'#2A2018');c.fillStyle=sg;c.fillRect(0,gy,W,H-gy);
+  // aquifer: its top rises and falls with storage
+  const sp=M?clamp(M.st.s/M.meanS,0,2):.8,aqTop=gy+(Hb-gy)*clamp(.62-.22*(sp-1),.2,.9),aq=c.createLinearGradient(0,aqTop,0,H);aq.addColorStop(0,'rgba(79,179,232,.55)');aq.addColorStop(1,'rgba(30,80,140,.7)');
+  c.fillStyle=aq;c.beginPath();c.moveTo(R*.42,H);for(let x=R*.42;x<=W+10;x+=10){c.lineTo(x,aqTop+Math.sin(x*.02+now/900)*3+(R*.62-x)*.04*(x<R*.62?1:0))}c.lineTo(W+10,H);c.closePath();c.fill();
+  // the falaj: mother well, access shafts, tunnel to the shari'a
+  const mwx=R*.66,mwy=aqTop+8,shx=lerp(left,R,.36),shy=gy;
+  c.strokeStyle='rgba(20,14,10,.9)';c.lineWidth=4;c.beginPath();c.moveTo(mwx,gy-H*.17+H*.17*0);c.stroke();
+  const tunnel=t=>[lerp(mwx,shx,t),lerp(mwy,shy,Math.pow(t,1.2))];
+  c.strokeStyle='#1A120C';c.lineWidth=9;c.beginPath();for(let k=0;k<=40;k++){const p=tunnel(k/40);k?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1])}c.stroke();
+  for(let k=0;k<=7;k++){const p=tunnel(k/7*.95),top=k===0?gy-H*.12*0:gy;const sx2=p[0],surf=sx2>R*.55?gy-(sx2-R*.55)/(R*.15)*H*.2*(sx2<R*.7?1:0):gy;
+    c.strokeStyle='rgba(26,18,12,.95)';c.lineWidth=3;c.beginPath();c.moveTo(sx2,Math.min(surf,gy));c.lineTo(sx2,p[1]);c.stroke();c.fillStyle='#8A6E55';c.beginPath();c.ellipse(sx2,Math.min(surf,gy),9,4,0,Math.PI,0);c.fill()}
+  // open channel from the shari'a to the plots
+  const plotL=narrow?16:left+10,plotR=shx-30;c.fillStyle='#24384A';c.fillRect(plotL,gy-3,shx-plotL,6);
+  // water particles: density and speed follow the flow
+  const f=M?flowLs(M.hist[M.hist.length-1]):0,fr=M?clamp(f/flowLs(M.meanQ),0,2.5):.5;flowT+=dt*(.05+.08*fr);
+  c.fillStyle='rgba(120,200,255,.9)';const nP=Math.round(40+90*clamp(fr,0,1.6));
+  for(let k=0;k<nP;k++){const pa=parts[k],u=(pa.u+flowT)%1;if(u<.6){const p=tunnel(u/.6);c.fillRect(p[0]-1.5,p[1]-2+pa.o*3,3,2.5)}else{const x=lerp(shx,plotL,(u-.6)/.4);c.fillRect(x,gy-2+pa.o*3,3,2)}}
+  // palms whose greenness is how well the falaj covers them
+  const cov=M&&M.cov!=null?clamp(M.cov,0,1.2):1,green=[Math.round(lerp(150,60,clamp(cov,0,1))),Math.round(lerp(120,170,clamp(cov,0,1))),Math.round(lerp(60,80,clamp(cov,0,1)))];
+  const nPalm=Math.max(3,Math.floor((plotR-plotL)/46));for(let k=0;k<nPalm;k++){const x=plotL+20+k*((plotR-plotL-20)/nPalm),h=H*(narrow?.09:.12)*(.85+.15*Math.sin(k*1.7)),sway=Math.sin(now/1300+k)*3;
+    c.strokeStyle='#6E5238';c.lineWidth=5;c.beginPath();c.moveTo(x,gy-3);c.quadraticCurveTo(x+4,gy-h*.5,x+sway,gy-h);c.stroke();
+    c.strokeStyle='rgb('+green.join(',')+')';c.lineWidth=3;c.lineCap='round';for(let a=0;a<7;a++){const ang=-Math.PI+a*Math.PI/6,len=h*.38;c.beginPath();c.moveTo(x+sway,gy-h);c.quadraticCurveTo(x+sway+Math.cos(ang)*len*.6,gy-h+Math.sin(ang)*len*.6-8,x+sway+Math.cos(ang)*len,gy-h+Math.sin(ang)*len*.3+len*.35);c.stroke()}}
+  // quiet labels
+  c.font='600 11px '+FONT;c.fillStyle='rgba(255,255,255,.75)';c.textAlign='center';c.direction='rtl';
+  c.fillText('أم الفلج',mwx,mwy+22);c.fillText('الشريعة',shx,gy-12);c.fillText('الخزان الجوفي',R*.84,Math.min(Hb-6,aqTop+30));
+  requestAnimationFrame(frame)}
+
+/* ================= controls ================= */
+let openS=null;
+function openSheet(n){openS=n;document.querySelectorAll('.sheet').forEach(s=>s.classList.toggle('off',s.id!=='s-'+n));document.querySelectorAll('.rail [data-s]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===n?'true':'false'))}
+document.querySelectorAll('.rail [data-s]').forEach(b=>b.addEventListener('click',()=>openSheet(openS===b.dataset.s?null:b.dataset.s)));
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>openSheet(null)));
+function seg(id,attr,val,fn){$(id).querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset[attr]===val?'true':'false');b.addEventListener('click',()=>{$(id).querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));fn(b.dataset[attr])})})}
+function renderAflaj(){$('aflaj').innerHTML=AFLAJ.map(a=>'<button data-id="'+a.id+'" aria-pressed="'+(P.falaj===a.id)+'"><b>'+a.n+'</b><small>'+a.w+' · الموقع تقريبي</small></button>').join('');
+  $('aflaj').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{const a=AFLAJ.find(x=>x.id===b.dataset.id);Object.assign(P,{falaj:a.id,name:a.n,lat:a.lat,lon:a.lon,obs:null});$('obs').value='';renderAflaj();openSheet(null);load()}))}
+seg('typeSeg','t',P.type,v=>{P.type=v;P.thalf=TYPES[v].ts;$('tau').value=P.thalf;outs();run()});
+seg('sysSeg','y',P.sys,v=>{P.sys=v;if(M){renderIrr();renderDry()}});
+function outs(){$('areaO').textContent=P.area+' كم²';$('alphaO').textContent=Math.round(P.alpha*100)+'٪';$('tauO').textContent=P.thalf>=365?(P.thalf/365).toFixed(1)+' سنة':nDays(P.thalf);
+  $('dMonthsO').textContent=P.dMonths?nMonths(P.dMonths):'لا انقطاع';$('pumpO').textContent=P.pump?P.pump.toLocaleString('en-US')+' م³/يوم':'لا ضخ';$('dawranO').textContent=nDays(P.dawran)}
+const RNG={area:['area',1],alpha:['alpha',1],tau:['thalf',1],dMonths:['dMonths',1],pump:['pump',1],dawran:['dawran',1]};
+for(const id in RNG){const k=RNG[id][0];$(id).value=P[k];$(id).addEventListener('input',e=>{P[k]=+e.target.value;outs();if(id==='dawran'){if(M)renderIrr()}else run()})}
+$('obs').value=P.obs||'';$('obs').addEventListener('change',e=>{const v=parseFloat(e.target.value);P.obs=v>0?v:null;run()});
+$('geo').addEventListener('click',()=>{const m=$('locMsg');m.hidden=true;if(!navigator.geolocation){m.textContent='جهازك لا يتيح تحديد الموقع.';m.hidden=false;return}
+  navigator.geolocation.getCurrentPosition(p=>{const la=p.coords.latitude,lo=p.coords.longitude;let b=AFLAJ[0],bd=1e9;for(const a of AFLAJ){const d=hav(la,lo,a.lat,a.lon);if(d<bd){bd=d;b=a}}
+    Object.assign(P,{falaj:'mine',name:'فلج في موقعي'+(bd<40?' (قرب '+b.n+')':''),lat:la,lon:lo,obs:null});renderAflaj();openSheet(null);load()},
+    e=>{m.textContent='تعذّر تحديد موقعك. اختر فلجًا من القائمة.';m.hidden=false},{timeout:12000,maximumAge:600000})});
+addEventListener('keydown',e=>{if(e.key==='Escape')openSheet(null)});
+renderAflaj();renderBlocks();outs();resize();requestAnimationFrame(frame);load();
+})();
+</script>
+
+<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{})</script>
+</body></html>

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<!-- i18n --><script>try{if(localStorage.getItem("lang")==="en")document.write('<script src="i18n/nafaf-i18n.js"><\/script>')}catch(e){}</script><!-- /i18n --><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#05080F">
+<title>قارورة الجو</title>
+<style>
+/* Layout: a glass bottle glows at the centre of a sky blended from the chosen scents; the mixing desk floats on the left; the poem and the gift link appear on the right once the bottle is sealed. */
+:root{--bg:#07070B;--glass:rgba(12,12,20,.82);--line:rgba(240,235,225,.12);--fg:#F3EFE6;--muted:#A9A396;--brass:#E3A94B;--teal:#5CC9B0;
+  --f:system-ui,-apple-system,"Segoe UI",Tahoma,"Geeza Pro","Noto Sans Arabic",Arial,sans-serif;
+  --gl:max(16px,env(safe-area-inset-left,0px));--gr:max(16px,env(safe-area-inset-right,0px));--gt:max(12px,env(safe-area-inset-top,0px));--gb:max(12px,env(safe-area-inset-bottom,0px));color-scheme:dark}
+html,body{height:100%;overflow:hidden;margin:0}*{box-sizing:border-box}[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);font-size:14px;line-height:1.5;direction:rtl;padding-left:var(--gl);padding-right:var(--gr);padding-block:0}
+button,input,select{font:inherit;color:inherit}button{cursor:pointer}:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.glass{background:var(--glass);border:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+.desk{position:fixed;z-index:4;top:var(--gt);left:var(--gl);bottom:var(--gb);width:310px;border-radius:18px;display:flex;flex-direction:column;overflow:hidden}
+.dh{padding:12px 14px 10px;border-bottom:1px solid var(--line)}.dh b{font-size:15px}.dh p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+.db{overflow-y:auto;padding:10px 14px 14px;display:flex;flex-direction:column;gap:9px;flex:1;min-height:0}
+.ing{display:grid;grid-template-columns:12px 1fr 40px;gap:4px 8px;align-items:center;font-size:12.5px}
+.ing i{width:12px;height:12px;border-radius:50%;grid-row:span 2}
+.ing output{text-align:left;color:var(--brass);font-variant-numeric:tabular-nums}
+.ing input{grid-column:2/4;width:100%;accent-color:var(--brass)}
+select{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;padding:7px 9px}
+.btn{border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:12px;padding:10px 12px;font-weight:700;font-size:13px}
+.btn.pri{background:var(--brass);color:#1a1206;border-color:transparent}
+.row{display:flex;gap:6px}.row>*{flex:1}
+.card{position:fixed;z-index:4;top:var(--gt);right:var(--gr);width:330px;max-height:calc(100% - var(--gt) - var(--gb));overflow:auto;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.card h2{margin:0;font-size:18px;text-wrap:balance}
+.poem{font-size:16px;line-height:2.1;white-space:pre-line;margin:0}
+.lbl{font-size:11.5px;color:var(--muted)}
+input[type=text]{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;padding:8px 10px;direction:ltr;font-size:12px}
+.gift{position:fixed;z-index:6;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.55)}
+.gift div{border-radius:20px;padding:22px;max-width:min(400px,calc(100% - 40px));text-align:center;display:flex;flex-direction:column;gap:12px}
+.gift b{font-size:19px}
+@media (max-width:760px){.desk{top:auto;right:var(--gr);width:auto;height:46%}.card{top:var(--gt);left:var(--gl);right:var(--gr);width:auto;max-height:44%;padding:12px}.poem{font-size:14px;line-height:1.9}}
+</style>
+</head><body>
+<a href="./" style="position:fixed;z-index:20;bottom:max(12px,env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);font-size:12px;color:#EDF1F6;text-decoration:none;background:rgba(8,13,26,.85);border:1px solid rgba(237,241,246,.15);border-radius:999px;padding:4px 12px">→ نفاف</a>
+
+<canvas id="cv" aria-label="مشهد القارورة: سماء وجزيئات من عناصر الجو المختارة"></canvas>
+<aside class="desk glass">
+  <div class="dh"><b>مختبر تقطير الجو</b><p>امزج عناصر طقس يومك في قارورة، ثم أهدها.</p></div>
+  <div class="db" id="ings"></div>
+</aside>
+<aside class="card glass" aria-live="polite">
+  <h2 id="bName"></h2>
+  <p class="poem" id="poem"></p>
+  <label class="lbl" for="city">أهدها إلى صديق في</label>
+  <select id="city"></select>
+  <div class="row"><button class="btn" id="sound">شغّل الصوت</button><button class="btn pri" id="copy">انسخ رابط الهدية</button></div>
+  <input type="text" id="link" readonly aria-label="رابط القارورة">
+  <p class="lbl" id="copied" hidden>نُسخ الرابط. من يفتحه يرى قارورتك وتنقلب شاشته إلى جوّها.</p>
+</aside>
+<div class="gift" id="gift" hidden><div class="glass"><b>وصلتك قارورة جو</b><span id="giftT"></span><button class="btn pri" id="openB">افتح القارورة</button></div></div>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(x,a,b)=>x<a?a:x>b?b:x,lerp=(a,b,t)=>a+(b-a)*t;
+/* ================= the ingredients of a Gulf day ================= */
+const ING=[
+ {k:'petri',n:'بتريكور مطر الوسم',c:'#8FB9A8',adj:'الوسمية',l:['ريحة التراب يوم يجيه أول مطر','الأرض تتنفس بعد صيف طويل'],a:'rain'},
+ {k:'sea',n:'نسيم بحر العرب',c:'#5FA8D3',adj:'البحرية',l:['هبوب البحر ينسّم على الساحل','موج خفيف يحكي للرمل حكايته'],a:'waves'},
+ {k:'wood',n:'حطب المربعانية',c:'#C8743C',adj:'الشتوية',l:['ضو الحطب والدلّة على الجمر','دفا السمر في ليل المربعانية'],a:'fire'},
+ {k:'kaws',n:'رطوبة الكوس',c:'#9FB7C9',adj:'الكوسية',l:['الكوس يارّ والندى على الزجاج','غبشة الصبح تغطي النخيل'],a:'hum'},
+ {k:'suhaili',n:'غبار السهيلي',c:'#D9A066',adj:'السهيلية',l:['السهيلي يمر وفي ريحه عجّ','غبرة دافية من صوب البادية'],a:'wind'},
+ {k:'jas',n:'ياسمين ليل الباطنة',c:'#F2E6C9',adj:'الياسمينية',l:['ياسمين الحوي يفوح بعد العشا','زهر أبيض في ليل هادي'],a:'chime'},
+ {k:'frank',n:'لبان ظفار',c:'#E3D3A8',adj:'اللبانية',l:['دخون اللبان يرتفع ويتلوى','ريحة ظفار في مجلس عتيق'],a:'drone'},
+ {k:'dates',n:'طباخ التمر في القيظ',c:'#B5651D',adj:'القيظية',l:['القيظ يطبخ الرطب على العذوق','حرّ يلمّع النخل وقت الظهر'],a:'cicada'}];
+const CITIES=['صحار','مسقط','صلالة','نزوى','صور','عبري','البريمي','الرستاق','خصب','إبراء','دبي','أبوظبي','العين','الدوحة','الرياض','الكويت','المنامة'];
+let mix=[40,30,30,0,0,0,0,0],city=1,opened=true;
+/* ================= desk ================= */
+$('ings').innerHTML=ING.map((g,i)=>'<label class="ing" for="g'+i+'"><i style="background:'+g.c+'"></i><span>'+g.n+'</span><output id="o'+i+'"></output><input type="range" id="g'+i+'" min="0" max="100" value="'+mix[i]+'"></label>').join('');
+$('city').innerHTML=CITIES.map((c,i)=>'<option value="'+i+'">'+c+'</option>').join('');
+function pct(){const s=mix.reduce((a,b)=>a+b,0)||1;return mix.map(v=>v/s)}
+function render(){const p=pct();ING.forEach((g,i)=>{$('o'+i).textContent=Math.round(p[i]*100)+'٪';$('g'+i).value=mix[i]});
+  const ord=p.map((v,i)=>[v,i]).filter(x=>x[0]>0).sort((a,b)=>b[0]-a[0]);
+  if(!ord.length){$('bName').textContent='قارورة فارغة';$('poem').textContent='حرّك شريطًا واحدًا على الأقل.';return}
+  const t=ING[ord[0][1]],s=ord[1]?ING[ord[1][1]]:null,th=ord[2]?ING[ord[2][1]]:null,seed=mix.reduce((a,b,i)=>a+b*(i+3),0);
+  $('bName').textContent='قارورة '+t.adj+(s?' بلمسة '+s.n:'');
+  const ln=[t.l[seed%2],s?s.l[(seed>>1)%2]:t.l[(seed+1)%2],th?th.l[(seed>>2)%2]:'والوقت يمشي على مهله',
+    'هذي قارورتي لك في '+CITIES[city]+'، افتحها وعيش جوّنا'];
+  $('poem').textContent=ln.join('\n');
+  const h='#b-'+mix.join('-')+'-'+city;$('link').value=location.href.split('#')[0]+h;try{history.replaceState(null,'',h)}catch(e){}
+  setAudio()}
+ING.forEach((g,i)=>$('g'+i).addEventListener('input',e=>{mix[i]=+e.target.value;render()}));
+$('city').addEventListener('change',e=>{city=+e.target.value;render()});
+$('copy').addEventListener('click',async e=>{const b=e.currentTarget;try{await navigator.clipboard.writeText($('link').value);$('copied').hidden=false}catch(err){$('link').select()}});
+
+/* ================= sound: one generated layer per ingredient ================= */
+let AC=null,G={};
+function initAudio(){AC=new(window.AudioContext||window.webkitAudioContext)();const out=AC.createGain();out.gain.value=.8;out.connect(AC.destination);
+  const n=AC.sampleRate*2,nb=AC.createBuffer(1,n,AC.sampleRate),d=nb.getChannelData(0);let b=0;for(let i=0;i<n;i++){d[i]=Math.random()*2-1}
+  const brown=AC.createBuffer(1,n,AC.sampleRate),bd=brown.getChannelData(0);for(let i=0;i<n;i++){b=(b+.02*(Math.random()*2-1))/1.02;bd[i]=b*3.5}
+  const src=(buf)=>{const s=AC.createBufferSource();s.buffer=buf;s.loop=true;s.start();return s};
+  const layer=(k,node)=>{const g=AC.createGain();g.gain.value=0;node.connect(g);g.connect(out);G[k]=g};
+  {const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=900;src(nb).connect(f);layer('rain',f)}
+  {const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=500;const lfo=AC.createOscillator(),lg=AC.createGain();lfo.frequency.value=.12;lg.gain.value=.5;const am=AC.createGain();am.gain.value=.5;lfo.connect(lg);lg.connect(am.gain);lfo.start();src(brown).connect(f);f.connect(am);layer('waves',am)}
+  {const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=300;src(brown).connect(f);layer('fire',f)}
+  {const o=AC.createOscillator();o.frequency.value=55;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=200;o.connect(f);o.start();layer('hum',f)}
+  {const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=420;f.Q.value=1.2;const lfo=AC.createOscillator(),lg=AC.createGain();lfo.frequency.value=.2;lg.gain.value=250;lfo.connect(lg);lg.connect(f.frequency);lfo.start();src(nb).connect(f);layer('wind',f)}
+  {const g=AC.createGain();layer('chime',g);G.chimeNode=g}
+  {const o1=AC.createOscillator(),o2=AC.createOscillator();o1.frequency.value=110;o2.frequency.value=165.5;const g=AC.createGain();g.gain.value=.4;o1.connect(g);o2.connect(g);o1.start();o2.start();layer('drone',g)}
+  {const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=4200;const am=AC.createGain();am.gain.value=0;const lfo=AC.createOscillator(),lg=AC.createGain();lfo.frequency.value=38;lg.gain.value=.5;lfo.connect(lg);lg.connect(am.gain);lfo.start();const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=4200;f.Q.value=8;o.connect(f);f.connect(am);o.start();layer('cicada',am)}
+  setInterval(()=>{const p=pct(),k=p[5];if(!AC||k<.02)return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=[523.3,587.3,659.3,784,880][Math.floor(Math.random()*5)];g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.25*k,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+2.2);o.connect(g);g.connect(G.chimeNode);o.start(t);o.stop(t+2.3)},700);
+  setInterval(()=>{const p=pct(),k=p[2];if(!AC||k<.02)return;const t=AC.currentTime,s=AC.createBufferSource();s.buffer=nb;const g=AC.createGain(),f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=2000;g.gain.setValueAtTime(.5*k,t);g.gain.exponentialRampToValueAtTime(.0001,t+.04);s.connect(f);f.connect(g);g.connect(G.fire);s.start(t);s.stop(t+.05)},140)}
+const VOL={rain:.35,waves:.6,fire:.6,hum:.25,wind:.5,chime:1,drone:.06,cicada:.05};
+function setAudio(){if(!AC)return;const p=pct();ING.forEach((g,i)=>{if(G[g.a])G[g.a].gain.setTargetAtTime(p[i]*VOL[g.a],AC.currentTime,.3)})}
+$('sound').addEventListener('click',e=>{if(!AC){initAudio();setAudio();e.currentTarget.textContent='أوقف الصوت'}else if(AC.state==='running'){AC.suspend();e.currentTarget.textContent='شغّل الصوت'}else{AC.resume();e.currentTarget.textContent='أوقف الصوت'}});
+
+/* ================= the scene ================= */
+const cv=$('cv'),cx=cv.getContext('2d');let W=0,H=0,DPR=1;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR}
+addEventListener('resize',resize);
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const parts=Array.from({length:240},()=>({a:Math.random()*6.28,r:Math.random(),s:Math.random(),k:0}));
+let reveal=1,last=performance.now();
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;const c=cx,p=pct(),t=now/1000;c.setTransform(DPR,0,0,DPR,0,0);
+  let col=[0,0,0];p.forEach((v,i)=>{const h=hex(ING[i].c);col=col.map((x,k)=>x+h[k]*v)});
+  const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgb('+col.map(v=>Math.round(v*.28)).join(',')+')');g.addColorStop(1,'rgb('+col.map(v=>Math.round(v*.08)).join(',')+')');c.fillStyle=g;c.fillRect(0,0,W,H);
+  const narrow=W<760,bx=narrow?W/2:W*.5,by=narrow?H*.5:H*.52,bh=Math.min(H*.42,W*.5)*reveal;
+  // weather around the bottle, by ingredient
+  if(p[0]>.02){c.strokeStyle='rgba(200,225,240,'+(p[0]*.6)+')';c.lineWidth=1;c.beginPath();for(let k=0;k<120*p[0];k++){const x=(k*137+t*30)%W,y=(k*71+t*400)%H;c.moveTo(x,y);c.lineTo(x-2,y+12)}c.stroke()}
+  if(p[1]>.02){c.strokeStyle='rgba(120,190,230,'+(p[1]*.7)+')';c.lineWidth=2;for(let r=0;r<3;r++){c.beginPath();for(let x=0;x<=W;x+=12)c.lineTo(x,H-30-r*18+Math.sin(x*.01+t*(1+r*.3))*8);c.stroke()}}
+  if(p[4]>.02){c.fillStyle='rgba(217,160,102,'+(p[4]*.5)+')';for(let k=0;k<150*p[4];k++){c.fillRect((k*197+t*80*(1+k%3))%W,(k*53)%H,2,2)}}
+  if(p[3]>.02){c.fillStyle='rgba(200,215,230,'+(p[3]*.22)+')';c.fillRect(0,H*.55,W,H*.45)}
+  if(p[7]>.02){c.strokeStyle='rgba(255,180,90,'+(p[7]*.25)+')';for(let k=0;k<6;k++){c.beginPath();for(let x=0;x<=W;x+=16)c.lineTo(x,H*.85-k*12+Math.sin(x*.03+t*3+k)*3);c.stroke()}}
+  // the bottle
+  c.save();c.translate(bx,by);const w=bh*.42;
+  c.beginPath();c.moveTo(-w*.22,-bh*.5);c.lineTo(-w*.22,-bh*.3);c.quadraticCurveTo(-w,-bh*.22,-w,bh*.1);c.quadraticCurveTo(-w,bh*.5,0,bh*.5);c.quadraticCurveTo(w,bh*.5,w,bh*.1);c.quadraticCurveTo(w,-bh*.22,w*.22,-bh*.3);c.lineTo(w*.22,-bh*.5);c.closePath();
+  const bg=c.createLinearGradient(-w,0,w,0);bg.addColorStop(0,'rgba(255,255,255,.08)');bg.addColorStop(.5,'rgba(255,255,255,.02)');bg.addColorStop(1,'rgba(255,255,255,.12)');c.fillStyle=bg;c.fill();c.strokeStyle='rgba(255,255,255,.45)';c.lineWidth=2;c.stroke();c.save();c.clip();
+  // swirling essence, each particle coloured by an ingredient in proportion
+  let acc=0;const cum=p.map(v=>acc+=v);for(const q of parts){const i=cum.findIndex(v=>q.s<=v);if(i<0)continue;q.a+=dt*(.3+q.r*.8);const rr=q.r*w*.9,x=Math.cos(q.a)*rr,y=bh*.15+Math.sin(q.a*1.3)*rr*.8-(ING[i].k==='frank'?((t*20+q.r*200)%(bh*.6)):0);
+    const h=hex(ING[i].c);c.fillStyle='rgba('+h.join(',')+',.75)';c.beginPath();c.arc(x,y,2+q.r*3,0,7);c.fill()}
+  c.restore();c.fillStyle='#8A6A44';c.fillRect(-w*.26,-bh*.58,w*.52,bh*.1);c.restore();
+  if(p[6]>.02){c.strokeStyle='rgba(235,225,200,'+(p[6]*.5)+')';c.lineWidth=2;c.beginPath();for(let k=0;k<40;k++){const y=by-bh*.6-k*6,x=bx+Math.sin(k*.35+t*1.5)*k*.8;k?c.lineTo(x,y):c.moveTo(x,y)}c.stroke()}
+  if(p[5]>.02){c.fillStyle='rgba(250,245,230,'+(p[5]*.8)+')';for(let k=0;k<30*p[5];k++){const x=(k*113+t*15)%W,y=(k*61+t*25)%H;c.beginPath();c.ellipse(x,y,4,2,t+k,0,7);c.fill()}}
+  if(p[2]>.02){c.fillStyle='rgba(255,140,60,'+(p[2]*.9)+')';for(let k=0;k<25*p[2];k++){const y=H-((t*40+k*47)%(H*.6)),x=bx+Math.sin(k*2.1+t)*w*1.4;c.fillRect(x,y,2,2)}}
+  if(reveal<1)reveal=Math.min(1,reveal+dt*.6);
+  requestAnimationFrame(frame)}
+
+/* ================= a gift link opens the bottle ================= */
+const m=(location.hash||'').match(/^#b((?:-\d{1,3}){8})-(\d{1,2})$/);
+if(m){const v=m[1].slice(1).split('-').map(Number);if(v.length===8){mix=v.map(x=>clamp(x,0,100));city=clamp(+m[2],0,CITIES.length-1);opened=false;reveal=.05;
+  $('gift').hidden=false;$('giftT').textContent='قارورة أُرسلت إليك في '+CITIES[city]+'. افتحها لتنقلب شاشتك إلى جوّها، وصوتها.'}}
+$('openB').addEventListener('click',()=>{$('gift').hidden=true;opened=true;reveal=.05;if(!AC){initAudio();setAudio();$('sound').textContent='أوقف الصوت'}});
+$('city').value=city;resize();render();requestAnimationFrame(frame);
+})();
+</script>
+
+<script>if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{})</script>
+</body></html>
