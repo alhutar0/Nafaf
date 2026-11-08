@@ -4637,8 +4637,6 @@ function smellCard(){
  '</div><div class="sm-b">'+sm.t[LI()]+'</div></div>';
 }
 
-
-
 /* ============================================================
  محرّك الأحداث الفلكية — «شيء لن يتكرر قريبًا»
  كل حساب هنا رياضي دقيق بلا واجهة برمجية يعمل أوفلاين.
@@ -10362,8 +10360,6 @@ function sheetIsOpen(){
  return !!(el&&el.className.indexOf('on')>=0);
 }
 
-
-
 /* ============================================================
  الرصد الشعبي — الاتصال بالخادم
  ⚠️ الإحداثيات تُرسل للتدقيق فقط ولا تُعرض للجمهور
@@ -11489,6 +11485,7 @@ function pushSubscribe(){
   if(CUR&&typeof CUR.lat==='number'){payload.lat=CUR.lat;payload.lon=CUR.lon;}
   payload.place=(CUR&&CUR.n)||'';
   payload.tz=(typeof TZ_OFF==='number'&&TZ_OFF!=null)?TZ_OFF:(-new Date().getTimezoneOffset()*60);
+  payload.lang=(LI()===2?'en':(LI()===1?'msa':'ar'));payload.widget=!!(WIDGET&&WIDGET.on);payload.v=2;
  }catch(e){}
  return fetch(PUSH_URL+'/subscribe',{method:'POST',
  headers:{'Content-Type':'application/json'},
@@ -11564,8 +11561,6 @@ function toast(msg,isErr){
  clearTimeout(window.__toastT);
  window.__toastT=setTimeout(function(){t.className='nafToast';},isErr?6500:3500);
 }
-
-
 
 /* ============================================================
  نبض السلسلة — يخبر الخادم أن التطبيق فُتح اليوم
@@ -12643,8 +12638,6 @@ function fetchAll(){
  WORLD=null; /* أعِد جلب سماء العالم مع كل تحديث */
  if(TAB==='world')worldLoad();}
 
-
-
 /* ============================================================
  PWA — قابل للتثبيت ويعمل أوفلاين
  المanifest وعامل الخدمة مولّدان في الذاكرة (Blob) ليعمل من ملف واحد.
@@ -13129,8 +13122,6 @@ setInterval(askPulse,420000);
 /* ★ الشايب نفاف — ينتظر وصول الطقس ثم يطل
    ⚠️ كان يُستدعى بعد ٦ ثوانٍ عمياء فيجدها بلا بيانات ويصمت */
 
-
-
 /* ★ كان يعيد رسم الصفحة كاملة كل ٢٢ ثانية فيومض رقم الحرارة —
    الآن يحدّث حاويته وحدها بانتقال ناعم */
 setInterval(function(){ WW_I++; },95000);
@@ -13280,58 +13271,14 @@ setInterval(function(){
 </script>
 
 
-
-
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
- -->
-
-
-
-
-
-
-
-
-
-
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
+/* — cfg.html — */
+html.nxNoIsland #nxIsland,html.nxNoIsland #nxPal,html.nxNoIsland #nxPalBack{display:none}
+html.nxNoRail #labRail{display:none}
+html.nxNoInst #nxInst{display:none}
+html.nx.nxIsCenter #nxIsland{inset-inline-end:auto;left:50%;transform:translateX(-50%)}
+html.nx.nxIsCenter #nxIsland:active{transform:translateX(-50%) scale(.92)}
 /* — design.html — */
 /* tokens */
 body.v2{--nf-gold:#E3A94B;--nf-cyan:#6FE3E1;--nf-violet:#A08CFF;--nf-edge:rgba(255,255,255,.075);--nf-spring:cubic-bezier(.34,1.56,.64,1)}
@@ -13407,18 +13354,53 @@ html.nx{--nxGold:#E3A94B;--nxCyan:#6FE3E1;--nxInk:#EDF1F6;--nxMute:rgba(237,241,
 /* the WebGL scene sits under everything */
 #nxScene{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0;transition:opacity 1.2s ease}
 html.nx3d #nxScene{opacity:1}
-html.nx3d body.v2 .v2veil{background:radial-gradient(120% 60% at 50% 42%,rgba(4,8,18,.22),transparent 70%),linear-gradient(to bottom,rgba(4,8,18,.42) 0%,rgba(4,8,18,.14) 26%,rgba(4,8,18,.08) 55%,rgba(4,8,18,.6) 100%)}
+html.nx3d body.v2 .v2veil{background:linear-gradient(to bottom,rgba(4,10,24,.14) 0%,rgba(4,10,24,0) 20%,rgba(4,10,24,0) 72%,rgba(4,10,24,.28) 100%)}
 html.nx3d body.v2 .hero{text-shadow:0 2px 24px rgba(0,0,0,.45),0 1px 2px rgba(0,0,0,.4)}
 /* typography: same system font, sharper scale */
 html.nx body.v2 .pgTemp{font-weight:200;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
 html.nx body.v2 .sec-t{font-size:17px;font-weight:700;letter-spacing:-.01em}
 
-/* ---------- adaptive spatial glass ---------- */
+/* ---------- adaptive spatial glass ----------
+   One token set per moment of day drives every surface, so a card can never get the sky of one moment and
+   the ink of another. Ink stays light in all three moments (the app's own text is white everywhere); what
+   changes is the glass tint, deep enough under that ink to read at 4.5:1 or better over the brightest sky. */
+html.nx{--nxGlass:rgba(12,20,38,.42)}
+html.nx3d[data-tod=day]{--nxCard:rgba(22,78,146,.84);--nxGlass:rgba(20,74,142,.62);--nxEdge:rgba(255,255,255,.30);--nxMute:rgba(236,244,255,.82)}
+html.nx3d[data-tod=golden]{--nxCard:rgba(56,26,60,.84);--nxGlass:rgba(54,24,58,.62);--nxEdge:rgba(255,214,170,.26);--nxMute:#F4CFB0}
+html.nx3d[data-tod=night]{--nxCard:rgba(14,28,72,.84);--nxGlass:rgba(12,26,68,.60);--nxEdge:rgba(170,195,255,.20);--nxMute:#B9CBEF}
 html.nx body.v2 :is(.card,.smart,.b2,.hitem,.qk,.fitCard,.daySum,.h6,.pgSide,.glance,.wwCard,.watch,.feed,.rotator,.timeline,.brief,.anom,.astro,.onday,.story,.actPanel,.nxT,.locbar,.pgTimeBox,.pgRangeBox){border-radius:22px}
-html.nx.nxHi body.v2 :is(.card,.smart,.b2,.hitem,.qk,.fitCard,.daySum,.h6,.pgSide,.glance,.wwCard,.watch,.feed,.rotator,.timeline,.brief,.anom,.astro,.onday,.story,.actPanel,.nxT,.locbar){
-  background-color:rgba(12,20,38,.42);-webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%)}
+html.nx.nxHi body.v2 :is(.card,.smart,.b2,.hitem,.qk,.fitCard,.daySum,.h6,.pgSide,.glance,.wwCard,.watch,.feed,.rotator,.timeline,.brief,.anom,.astro,.onday,.story,.actPanel,.nxT,.locbar,.pgTimeBox,.pgRangeBox){
+  background-color:var(--nxGlass);-webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%)}
 html.nx:not(.nxHi) body.v2 .nxT{background:var(--nxCard)}
+html.nx3d:not(.nxHi) body.v2 :is(.pgTimeBox,.pgRangeBox){background:var(--nxCard)}
+html.nx3d body.v2 .nxT{border-color:var(--nxEdge)}
 
+/* ---------- moment-of-day theme: the whole UI takes the sky's colour (day · golden · night) ---------- */
+html.nx3d[data-tod=day] body.v2{--skyCard:rgba(22,78,146,.70);--skyCard2:rgba(18,66,128,.80);--skyEdge:rgba(255,255,255,.30);--skyDock:rgba(255,255,255,.94)}
+html.nx3d[data-tod=golden] body.v2{--skyCard:rgba(60,28,64,.66);--skyCard2:rgba(50,22,56,.76);--skyEdge:rgba(255,214,170,.30);--skyDock:rgba(42,20,50,.88)}
+html.nx3d[data-tod=night] body.v2{--skyCard:rgba(14,28,72,.66);--skyCard2:rgba(10,22,60,.76);--skyEdge:rgba(170,195,255,.22);--skyDock:rgba(12,24,64,.88)}
+html.nx3d[data-tod=day] body.v2 .hero,html.nx3d[data-tod=day] body.v2 .locbar{text-shadow:0 2px 18px rgba(8,50,110,.45),0 1px 2px rgba(8,40,90,.35)}
+html.nx3d body.v2 .nxT .k,html.nx3d body.v2 .nxT .s,html.nx3d body.v2 .nxT .v small,html.nx3d body.v2 .nxT .det{color:var(--nxMute)}
+html.nx3d[data-tod=day] body.v2 .nxT::after{opacity:.45}
+/* daytime: the app's secondary inks were tuned for a dark sky; lift them so they read on blue glass */
+html.nx3d[data-tod=day] body.v2{--tx2:rgba(244,248,255,.90);--tx3:rgba(236,244,255,.84)}
+html.nx3d[data-tod=day] body.v2 :is(.srcnote,.hv-pill,.v2hr .t,.v2season p,.v2tile .v2k,.v2radar .lbl small,.v2tile .v2big small,.fbp-d,.locname small){color:var(--tx3)}
+html.nx3d[data-tod=day] body.v2 .foot{opacity:1;color:#fff;text-shadow:0 1px 3px rgba(6,30,70,.9),0 0 14px rgba(6,30,70,.6)}
+html.nx3d[data-tod=day] body.v2 :is(.wm-en,.wm-ar){text-shadow:0 1px 2px rgba(60,34,4,.55),0 4px 18px rgba(10,40,90,.35)}
+html.nx3d[data-tod=day] body.v2 :is(.v2h,.sec-t,.secT,h2,h3):not(.nxT *){text-shadow:0 1px 2px rgba(6,30,70,.75),0 0 16px rgba(6,30,70,.45)}
+/* the dock is the one light surface in daytime (as in the approved mock): every label on it is ink */
+html.nx3d[data-tod=day] body.v2 .v2dock{background:rgba(255,255,255,.94);border-color:#fff;box-shadow:0 14px 34px -18px rgba(10,40,90,.6)}
+html.nx3d[data-tod=day] body.v2 .v2tab,html.nx3d[data-tod=day] body.v2 .v2tab span{color:#33506E}
+html.nx3d[data-tod=day] body.v2 .v2tab[aria-current="page"] span{color:#7A4E0C;font-weight:800}
+html.nx3d[data-tod=day] body.v2 .v2tab[aria-current="page"] svg{color:#241703}
+/* the island rests as a gold orb above the dock and opens into a pill only when there is news */
+html.nx #nxIsland{min-width:0;width:48px;height:48px;padding:0;justify-content:center;gap:0;border-radius:999px;transition:width .55s var(--nxSpring),padding .55s var(--nxSpring),gap .3s,bottom .4s ease,transform .5s var(--nxSpring)}
+html.nx #nxIsland .t,html.nx #nxIsland .m{max-width:0;opacity:0;overflow:hidden;transition:max-width .55s var(--nxSpring),opacity .25s}
+html.nx #nxIsland .orb{width:38px;height:38px}
+html.nx #nxIsland.peek{width:auto;padding:0 16px 0 6px;gap:8px;justify-content:flex-start}
+html.nx #nxIsland.peek .t,html.nx #nxIsland.peek .m{max-width:220px;opacity:1}
+html.nx3d[data-tod=day] #nxIsland{background:rgba(255,255,255,.92);border-color:#fff;color:#0F2A44}
+html.nx3d[data-tod=day] #nxIsland .m{color:#3D5B78}
 /* ---------- bento instruments ---------- */
 .nxTiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 6px;grid-auto-flow:dense}
 .nxT{position:relative;grid-column:span 2;min-height:150px;padding:14px;border:1px solid var(--nxEdge);background:var(--nxCard);color:var(--nxInk);
@@ -13465,11 +13447,11 @@ html.nx body.v2.wide #nowBody>.sec-t,html.nx body.v2.wide #nowBody>.sec-s{grid-c
 html.nx #fabBtn,html.nx #fabTip,html.nx #askFab,html.nx #evBtn{display:none}
 
 /* ---------- command island ---------- */
-#nxIsland{position:fixed;z-index:52;bottom:calc(env(safe-area-inset-bottom,0px) + 98px);left:50%;transform:translateX(-50%);height:40px;min-width:118px;max-width:min(64vw,320px);
+#nxIsland{position:fixed;z-index:52;bottom:calc(env(safe-area-inset-bottom,0px) + 98px);left:auto;right:auto;inset-inline-end:16px;transform:none;height:40px;min-width:118px;max-width:min(64vw,320px);
   display:flex;align-items:center;gap:8px;padding:0 14px 0 6px;border-radius:999px;border:1px solid rgba(255,255,255,.12);color:var(--nxInk);
   background:linear-gradient(180deg,rgba(14,20,36,.96),rgba(6,10,20,.96));box-shadow:0 10px 30px -10px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.08);
   font:inherit;cursor:pointer;transition:transform .5s var(--nxSpring),width .5s var(--nxSpring),box-shadow .3s;-webkit-tap-highlight-color:transparent;white-space:nowrap}
-#nxIsland:active{transform:translateX(-50%) scale(.95)}
+#nxIsland:active{transform:scale(.92)}
 #nxIsland .orb{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#F6CF85,#E3A94B 55%,#9A6A22);box-shadow:0 0 14px rgba(227,169,75,.55)}
 #nxIsland .orb svg{width:15px;height:15px;stroke:#1d1305;fill:none;stroke-width:2.2;stroke-linecap:round}
 #nxIsland .t{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
@@ -13488,12 +13470,41 @@ html.nx.nxWideUI #nxPal{bottom:76px}
 #nxPal input{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:13px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:inherit;outline:none}
 #nxPal input:focus{border-color:rgba(227,169,75,.6);box-shadow:0 0 0 3px rgba(227,169,75,.18)}
 #nxPal h4{margin:16px 4px 8px;font-size:11.5px;color:var(--nxMute);font-weight:700;letter-spacing:.02em}
-.nxActs{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
-.nxA{display:flex;flex-direction:column;align-items:center;gap:7px;padding:13px 6px;border-radius:18px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045);color:inherit;font:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:scale .4s var(--nxSpring),background .2s,border-color .2s;text-align:center;line-height:1.3}
-.nxA:active{scale:.94}
-.nxA:hover{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.07)}
-.nxA .ic{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--lc,#E3A94B);background:radial-gradient(circle at 35% 28%,color-mix(in srgb,var(--lc,#E3A94B) 26%,transparent),rgba(255,255,255,.02) 65%);border:1px solid color-mix(in srgb,var(--lc,#E3A94B) 40%,transparent);box-shadow:0 0 16px color-mix(in srgb,var(--lc,#E3A94B) 30%,transparent)}
-.nxA .ic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* palette content: one hero card for the cyclone game, then small floating icons (no boxes) */
+.nxHero{position:relative;display:flex;align-items:center;gap:14px;width:100%;margin:12px 0 4px;padding:14px 16px;border-radius:22px;border:1px solid rgba(240,138,75,.45);cursor:pointer;color:inherit;font:inherit;text-align:start;overflow:hidden;
+  background:radial-gradient(120% 140% at 12% 50%,rgba(240,138,75,.30),transparent 60%),linear-gradient(135deg,rgba(40,22,30,.6),rgba(10,20,44,.6));box-shadow:0 14px 34px -18px rgba(240,138,75,.7),inset 0 1px 0 rgba(255,255,255,.1);transition:scale .45s var(--nxSpring)}
+.nxHero:active{scale:.97}
+.nxHero .cy{flex:none;width:58px;height:58px}
+.nxHero .cy svg{width:100%;height:100%;animation:nxSpin 3.2s linear infinite;filter:drop-shadow(0 0 10px rgba(240,138,75,.7))}
+.nxHero b{display:block;font-size:16px;font-weight:800}
+.nxHero small{display:block;font-size:12px;color:var(--nxMute);margin-top:3px;line-height:1.45}
+.nxHero .go{margin-inline-start:auto;flex:none;height:32px;padding:0 14px;border-radius:999px;background:#F08A4B;color:#1d0d03;font-size:12.5px;font-weight:800;display:grid;place-items:center}
+.nxHero .n1{position:absolute;top:8px;inset-inline-end:12px;font-size:10px;font-weight:800;color:#FFD3B5;letter-spacing:.04em}
+@keyframes nxSpin{to{transform:rotate(-360deg)}}
+.nxActs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin:0 -4px;padding:2px 0 4px}
+.nxActs::-webkit-scrollbar{display:none}
+.nxActs .nxA{flex:1 0 64px}
+.nxLabs{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 4px}
+@media (min-width:480px){.nxLabs{grid-template-columns:repeat(5,1fr)}}
+.nxA{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 2px;border:0;background:transparent;color:inherit;font:inherit;font-size:10.5px;font-weight:650;cursor:pointer;text-align:center;line-height:1.3;
+  -webkit-tap-highlight-color:transparent;animation:nxPop .5s var(--nxSpring) both;animation-delay:calc(var(--i,0) * 22ms)}
+.nxA>span:last-child{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:78px;color:rgba(237,241,246,.86)}
+.nxA .ic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--lc,#E3A94B);
+  background:radial-gradient(circle at 35% 28%,color-mix(in srgb,var(--lc,#E3A94B) 34%,transparent),color-mix(in srgb,var(--lc,#E3A94B) 6%,transparent) 70%);
+  border:1px solid color-mix(in srgb,var(--lc,#E3A94B) 45%,transparent);
+  box-shadow:0 0 18px -2px color-mix(in srgb,var(--lc,#E3A94B) 45%,transparent),0 8px 16px -10px rgba(0,0,0,.8);transition:transform .45s var(--nxSpring),box-shadow .3s}
+.nxActs .nxA .ic{width:38px;height:38px}
+.nxA .ic svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nxA:active .ic{transform:scale(.86)}
+.nxA:hover .ic{transform:translateY(-3px);box-shadow:0 0 24px 0 color-mix(in srgb,var(--lc,#E3A94B) 60%,transparent),0 12px 18px -10px rgba(0,0,0,.8)}
+html.nx.nxHi #nxPal.on .nxLabs .nxA .ic{animation:nxBob 4.6s ease-in-out infinite;animation-delay:calc(var(--i,0) * -370ms)}
+@keyframes nxBob{0%,100%{translate:0 0}50%{translate:0 -3px}}
+@keyframes nxPop{from{opacity:0;transform:translateY(10px) scale(.7)}}
+#nxPal .star{position:relative}
+#nxPal .star::after{content:"";position:absolute;top:0;inset-inline-end:10px;width:8px;height:8px;border-radius:50%;background:#E3A94B;box-shadow:0 0 8px #E3A94B}
+/* palette glass follows the moment of day */
+html.nx3d[data-tod=day] #nxPal{background:linear-gradient(180deg,rgba(22,72,136,.985),rgba(12,46,96,.985));border-color:rgba(255,255,255,.22)}
+html.nx3d[data-tod=golden] #nxPal{background:linear-gradient(180deg,rgba(62,28,64,.985),rgba(34,16,42,.985));border-color:rgba(255,214,170,.22)}
 .nxRes{display:flex;flex-direction:column;gap:4px}
 .nxR{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;border:0;background:transparent;color:inherit;font:inherit;font-size:14px;text-align:start;cursor:pointer}
 .nxR:hover,.nxR.sel{background:rgba(255,255,255,.07)}
@@ -13534,7 +13545,104 @@ html.nx.nxWideUI #nxNudge{bottom:84px}
 @keyframes nxOrb{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes nxRing{0%{opacity:.7;transform:scale(.9)}100%{opacity:0;transform:scale(1.35)}}
 @media (prefers-reduced-motion:reduce){#nxNudge,#nxNudge .orb,#nxNudge .orb::after{animation:none!important;transition:opacity .2s!important}}
+/* — nudge.html — */
+#nxCy{position:fixed;inset:0;z-index:70;display:grid;place-items:center;pointer-events:none;visibility:hidden}
+#nxCy.on{pointer-events:auto;visibility:visible}
+#nxCy .bk{position:absolute;inset:0;background:radial-gradient(circle at 50% 44%,rgba(4,8,20,.62),rgba(2,5,14,.9) 70%);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .5s}
+#nxCy.on .bk{opacity:1}
+#nxCy .st{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:0 24px;max-width:360px}
+#nxCy .eye{position:relative;width:min(62vw,250px);aspect-ratio:1;transform:scale(.15) rotate(200deg);opacity:0;transition:transform .9s cubic-bezier(.2,1.3,.4,1),opacity .4s}
+#nxCy.on .eye{transform:none;opacity:1}
+#nxCy .eye svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#nxCy .eye .spin{animation:nxCySpin 5.5s linear infinite;transform-origin:50% 50%}
+#nxCy .eye .spin2{animation:nxCySpin 9s linear infinite;transform-origin:50% 50%;opacity:.55}
+#nxCy .eye::after{content:"";position:absolute;inset:-18%;border-radius:50%;background:radial-gradient(circle,rgba(240,138,75,.28),transparent 62%);animation:nxCyPulse 2.4s ease-in-out infinite;z-index:-1}
+@keyframes nxCySpin{to{transform:rotate(-360deg)}}
+@keyframes nxCyPulse{50%{transform:scale(1.08);opacity:.7}}
+#nxCy .tx{opacity:0;transform:translateY(14px);transition:opacity .4s .45s,transform .6s .45s cubic-bezier(.2,1.3,.4,1);color:#F4F7FB}
+#nxCy.on .tx{opacity:1;transform:none}
+#nxCy .tg{font-size:11px;font-weight:800;letter-spacing:.06em;color:#FFC9A3}
+#nxCy b{display:block;font-size:24px;font-weight:800;margin:4px 0 6px;letter-spacing:-.01em}
+#nxCy p{margin:0;font-size:14px;line-height:1.6;color:rgba(238,243,250,.82)}
+#nxCy .bt{display:flex;gap:10px;justify-content:center;margin-top:16px}
+#nxCy .bt button{height:46px;padding:0 22px;border-radius:999px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;border:0}
+#nxCy .play{background:linear-gradient(180deg,#F7A46B,#F08A4B);color:#1d0d03;box-shadow:0 10px 30px -8px rgba(240,138,75,.8)}
+#nxCy .later{background:rgba(255,255,255,.1);color:#EEF3FA;border:1px solid rgba(255,255,255,.16)!important}
+#nxCy .cyRing{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#nxCy .cyRing circle{fill:none;stroke:#F08A4B;stroke-width:2;stroke-dasharray:var(--len);stroke-dashoffset:0;transition:stroke-dashoffset linear;opacity:.85}
+#nxCy.out .eye{transition:transform .7s cubic-bezier(.6,0,.8,.4),opacity .6s .1s;transform:translate(var(--fx,0),var(--fy,0)) scale(.08) rotate(-540deg);opacity:0}
+#nxCy.out .tx,#nxCy.out .bk{opacity:0;transition:opacity .35s}
+@media (prefers-reduced-motion:reduce){#nxCy .eye .spin,#nxCy .eye .spin2,#nxCy .eye::after{animation:none}}
+/* — alerts.html — */
+/* install: a small icon button in the same family as the camera and gear buttons */
+#nxInst{order:2;position:relative;flex:0 0 auto;width:38px;height:38px;padding:0;border-radius:12px;display:none;place-items:center;cursor:pointer;
+  color:#F2C46D;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);transition:scale .4s cubic-bezier(.34,1.56,.64,1),background .2s}
+#nxInst.on{display:inline-flex}
+#nxInst:active{scale:.9}
+#nxInst svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+#nxInst i{position:absolute;top:6px;inset-inline-start:6px;width:6px;height:6px;border-radius:50%;background:#E3A94B;box-shadow:0 0 6px #E3A94B}
+/* same size, shape and glass as the camera and gear buttons next to it */
+body.v2 #nxInst{width:auto;min-width:44px;height:44px;padding:0 12px 0 10px;gap:6px;align-items:center;justify-content:center;font:inherit;font-size:13.5px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;border-radius:14px;background:var(--skyCard,rgba(9,16,32,.62));border:1px solid var(--skyEdge,rgba(255,255,255,.16));box-shadow:0 8px 24px rgba(0,0,0,.14);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+body.v2 #nxInst svg{width:18px;height:18px;flex:none}
+#nxInst b{font-weight:800;color:#F6CF85}
+#nxInst.ready i{animation:nxInstDot 2.4s ease-in-out infinite}
+@keyframes nxInstDot{50%{transform:scale(1.35);opacity:.75}}
+@media (prefers-reduced-motion:reduce){#nxInst.ready i{animation:none}}
+#nxInstSheet{position:fixed;inset:0;z-index:80;display:none;align-items:flex-end;justify-content:center;background:rgba(3,6,14,.55)}
+#nxInstSheet.on{display:flex}
+#nxInstSheet .p{width:min(460px,100%);margin:0 10px calc(10px + env(safe-area-inset-bottom,0px));padding:20px 18px 16px;border-radius:26px;background:linear-gradient(180deg,#14223f,#0b1428);color:#EEF3FA;
+  border:1px solid rgba(255,255,255,.12);box-shadow:0 30px 80px -20px rgba(0,0,0,.9);animation:nxSheetUp .5s cubic-bezier(.34,1.3,.64,1)}
+@keyframes nxSheetUp{from{transform:translateY(40px);opacity:0}}
+#nxInstSheet h3{margin:0 0 6px;font-size:18px}
+#nxInstSheet ol{margin:10px 0 14px;padding-inline-start:22px;line-height:1.9;font-size:14.5px}
+#nxInstSheet .why{font-size:12.5px;color:rgba(238,243,250,.72);line-height:1.6;margin:0 0 14px}
+#nxInstSheet button{width:100%;height:46px;border-radius:14px;border:0;font:inherit;font-weight:800;font-size:15px;background:#E3A94B;color:#1d1305;cursor:pointer}
 </style>
+<script>
+/* Defaults = how Nafaf behaves with no portal setting. The portal publishes cfg.next; the app keeps the
+   last copy in localStorage (nx.cfg) so the next launch, the labs and the cyclone game apply it instantly. */
+(function(){
+  var DEF={
+    scene:{on:true,quality:'auto',palms:true,ringFx:true},
+    theme:{tod:'auto'},
+    island:{on:true,peekSec:6,pos:'corner'},
+    palette:{heroCyclone:true},
+    rail:{on:true},
+    nudge:{on:true,minSec:60,maxSec:120,showSec:10,pauseMin:15},
+    summon:{on:true,delaySec:20,showSec:10,ignoreLimit:3},
+    install:{pill:true},
+    push:{auto:true,moveKm:5,bgSync:true},
+    widget:{autoOn:true},
+    labShell:{on:true,tag:true,flash:true},
+    english:{on:true},
+    labs:null,           /* [{id,enabled,order,label,en,star}] — null = the built-in list as is */
+    cyclone:{mode:'sim',basin:'NI',histFilter:'om',modes:{sim:true,history:true,forecast:true,ach:true},layers:{rings:true,cities:true,sst:false,steer:false},summonLine:''}
+  };
+  function merge(a,b){var o={};for(var k in a)o[k]=a[k];if(!b)return o;for(var k2 in b){var v=b[k2];o[k2]=(v&&typeof v==='object'&&!Array.isArray(v)&&a[k2]&&typeof a[k2]==='object'&&!Array.isArray(a[k2]))?merge(a[k2],v):v}return o}
+  var saved=null;try{saved=JSON.parse(localStorage.getItem('nx.cfg')||'null')}catch(e){}
+  window.NXC_DEF=DEF;window.NXC=merge(DEF,saved);
+  function apply(){
+    var H=document.documentElement,C=window.NXC;
+    H.classList.toggle('nxNoIsland',C.island.on===false);
+    H.classList.toggle('nxIsCenter',C.island.pos==='center');
+    H.classList.toggle('nxNoRail',C.rail.on===false);
+    H.classList.toggle('nxNoInst',C.install.pill===false);
+    try{if(C.english.on===false&&localStorage.getItem('lang')==='en'){localStorage.setItem('lang','dial')}}catch(e){}
+  }
+  apply();
+  /* hook the app's live-config loader: cfg.next arrives with the rest of the portal settings */
+  function hook(){
+    if(typeof window.applyAppCfg!=='function'||window.applyAppCfg.__nx)return !!(window.applyAppCfg&&window.applyAppCfg.__nx);
+    var o=window.applyAppCfg;
+    var w=function(c){var r=o.apply(this,arguments);
+      try{if(c&&c.next){var prev=JSON.stringify(window.NXC);window.NXC=merge(DEF,c.next);localStorage.setItem('nx.cfg',JSON.stringify(c.next));apply();
+        if(JSON.stringify(window.NXC)!==prev)document.dispatchEvent(new CustomEvent('nxcfg',{detail:window.NXC}))}
+        else if(c&&!c.next){localStorage.removeItem('nx.cfg')}}catch(e){}
+      return r};
+    w.__nx=1;window.applyAppCfg=w;try{applyAppCfg=w}catch(e){}return true}
+  if(!hook()){var n=0,t=setInterval(function(){if(hook()||++n>60)clearInterval(t)},100)}
+})();
+</script>
 <script>
 (function(){
   var B=document.body;if(!B)return;
@@ -13588,11 +13696,11 @@ html.nx.nxWideUI #nxNudge{bottom:84px}
 <script>
 /* the fourteen Nafaf labs: id, name ar/en, one line ar/en, file, glow colour, group, needs net, icon path */
 var NAFAF_LABS=[
+ {id:'cyclone',n:'لعبة الأعاصير',e:'Cyclone Game',s:'اصنع إعصارًا، أعِد أعاصير التاريخ، وتحدَّ المتنبئين',se:'Spawn a storm, replay history, beat the forecasters',f:'cyclone.html',c:'#F08A4B',g:'air',net:0,star:1,p:'M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0M12 3c5 0 7 4 4 6M21 12c0 5-4 7-6 4M12 21c-5 0-7-4-4-6M3 12c0-5 4-7 6-4'},
  {id:'wadi',n:'مختبر الوادي',e:'Wadi Lab',s:'احمِ المدينة من السيل في محاكاة ثلاثية الأبعاد',se:'Defend a town from a flash flood in 3D',f:'wadi.html',c:'#4FB3E8',g:'water',net:0,star:1,p:'M3 19l5-9 4 5 3-3 6 7zM5 21c3-1.5 6-1.5 9 0s5 1.5 7 0'},
  {id:'falaj',n:'محرك الأفلاج',e:'Falaj Engine',s:'تدفق الفلج والخزان الجوفي وشبكة الري',se:'Falaj flow, aquifer and irrigation shares',f:'falaj.html',c:'#5CC9B0',g:'water',net:1,p:'M3 17h18M6 17V9M10 17v-5M14 17v-3M18 17v-6M3 21c3-1.5 6-1.5 9 0s6 1.5 9 0'},
  {id:'seeding',n:'مفاعل الاستمطار',e:'Cloud Seeding Reactor',s:'داخل السحابة: يوديد الفضة والأملاح',se:'Inside a cloud: silver iodide and salt',f:'seeding.html',c:'#9CC8FF',g:'water',net:0,p:'M7 15a4 4 0 0 1 .5-8 5 5 0 0 1 9.5 1.5A3.5 3.5 0 0 1 17 15zM9 18v2M13 18v3M17 18v2'},
  {id:'atmo',n:'مختبر الغلاف الجوي',e:'Atmosphere Lab',s:'احقن الرطوبة وابنِ عاصفة رعدية',se:'Inject moisture and build a thunderstorm',f:'atmo.html',c:'#B88CFF',g:'air',net:0,p:'M12 3l1.5 5h-3zM6 21h12M8 21l2-9h4l2 9M4 9h16'},
- {id:'cyclone',n:'مفاعل الأعاصير',e:'Cyclone Reactor',s:'ست معادلات تصنع إعصارًا في بحر العرب',se:'Six equations build an Arabian Sea cyclone',f:'cyclone.html',c:'#F08A4B',g:'air',net:0,p:'M12 12m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0M12 3c5 0 7 4 4 6M21 12c0 5-4 7-6 4M12 21c-5 0-7-4-4-6M3 12c0-5 4-7 6-4'},
  {id:'trajectory',n:'بصمة الهواء',e:'Air Fingerprint',s:'من أين جاءت رطوبتك وغبارك؟',se:'Where did your humidity and dust come from?',f:'trajectory.html',c:'#7FB8FF',g:'air',net:1,p:'M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0M3 12h18M12 3c3 3 3 15 0 18M17 7c-3 2-6 3-9 9'},
  {id:'worlds',n:'نافذة العوالم',e:'Window to Worlds',s:'جزيرة العرب الخضراء والمريخ وتيتان',se:'Green Arabia, Mars and Titan',f:'worlds.html',c:'#E3A94B',g:'air',net:0,p:'M12 12m-6 0a6 6 0 1 0 12 0a6 6 0 1 0-12 0M2.5 14.5c3 2 15 -1 19-5'},
  {id:'route',n:'مخطط المسار',e:'Route Planner',s:'طقس طريقك لحظة وصولك لكل نقطة',se:'Weather at each point the moment you arrive',f:'route.html',c:'#6FD39B',g:'you',net:1,p:'M6 18m-2.5 0a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0M18 6m-2.5 0a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5'},
@@ -13604,6 +13712,12 @@ var NAFAF_LABS=[
  {id:'village',n:'قرية نفاف',e:'Nafaf Village',s:'فلج وفوانيس ونخيل تكبر مع أيامك',se:'A falaj village that grows with your days',f:'village.html',c:'#B9D36A',g:'make',net:1,p:'M3 21V11l5-4 5 4v10M13 21v-7h8v7M6 21v-4h4v4M17 14V9'}];
 var NAFAF_GROUPS={water:['الماء والسيول','Water & floods'],air:['الجو والكواكب','Air & planets'],you:['رحلتك وجسمك','Your trip & body'],make:['إبداع ولعب','Create & play']};
 function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){return false}}
+/* the admin portal can hide, rename, reorder and feature labs (cfg.next.labs, kept in localStorage nx.cfg) */
+(function(){try{var c=JSON.parse(localStorage.getItem('nx.cfg')||'null'),L=c&&c.labs;if(!L||!L.length)return;
+  var by={};L.forEach(function(x){by[x.id]=x});
+  NAFAF_LABS=NAFAF_LABS.filter(function(l){return !by[l.id]||by[l.id].enabled!==false}).map(function(l){var o=by[l.id];if(!o)return l;var n={};for(var k in l)n[k]=l[k];if(o.label)n.n=o.label;if(o.en)n.e=o.en;if(o.star!=null)n.star=o.star?1:0;n._o=o.order;return n})
+    .sort(function(a,b){return (a._o==null?99:a._o)-(b._o==null?99:b._o)});
+}catch(e){}})();
 
 (function(){
   var rail=document.getElementById('labRail'),list=document.getElementById('lrList'),pill=document.getElementById('labPill'),flash=document.getElementById('labFlash'),hub=document.getElementById('lrHub');
@@ -13663,6 +13777,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   function $(i){return document.getElementById(i)}
   function T(c){try{return tconv(c)}catch(e){return Math.round(c)}}
   function hi(){try{return Clock.hourIndex()}catch(e){return 0}}
+  var CYC='<svg viewBox="0 0 64 64"><defs><radialGradient id="nxCyG" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#FFD9B8"/><stop offset="1" stop-color="#F08A4B" stop-opacity="0"/></radialGradient></defs><circle cx="32" cy="32" r="30" fill="url(#nxCyG)" opacity=".35"/><g fill="none" stroke-linecap="round"><path d="M32 32c0-9 9-14 18-10" stroke="#FFE2C9" stroke-width="5"/><path d="M32 32c9 0 14 9 10 18" stroke="#F7B27F" stroke-width="5"/><path d="M32 32c0 9-9 14-18 10" stroke="#FFE2C9" stroke-width="5"/><path d="M32 32c-9 0-14-9-10-18" stroke="#F7B27F" stroke-width="5"/><path d="M32 32c0-15 16-24 28-14" stroke="#F08A4B" stroke-width="2.5" opacity=".7"/><path d="M32 32c0 15-16 24-28 14" stroke="#F08A4B" stroke-width="2.5" opacity=".7"/></g><circle cx="32" cy="32" r="4" fill="#0b1430"/></svg>';window.NX_CYC=CYC;
   function ic(p){return '<svg viewBox="0 0 24 24"><path d="'+p+'"/></svg>'}
   var I={wind:'M3 8h11a3 3 0 1 0-3-3M3 14h14a3 3 0 1 1-3 3M3 11h7',drop:'M12 3s6 7 6 11a6 6 0 1 1-12 0c0-4 6-11 6-11z',sun:'M12 7a5 5 0 1 0 0 10a5 5 0 1 0 0-10M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2',
     rain:'M7 15a4 4 0 0 1 .5-8 5 5 0 0 1 9.5 1.5A3.5 3.5 0 0 1 17 15zM9 18l-1 2M13 18l-1 3M17 18l-1 2',therm:'M14 14.8V4a2 2 0 1 0-4 0v10.8a4 4 0 1 0 4 0z',air:'M4 12h12a3 3 0 1 0-3-3M4 16h9a3 3 0 1 1-3 3',gauge:'M12 14l4-4M3.5 17a9 9 0 1 1 17 0',wave:'M2 15c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6 0M2 19c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6 0'};
@@ -13790,9 +13905,12 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
 
   /* ---------- command island ---------- */
   var isl=$('nxIsland'),pal=$('nxPal'),back=$('nxPalBack'),q=$('nxQ'),pb=$('nxPB');
+  var lastMsg='',peekT=0;
   function wide(){return B.classList.contains('wide')}
   function lift(){var bars=document.querySelectorAll('.installBar'),top=null;for(var i=0;i<bars.length;i++){var b=bars[i];if(!b.classList.contains('on'))continue;var r=b.getBoundingClientRect();if(r.height&&r.top<innerHeight)top=top==null?r.top:Math.min(top,r.top)}
-    isl.style.bottom=top!=null?(innerHeight-top+10)+'px':'';pal.style.bottom=top!=null?(innerHeight-top+56)+'px':''}
+    if(top==null&&!wide()){var dk=document.getElementById('v2Dock');if(dk){var dr=dk.getBoundingClientRect();if(dr.height)top=dr.top}}
+    isl.style.bottom=top!=null?(innerHeight-top+10)+'px':'';pal.style.bottom=top!=null?(innerHeight-top+66)+'px':'';
+    var pb2=top!=null?innerHeight-top+66:90;pal.style.maxHeight=Math.max(260,innerHeight-pb2-Math.max(16,(window.visualViewport?0:0)+16))+'px'}
   setInterval(lift,1200);
   function island(){H.classList.toggle('nxWideUI',wide());lift();
     if(!W){$('nxIT').textContent='—';return}
@@ -13801,6 +13919,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     var nx='';try{nx=nextChangeLine()||''}catch(e){}
     var tmp=document.createElement('div');tmp.innerHTML=nx;var m=(tmp.textContent||'').trim();
     if(!m){try{m=META[st].t[L()]}catch(e){m=''}}
+    if(m!==lastMsg){lastMsg=m;if(m&&!pal.classList.contains('on')){isl.classList.add('peek');clearTimeout(peekT);peekT=setTimeout(function(){isl.classList.remove('peek')},((window.NXC&&+NXC.island.peekSec)||6)*1000)}}
     $('nxIM').textContent=m;
     var ev=$('evBtn');isl.classList.toggle('alert',!!(ev&&getComputedStyle(ev).display!=='none'));
     isl.setAttribute('aria-label',P('أوامر نفاف','أوامر نفاف','Nafaf commands')+' · '+$('nxIT').textContent+' '+m)}
@@ -13822,9 +13941,12 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   function render(){
     var qq=norm(q.value.trim()),en=L()===2,h='';flat=[];
     var A=acts().filter(function(a){return !qq||norm(a.t+' '+a.kw).indexOf(qq)>=0});
-    if(A.length){h+='<h4>'+P('أوامر','أوامر','Actions')+'</h4><div class="nxActs">'+A.map(function(a){flat.push(a.f);return '<button class="nxA" style="--lc:'+a.c+'" data-f="'+(flat.length-1)+'"><span class="ic">'+ic(a.i)+'</span>'+a.t+'</button>'}).join('')+'</div>'}
     var Lb=labs().filter(function(l){return !qq||norm(l.n+' '+l.e+' '+l.s+' '+l.se).indexOf(qq)>=0});
-    if(Lb.length){h+='<h4>'+P('مختبرات نفاف','مختبرات نفاف','Nafaf Labs')+'</h4><div class="nxActs">'+Lb.map(function(l){flat.push(function(){location.href=l.f});return '<button class="nxA" style="--lc:'+l.c+'" data-f="'+(flat.length-1)+'"><span class="ic">'+ic(l.p)+'</span>'+(en?l.e:l.n)+'</button>'}).join('')+'</div>'}
+    var cy=null;if(!window.NXC||NXC.palette.heroCyclone!==false)Lb=Lb.filter(function(l){if(l.id==='cyclone'){cy=l;return false}return true});
+    if(cy){flat.push(function(){location.href=cy.f});
+      h+='<button class="nxHero" data-f="'+(flat.length-1)+'"><span class="cy" aria-hidden="true">'+CYC+'</span><span><b>'+(en?cy.e:cy.n)+'</b><small>'+(en?cy.se:cy.s)+'</small></span><span class="go">'+P('العب','العب','Play')+'</span><span class="n1">'+P('رقم ١ في نفاف','الأولى في نفاف','#1 IN NAFAF')+'</span></button>'}
+    if(A.length){h+='<h4>'+P('أوامر','أوامر','Actions')+'</h4><div class="nxActs">'+A.map(function(a,i){flat.push(a.f);return '<button class="nxA" style="--lc:'+a.c+';--i:'+i+'" data-f="'+(flat.length-1)+'"><span class="ic">'+ic(a.i)+'</span><span>'+a.t+'</span></button>'}).join('')+'</div>'}
+    if(Lb.length){h+='<h4>'+P('مختبرات نفاف','مختبرات نفاف','Nafaf Labs')+'</h4><div class="nxLabs">'+Lb.map(function(l,i){flat.push(function(){location.href=l.f});return '<button class="nxA'+(l.star?' star':'')+'" style="--lc:'+l.c+';--i:'+(i+A.length)+'" data-f="'+(flat.length-1)+'"><span class="ic">'+ic(l.p)+'</span><span>'+(en?l.e:l.n)+'</span></button>'}).join('')+'</div>'}
     var Tb=tabsList().filter(function(t){return !qq||norm(t.t).indexOf(qq)>=0});
     if(Tb.length){h+='<h4>'+P('الصفحات','الصفحات','Pages')+'</h4><div class="nxRes">'+Tb.map(function(t){flat.push(function(){try{showTab(t.k)}catch(e){}});return '<button class="nxR" data-f="'+(flat.length-1)+'">'+t.t+'<small>'+(TAB===t.k?P('مفتوحة','مفتوحة','Open'):'')+'</small></button>'}).join('')+'</div>'}
     if(qq.length>=2){var C=[];try{CITIES.forEach(function(c,i){if(norm(c.n+' '+(c.en||'')).indexOf(qq)>=0)C.push({c:c,i:i})})}catch(e){}
@@ -13832,7 +13954,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     if(!h)h='<p style="color:var(--nxMute);padding:12px 6px;margin:0">'+P('ما لقيت شي بهالاسم','لا نتائج','Nothing found')+'</p>';
     pb.innerHTML=h;sel=0;
   }
-  function openPal(){render();q.placeholder=P('اكتب: مطر، صحار، الوادي، الإعدادات…','ابحث في نفاف…','Search Nafaf: rain, Sohar, Wadi, settings…');
+  function openPal(){lift();render();pal.scrollTop=0;q.placeholder=P('اكتب: مطر، صحار، الوادي، الإعدادات…','ابحث في نفاف…','Search Nafaf: rain, Sohar, Wadi, settings…');
     pal.dir=L()===2?'ltr':'rtl';pal.classList.add('on');back.classList.add('on');isl.setAttribute('aria-expanded','true');
     setTimeout(function(){if(matchMedia('(pointer:fine)').matches)q.focus()},120)}
   function closePal(){pal.classList.remove('on');back.classList.remove('on');isl.setAttribute('aria-expanded','false');q.value='';q.blur()}
@@ -13849,6 +13971,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
 <script>
 (function(){
   var el=document.getElementById('nxNudge');if(!el)return;
+  function N(){var c=(window.NXC&&NXC.nudge)||{};return c}
   var SHOW_MS=10000,MIN=60000,MAX=120000,timer=0,hideT=0,lastAct=0,dismiss=0,pausedUntil=0,cur=null;
   function P(a,b,c){try{return pick(a,b,c)}catch(e){return a}}
   function en(){try{return LI()===2}catch(e){return false}}
@@ -13866,7 +13989,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     sky:[['ارفع جوالك للسما: القمر وين بالضبط؟','ارفع هاتفك نحو السماء: أين القمر بالضبط؟','Raise your phone: where exactly is the moon?']],
     worlds:[['تخيّل جزيرة العرب خضرا قبل ٨ آلاف سنة','تخيّل جزيرة العرب خضراء قبل ثمانية آلاف عام','Picture a green Arabia 8,000 years ago']],
     village:[['قريتك تنتظرك: سقّ النخيل وشعّل الفوانيس','قريتك بانتظارك: اسقِ النخيل وأشعل الفوانيس','Your village is waiting: water the palms, light the lanterns']],
-    cyclone:[['اصنع إعصار في بحر العرب بست معادلات','اصنع إعصارًا في بحر العرب بست معادلات','Build an Arabian Sea cyclone with six equations']],
+    cyclone:[['جرّب تتنبأ بمسار جونو وكاترينا: ١٦ إعصارًا حقيقيًا على كرة أرضية','هل تستطيع توقّع مسار إعصار حقيقي؟ ١٦ إعصارًا على كرة أرضية','Can you forecast a real cyclone? 16 storms on a 4K globe']],
     broadcast:[['سوّ نشرة طقس بصوتك وشاركها','اصنع نشرة جوية بصوتك وشاركها','Make a weather bulletin in your own voice']]
   };
   function prefs(){
@@ -13878,7 +14001,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     if(st==='fog')return ['trajectory','sky'];
     if(st==='cloudy')return ['atmo','seeding','wadi'];
     if(night)return ['sky','worlds','village','cyclone'];
-    return ['route','cyclone','wadi','broadcast','scent','falaj','body'];
+    return ['cyclone','route','wadi','broadcast','scent','falaj','body'];
   }
   function recent(){try{return JSON.parse(sessionStorage.getItem('nx.nudged')||'[]')}catch(e){return []}}
   function remember(id){var r=recent().filter(function(x){return x!==id});r.unshift(id);try{sessionStorage.setItem('nx.nudged',JSON.stringify(r.slice(0,6)))}catch(e){}}
@@ -13894,12 +14017,12 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     if(document.hidden)return true;
     if(Date.now()<pausedUntil)return true;
     if(Date.now()-lastAct<2500)return true;
-    var q=['#nxPal.on','#ovSet.on','#ovCity.on','#v2More.on','.sheet.on','#obWrap.on','#labPill.show'];
+    var q=['#nxCy.on','#nxPal.on','#ovSet.on','#ovCity.on','#v2More.on','.sheet.on','#obWrap.on','#labPill.show'];
     for(var i=0;i<q.length;i++)if(document.querySelector(q[i]))return true;
     var ae=document.activeElement;if(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName))return true;
     return false}
-  function schedule(ms){clearTimeout(timer);timer=setTimeout(tryShow,ms==null?MIN+Math.random()*(MAX-MIN):ms)}
-  function tryShow(){if(busy()){schedule(4000);return}var c=choose();if(!c){schedule();return}show(c)}
+  function schedule(ms){var c=N();MIN=(+c.minSec||60)*1000;MAX=Math.max(MIN,(+c.maxSec||120)*1000);SHOW_MS=(+c.showSec||10)*1000;clearTimeout(timer);timer=setTimeout(tryShow,ms==null?MIN+Math.random()*(MAX-MIN):ms)}
+  function tryShow(){if(N().on===false){schedule();return}if(busy()){schedule(4000);return}var c=choose();if(!c){schedule();return}show(c)}
   var GO='<span class="go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>';
   function show(c){cur=c;var E=en(),l=c.lab;el.dir=E?'ltr':'rtl';el.style.setProperty('--lc',l.c);el.style.setProperty('--dur',SHOW_MS+'ms');
     el.innerHTML='<span class="orb" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="'+l.p+'"/></svg></span><span class="tx"><span class="tg">'+P('جرّب مختبر','جرّب مختبر','Try a lab')+'</span><b>'+(E?l.e:l.n)+'</b><small>'+c.line+'</small></span>'+GO+
@@ -13915,13 +14038,79 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     setTimeout(function(){location.href=l.f},f?360:0)}
   el.addEventListener('click',function(e){if(e.target.closest('.x')){e.stopPropagation();hide();clearTimeout(hideT);
       /* three dismissals in one visit = the user is busy: rest for 15 minutes */
-      if(++dismiss>=3){pausedUntil=Date.now()+15*60000;dismiss=0}schedule();return}open()});
+      if(++dismiss>=3){pausedUntil=Date.now()+(+N().pauseMin||15)*60000;dismiss=0}schedule();return}open()});
   el.addEventListener('keydown',function(e){if(e.key==='Enter')open();if(e.key==='Escape'){hide();schedule()}});
   ['pointerdown','wheel','touchmove','keydown'].forEach(function(t){addEventListener(t,function(){lastAct=Date.now()},{passive:true,capture:true})});
   addEventListener('scroll',function(){lastAct=Date.now()},{passive:true,capture:true});
   document.addEventListener('visibilitychange',function(){if(!document.hidden&&!timer)schedule()});
   window.nxNudgeNow=function(){clearTimeout(timer);lastAct=0;tryShow()};
   schedule();
+})();
+</script>
+
+
+
+<div id="nxCy" role="dialog" aria-modal="false" aria-labelledby="nxCyT"><div class="bk"></div><div class="st"><div class="eye" id="nxCyEye"></div><div class="tx"><div class="tg" id="nxCyTg"></div><b id="nxCyT"></b><p id="nxCyP"></p><div class="bt"><button class="play" id="nxCyGo" type="button"></button><button class="later" id="nxCyNo" type="button"></button></div></div></div></div>
+<script>
+(function(){
+  var el=document.getElementById('nxCy');if(!el)return;
+  function P(a,b,c){try{return pick(a,b,c)}catch(e){return a}}
+  /* a satellite-style storm drawn from logarithmic spiral bands plus seeded cloud puffs;
+     the northern-hemisphere storm turns counter-clockwise, bands trailing clockwise outwards */
+  function storm(){var s=41,R=function(){s=(s*16807)%2147483647;return s/2147483647},cx=100,cy=100,g='',h='';
+    function arm(phase,inner,outer,w,op,col){var pts=[];for(var t=0;t<=1.0001;t+=0.02){var r=inner*Math.pow(outer/inner,t),a=phase+t*4.2;pts.push((cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1))}
+      return '<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round" opacity="'+op+'"/>'}
+    for(var k=0;k<4;k++){var ph=k*Math.PI/2;g+=arm(ph,13,96,16,.18,'#fff')+arm(ph,13,90,9,.42,'#F4F1EC')+arm(ph,13,78,4,.8,'#fff')}
+    for(var i=0;i<170;i++){var k2=Math.floor(R()*4),t=Math.pow(R(),.8),r=13*Math.pow(96/13,t),a=k2*Math.PI/2+t*4.2+(R()-.5)*.35,rr=r+(R()-.5)*10,pr=1.5+R()*(3+t*7);
+      h+='<circle cx="'+(cx+rr*Math.cos(a)).toFixed(1)+'" cy="'+(cy+rr*Math.sin(a)).toFixed(1)+'" r="'+pr.toFixed(1)+'" fill="#fff" opacity="'+(0.15+R()*.45).toFixed(2)+'"/>'}
+    return '<svg viewBox="0 0 200 200" aria-hidden="true"><defs><radialGradient id="nxCyCore"><stop offset="0" stop-color="#0a1226"/><stop offset=".55" stop-color="#0a1226"/><stop offset=".62" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><radialGradient id="nxCyGlow"><stop offset="0" stop-color="#F08A4B" stop-opacity=".0"/><stop offset=".5" stop-color="#F08A4B" stop-opacity=".18"/><stop offset="1" stop-color="#F08A4B" stop-opacity="0"/></radialGradient></defs>'+
+      '<circle cx="100" cy="100" r="100" fill="url(#nxCyGlow)"/><g class="spin2">'+h+'</g><g class="spin">'+g+'<circle cx="100" cy="100" r="19" fill="url(#nxCyCore)"/></g><circle cx="100" cy="100" r="6" fill="#050b1c"/></svg>'+
+      '<svg class="cyRing" viewBox="0 0 200 200"><circle cx="100" cy="100" r="108" transform="rotate(-90 100 100)" id="nxCyRing"/></svg>'}
+  function SC(){return (window.NXC&&NXC.summon)||{}}
+  var DELAY=(+SC().delaySec||20)*1000,SHOW=(+SC().showSec||10)*1000,shown=false,hideT=0,tries=0,lastAct=0;
+  function st(){try{return JSON.parse(localStorage.getItem('nx.cy')||'{}')}catch(e){return {}}}
+  function save(o){try{localStorage.setItem('nx.cy',JSON.stringify(o))}catch(e){}}
+  function due(){var o=st(),n=+o.skip||0;try{if(sessionStorage.getItem('nx.cy.s'))return false}catch(e){}
+    /* ignored three times in a row: come back every third visit instead of every visit */
+    if(n>=(+SC().ignoreLimit||3)){o.wait=(+o.wait||0)+1;save(o);if(o.wait%3)return false}return true}
+  function busy(){if(document.hidden)return true;if(Date.now()-lastAct<1500)return true;
+    var q=['#nxPal.on','#ovSet.on','#ovCity.on','#v2More.on','.sheet.on','#obWrap.on','#labPill.show','#nxNudge.on','.ov.on'];
+    for(var i=0;i<q.length;i++)if(document.querySelector(q[i]))return true;
+    var ae=document.activeElement;return !!(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName))}
+  function line(){var cl=window.NXC&&NXC.cyclone&&NXC.cyclone.summonLine;if(cl)return cl;var w=null;try{w=W}catch(e){}var sst=null;try{sst=MARINE&&MARINE.sea_surface_temperature}catch(e){}
+    if(typeof sst==='number')return P('حرارة البحر عندك اليوم '+Math.round(sst)+'°. تقدر تصنع منها إعصار؟','حرارة البحر قربك '+Math.round(sst)+'° اليوم. هل تكفي لولادة إعصار؟','Your sea is '+Math.round(sst)+'° today. Enough to spin up a cyclone?');
+    return P('جونو، شاهين، ميكونو… عيد أعاصير التاريخ أو اصنع إعصارك','أعِد أعاصير التاريخ أو اصنع إعصارك الخاص','Replay history’s storms or spin up your own')}
+  function show(){if(shown)return;if(SC().on===false)return;SHOW=(+SC().showSec||10)*1000;if(busy()){if(++tries<25)setTimeout(show,3000);return}
+    shown=true;try{sessionStorage.setItem('nx.cy.s','1')}catch(e){}
+    var E=false;try{E=LI()===2}catch(e){}el.dir=E?'ltr':'rtl';
+    document.getElementById('nxCyEye').innerHTML=storm();
+    document.getElementById('nxCyTg').textContent=P('إعصار يتشكّل الحين','إعصار يتشكّل الآن','A STORM IS FORMING');
+    document.getElementById('nxCyT').textContent=P('لعبة الأعاصير','لعبة الأعاصير','Cyclone Game');
+    document.getElementById('nxCyP').textContent=line();
+    document.getElementById('nxCyGo').textContent=P('العب الحين','العب الآن','Play now');
+    document.getElementById('nxCyNo').textContent=P('بعدين','لاحقًا','Later');
+    var rg=document.getElementById('nxCyRing'),len=2*Math.PI*108;rg.style.setProperty('--len',len);rg.style.strokeDashoffset=0;
+    el.classList.remove('out');void el.offsetWidth;el.classList.add('on');
+    requestAnimationFrame(function(){requestAnimationFrame(function(){rg.style.transition='stroke-dashoffset '+SHOW+'ms linear';rg.style.strokeDashoffset=len})});
+    try{navigator.vibrate&&navigator.vibrate([10,60,10,60,18])}catch(e){}
+    clearTimeout(hideT);hideT=setTimeout(function(){close(true)},SHOW+200)}
+  function close(ignored){if(!el.classList.contains('on'))return;clearTimeout(hideT);
+    /* the storm shrinks into the labs rail so the user learns where to find it */
+    var hub=document.getElementById('lrHub'),eye=document.getElementById('nxCyEye');
+    if(hub&&eye){var a=hub.getBoundingClientRect(),b=eye.getBoundingClientRect();if(a.width){el.style.setProperty('--fx',(a.left+a.width/2-(b.left+b.width/2))+'px');el.style.setProperty('--fy',(a.top+a.height/2-(b.top+b.height/2))+'px')}}
+    el.classList.add('out');setTimeout(function(){el.classList.remove('on','out')},800);
+    var o=st();if(ignored){o.skip=(+o.skip||0)+1}save(o)}
+  function play(){var o=st();o.skip=0;o.wait=0;o.played=(+o.played||0)+1;save(o);clearTimeout(hideT);
+    var f=document.getElementById('labFlash');if(f){f.style.setProperty('--lc','#F08A4B');f.style.setProperty('--x','50%');f.style.setProperty('--y','44%');f.classList.add('on')}
+    setTimeout(function(){location.href='cyclone.html'},f?360:0)}
+  document.getElementById('nxCyGo').addEventListener('click',play);
+  document.getElementById('nxCyEye').addEventListener('click',play);
+  document.getElementById('nxCyNo').addEventListener('click',function(){close(true)});
+  el.querySelector('.bk').addEventListener('click',function(){close(true)});
+  addEventListener('keydown',function(e){if(e.key==='Escape')close(true)});
+  ['pointerdown','wheel','touchmove','keydown','scroll'].forEach(function(t){addEventListener(t,function(e){if(!el.contains(e.target))lastAct=Date.now()},{passive:true,capture:true})});
+  window.nxCycloneNow=function(){shown=false;lastAct=0;try{sessionStorage.removeItem('nx.cy.s')}catch(e){}show()};
+  if(due())setTimeout(show,DELAY);
 })();
 </script>
 <script>
@@ -13945,7 +14134,9 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
           'Widget is on — it lives in your notification bar. Turn it off any time in Settings'][L()])}catch(e){}
       })})();
   }
+  function off(){return window.NXC&&NXC.widget&&NXC.widget.autoOn===false}
   function ask(){
+    if(off())return;
     if(decided()||!ok()||g('widget_auto')==='1')return;
     s('widget_auto','1');
     if(Notification.permission==='granted'){enable(false);return}
@@ -13956,7 +14147,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   /* 1) first run: the onboarding Start button is a user gesture, so the permission prompt is allowed there */
   document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('#obDone');if(b&&!b.disabled)ask()},true);
   setTimeout(function(){
-    if(decided()||!ok())return;
+    if(off()||decided()||!ok())return;
     /* 2) permission already granted (e.g. push alerts): switch on quietly */
     if(Notification.permission==='granted'){s('widget_auto','1');enable(true);return}
     /* 3) installed app opened after onboarding: ask on the first tap, once */
@@ -13965,6 +14156,119 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
       document.addEventListener('pointerup',once,true);
     }
   },7000);
+})();
+</script>
+<div id="nxInstSheet" role="dialog" aria-modal="true"><div class="p"><h3 id="nxIsH"></h3><p class="why" id="nxIsW"></p><ol id="nxIsL"></ol><button type="button" id="nxIsOk"></button></div></div>
+<script>
+(function(){
+  function P(a,b,c){try{return pick(a,b,c)}catch(e){return a}}
+  function g(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function s(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function standalone(){try{return navigator.standalone===true||matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||document.referrer.indexOf('android-app://')===0}catch(e){return false}}
+  function ios(){try{return isIOS()}catch(e){return /iPad|iPhone|iPod/.test(navigator.userAgent)}}
+  function perm(){try{return typeof Notification!=='undefined'?Notification.permission:'unsupported'}catch(e){return 'unsupported'}}
+  function hav(a,b){var R=6371,r=Math.PI/180,dLa=(b[0]-a[0])*r,dLo=(b[1]-a[1])*r,x=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dLo/2)*Math.sin(dLo/2);return 2*R*Math.asin(Math.sqrt(x))}
+  function here(){try{if(CUR&&typeof CUR.lat==='number')return [CUR.lat,CUR.lon,CUR.n||'']}catch(e){}return null}
+
+  /* ── 1. push follows permission: anyone who allowed notifications (widget, onboarding, settings) is also
+        subscribed to the server's rain watch, which keeps working while Nafaf is closed ── */
+  var lastTry=0;
+  if(typeof window.pushUnsubscribe==='function'&&!window.pushUnsubscribe.__nx){var ou=window.pushUnsubscribe;
+    window.pushUnsubscribe=function(){s('nx.push.userOff','1');return ou.apply(this,arguments)};window.pushUnsubscribe.__nx=1;try{pushUnsubscribe=window.pushUnsubscribe}catch(e){}}
+  if(typeof window.pushSubscribe==='function'&&!window.pushSubscribe.__nx){var os=window.pushSubscribe;
+    window.pushSubscribe=function(){s('nx.push.userOff','');return os.apply(this,arguments).then(function(r){if(r&&r.ok){var h=here();if(h)s('nx.push.ll',h[0].toFixed(3)+','+h[1].toFixed(3))}return r})};window.pushSubscribe.__nx=1;try{pushSubscribe=window.pushSubscribe}catch(e){}}
+  function auto(){
+    try{
+      if(window.NXC&&NXC.push.auto===false)return;
+      if(perm()!=='granted'||g('nx.push.userOff')==='1')return;
+      if(typeof pushSupported!=='function'||!pushSupported()||typeof PUSH_URL==='undefined'||!PUSH_URL)return;
+      if(!here())return;
+      var on=false;try{on=!!PUSH_ON}catch(e){}
+      var ll=(g('nx.push.ll')||'').split(','),h=here(),moved=ll.length<2||hav([+ll[0],+ll[1]],[h[0],h[1]])>((window.NXC&&+NXC.push.moveKm)||5);
+      if(on&&!moved)return;
+      if(Date.now()-lastTry<10*60000)return;lastTry=Date.now();
+      /* pushSubscribe re-uses the existing subscription and re-posts the location, so this is also the "I moved" update */
+      pushSubscribe().then(function(r){
+        if(r&&r.ok&&!on)try{toast(P('صار نفاف يراقب المطر بمنطقتك حتى وهو مسكّر','يراقب نفاف المطر في منطقتك حتى والتطبيق مغلق','Nafaf now watches for rain near you, even when closed'))}catch(e){}
+      });
+    }catch(e){}
+  }
+
+  /* ── 2. background refresh: hand the service worker what it needs to check the sky on its own ── */
+  var lastState='';
+  function state(){
+    var h=here();if(!h||!navigator.serviceWorker||!navigator.serviceWorker.controller)return;
+    var lang='ar';try{lang=LI()===2?'en':(LI()===1?'msa':'ar')}catch(e){}
+    var wid=false;try{wid=!!(WIDGET&&WIDGET.on)}catch(e){}
+    var st={type:'nafaf-state',lat:+h[0].toFixed(3),lon:+h[1].toFixed(3),place:h[2],lang:lang,widget:wid,tz:-new Date().getTimezoneOffset()};
+    var k=JSON.stringify(st);if(k===lastState)return;lastState=k;
+    try{navigator.serviceWorker.controller.postMessage(st)}catch(e){}
+  }
+  function periodic(){
+    if(perm()!=='granted'||!('serviceWorker' in navigator))return;
+    navigator.serviceWorker.ready.then(function(reg){
+      if(!reg.periodicSync)return;
+      if(window.NXC&&NXC.push.bgSync===false)return reg.periodicSync.unregister('nafaf-sky');
+      return navigator.permissions.query({name:'periodic-background-sync'}).then(function(p){
+        if(p.state!=='granted')return;
+        /* Chrome decides the real cadence from how much the app is used; 1 h is the floor we ask for */
+        return reg.periodicSync.register('nafaf-sky',{minInterval:60*60*1000});
+      });
+    }).catch(function(){});
+  }
+
+  /* ── 3. install pill: always visible until Nafaf is installed ── */
+  var top=document.querySelector('.wrap .top'),gear=document.getElementById('gearBtn'),pill=null;
+  if(top&&gear){
+    pill=document.createElement('button');pill.id='nxInst';pill.type='button';
+    pill.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11M7.5 9.5L12 14l4.5-4.5M5 15v3.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V15"/></svg><b></b><i aria-hidden="true"></i>';
+    top.insertBefore(pill,gear);
+  }
+  /* keep our own copy of the browser's install offer, so one tap opens the phone's native install dialog */
+  var BIP=null;try{BIP=DEFERRED}catch(e){}
+  addEventListener('beforeinstallprompt',function(e){BIP=e;paint()});
+  function inApp(){return /FBAN|FBAV|Instagram|WhatsApp|Snapchat|TikTok|musical_ly|Line\/|; wv\)|GSA\//i.test(navigator.userAgent)}
+  function android(){return /Android/i.test(navigator.userAgent)}
+  function label(){if(!pill)return;var t=P('ثبّت نفاف على جوالك','تثبيت نفاف','Install Nafaf');pill.setAttribute('aria-label',t);pill.title=t;pill.querySelector('b').textContent=P('ثبّت','تثبيت','Install');pill.classList.toggle('ready',!!BIP)}
+  function paint(){if(!pill)return;label();pill.classList.toggle('on',!standalone()&&g('nx.installed')!=='1')}
+  var sh=document.getElementById('nxInstSheet');
+  function sheet(kind){
+    document.getElementById('nxIsH').textContent=P('ثبّت نفاف على شاشتك','تثبيت نفاف','Install Nafaf');
+    document.getElementById('nxIsW').textContent=P('بعد التثبيت يشتغل نفاف كتطبيق كامل، ويوصلك إشعار المطر حتى وهو مسكّر.','بعد التثبيت يعمل نفاف كتطبيق كامل، وتصلك إشعارات المطر والتطبيق مغلق.','Once installed Nafaf runs as a full app and rain alerts reach you even when it is closed.');
+    var L=kind==='inapp'?[P('افتح نفاف في سفاري أو كروم (من زر ⋯ اختر «فتح في المتصفح»)','افتح الرابط في المتصفح','Open this page in Safari or Chrome (⋯ → Open in browser)'),P('بعدها اضغط أيقونة التثبيت مرة ثانية','ثم اضغط زر التثبيت','Then tap the install icon again')]:kind==='ios'?[P('اضغط زر المشاركة ⎋ تحت الشاشة','اضغط زر المشاركة ⎋','Tap the Share button ⎋'),P('اختر «إضافة إلى الشاشة الرئيسية»','اختر «إضافة إلى الشاشة الرئيسية»','Choose “Add to Home Screen”'),P('افتح نفاف من أيقونته وفعّل الإشعارات','افتح التطبيق من أيقونته وفعّل الإشعارات','Open Nafaf from its icon and allow notifications')]
+      :[P('افتح قائمة المتصفح ⋮ فوق','افتح قائمة المتصفح ⋮','Open the browser menu ⋮'),P('اختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية»','اختر «تثبيت التطبيق»','Choose “Install app” or “Add to Home screen”'),P('افتح نفاف من أيقونته','افتح التطبيق من أيقونته','Open Nafaf from its icon')];
+    document.getElementById('nxIsL').innerHTML=L.map(function(x){return '<li>'+x+'</li>'}).join('');
+    document.getElementById('nxIsOk').textContent=P('تمام','حسنًا','Got it');
+    sh.classList.add('on');
+  }
+  if(sh){sh.addEventListener('click',function(e){if(e.target===sh||e.target.id==='nxIsOk')sh.classList.remove('on')})}
+  if(pill)pill.addEventListener('click',function(){
+    var d=BIP;try{d=d||DEFERRED}catch(e){}
+    /* Chrome/Edge/Samsung Internet: the phone's own install dialog, one tap to confirm */
+    if(d){d.prompt();d.userChoice.then(function(c){BIP=null;try{DEFERRED=null}catch(e){}if(c&&c.outcome==='accepted'){s('nx.installed','1');paint();try{toast(P('تمام! نفاف ينزل على شاشتك الحين','جارٍ تثبيت نفاف','Installing Nafaf…'))}catch(e){}}});return}
+    /* inside WhatsApp/Instagram…: these browsers cannot install apps, so hand the page to Chrome directly */
+    if(android()&&inApp()){location.href='intent://'+location.host+location.pathname+'#Intent;scheme=https;package=com.android.chrome;end';return}
+    sheet(ios()?'ios':(inApp()?'inapp':'menu'));
+  });
+  addEventListener('appinstalled',function(){s('nx.installed','1');paint()});
+  /* the installed app opening itself proves the install */
+  if(standalone())s('nx.installed','1');
+  else if(g('nx.installed')==='1'&&matchMedia('(display-mode: browser)').matches){
+    /* browser tab after an install: still show it, the user may have removed the app */
+    s('nx.installed','');
+  }
+
+  function tick(){paint();auto();state()}
+  setTimeout(tick,4000);setInterval(tick,60000);
+  setTimeout(periodic,6000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){setTimeout(tick,800)}});
+  /* permission granted from any prompt (widget, onboarding) → subscribe right away */
+  try{navigator.permissions&&navigator.permissions.query({name:'notifications'}).then(function(p){p.onchange=function(){if(p.state==='granted'){lastTry=0;setTimeout(function(){auto();periodic()},600)}}})}catch(e){}
+  /* a rain notification's "Radar" action opens the live tab */
+  function openTab(k){var t0=Date.now();(function w(){try{if(typeof showTab==='function'&&typeof W!=='undefined'&&W){showTab(k);return}}catch(e){}if(Date.now()-t0<20000)setTimeout(w,500)})()}
+  if(location.hash==='#live'){openTab('live');try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
+  try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',function(e){if(e.data&&e.data.type==='nafaf-open')openTab(e.data.tab||'live')})}catch(e){}
+  window.nxAlerts={auto:auto,state:state,paint:paint};
 })();
 </script>
 <script type="module">
@@ -14016,6 +14320,7 @@ function weatherTargets() {
 
 /* ---------- device tier ---------- */
 function tier() {
+  const q = G.NXC && G.NXC.scene && G.NXC.scene.quality; if (q === 'low') return 0; if (q === 'high') return 2;
   const mem = navigator.deviceMemory || 4, cpu = navigator.hardwareConcurrency || 4;
   if (body.classList.contains('perfLow') || mem <= 2) return 0;
   if (mem >= 6 && cpu >= 6) return 2;
@@ -14032,8 +14337,8 @@ void main(){
   vec3 d = normalize(vDir); float y = d.y; float sa = uSun.y;
   float day = smoothstep(-0.18, 0.22, sa);
   float gold = (1.0 - smoothstep(0.0, 0.32, abs(sa - 0.04))) * smoothstep(-0.2, -0.02, sa);
-  vec3 zenD = vec3(0.09,0.27,0.60), horD = vec3(0.50,0.69,0.86);
-  vec3 zenN = vec3(0.012,0.025,0.07), horN = vec3(0.05,0.09,0.17);
+  vec3 zenD = vec3(0.10,0.42,0.80), horD = vec3(0.78,0.90,0.98);
+  vec3 zenN = vec3(0.025,0.055,0.17), horN = vec3(0.20,0.33,0.62);
   vec3 zen = lerp3(zenN, zenD, day), hor = lerp3(horN, horD, day);
   float h = pow(clamp(y,0.,1.), 0.42);
   vec3 col = mix(hor, zen, h);
@@ -14042,6 +14347,10 @@ void main(){
   vec3 warm = mix(vec3(1.0,0.48,0.20), vec3(1.0,0.74,0.42), clamp(y*3.0,0.,1.));
   col = mix(col, warm, gold * pow(side, 2.2) * pow(1.0 - clamp(y,0.,1.), 3.2) * 0.95);
   col += vec3(0.30,0.12,0.25) * gold * (1.0 - side) * pow(1.0 - clamp(y,0.,1.), 5.0) * 0.35;
+  vec3 gw = mix(vec3(1.0,0.80,0.50), vec3(0.93,0.50,0.40), smoothstep(0.0,0.10,y));
+  gw = mix(gw, vec3(0.68,0.34,0.52), smoothstep(0.08,0.30,y));
+  gw = mix(gw, vec3(0.20,0.20,0.45), smoothstep(0.28,0.75,y));
+  col = mix(col, gw, gold * 0.78);
   float cs = max(dot(d, normalize(uSun)), 0.0);
   vec3 sunCol = mix(vec3(1.0,0.55,0.25), vec3(1.0,0.95,0.85), smoothstep(0.0,0.4,sa));
   col += sunCol * (pow(cs, 600.0) * 3.0 + pow(cs, 40.0) * 0.35 + pow(cs, 6.0) * 0.12) * smoothstep(-0.05, 0.02, sa) * (1.0 - uOver*0.85);
@@ -14140,7 +14449,7 @@ function vnoise(x, y) {
 function ridged(x, y) { let s = 0, a = 0.5, f = 1; for (let i = 0; i < 5; i++) { const n = 1 - Math.abs(vnoise(x * f, y * f) * 2 - 1); s += n * n * a; a *= 0.5; f *= 2.03; } return s; }
 
 /* ---------- build ---------- */
-let R, scene, cam, skyMat, sunLight, hemi, ridges = [], clouds, cloudMat, rain, rainMat, stars, starMat, dust, dustMat, moon, moonMat, sunGlow;
+let seaMat, sand, palms = [], R, scene, cam, skyMat, sunLight, hemi, ridges = [], clouds, cloudMat, rain, rainMat, stars, starMat, dust, dustMat, moon, moonMat, sunGlow;
 let T = 0, last = 0, tierN = 1, pxr = 1, budget = 1000 / 40, frameAvg = 16, frames = 0, running = false, fails = 0;
 const cur = { cloud: 0.2, rain: 0, storm: 0, dust: 0, fog: 0, flash: 0, wx: 0, wz: 0 };
 let tgt = weatherTargets(), sunV = new THREE.Vector3(0, 0.3, -1), moonV = new THREE.Vector3(0.3, 0.4, -1), yaw = 0, look = { x: 0, y: 0 }, lookT = { x: 0, y: 0 };
@@ -14187,17 +14496,65 @@ function build(canvas) {
   sunLight = new THREE.DirectionalLight(0xfff1dc, 2.2); scene.add(sunLight); scene.add(sunLight.target);
 
   const seg = tierN === 2 ? [220, 70] : tierN === 1 ? [150, 48] : [90, 30];
-  ridges.push(makeRidge(1150, 300, 4200, 3.1, 0x3a2f2a, 0x8a7563, seg[0], seg[1]));
-  ridges.push(makeRidge(700, 170, 3000, 7.7, 0x2f2620, 0x7a6450, seg[0], seg[1]));
-  ridges.push(makeRidge(330, 60, 1800, 11.3, 0x6b5136, 0xb08a5c, Math.round(seg[0] * 0.8), Math.round(seg[1] * 0.8)));
-  ridges.forEach(r => scene.add(r));
-  /* ground: a gently rolling plain from under the camera to the first ridge */
-  const gg = new THREE.PlaneGeometry(5000, 1400, Math.round(seg[0] * 0.6), Math.round(seg[1] * 0.6)); gg.rotateX(-Math.PI / 2);
-  const gp = gg.attributes.position, gc = new Float32Array(gp.count * 3), g1 = new THREE.Color(0x5a4330), g2 = new THREE.Color(0x9a7650), gt = new THREE.Color();
-  for (let i = 0; i < gp.count; i++) { const x = gp.getX(i), z = gp.getZ(i), n = vnoise(x / 60, z / 60) * 0.6 + vnoise(x / 17, z / 17) * 0.4;
-    gp.setY(i, n * 3.2 - 9); gt.copy(g1).lerp(g2, n); gc[i * 3] = gt.r; gc[i * 3 + 1] = gt.g; gc[i * 3 + 2] = gt.b; }
-  gg.setAttribute('color', new THREE.BufferAttribute(gc, 3)); gg.computeVertexNormals();
-  const ground = new THREE.Mesh(gg, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, metalness: 0 })); ground.position.z = -600; scene.add(ground);
+  /* far Hajar ridges on the horizon: lit, tinted per time of day */
+  ridges.push(makeRidge(1500, 210, 5200, 3.1, 0x808894, 0xc4ccd8, seg[0], seg[1]));
+  ridges.push(makeRidge(1050, 120, 4200, 7.7, 0x6c7684, 0xaab4c4, seg[0], seg[1]));
+  ridges.forEach(r => { r.material = new THREE.MeshLambertMaterial({ vertexColors: true, color: 0xffffff }); scene.add(r); });
+  /* the sea: one big plane with a water shader (waves, fresnel sky reflection, sun & moon glitter) */
+  seaMat = new THREE.ShaderMaterial({ toneMapped: false, fog: false,
+    uniforms: { uTime: { value: 0 }, uSun: { value: sunV }, uMoon: { value: moonV }, uSunA: { value: 1 }, uMoonA: { value: 0 }, uCam: { value: new THREE.Vector3() },
+      uZen: { value: new THREE.Color() }, uHor: { value: new THREE.Color() }, uDeep: { value: new THREE.Color() }, uFog: { value: new THREE.Color() }, uFogD: { value: 0.0005 }, uWind: { value: 0.3 }, uOver: { value: 0 } },
+    vertexShader: 'varying vec3 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }',
+    fragmentShader: `precision highp float; varying vec3 vW;
+      uniform float uTime, uSunA, uMoonA, uFogD, uWind, uOver; uniform vec3 uSun, uMoon, uCam, uZen, uHor, uDeep, uFog;
+      float h(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
+      float n(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*(3.0-2.0*f); return mix(mix(h(i),h(i+vec2(1,0)),u.x), mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x), u.y); }
+      void main(){
+        vec3 V = normalize(vW - uCam); float dist = length(vW - uCam);
+        vec2 p = vW.xz * 0.06; float t = uTime * (0.6 + uWind);
+        float fade = 1.0 / (1.0 + dist * 0.004);
+        vec2 g = vec2(0.0);
+        g += vec2(cos(p.x*1.3 + t*1.1), sin(p.y*1.7 - t*0.9)) * 0.55;
+        g += vec2(cos(p.x*3.1 - p.y*1.2 + t*1.7), sin(p.y*2.9 + p.x*0.8 + t*1.3)) * 0.30;
+        g += (vec2(n(p*4.0 + t*0.6), n(p*4.0 - t*0.5)) - 0.5) * 0.9;
+        vec3 N = normalize(vec3(g.x * (0.10 + uWind*0.18) * fade, 1.0, g.y * (0.10 + uWind*0.18) * fade));
+        vec3 R = reflect(V, N);
+        float fr = 0.03 + 0.97 * pow(1.0 - max(dot(N, -V), 0.0), 5.0);
+        vec3 sky = mix(uHor, uZen, pow(clamp(R.y, 0.0, 1.0), 0.55));
+        vec3 col = mix(uDeep, sky, fr);
+        float sg = pow(max(dot(R, normalize(uSun)), 0.0), 220.0) * 3.0 + pow(max(dot(R, normalize(uSun)), 0.0), 26.0) * 0.30;
+        float mg = pow(max(dot(R, normalize(uMoon)), 0.0), 180.0) * 1.6 + pow(max(dot(R, normalize(uMoon)), 0.0), 22.0) * 0.12;
+        col += vec3(1.0, 0.86, 0.62) * sg * uSunA * (1.0 - uOver*0.85) + vec3(0.82, 0.88, 1.0) * mg * uMoonA * (1.0 - uOver*0.85);
+        float fogf = 1.0 - exp(-pow(uFogD * dist, 2.0));
+        gl_FragColor = vec4(mix(col, uFog, fogf), 1.0);
+      }` });
+  const sea = new THREE.Mesh(new THREE.PlaneGeometry(9000, 4200, 1, 1), seaMat); sea.rotation.x = -Math.PI / 2; sea.position.set(0, -9, -2000); scene.add(sea);
+  /* beach strip under the camera */
+  const bg = new THREE.PlaneGeometry(900, 70, Math.round(seg[0] * 0.5), 8); bg.rotateX(-Math.PI / 2);
+  const bp = bg.attributes.position, bc = new Float32Array(bp.count * 3), s1 = new THREE.Color(0xd9bf8c), s2 = new THREE.Color(0xf0dcb0), st2 = new THREE.Color();
+  for (let i = 0; i < bp.count; i++) { const x = bp.getX(i), z = bp.getZ(i), nn = vnoise(x / 14, z / 9); bp.setY(i, nn * 0.9 - 8.6 + Math.max(0, z) * 0.02); st2.copy(s1).lerp(s2, nn); bc[i * 3] = st2.r; bc[i * 3 + 1] = st2.g; bc[i * 3 + 2] = st2.b; }
+  bg.setAttribute('color', new THREE.BufferAttribute(bc, 3)); bg.computeVertexNormals();
+  sand = new THREE.Mesh(bg, new THREE.MeshLambertMaterial({ vertexColors: true })); sand.position.z = -32; scene.add(sand);
+  /* palms framing the view, swaying with the real wind */
+  const frondMat = new THREE.MeshLambertMaterial({ color: 0x2f6b45, side: THREE.DoubleSide }), trunkMat = new THREE.MeshLambertMaterial({ color: 0x6b5236 });
+  function palm(x, z, hgt, lean, seed) {
+    if (G.NXC && G.NXC.scene && G.NXC.scene.palms === false) return;
+    const g = new THREE.Group();
+    const pts = []; for (let i = 0; i <= 8; i++) { const t = i / 8; pts.push(new THREE.Vector3(Math.sin(t * 1.6) * lean, t * hgt, 0)); }
+    const curve = new THREE.CatmullRomCurve3(pts); g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 16, 0.42, 6, false), trunkMat));
+    const top = pts[8], crown = new THREE.Group(); crown.position.copy(top); g.add(crown);
+    const nF = tierN === 0 ? 7 : 11;
+    for (let k = 0; k < nF; k++) {
+      const fg = new THREE.PlaneGeometry(1.5, 8.5, 1, 8); fg.translate(0, 4.25, 0);
+      const fp = fg.attributes.position; for (let i = 0; i < fp.count; i++) { const yy = fp.getY(i), tt = yy / 8.5; fp.setZ(i, -tt * tt * 4.8); fp.setX(i, fp.getX(i) * (1 - tt * 0.85)); }
+      fg.computeVertexNormals();
+      const f = new THREE.Mesh(fg, frondMat); f.rotation.set(-0.35 - Math.random() * 0.4, (k / nF) * Math.PI * 2 + seed, 0, 'YXZ'); crown.add(f);
+    }
+    g.position.set(x, -8.6, z); g.userData = { ph: seed * 3.1, crown }; palms.push(g); scene.add(g);
+  }
+  palm(-17, -30, 15, 1.6, 0.3); palm(-25, -46, 18, -1.2, 1.7); palm(-12, -58, 12, 0.8, 2.9);
+  palm(19, -34, 16, -1.8, 4.1); palm(28, -52, 19, 1.0, 5.3);
+  if (tierN > 0) { palm(-34, -70, 14, 0.6, 6.2); palm(36, -74, 13, -0.7, 7.4); }
 
   /* clouds: billboards */
   const ctex = cloudTexture(), nC = tierN === 2 ? 42 : tierN === 1 ? 28 : 16;
@@ -14247,7 +14604,9 @@ function resize() {
 }
 
 /* ---------- per-frame ---------- */
-const tmpC = new THREE.Color(), fogDay = new THREE.Color(0x9cc1e0), fogNight = new THREE.Color(0x0c1426), fogGold = new THREE.Color(0xd99a6a), fogDust = new THREE.Color(0xb59262), fogGrey = new THREE.Color(0x8c96a2);
+const zD = new THREE.Color(0.10, 0.42, 0.80), hD = new THREE.Color(0.78, 0.90, 0.98), zN = new THREE.Color(0.025, 0.055, 0.17), hN = new THREE.Color(0.20, 0.33, 0.62), zG = new THREE.Color(0.68, 0.34, 0.52), hG = new THREE.Color(1.0, 0.72, 0.50);
+const C_GREY = new THREE.Color(), C_DD = new THREE.Color(0.03, 0.28, 0.52), C_DG = new THREE.Color(0.30, 0.15, 0.30), C_RT = new THREE.Color(), C_RD = new THREE.Color(0xa9bfdc), C_RG = new THREE.Color(0x9a6a98);
+const tmpC = new THREE.Color(), fogDay = new THREE.Color(0xc4dcf0), fogNight = new THREE.Color(0x1a2b5c), fogGold = new THREE.Color(0xe7a38a), fogDust = new THREE.Color(0xb59262), fogGrey = new THREE.Color(0x8c96a2);
 function dirFrom(alt, az, out) { const ca = Math.cos(alt); return out.set(Math.sin(az) * ca, Math.sin(alt), -Math.cos(az) * ca); }
 
 function updateSky() {
@@ -14307,6 +14666,19 @@ function tick(now) {
   const f = scene.fog; f.color.copy(fogNight).lerp(fogDay, day).lerp(fogGold, gold * 0.6).lerp(fogDust, cur.dust * 0.8).lerp(fogGrey, Math.min(1, cur.fog + U.uOver.value * 0.5) * 0.7);
   f.density = 0.00042 + cur.dust * 0.0026 + cur.fog * 0.0036 + cur.rain * 0.0008;
 
+  /* coast: ridges, sea, palms follow the moment of day */
+  const SU = seaMat.uniforms, over = U.uOver.value;
+  SU.uZen.value.copy(zN).lerp(zD, day).lerp(zG, gold * 0.7); SU.uHor.value.copy(hN).lerp(hD, day).lerp(hG, gold * 0.8);
+  const grey = C_GREY.setRGB(0.55, 0.6, 0.66).multiplyScalar(0.4 + 0.6 * day);
+  SU.uZen.value.lerp(grey, over * 0.8); SU.uHor.value.lerp(grey, over * 0.8);
+  SU.uDeep.value.setRGB(0.015, 0.04, 0.12).lerp(C_DD, day).lerp(C_DG, gold * 0.6).multiplyScalar(1 - cur.storm * 0.4);
+  SU.uFog.value.copy(scene.fog.color); SU.uFogD.value = scene.fog.density; SU.uTime.value = T; SU.uCam.value.copy(cam.position);
+  SU.uWind.value = Math.min(1.2, tgt.windKmh / 40); SU.uOver.value = over;
+  SU.uSunA.value = THREE.MathUtils.smoothstep(sa, -0.03, 0.04); SU.uMoonA.value = THREE.MathUtils.smoothstep(moonV.y, -0.02, 0.06) * (1 - day) * (0.3 + illum);
+  const rt = C_RT.set(0x24386e).lerp(C_RD, day).lerp(C_RG, gold * 0.7);
+  ridges.forEach(r => r.material.color.copy(rt));
+  const sw = 0.012 + Math.min(1.2, tgt.windKmh / 40) * 0.03;
+  palms.forEach(pm => { pm.rotation.z = Math.sin(T * (0.7 + sw * 8) + pm.userData.ph) * sw; pm.userData.crown.rotation.y = Math.sin(T * 0.9 + pm.userData.ph) * sw * 2; });
   /* clouds */
   cloudMat.opacity = Math.min(0.95, 0.12 + cur.cloud * 0.85);
   tmpC.setRGB(0.18 + 0.78 * day, 0.2 + 0.76 * day, 0.26 + 0.7 * day).lerp(new THREE.Color(1, 0.66, 0.46), gold * 0.55).multiplyScalar(1 - cur.storm * 0.55 - cur.rain * 0.35);
@@ -14321,7 +14693,8 @@ function tick(now) {
   dustMat.uniforms.uTime.value = T; dustMat.uniforms.uAlpha.value = cur.dust * 0.5 + (tgt.heat ? 0.05 : 0); dustMat.uniforms.uWind.value.set(cur.wx + 6, cur.wz);
   dust.visible = dustMat.uniforms.uAlpha.value > 0.01;
 
-  R.toneMappingExposure = 0.85 + 0.25 * day; dayF = day;
+  R.toneMappingExposure = 1.0 + 0.2 * day; dayF = day;
+  const fz = G.NXC && G.NXC.theme && G.NXC.theme.tod, tod = fz && fz !== 'auto' ? fz : sa > 0.2 ? 'day' : sa > -0.07 ? 'golden' : 'night'; if (tod !== lastTod) { lastTod = tod; document.documentElement.dataset.tod = tod; }
   R.render(scene, cam);
   if (rfScene && rfStep(dt)) rfRender();
 }
@@ -14370,7 +14743,7 @@ function rfEmit(kind, n) { for (let i = 0; i < n; i++) {
   else if (kind === 'splash') rfP.push({ k: 1, x: this_x, y: this_y, vx: 0, vy: 0, life: 0, max: .45, s: 4, grow: 26, col: [.7, .88, 1], a: .7 });
   else if (kind === 'star') rfP.push({ k: 0, x: c + rnd(-.8, .8) * R, y: y0 + rnd(-.9, -.15) * R, vx: 0, vy: 0, life: 0, max: 1e9, s: rnd(2, 3.6), col: [.9, .95, 1], a: .9, fl: Math.random() * 6, tw: rnd(1.2, 3) });
 } }
-let this_x = 0, this_y = 0, dayF = 1;
+let this_x = 0, this_y = 0, dayF = 1, lastTod = '';
 function rfStep(dt) {
   rfLocate();
   const on = RF.on && RF.vis;
@@ -14422,7 +14795,7 @@ function rfHook() {
   const orig = G.ringPhysics;
   const wrapped = function (st, temp, Rr, CX, CY) {
     const out = orig.apply(this, arguments);
-    if (!running || !document.documentElement.classList.contains('nx3d')) { RF.on = false; return out; }
+    if (!running || !document.documentElement.classList.contains('nx3d') || (G.NXC && G.NXC.scene && G.NXC.scene.ringFx === false)) { RF.on = false; return out; }
     const wet = /rain|storm/.test(st); let mm = 0;
     try { mm = G.HOURLY.precipitation[G.Clock.hourIndex()] || 0; } catch (e) {}
     RF.I = wet ? Math.max(st === 'rain_light' ? .2 : st === 'storm' ? .75 : .45, Math.min(1, mm / 12)) : 0;
@@ -14451,7 +14824,8 @@ function silence2D() {
 }
 
 function start() {
-  if (G.MOTION === 'off') return;                         // user asked for no motion: keep the light canvas sky
+  if (G.MOTION === 'off') return;
+  if (G.NXC && G.NXC.scene && G.NXC.scene.on === false) return;   // switched off from the admin portal                         // user asked for no motion: keep the light canvas sky
   const cv = document.createElement('canvas'); cv.id = 'nxScene'; cv.setAttribute('aria-hidden', 'true');
   document.body.insertBefore(cv, document.body.firstChild);
   try { build(cv); rfBuild(); } catch (e) { cv.remove(); return; }

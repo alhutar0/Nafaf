@@ -284,6 +284,13 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
       <div class="navItem" data-p="features"><span class="ni">⚡</span>الميزات</div>
       <div class="navItem" data-p="theme"><span class="ni">🎨</span>المظهر</div>
 
+      <div class="navGrp">نفاف الجديد</div>
+      <div class="navItem" data-p="nxlook"><span class="ni">🌅</span>المشهد والألوان</div>
+      <div class="navItem" data-p="nxui"><span class="ni">✨</span>الواجهة والدعوات</div>
+      <div class="navItem" data-p="nxlabs"><span class="ni">🧪</span>المختبرات</div>
+      <div class="navItem" data-p="nxcyc"><span class="ni">🌀</span>لعبة الأعاصير</div>
+      <div class="navItem" data-p="nxpush"><span class="ni">📲</span>الإشعارات والتثبيت</div>
+
       <div class="navGrp">عقل نفاف</div>
       <div class="navItem" data-p="rules"><span class="ni">🎯</span>القواعد الذكية</div>
       <div class="navItem" data-p="sources"><span class="ni">📡</span>مصادر الطقس</div>
@@ -414,6 +421,47 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
         </div>
       </section>
 
+
+      <section class="sec" data-s="nxlook">
+        <div class="pageHead">
+          <div class="pageTitle">المشهد والألوان</div>
+          <div class="pageSub">الساحل ثلاثي الأبعاد وألوان الواجهة حسب لحظة اليوم</div>
+        </div>
+        <div id="nxlookBody"></div>
+      </section>
+
+      <section class="sec" data-s="nxui">
+        <div class="pageHead">
+          <div class="pageTitle">الواجهة والدعوات</div>
+          <div class="pageSub">زر الأوامر، الشريط الجانبي، دعوة المختبرات، وإعصار الدعوة</div>
+        </div>
+        <div id="nxuiBody"></div>
+      </section>
+
+      <section class="sec" data-s="nxlabs">
+        <div class="pageHead">
+          <div class="pageTitle">المختبرات</div>
+          <div class="pageSub">رتّب المختبرات الأربعة عشر، أخفِ أو أعد تسمية أو ميّز أيًّا منها</div>
+        </div>
+        <div id="nxlabsBody"></div>
+      </section>
+
+      <section class="sec" data-s="nxcyc">
+        <div class="pageHead">
+          <div class="pageTitle">لعبة الأعاصير</div>
+          <div class="pageSub">إعدادات البداية والأوضاع والطبقات</div>
+        </div>
+        <div id="nxcycBody"></div>
+      </section>
+
+      <section class="sec" data-s="nxpush">
+        <div class="pageHead">
+          <div class="pageTitle">الإشعارات والتثبيت</div>
+          <div class="pageSub">ما يفعله التطبيق على جهاز المستخدم — وإعدادات الخادم في صفحة «التنبيهات»</div>
+        </div>
+        <div id="nxpushBody"></div>
+      </section>
+
       <!-- 🎯 القواعد الذكية -->
       <section class="sec" data-s="rules">
         <div class="pageHead">
@@ -539,6 +587,9 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
             <span style="font-size:11.5px;color:#8b98ab">إلى</span>
             <input class="fld" id="alQE" type="number" min="0" max="23" style="width:78px" />
           </div>
+          <span class="lbl">مسافة مسح «مطر حولك» (كم)</span>
+          <div class="note">٨ نقاط حول كل منطقة مشتركين. تُمسح فقط حين يكون احتمال المطر ٣٠٪ فأكثر خلال ٣ ساعات، ومرة كل ٣٠ دقيقة.</div>
+          <input class="fld" id="alRing" type="number" min="8" max="60" style="width:96px" />
           <button class="btn gold" id="bAlSave" style="width:100%;margin-top:14px">حفظ الإعدادات</button>
         </div>
 
@@ -897,7 +948,7 @@ function goPage(p){
   for(var j=0;j<secs.length;j++)
     secs[j].className='sec'+(secs[j].getAttribute('data-s')===p?' on':'');
   /* شريط المسودة يظهر في صفحات البناء فقط */
-  var buildPages=['tabs','blocks','dock','features','theme','rules','sources'];
+  var buildPages=['tabs','blocks','dock','features','theme','rules','sources','nxlook','nxui','nxlabs','nxcyc','nxpush'];
   $('draftBar').style.display=(buildPages.indexOf(p)>=0)?'flex':'none';
   if(window.innerWidth<900)openSide(false);
   window.scrollTo(0,0);
@@ -907,6 +958,7 @@ function goPage(p){
  if(p==='corr')loadCorr();
   if(p==='feedback')loadFeedback();
   if(p==='alerts')loadAlerts();
+  if(p.indexOf('nx')===0)renderNX(p);
  if(p==='news')loadNews();
  if(p==='fusion')renderFusion();
  if(p==='licensing')renderLicensing();
@@ -932,6 +984,11 @@ var SEARCH_MAP=[
   {q:'سمة لون مظهر ثيم',p:'theme',t:'🎨 المظهر',d:'السمة الافتراضية'},
   {q:'قاعدة شرط مطر رياح تلقائي',p:'rules',t:'🎯 القواعد',d:'إذا-عندها'},
   {q:'مصدر نموذج ecmwf gfs icon رادار',p:'sources',t:'📡 المصادر',d:'تفعيل وأولوية'},
+  {q:'مشهد ساحل نخيل بحر ثلاثي جودة ألوان نهار ليل غروب',p:'nxlook',t:'🌅 المشهد والألوان',d:'الساحل والألوان'},
+  {q:'زر اوامر جزيرة شريط جانبي دعوة مختبر إعصار لغة انجليزي',p:'nxui',t:'✨ الواجهة والدعوات',d:'الزر والدعوات'},
+  {q:'مختبر مختبرات ترتيب اخفاء وادي افلاج',p:'nxlabs',t:'🧪 المختبرات',d:'ترتيب وإخفاء'},
+  {q:'اعصار لعبة محيط تاريخ متنبئ تحديات طبقات',p:'nxcyc',t:'🌀 لعبة الأعاصير',d:'البداية والأوضاع'},
+  {q:'اشعار تثبيت ويدجت خلفية اشتراك',p:'nxpush',t:'📲 الإشعارات والتثبيت',d:'على جهاز المستخدم'},
   {q:'خبر عاجل نشر تنبيه إعلان',p:'news',t:'📢 الأخبار',d:'نشر خبر'},
   {q:'رصد مطر مستخدم موافقة',p:'reports',t:'👁 الرصدات',d:'مراجعة'},
   {q:'مراسل اعتماد صلاحية',p:'corr',t:'🎖 المراسلون',d:'اعتماد'},
@@ -1125,6 +1182,138 @@ var SRC_NAMES={
   gibs:['NASA GIBS','صور الأقمار الصناعية']
 };
 
+
+/* ═══════ نفاف الجديد — كل ما بُني منذ v18 تحت تحكم البوابة (DRAFT.next) ═══════
+   التطبيق يقرأها مع /cfg/live ويحفظ آخر نسخة على الجهاز، فتُطبّق فورًا في الفتح التالي وفي المختبرات ولعبة الأعاصير. */
+var NX_DEF={
+  scene:{on:true,quality:'auto',palms:true,ringFx:true},
+  theme:{tod:'auto'},
+  island:{on:true,peekSec:6,pos:'corner'},
+  palette:{heroCyclone:true},
+  rail:{on:true},
+  nudge:{on:true,minSec:60,maxSec:120,showSec:10,pauseMin:15},
+  summon:{on:true,delaySec:20,showSec:10,ignoreLimit:3},
+  install:{pill:true},
+  push:{auto:true,moveKm:5,bgSync:true},
+  widget:{autoOn:true},
+  labShell:{on:true,tag:true,flash:true},
+  english:{on:true},
+  labs:null,
+  cyclone:{mode:'sim',basin:'NI',histFilter:'om',modes:{sim:true,history:true,forecast:true,ach:true},layers:{rings:true,cities:true,sst:false,steer:false},summonLine:''}
+};
+var NX_LABS=[['cyclone','🌀','لعبة الأعاصير','Cyclone Game'],['wadi','🌊','مختبر الوادي','Wadi Lab'],['falaj','💧','محرك الأفلاج','Falaj Engine'],['seeding','☁️','مفاعل الاستمطار','Cloud Seeding Reactor'],
+ ['atmo','⛈','مختبر الغلاف الجوي','Atmosphere Lab'],['trajectory','🧭','بصمة الهواء','Air Fingerprint'],['worlds','🪐','نافذة العوالم','Window to Worlds'],['route','🛣','مخطط المسار','Route Planner'],
+ ['coach','🏃','المدرب البيئي','Bio-Weather Coach'],['body','🌡','المجسم الحراري','Thermal Body'],['sky','🔭','البوصلة السماوية','Sky Compass'],['broadcast','📺','استوديو النشرة','Broadcast Studio'],
+ ['scent','🧴','قارورة الجو','Weather Flask'],['village','🏡','قرية نفاف','Nafaf Village']];
+function nxMerge(a,b){var o={};for(var k in a)o[k]=a[k];if(!b)return o;for(var k2 in b){var v=b[k2];o[k2]=(v&&typeof v==='object'&&!Array.isArray(v)&&a[k2]&&typeof a[k2]==='object'&&!Array.isArray(a[k2]))?nxMerge(a[k2],v):v;}return o;}
+function nxCfg(){ if(!DRAFT)return null; DRAFT.next=nxMerge(NX_DEF,DRAFT.next||{}); return DRAFT.next; }
+function nxGet(path){var o=nxCfg();path.split('.').forEach(function(k){o=o==null?undefined:o[k];});return o;}
+function nxSet(path,v){var o=nxCfg(),ks=path.split('.');for(var i=0;i<ks.length-1;i++){if(!o[ks[i]]||typeof o[ks[i]]!=='object')o[ks[i]]={};o=o[ks[i]];}o[ks[ks.length-1]]=v;markDirty();}
+/* مخطط الصفحات: sw = مفتاح · opt = خيارات · num = رقم · txt = نص */
+var NX_PAGES={
+ nxlook:[
+  {h:'المشهد ثلاثي الأبعاد',n:'ساحل الباطنة الحي: بحر وسماء حقيقية ونخيل يتمايل بسرعة الريح. إطفاؤه يعيد السماء البسيطة القديمة.',rows:[
+   {k:'scene.on',t:'تشغيل المشهد',d:'يُطفأ تلقائيًا أيضًا لمن اختار «بلا حركة» في التطبيق',ty:'sw'},
+   {k:'scene.quality',t:'الجودة',d:'«تلقائي» يقرأ ذاكرة الجهاز ومعالجه ويخفّض نفسه إذا ثقل',ty:'opt',o:[['auto','تلقائي'],['high','عالية للجميع'],['low','خفيفة للجميع']]},
+   {k:'scene.palms',t:'النخيل',d:'أشجار النخيل على الشاطئ',ty:'sw'},
+   {k:'scene.ringFx',t:'جسيمات الحلقة على المعالج الرسومي',d:'المطر والجمر والغبار والنجوم حول حلقة النبض. إطفاؤها يعيد الجسيمات القديمة',ty:'sw'}]},
+  {h:'ألوان الواجهة',n:'البطاقات والشريط تأخذ لون لحظة اليوم الحقيقية عند المستخدم (حسب الشمس في موقعه).',rows:[
+   {k:'theme.tod',t:'لحظة الألوان',d:'«تلقائي» هو الأفضل. التثبيت مفيد للمعاينة أو لمناسبة',ty:'opt',o:[['auto','تلقائي'],['day','نهار دائمًا'],['golden','غروب دائمًا'],['night','ليل دائمًا']]}]}
+ ],
+ nxui:[
+  {h:'زر الأوامر (الكرة الذهبية)',rows:[
+   {k:'island.on',t:'إظهار الزر',d:'يفتح البحث والأوامر والمختبرات',ty:'sw'},
+   {k:'island.pos',t:'مكانه',d:'الزاوية لا تغطي وصف الطقس',ty:'opt',o:[['corner','الزاوية'],['center','الوسط']]},
+   {k:'island.peekSec',t:'مدة ظهور الخبر عليه',d:'بالثواني، عند تغير الطقس القادم',ty:'num',min:2,max:20},
+   {k:'palette.heroCyclone',t:'بطاقة لعبة الأعاصير أولًا في اللوحة',d:'',ty:'sw'}]},
+  {h:'الشريط الجانبي للمختبرات',rows:[{k:'rail.on',t:'إظهار الشريط',d:'أيقونة القارورة على حافة الشاشة',ty:'sw'}]},
+  {h:'دعوة المختبرات',n:'بطاقة مختبر مضيئة تظهر للمستخدم، يختارها نفاف حسب الطقس.',rows:[
+   {k:'nudge.on',t:'تشغيل الدعوة',d:'',ty:'sw'},
+   {k:'nudge.minSec',t:'أقل فاصل',d:'بالثواني',ty:'num',min:20,max:1800},
+   {k:'nudge.maxSec',t:'أكبر فاصل',d:'بالثواني',ty:'num',min:20,max:3600},
+   {k:'nudge.showSec',t:'مدة الظهور',d:'بالثواني',ty:'num',min:4,max:30},
+   {k:'nudge.pauseMin',t:'راحة بعد ٣ إغلاقات',d:'بالدقائق',ty:'num',min:1,max:240}]},
+  {h:'إعصار الدعوة',n:'إعصار يدور في وسط الشاشة يدعو المستخدم للعبة.',rows:[
+   {k:'summon.on',t:'تشغيل',d:'مرة واحدة في كل جلسة',ty:'sw'},
+   {k:'summon.delaySec',t:'يظهر بعد',d:'ثانية من فتح نفاف',ty:'num',min:5,max:300},
+   {k:'summon.showSec',t:'مدة البقاء',d:'بالثواني قبل أن يختفي في زر المختبرات',ty:'num',min:4,max:30},
+   {k:'summon.ignoreLimit',t:'بعد كم تجاهل يقلّ ظهوره',d:'بعدها يظهر كل ثالث زيارة',ty:'num',min:1,max:20},
+   {k:'cyclone.summonLine',t:'نص الدعوة',d:'اتركه فارغًا ليستخدم حرارة البحر الحقيقية عند المستخدم',ty:'txt',ph:'مثال: جونو رجع! تقدر توقفه؟'}]},
+  {h:'اللغة',rows:[{k:'english.on',t:'السماح بالإنجليزية',d:'لو أطفأته يرجع كل من اختار الإنجليزية إلى اللهجة',ty:'sw'}]}
+ ],
+ nxcyc:[
+  {h:'البداية',rows:[
+   {k:'cyclone.mode',t:'الوضع الافتتاحي',d:'',ty:'opt',o:[['sim','المحاكي'],['history','التاريخ'],['forecast','المتنبئ'],['ach','التحديات']]},
+   {k:'cyclone.basin',t:'المحيط الافتتاحي في المحاكي',d:'',ty:'opt',o:[['NI','شمال الهندي'],['WP','غرب الهادئ'],['NA','الأطلسي'],['EP','شرق الهادئ'],['SI','جنوب غرب الهندي'],['AU','أستراليا'],['SP','جنوب الهادئ']]},
+   {k:'cyclone.histFilter',t:'فلتر التاريخ الافتراضي',d:'',ty:'opt',o:[['om','قرب عُمان'],['all','الكل'],['strong','الأقوى']]}]},
+  {h:'الأوضاع الظاهرة',rows:[
+   {k:'cyclone.modes.sim',t:'المحاكي',d:'اصنع إعصارًا في بيئة اليوم الحقيقية',ty:'sw'},
+   {k:'cyclone.modes.history',t:'التاريخ',d:'٤٦ إعصارًا حقيقيًا من IBTrACS',ty:'sw'},
+   {k:'cyclone.modes.forecast',t:'المتنبئ',d:'توقّع موقع المركز بعد ٤٨ ساعة',ty:'sw'},
+   {k:'cyclone.modes.ach',t:'التحديات',d:'١٢ إنجازًا',ty:'sw'}]},
+  {h:'الطبقات الافتراضية',n:'المستخدم يستطيع تغييرها من زر الطبقات، واختياره يبقى على جهازه.',rows:[
+   {k:'cyclone.layers.rings',t:'دوائر الرياح',d:'٦٣ · ٩٣ · ١١٩ كم/س',ty:'sw'},
+   {k:'cyclone.layers.cities',t:'تأثير المدن',d:'',ty:'sw'},
+   {k:'cyclone.layers.sst',t:'حرارة البحر اليوم',d:'المحاكي فقط',ty:'sw'},
+   {k:'cyclone.layers.steer',t:'رياح التوجيه',d:'المحاكي فقط',ty:'sw'}]}
+ ],
+ nxpush:[
+  {h:'الاشتراك التلقائي في خادم المطر',n:'من يمنح إذن الإشعارات يُسجَّل تلقائيًا ليصله المطر حتى والتطبيق مغلق. لا يُطلب الإذن بدون ضغطة من المستخدم.',rows:[
+   {k:'push.auto',t:'اشتراك تلقائي',d:'',ty:'sw'},
+   {k:'push.moveKm',t:'تحديث الموقع عند الانتقال',d:'كيلومتر',ty:'num',min:1,max:100},
+   {k:'push.bgSync',t:'الفحص في الخلفية (أندرويد)',d:'كروم يقرّر التوقيت الفعلي حسب استخدام التطبيق',ty:'sw'}]},
+  {h:'الودجت',rows:[{k:'widget.autoOn',t:'تشغيل ودجت الإشعار تلقائيًا',d:'عند أول تشغيل أو بعد منح الإذن',ty:'sw'}]},
+  {h:'التثبيت',rows:[{k:'install.pill',t:'زر «ثبّت نفاف» الدائم',d:'يختفي تلقائيًا داخل التطبيق المثبّت',ty:'sw'}]},
+  {h:'إطار المختبرات',rows:[
+   {k:'labShell.on',t:'تشغيل الإطار الموحد',d:'زر الرجوع وألوان الأزرار في كل المختبرات',ty:'sw'},
+   {k:'labShell.tag',t:'اسم المختبر عند الدخول',d:'',ty:'sw'},
+   {k:'labShell.flash',t:'وميض الدخول بلون المختبر',d:'',ty:'sw'}]}
+ ]
+};
+function nxEsc(s){return esc(s).replace(/"/g,'&quot;');}
+function renderNX(p){
+  var host=$(p+'Body'); if(!host)return;
+  if(!DRAFT){host.innerHTML='<div class="card"><div class="empty">جارٍ التحميل…</div></div>';return;}
+  nxCfg();
+  if(p==='nxlabs'){renderNXLabs(host);return;}
+  var h='';
+  (NX_PAGES[p]||[]).forEach(function(c){
+    h+='<div class="card"><h3>'+c.h+'</h3>'+(c.n?'<div class="note" style="margin:-4px 0 6px">'+c.n+'</div>':'');
+    c.rows.forEach(function(r){
+      var v=nxGet(r.k);
+      if(r.ty==='sw') h+='<div class="rowSw"><span>'+r.t+(r.d?'<div class="rd">'+r.d+'</div>':'')+'</span><span class="sw'+(v!==false?' on':'')+'" data-nxk="'+r.k+'"></span></div>';
+      else if(r.ty==='opt') h+='<span class="lbl">'+r.t+'</span>'+(r.d?'<div class="note">'+r.d+'</div>':'')+'<div class="opts">'+r.o.map(function(o){return '<span class="opt'+(v===o[0]?' sel':'')+'" data-nxo="'+r.k+'" data-v="'+o[0]+'">'+o[1]+'</span>';}).join('')+'</div>';
+      else if(r.ty==='num') h+='<div class="rowSw"><span>'+r.t+(r.d?'<div class="rd">'+r.d+'</div>':'')+'</span><input class="fld" type="number" min="'+r.min+'" max="'+r.max+'" value="'+v+'" data-nxn="'+r.k+'" style="width:96px;margin-inline-start:auto"></div>';
+      else if(r.ty==='txt') h+='<span class="lbl">'+r.t+'</span>'+(r.d?'<div class="note">'+r.d+'</div>':'')+'<input class="fld" data-nxt="'+r.k+'" value="'+nxEsc(v||'')+'" placeholder="'+nxEsc(r.ph||'')+'">';
+    });
+    h+='</div>';
+  });
+  h+='<div class="card"><div class="note">بعد التعديل اضغط <b>🚀 نشر</b>. التطبيق يقرأ الإعداد خلال دقيقة تقريبًا، وتُطبَّق بعض الإعدادات (المشهد، الشريط، ترتيب المختبرات) عند فتح نفاف التالي. <button class="btn ghost" id="nxReset" style="margin-top:8px">↺ إرجاع هذه الصفحة للافتراضي</button></div></div>';
+  host.innerHTML=h;
+  host.querySelectorAll('[data-nxk]').forEach(function(el){el.onclick=function(){var k=this.getAttribute('data-nxk');nxSet(k,nxGet(k)===false);renderNX(p);};});
+  host.querySelectorAll('[data-nxo]').forEach(function(el){el.onclick=function(){nxSet(this.getAttribute('data-nxo'),this.getAttribute('data-v'));renderNX(p);};});
+  host.querySelectorAll('[data-nxn]').forEach(function(el){el.onchange=function(){var r=NX_PAGES[p].reduce(function(a,c){return a.concat(c.rows)},[]).find(function(x){return x.k===el.getAttribute('data-nxn');});
+    var n=Math.max(r.min,Math.min(r.max,parseFloat(this.value)||r.min));this.value=n;nxSet(r.k,n);
+    if(r.k==='nudge.minSec'&&n>nxGet('nudge.maxSec')){nxSet('nudge.maxSec',n);renderNX(p);} };});
+  host.querySelectorAll('[data-nxt]').forEach(function(el){el.onchange=function(){nxSet(this.getAttribute('data-nxt'),this.value.trim().slice(0,120));};});
+  var rs=$('nxReset'); if(rs)rs.onclick=function(){ if(!confirm('إرجاع إعدادات هذه الصفحة للافتراضي؟'))return;
+    NX_PAGES[p].forEach(function(c){c.rows.forEach(function(r){var d=NX_DEF;r.k.split('.').forEach(function(k){d=d[k];});nxSet(r.k,JSON.parse(JSON.stringify(d)));});});renderNX(p);toast('رجعت للافتراضي — اضغط نشر');};
+}
+function renderNXLabs(host){
+  var C=nxCfg();
+  if(!C.labs||!C.labs.length) C.labs=NX_LABS.map(function(l,i){return {id:l[0],icon:l[1],label:l[2],en:l[3],enabled:true,order:i+1,star:(l[0]==='cyclone'||l[0]==='wadi')};});
+  NX_LABS.forEach(function(l){ if(!C.labs.some(function(x){return x.id===l[0];})) C.labs.push({id:l[0],icon:l[1],label:l[2],en:l[3],enabled:true,order:C.labs.length+1}); });
+  C.labs.sort(function(a,b){return (a.order||99)-(b.order||99);});
+  host.innerHTML='<div class="card"><h3>الترتيب والظهور</h3><div class="note" style="margin-bottom:8px">الترتيب يطبَّق على الشريط الجانبي ولوحة الأوامر ودعوة المختبرات ومعرض المختبرات. المختبر المخفي يعرض لمن يفتح رابطه رسالة «متوقف مؤقتًا» مع زر رجوع.</div><div id="nxLabList"></div></div>'+
+    '<div class="card"><h3>المميَّزة ★</h3><div class="note">النجمة تظهر على الأيقونة في اللوحة والشريط.</div><div id="nxStars"></div></div>'+
+    '<div class="card"><h3>الاسم الإنجليزي</h3><div id="nxEn"></div></div>';
+  dragList('nxLabList',C.labs,function(){markDirty();renderNX('nxlabs');},{rename:true});
+  $('nxStars').innerHTML=C.labs.map(function(l,i){return '<div class="rowSw"><span>'+(l.icon||'')+' '+esc(l.label||l.id)+'</span><span class="sw'+(l.star?' on':'')+'" data-star="'+i+'"></span></div>';}).join('');
+  $('nxStars').querySelectorAll('[data-star]').forEach(function(el){el.onclick=function(){var l=C.labs[+this.getAttribute('data-star')];l.star=!l.star;markDirty();renderNX('nxlabs');};});
+  $('nxEn').innerHTML=C.labs.map(function(l,i){return '<div class="rowSw"><span>'+(l.icon||'')+' '+esc(l.label||l.id)+'</span><input class="fld" data-en="'+i+'" value="'+nxEsc(l.en||'')+'" style="width:200px;margin-inline-start:auto" dir="ltr"></div>';}).join('');
+  $('nxEn').querySelectorAll('[data-en]').forEach(function(el){el.onchange=function(){C.labs[+this.getAttribute('data-en')].en=this.value.trim().slice(0,40);markDirty();};});
+}
+
 function renderAll(){
   if(!DRAFT)return;
   updateDraft();
@@ -1191,6 +1380,7 @@ function renderAll(){
   /* القواعد */
   renderRules();
   if(PAGE==='fusion')renderFusion();
+  if(PAGE.indexOf('nx')===0)renderNX(PAGE);
 }
 
 /* المظهر */
@@ -1430,9 +1620,9 @@ function renderLicensing(){
 var ALC=null;
 var AL_ICON={rainStart:'🌧️',rainHeavy:'⛈️',rainStop:'🌤️',thunder:'⚡',
  windSurge:'💨',dustRise:'🌫️',heatSpike:'🔥',coldDrop:'🌡️',
- pressureFall:'📉',firstRain:'💧',nearbyRain:'🌦️',quake:'◎',streak:'🔥'};
+ pressureFall:'📉',firstRain:'💧',nearbyRain:'🌦️',quake:'◎',streak:'🔥',rainSoon:'⏱️',rainNear:'📍',widget:'🧩'};
 var AL_UNIT={rainStart:'ملم',rainHeavy:'ملم',windSurge:'كم/س',heatSpike:'°',
- coldDrop:'°',pressureFall:'hPa',nearbyRain:'%',quake:'قوة',streak:'يوم'};
+ coldDrop:'°',pressureFall:'hPa',nearbyRain:'%',quake:'قوة',streak:'يوم',rainSoon:'ملم',rainNear:'ملم'};
 
 function loadAlerts(){
  api('/admin/alerts').then(function(r){
@@ -1456,6 +1646,7 @@ function renderAlerts(){
   co[i].className='opt'+(+co[i].getAttribute('data-v')===ALC.dailyCap?' sel':'');
  $('alQS').value=ALC.quietStart!=null?ALC.quietStart:23;
  $('alQE').value=ALC.quietEnd!=null?ALC.quietEnd:6;
+ $('alRing').value=ALC.ringKm||22;
 
  var h='';
  for(var k in ALC.types){
@@ -1503,6 +1694,7 @@ $('bAlSave').onclick=function(){
  if(!ALC)return;
  ALC.quietStart=parseInt($('alQS').value,10)||0;
  ALC.quietEnd=parseInt($('alQE').value,10)||0;
+ ALC.ringKm=Math.max(8,Math.min(60,parseInt($('alRing').value,10)||22));
  var b=this;b.innerHTML='جارٍ…';
  api('/admin/alerts/save',{cfg:ALC}).then(function(r){
   b.innerHTML='حفظ الإعدادات';
