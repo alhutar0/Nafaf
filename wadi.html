@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <script src="lab-shell.js"></script>
-<!-- i18n --><script>try{if(localStorage.getItem("lang")==="en")document.write('<script src="i18n/nafaf-i18n.js"><\/script>')}catch(e){}</script><!-- /i18n -->
+<!-- i18n --><script>try{if(localStorage.getItem("lang")==="en")document.write('<script src="nafaf-i18n.js"><\/script>')}catch(e){}</script><!-- /i18n -->
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#05080F">
 <meta name="description" content="مختبر الوادي من نفاف: لعبة استراتيجية لإدارة كوارث السيول في مدينة عُمانية افتراضية بفيزياء مياه حقيقية.">
@@ -386,13 +386,13 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--teal);outline-o
  setTimeout(chk,1000)})();
 </script>
 
-<script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js","three/addons/":"./vendor/three/addons/"}}</script>
+<script type="importmap">{"imports":{"three":"./three.module.min.js","three/addons/":"./"}}</script>
 <script type="module">
 import * as T0 from 'three';
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {Sky} from 'three/addons/objects/Sky.js';
-import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
-import {FullScreenQuad} from 'three/addons/postprocessing/Pass.js';
+import {OrbitControls} from 'three/addons/OrbitControls.js';
+import {Sky} from 'three/addons/Sky.js';
+import {UnrealBloomPass} from 'three/addons/UnrealBloomPass.js';
+import {FullScreenQuad} from 'three/addons/Pass.js';
 const THREE={...T0,OrbitControls,Sky,UnrealBloomPass,FullScreenQuad};
 
 (function(){
