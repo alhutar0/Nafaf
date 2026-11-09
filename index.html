@@ -13270,7 +13270,6 @@ setInterval(function(){
  }},60000);
 </script>
 
-
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -13596,6 +13595,12 @@ body.v2 #nxInst svg{width:18px;height:18px;flex:none}
 #nxInstSheet h3{margin:0 0 6px;font-size:18px}
 #nxInstSheet ol{margin:10px 0 14px;padding-inline-start:22px;line-height:1.9;font-size:14.5px}
 #nxInstSheet .why{font-size:12.5px;color:rgba(238,243,250,.72);line-height:1.6;margin:0 0 14px}
+html.nx.nxRep #fabBtn{display:flex!important;position:fixed;inset-inline-start:16px;inset-inline-end:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 98px);width:50px;height:50px;z-index:51;animation:none;flex-direction:column;gap:0;
+  background:linear-gradient(145deg,#f2c877,#d99a3d);color:#3a2405;box-shadow:0 10px 24px -8px rgba(0,0,0,.55),0 0 0 3px rgba(255,255,255,.12)}
+html.nx.nxRep #fabBtn svg{width:22px;height:22px}
+html.nx.nxRep #fabBtn .nxRepL{font-size:10px;font-weight:900;line-height:1;margin-top:1px}
+html.nx.nxRep #fabBtn:active{transform:scale(.92)}
+html.nx:not(.nxRep) #fabBtn .nxRepL{display:none}
 #nxPD{position:fixed;inset:0;z-index:81;display:none;align-items:flex-end;justify-content:center;background:rgba(3,6,14,.6)}
 #nxPD.on{display:flex}
 #nxPD .p{width:min(460px,100%);margin:0 10px calc(10px + env(safe-area-inset-bottom,0px));padding:20px 18px 14px;border-radius:26px;background:linear-gradient(180deg,#14223f,#0b1428);color:#EEF3FA;border:1px solid rgba(255,255,255,.12);box-shadow:0 30px 80px -20px rgba(0,0,0,.9);animation:nxSheetUp .5s cubic-bezier(.34,1.3,.64,1)}
@@ -13969,6 +13974,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     A('ask',P('اسأل نفاف','اسأل نفاف','Ask Nafaf'),'M4 5h16v11H8l-4 4z','#6FE3E1',function(){clickId('askFab')},'سؤال chat ask');
     A('share',P('شاركنا جوك','شارك الطقس','Share your sky'),'M12 16V4M7 9l5-5 5 5M5 14v5h14v-5','#E3A94B',function(){clickId('fabBtn')},'صورة camera share');
     var ev=$('evBtn');if(ev&&getComputedStyle(ev).display!=='none')A('ev',(ev.textContent||'').trim()||P('البلاغات','البلاغات','Reports'),'M12 3l10 18H2zM12 10v5M12 18v.5','#F06B5B',function(){ev.click()},'بلاغ events');
+    A('push',P('الإشعارات','الإشعارات','Notifications'),'M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0','#F6CF85',function(){if(window.nxPushDoctor)nxPushDoctor()},'اشعارات notifications تنبيه bell');
     A('me',P('موقعي','موقعي','My location'),'M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11zM12 8a2 2 0 1 0 0 4a2 2 0 1 0 0-4','#6FD39B',function(){clickId('meBtn')},'gps location');
     A('city',P('موقع آخر','موقع آخر','Other place'),'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14M21 21l-5-5','#7FB8FF',function(){clickId('pickBtn')},'city search مدينة');
     A('set',P('الإعدادات','الإعدادات','Settings'),'M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6M19 12l2-1-1-3-2 .3-1.4-1.4.3-2-3-1-1 2h-2l-1-2-3 1 .3 2L5 7.3 3 7 2 10l2 1v2l-2 1 1 3 2-.3 1.4 1.4-.3 2 3 1 1-2h2l1 2 3-1-.3-2 1.4-1.4 2 .3 1-3-2-1z','#C9D3E0',function(){clickId('gearBtn')},'settings language اللغة');
@@ -14392,6 +14398,16 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     b.addEventListener('click',function(e){e.stopPropagation();doctor()});on.parentNode.appendChild(b)}
   (function hook(n){if(typeof window.renderSettings==='function'&&!window.renderSettings.__nx){var o=window.renderSettings;window.renderSettings=function(){var r=o.apply(this,arguments);try{addBtn()}catch(e){}return r};window.renderSettings.__nx=1;try{renderSettings=window.renderSettings}catch(e){}}else if(n<60)setTimeout(function(){hook(n+1)},250)})(0);
   window.nxPushDoctor=doctor;
+
+  /* ── 6. the reporter button follows the portal switch («زر المراسل»): when it is on, it floats at the
+        bottom corner opposite the command orb, small and labelled, and opens the observation sheet ── */
+  function repOn(){var on=true;try{on=feat('reporter')}catch(e){}return !!on}
+  function repPaint(){var f=document.getElementById('fabBtn');if(!f)return;
+    document.documentElement.classList.toggle('nxRep',repOn());
+    if(!f.querySelector('.nxRepL')){var l=document.createElement('span');l.className='nxRepL';f.appendChild(l)}
+    f.querySelector('.nxRepL').textContent=P('رصد','رصد','Report');f.setAttribute('aria-label',P('أرسل رصدك','إرسال رصد','Send a report'))}
+  if(typeof window.applyVisibility==='function'&&!window.applyVisibility.__nx){var av=window.applyVisibility;window.applyVisibility=function(){var r=av.apply(this,arguments);try{repPaint()}catch(e){}return r};window.applyVisibility.__nx=1;try{applyVisibility=window.applyVisibility}catch(e){}}
+  repPaint();setTimeout(repPaint,3000);setTimeout(repPaint,9000);
 
   window.nxAlerts={auto:auto,state:state,paint:paint};
 })();
