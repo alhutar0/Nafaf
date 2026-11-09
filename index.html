@@ -13270,6 +13270,7 @@ setInterval(function(){
  }},60000);
 </script>
 
+
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -13595,7 +13596,46 @@ body.v2 #nxInst svg{width:18px;height:18px;flex:none}
 #nxInstSheet h3{margin:0 0 6px;font-size:18px}
 #nxInstSheet ol{margin:10px 0 14px;padding-inline-start:22px;line-height:1.9;font-size:14.5px}
 #nxInstSheet .why{font-size:12.5px;color:rgba(238,243,250,.72);line-height:1.6;margin:0 0 14px}
+#nxPD{position:fixed;inset:0;z-index:81;display:none;align-items:flex-end;justify-content:center;background:rgba(3,6,14,.6)}
+#nxPD.on{display:flex}
+#nxPD .p{width:min(460px,100%);margin:0 10px calc(10px + env(safe-area-inset-bottom,0px));padding:20px 18px 14px;border-radius:26px;background:linear-gradient(180deg,#14223f,#0b1428);color:#EEF3FA;border:1px solid rgba(255,255,255,.12);box-shadow:0 30px 80px -20px rgba(0,0,0,.9);animation:nxSheetUp .5s cubic-bezier(.34,1.3,.64,1)}
+#nxPD h3{margin:0 0 10px;font-size:18px}
+#nxPD ul{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:8px}
+#nxPD li{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-radius:13px;background:rgba(255,255,255,.05)}
+#nxPD li i{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:900;font-size:12px;background:rgba(255,255,255,.12)}
+#nxPD li.ok i{background:#3FB37F;color:#06200f}#nxPD li.no i{background:#E2604F;color:#2a0703}
+#nxPD li b{display:block;font-size:14px}#nxPD li small{display:block;font-size:12px;color:rgba(238,243,250,.72);margin-top:2px;line-height:1.5}
+#nxPD .why{min-height:1em;font-size:13px;line-height:1.6;color:#F6CF85;margin:0 0 10px}
+#nxPD .b{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#nxPD button{height:44px;border-radius:13px;border:0;font:inherit;font-weight:800;font-size:14px;background:#E3A94B;color:#1d1305;cursor:pointer}
+#nxPD button.g{background:rgba(255,255,255,.1);color:#EEF3FA;border:1px solid rgba(255,255,255,.16)}
+#nxPD button.x{width:100%;margin-top:8px;background:transparent;color:rgba(238,243,250,.7)}
+#nxPDb{display:block;width:100%;margin-top:10px;height:42px;border-radius:12px;border:1px solid rgba(227,169,75,.5);background:rgba(227,169,75,.14);color:#F6CF85;font:inherit;font-weight:800;font-size:13.5px;cursor:pointer}
 #nxInstSheet button{width:100%;height:46px;border-radius:14px;border:0;font:inherit;font-weight:800;font-size:15px;background:#E3A94B;color:#1d1305;cursor:pointer}
+/* — surface.html — */
+/* the sky decides the surface: day → deep sea blue, golden → deep dusk plum, night → the glass stays */
+html.nx3d[data-tod=day]{--nxS:rgba(14,52,104,.90);--nxS2:rgba(10,40,84,.94);--nxSEdge:rgba(255,255,255,.16);--nxSLbl:rgba(12,46,94,.80);--nxSShadow:rgba(6,24,56,.55)}
+html.nx3d[data-tod=golden]{--nxS:rgba(50,22,58,.90);--nxS2:rgba(38,16,46,.94);--nxSEdge:rgba(255,214,170,.18);--nxSLbl:rgba(46,20,54,.80);--nxSShadow:rgba(30,10,36,.55)}
+html.nx3d:is([data-tod=day],[data-tod=golden]) .nxS{
+  background:linear-gradient(180deg,var(--nxS),var(--nxS2))!important;border-color:var(--nxSEdge)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 12px 28px -18px var(--nxSShadow)!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;color:#F7F3FA}
+html.nx3d:is([data-tod=day],[data-tod=golden]) .nxS :is(small,.lg-d,.lg-n,.m-hint,.v2k,.t,p,span):not([style*="color"]){color:inherit}
+html.nx3d:is([data-tod=day],[data-tod=golden]) .nxS :is(small,.lg-d,.m-hint){opacity:.82}
+/* text that floats on the sky (section titles, captions) gets a soft label plate */
+html.nx3d:is([data-tod=day],[data-tod=golden]) .nxL{
+  width:fit-content;max-width:100%;box-sizing:border-box;padding:3px 10px;border-radius:10px;
+  background:var(--nxSLbl);color:#F7F3FA!important;text-shadow:none!important;opacity:1!important;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+html.nx3d:is([data-tod=day],[data-tod=golden]) .nxL.nxLc{margin-inline:auto}
+html.nx3d:is([data-tod=day],[data-tod=golden]) .nxL+.nxL{margin-top:4px}
+html.nx3d:is([data-tod=day],[data-tod=golden]) .nxL *{color:inherit!important;text-shadow:none!important}
+/* the pulse-ring hero keeps its own layout; only its small readouts get the same treatment */
+html.nx3d:is([data-tod=day],[data-tod=golden]) body.v2 :is(.pgStrip,.pgNext){background:linear-gradient(180deg,var(--nxS),var(--nxS2))!important;border-color:var(--nxSEdge)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.nx3d:is([data-tod=day],[data-tod=golden]) body.v2 .pgStrip :is(.pgSt){color:rgba(247,243,250,.78)!important}
+html.nx3d:is([data-tod=day],[data-tod=golden]) body.v2 :is(.pgDesc,.scrubHint){width:fit-content;max-width:100%;margin-inline:auto;padding:3px 12px;border-radius:10px;background:var(--nxSLbl)!important;color:#F7F3FA!important;text-shadow:none!important;opacity:1!important}
+html.nx3d:is([data-tod=day],[data-tod=golden]) body.v2 .scrubHint{color:#F6CF85!important}
+html.nx3d:is([data-tod=day],[data-tod=golden]) body.v2 .pulseIn{text-shadow:0 1px 2px var(--nxSShadow),0 0 18px var(--nxSShadow)}
 </style>
 <script>
 /* Defaults = how Nafaf behaves with no portal setting. The portal publishes cfg.next; the app keeps the
@@ -14267,7 +14307,146 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   function openTab(k){var t0=Date.now();(function w(){try{if(typeof showTab==='function'&&typeof W!=='undefined'&&W){showTab(k);return}}catch(e){}if(Date.now()-t0<20000)setTimeout(w,500)})()}
   if(location.hash==='#live'){openTab('live');try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
   try{navigator.serviceWorker&&navigator.serviceWorker.addEventListener('message',function(e){if(e.data&&e.data.type==='nafaf-open')openTab(e.data.tab||'live')})}catch(e){}
+  /* ── 4. a subscription made with an older server key never receives anything: replace it before re-subscribing ── */
+  function keyMatch(reg){
+    return reg.pushManager.getSubscription().then(function(sub){
+      if(!sub||!sub.options||!sub.options.applicationServerKey)return sub;
+      return fetch(PUSH_URL+'/vapid').then(function(r){return r.json()}).then(function(v){
+        if(!v||!v.key)return sub;
+        var a=new Uint8Array(sub.options.applicationServerKey),b=b64ToU8(v.key),same=a.length===b.length;
+        for(var i=0;same&&i<a.length;i++)if(a[i]!==b[i])same=false;
+        if(same)return sub;
+        return sub.unsubscribe().then(function(){return null});
+      }).catch(function(){return sub});
+    });
+  }
+  if(typeof window.pushSubscribe==='function'&&!window.pushSubscribe.__nxk){var ok0=window.pushSubscribe;
+    window.pushSubscribe=function(){var a=arguments,t=this;
+      if(!('serviceWorker' in navigator)||typeof PUSH_URL==='undefined'||!PUSH_URL)return ok0.apply(t,a);
+      return Promise.race([navigator.serviceWorker.ready,new Promise(function(r){setTimeout(r,6000)})]).then(function(reg){return reg?keyMatch(reg):null}).catch(function(){}).then(function(){return ok0.apply(t,a)})};
+    window.pushSubscribe.__nx=1;window.pushSubscribe.__nxk=1;try{pushSubscribe=window.pushSubscribe}catch(e){}}
+
+  /* ── 5. notification check-up: shows each link of the chain and lets the user send a test alert to this phone ── */
+  var dz=document.createElement('div');dz.id='nxPD';dz.setAttribute('role','dialog');dz.setAttribute('aria-modal','true');
+  dz.innerHTML='<div class="p"><h3></h3><ul id="nxPDl"></ul><p class="why" id="nxPDw"></p><div class="b"><button type="button" id="nxPDt"></button><button type="button" id="nxPDf" class="g"></button></div><button type="button" id="nxPDx" class="x"></button></div>';
+  document.body.appendChild(dz);
+  var EP=null,CHK=null;
+  function row(ok,t,d){return '<li class="'+(ok===true?'ok':ok===false?'no':'wt')+'"><i>'+(ok===true?'✓':ok===false?'✕':'…')+'</i><div><b>'+t+'</b>'+(d?'<small>'+d+'</small>':'')+'</div></li>'}
+  function ago(ts){var m=Math.round((Date.now()-ts)/60000);return m<1?P('الحين','الآن','just now'):m<60?P('قبل '+m+' دقيقة','قبل '+m+' دقيقة',m+' min ago'):P('قبل '+Math.round(m/60)+' ساعة','قبل '+Math.round(m/60)+' ساعة',Math.round(m/60)+' h ago')}
+  function doctor(){
+    dz.querySelector('h3').textContent=P('فحص الإشعارات','فحص الإشعارات','Notification check-up');
+    document.getElementById('nxPDt').textContent=P('أرسل لي إشعار تجريبي','إرسال إشعار تجريبي','Send me a test alert');
+    document.getElementById('nxPDf').textContent=P('أصلح الاشتراك','إصلاح الاشتراك','Repair subscription');
+    document.getElementById('nxPDx').textContent=P('سكّر','إغلاق','Close');
+    var w=document.getElementById('nxPDw');w.textContent='';
+    var R=[];function paintRows(){document.getElementById('nxPDl').innerHTML=R.join('')}
+    dz.classList.add('on');
+    var p=perm();
+    R[0]=row(p==='granted'?true:p==='denied'?false:null,P('إذن الإشعارات','إذن الإشعارات','Permission'),
+      p==='granted'?P('مسموح','مسموح','Allowed'):p==='denied'?P('مرفوض — افتح إعدادات الموقع في المتصفح واسمح بالإشعارات','مرفوض من إعدادات المتصفح','Blocked — allow it in the browser’s site settings'):P('ما انطلب بعد','لم يُطلب بعد','Not asked yet'));
+    R[1]=row(null,P('عامل الخدمة','عامل الخدمة','Service worker'),'');R[2]=row(null,P('اشتراك جوالك','اشتراك الجهاز','This phone’s subscription'),'');
+    R[3]=row(null,P('الخادم يعرف جوالك ومنطقتك','الخادم يعرف جهازك','Server knows this phone'),'');R[4]=row(null,P('فحص المطر الدوري','الفحص الدوري','Rain scan on the server'),'');
+    paintRows();
+    if(!('serviceWorker' in navigator)){R[1]=row(false,P('عامل الخدمة','عامل الخدمة','Service worker'),P('متصفحك ما يدعمه','غير مدعوم','Not supported'));paintRows();return}
+    Promise.race([navigator.serviceWorker.ready,new Promise(function(_,j){setTimeout(function(){j(0)},6000)})]).then(function(reg){
+      R[1]=row(!!reg.active,P('عامل الخدمة','عامل الخدمة','Service worker'),reg.active?P('شغّال — هو اللي يستقبل الإشعار وانت مسكّر نفاف','يعمل','Running — it receives alerts while Nafaf is closed'):'');paintRows();
+      return reg.pushManager.getSubscription();
+    }).then(function(sub){
+      EP=sub&&sub.endpoint;
+      R[2]=row(!!sub,P('اشتراك جوالك','اشتراك الجهاز','This phone’s subscription'),sub?(/fcm\.googleapis|push\.apple|mozilla|windows/.exec(sub.endpoint)||[''])[0].replace('fcm.googleapis','Google FCM').replace('push.apple','Apple'):P('ما في اشتراك — اضغط «أصلح الاشتراك»','لا يوجد اشتراك','None — tap Repair'));paintRows();
+      if(!sub)return;
+      return fetch(PUSH_URL+'/push/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:sub.endpoint})}).then(function(r){return r.ok?r.json():null}).then(function(c){
+        CHK=c;
+        if(!c){R[3]=row(null,P('الخادم يعرف جوالك ومنطقتك','الخادم يعرف جهازك','Server knows this phone'),P('الخادم ما رد — يمكن نسخته قديمة','لا رد من الخادم','No answer — the server may be an older version'));R[4]='';paintRows();return}
+        R[3]=row(c.known&&c.hasLoc,P('الخادم يعرف جوالك ومنطقتك','الخادم يعرف جهازك','Server knows this phone'),c.known?(c.hasLoc?(c.place||P('منطقتك محفوظة','الموقع محفوظ','Area saved')):P('معروف بس بدون منطقة — افتح نفاف على موقعك','بدون موقع','Known, but without your area')):P('غير مسجّل — اضغط «أصلح الاشتراك»','غير مسجّل','Not registered — tap Repair'));
+        var fresh=c.lastScan&&Date.now()-c.lastScan<40*60000;
+        R[4]=row(c.lastScan?!!fresh:false,P('فحص المطر الدوري','الفحص الدوري','Rain scan on the server'),c.lastScan?ago(c.lastScan):P('ما اشتغل — جدولة Cron غير مفعّلة في Cloudflare','لا يعمل','Never ran — the Cloudflare cron is not set'));
+        paintRows();
+      });
+    }).catch(function(){R[1]=row(false,P('عامل الخدمة','عامل الخدمة','Service worker'),P('ما اشتغل — حدّث الصفحة','لا يعمل','Not running — reload'));paintRows()});
+  }
+  dz.addEventListener('click',function(e){
+    var id=e.target.id;
+    if(e.target===dz||id==='nxPDx')dz.classList.remove('on');
+    var w=document.getElementById('nxPDw');
+    if(id==='nxPDf'){w.textContent=P('جاري الإصلاح…','جارٍ الإصلاح…','Repairing…');
+      navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription()}).then(function(s0){return s0&&s0.unsubscribe()}).catch(function(){}).then(function(){return pushSubscribe()}).then(function(r){
+        if(r&&r.ok){doctor();w.textContent=P('تم. جرّب الإشعار التجريبي الحين.','تم الإصلاح.','Done. Try the test alert now.')}else w.textContent=(r&&r.why)||P('ما زبط.','تعذّر.','Failed.')});}
+    if(id==='nxPDt'){
+      if(!EP){w.textContent=P('ما في اشتراك — اضغط «أصلح الاشتراك» أول.','لا يوجد اشتراك.','No subscription — tap Repair first.');return}
+      w.textContent=P('أرسلت… سكّر نفاف أو اطلع للشاشة الرئيسية، المفروض يوصلك خلال ثواني.','أُرسل… أغلق التطبيق وانتظر ثوانٍ.','Sent… leave Nafaf; it should arrive within seconds.');
+      var lang='ar';try{lang=LI()===2?'en':'ar'}catch(x){}
+      fetch(PUSH_URL+'/push/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:EP,lang:lang})}).then(function(r){return r.json().then(function(j){return [r.status,j]})}).then(function(a){
+        var st=a[0],j=a[1]||{};
+        if(st===404&&j.why==='unknown')w.textContent=P('الخادم ما يعرف جوالك — اضغط «أصلح الاشتراك».','الجهاز غير مسجّل.','Server does not know this phone — tap Repair.');
+        else if(st===429)w.textContent=P('انتظر دقيقة بين كل تجربة.','انتظر دقيقة.','Wait a minute between tests.');
+        else if(st===404)w.textContent=P('الخادم نسخته قديمة وما فيه زر التجربة — انشر push.js الجديد على Cloudflare.','الخادم قديم.','The server is an older version — deploy the new push.js.');
+        else if(j.ok)w.textContent=P('الخادم أرسل وجوجل استلم ✓ — إذا ما ظهر خلال دقيقة: إعدادات الجوال ← التطبيقات ← Chrome (أو نفاف) ← البطارية ← «غير مقيّد»، وتأكد إن الإشعارات مسموحة.','أُرسل بنجاح؛ إن لم يظهر فاسمح لكروم بالعمل في الخلفية.','Sent and accepted ✓ — if nothing shows within a minute: Settings → Apps → Chrome (or Nafaf) → Battery → Unrestricted, and check notifications are allowed.');
+        else w.textContent=P('خدمة الإشعارات رفضت ('+j.status+') — اضغط «أصلح الاشتراك».','رُفض الإرسال ('+j.status+').','Push service refused ('+j.status+') — tap Repair.');
+      }).catch(function(){w.textContent=P('ما قدرت أوصل للخادم.','تعذّر الاتصال بالخادم.','Could not reach the server.')});
+    }
+  });
+  /* the check-up button lives under the rain-alert switch in Settings */
+  function addBtn(){var on=document.querySelector('[data-push="1"]');if(!on||document.getElementById('nxPDb'))return;
+    var b=document.createElement('button');b.type='button';b.id='nxPDb';b.textContent=P('🔔 فحص الإشعارات وتجربتها','فحص الإشعارات','🔔 Check & test notifications');
+    b.addEventListener('click',function(e){e.stopPropagation();doctor()});on.parentNode.appendChild(b)}
+  (function hook(n){if(typeof window.renderSettings==='function'&&!window.renderSettings.__nx){var o=window.renderSettings;window.renderSettings=function(){var r=o.apply(this,arguments);try{addBtn()}catch(e){}return r};window.renderSettings.__nx=1;try{renderSettings=window.renderSettings}catch(e){}}else if(n<60)setTimeout(function(){hook(n+1)},250)})(0);
+  window.nxPushDoctor=doctor;
+
   window.nxAlerts={auto:auto,state:state,paint:paint};
+})();
+</script>
+<script>
+/* Finds, inside the app's main column, every box and caption that sits directly on the sky
+   (its own background is see-through and nothing opaque is behind it) and marks it:
+     .nxS — a card, tile or button  → solid surface
+     .nxL — a run of text            → label plate
+   Runs on load, on tab changes and on content changes; only acts while the sky is bright. */
+(function(){
+  var SKIP='script,style,svg,canvas,img,video,iframe,input,textarea,select,.hero,.wm-en,.wm-ar,.top,.v2dock,#nxIsland,#nxPal,#nxPalBack,#labRail,.leaflet-container,[data-nxs-skip]';
+  function bright(){var t=document.documentElement.dataset.tod;return document.documentElement.classList.contains('nx3d')&&(t==='day'||t==='golden')}
+  function alpha(cs){
+    if(cs.backgroundImage&&cs.backgroundImage!=='none')return 1;
+    var m=cs.backgroundColor.match(/rgba?\(([^)]+)\)/);if(!m)return 0;
+    var p=m[1].split(/[ ,\/]+/).filter(Boolean);return p.length>3?parseFloat(p[3]):1;
+  }
+  function inlineOnly(el){
+    for(var c=el.firstElementChild;c;c=c.nextElementSibling){
+      var d=getComputedStyle(c).display;if(d!=='inline'&&d!=='inline-block'&&d!=='none'&&d!=='contents')return false}
+    return true;
+  }
+  function ownText(el){for(var n=el.firstChild;n;n=n.nextSibling)if(n.nodeType===3&&n.nodeValue.trim())return true;return false}
+  function visit(el){
+    for(var c=el.firstElementChild;c;c=c.nextElementSibling){
+      if(c.matches(SKIP))continue;
+      var cs=getComputedStyle(c);
+      if(cs.display==='none'||cs.visibility==='hidden'||cs.position==='fixed')continue;
+      if(c.classList.contains('nxS')||c.classList.contains('nxL'))continue;
+      var a=alpha(cs);
+      if(a>=.5)continue;                                    /* already opaque: it carries its own contrast */
+      var r=c.getBoundingClientRect();
+      var boxy=parseFloat(cs.borderTopLeftRadius)>=8&&(parseFloat(cs.borderTopWidth)>0||a>.02)&&r.width>=40&&r.height>=28;
+      if(boxy){c.classList.add('nxS');continue}
+      if(c.textContent.trim()&&(ownText(c)||inlineOnly(c))&&r.width>0){
+        c.classList.add('nxL');if(cs.textAlign==='center')c.classList.add('nxLc');continue}
+      visit(c);
+    }
+  }
+  var root=null,busy=0,pending=0;
+  function run(){
+    pending=0;if(!bright())return;
+    root=root||document.querySelector('.wrap')||document.body;
+    busy=1;try{visit(root)}catch(e){}busy=0;
+  }
+  function soon(){if(!pending){pending=1;setTimeout(run,180)}}
+  new MutationObserver(function(){if(!busy)soon()}).observe(document.documentElement,{attributes:true,attributeFilter:['data-tod']});
+  function watch(){var w=document.querySelector('.wrap');if(!w)return setTimeout(watch,500);root=w;
+    new MutationObserver(function(ms){if(busy)return;for(var i=0;i<ms.length;i++){if(ms[i].type==='childList'){soon();return}}}).observe(w,{childList:true,subtree:true});soon()}
+  watch();addEventListener('resize',soon);
+  /* tabs and sheets open by showing hidden content, which is not a DOM change: re-check after each tab switch and tap */
+  (function hook(n){if(typeof window.showTab==='function'&&!window.showTab.__nxs){var o=window.showTab;window.showTab=function(){var r=o.apply(this,arguments);soon();setTimeout(soon,700);return r};window.showTab.__nxs=1;try{showTab=window.showTab}catch(e){}}else if(n<60)setTimeout(function(){hook(n+1)},250)})(0);
+  document.addEventListener('click',function(){setTimeout(soon,350)},true);
+  window.nxSurfaces={run:run};
 })();
 </script>
 <script type="module">
