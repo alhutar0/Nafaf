@@ -1,0 +1,22 @@
+# خادم إشعارات نفاف — يُنشر تلقائيًا من GitHub Actions عند أي تعديل في مجلد worker/
+name = "nafa-push"
+main = "push.js"
+compatibility_date = "2025-01-01"
+
+# لا تمسح المتغيرات المحفوظة في لوحة Cloudflare (مثل GOOGLE_CLIENT_ID).
+# الأسرار (VAPID_PRIVATE_KEY, VAPID_PUBLIC_KEY, ADMIN_PASS) لا تُكتب هنا أبدًا وتبقى كما هي في Cloudflare.
+keep_vars = true
+
+# الدومين الافتراضي nafa-push.alhutar0.workers.dev يبقى شغالًا
+workers_dev = true
+
+[[kv_namespaces]]
+binding = "NAFAF_KV"
+id = "0070863de928403bbf9ef36d46550ac6"   # nafaf-subscribers
+
+# فحص المطر الدوري — كل ١٠ دقائق
+[triggers]
+crons = ["*/10 * * * *"]
+
+[observability]
+enabled = true
