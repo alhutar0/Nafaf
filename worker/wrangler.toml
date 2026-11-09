@@ -1,6 +1,7 @@
 # خادم إشعارات نفاف — يُنشر تلقائيًا من GitHub Actions عند أي تعديل في مجلد worker/
 name = "nafa-push"
 main = "push.js"
+account_id = "5dfcb01ccd73bc287c8d658cb9e118e8"
 compatibility_date = "2025-01-01"
 
 # لا تمسح المتغيرات المحفوظة في لوحة Cloudflare (مثل GOOGLE_CLIENT_ID).
