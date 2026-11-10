@@ -1,7 +1,7 @@
 """Nafaf city pages — data step (run by .github/workflows/seo-data.yml, never in the browser).
 Picks the cities, then for each one fetches, once:
   · its names in the page languages and its region (Open-Meteo geocoding, CC BY 4.0 — names from GeoNames)
-  · its monthly climate normals 1991–2020 (NASA POWER climatology, MERRA-2 reanalysis — NASA LaRC POWER Project)
+  · its monthly climate normals 1991–2020 built from NASA POWER daily values (MERRA-2 reanalysis — NASA LaRC POWER Project)
 and stores everything in data/seo/cities.json. Re-runs only fetch what is missing, so rebuilding pages costs nothing.
 """
 import json, glob, os, sys, time, re, unicodedata, urllib.request, urllib.parse, concurrent.futures as cf
@@ -66,13 +66,22 @@ def names(r):
     return out
 
 def climate(lat, lon):
-    u = ('https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M_MAX,T2M_MIN,PRECTOTCORR,RH2M,WS10M'
-         f'&community=RE&longitude={lon:.3f}&latitude={lat:.3f}&start=1991&end=2020&format=JSON')
+    """1991–2020 normals built from NASA POWER daily values (the climatology endpoint's T2M_MAX is the month's
+    extreme, not the average daily high — checked against Moscow, Riyadh, London, Delhi and Muscat)."""
+    u = ('https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M_MAX,T2M_MIN,PRECTOTCORR,RH2M,WS10M'
+         f'&community=RE&longitude={lon:.3f}&latitude={lat:.3f}&start=19910101&end=20201231&format=JSON')
     p = get(u)['properties']['parameter']
-    m = lambda k: [p[k][M] for M in MONTHS]
-    pr = [round(v * d, 1) for v, d in zip(m('PRECTOTCORR'), DAYS)]
-    return {'tmax': [round(v, 1) for v in m('T2M_MAX')], 'tmin': [round(v, 1) for v in m('T2M_MIN')], 'rain': pr,
-            'rh': [round(v) for v in m('RH2M')], 'wind': [round(v * 3.6, 1) for v in m('WS10M')]}
+    S = {k: [0.0] * 12 for k in p}; N = {k: [0] * 12 for k in p}; wet = [0] * 12; yrs = 30
+    for k, v in p.items():
+        for day, val in v.items():
+            if val is None or val < -900: continue
+            m = int(day[4:6]) - 1; S[k][m] += val; N[k][m] += 1
+            if k == 'PRECTOTCORR' and val >= 1.0: wet[m] += 1
+    avg = lambda k: [S[k][m] / N[k][m] if N[k][m] else None for m in range(12)]
+    return {'tmax': [round(v, 1) for v in avg('T2M_MAX')], 'tmin': [round(v, 1) for v in avg('T2M_MIN')],
+            'rain': [round(v * d, 1) for v, d in zip(avg('PRECTOTCORR'), DAYS)], 'wet': [round(w / yrs, 1) for w in wet],
+            'rh': [round(v) for v in avg('RH2M')], 'wind': [round(v * 3.6, 1) for v in avg('WS10M')],
+            'src': 'NASA POWER daily, MERRA-2, 1991–2020'}
 
 def main():
     data = json.load(open(OUT, encoding='utf-8')) if os.path.exists(OUT) else {}
