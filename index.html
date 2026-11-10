@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611101727';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611101732';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -13860,6 +13860,27 @@ body.v2:not(.wide) .ov>.modal{left:auto;right:auto}
 .nxAstro b{display:block;font-size:15px}.nxAstro small{display:block;font-size:12.5px;opacity:.75;line-height:1.5}
 .nxAstro .d{margin-inline-start:auto;font-weight:900;font-size:20px;color:#F2C36B;white-space:nowrap}
 .nxAstro .d small{display:inline;font-size:11px;font-weight:700;opacity:.8;color:inherit}
+/* — event.html — */
+.nxEvt{position:relative;margin:0 0 14px;padding:14px 14px 12px;border-radius:20px;background:#120d18;color:#F4F6FB;border:1.5px solid var(--ec,#ff6b5a);box-shadow:0 14px 34px -18px var(--ec,#ff6b5a);overflow:hidden}
+.nxEvt::before{content:"";position:absolute;inset:0;background:radial-gradient(120% 80% at 100% 0%,var(--eg,rgba(255,107,90,.22)),transparent 60%);pointer-events:none}
+.nxEvt>*{position:relative}
+.nxEvt .hd{display:flex;align-items:center;gap:10px}
+.nxEvt .dot{flex:0 0 auto;width:12px;height:12px;border-radius:50%;background:var(--ec,#ff6b5a);box-shadow:0 0 0 0 var(--ec,#ff6b5a);animation:nxEvP 1.6s ease-out infinite}
+@keyframes nxEvP{0%{box-shadow:0 0 0 0 var(--eg,rgba(255,107,90,.6))}100%{box-shadow:0 0 0 12px rgba(0,0,0,0)}}
+@media (prefers-reduced-motion:reduce){.nxEvt .dot{animation:none}}
+.nxEvt .tg{font-size:11px;font-weight:900;letter-spacing:.04em;color:var(--ec,#ff6b5a);text-transform:uppercase}
+.nxEvt h3{margin:2px 0 0;font-size:19px;font-weight:900;line-height:1.3;color:#fff}
+.nxEvt .sb{margin:6px 0 0;font-size:13px;font-weight:700;color:rgba(244,246,251,.82);line-height:1.6}
+.nxEvt .tip{margin:8px 0 0;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.07);font-size:13px;font-weight:800;color:#fff;line-height:1.6}
+.nxEvt .ac{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.nxEvt .ac button{min-height:44px;border-radius:13px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#fff;font:inherit;font-size:13.5px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.nxEvt .ac button.p{background:var(--ec,#ff6b5a);border-color:transparent;color:#160b08}
+.nxEvt .ac button:active{transform:scale(.96)}
+.nxEvt .x{position:absolute;top:8px;inset-inline-end:8px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);font-size:15px;cursor:pointer}
+body.v2.wide .nxEvt{column-span:all;-webkit-column-span:all}
+.nxEvt[data-k="rain"]{--ec:#5fb4ff;--eg:rgba(95,180,255,.24)}
+.nxEvt[data-k="dust"]{--ec:#e8b45a;--eg:rgba(232,180,90,.24)}
+.nxEvt[data-k="wind"]{--ec:#9fe3c8;--eg:rgba(159,227,200,.22)}
 </style>
 <script>
 /* Defaults = how Nafaf behaves with no portal setting. The portal publishes cfg.next; the app keeps the
@@ -14894,7 +14915,11 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     x.textAlign='center';x.direction=rtl?'rtl':'ltr';x.fillStyle='#fff';
     /* header (inside the safe zone below the app's top bar) */
     x.shadowColor='rgba(0,0,0,.35)';x.shadowBlur=20;
-    x.font='900 46px '+FONT;x.fillStyle='#F2C36B';x.fillText('NAFAF  ·  نفاف',Wd/2,250);
+    var EVT=window.NX_EVENT;
+    if(EVT&&EVT.t){ /* event mode: the headline replaces the brand line (the brand stays in the footer) */
+      x.shadowBlur=0;x.font='900 48px '+FONT;var tw=Math.min(Wd-160,x.measureText(EVT.t).width+90),col=EVT.k==='rain'?'#5fb4ff':EVT.k==='dust'?'#e8b45a':EVT.k==='wind'?'#9fe3c8':'#ff6b5a';
+      x.fillStyle=col;rr(x,Wd/2-tw/2,196,tw,78,39);x.fill();x.fillStyle='#120b0a';x.fillText(EVT.t,Wd/2,252);x.shadowBlur=20;
+    } else {x.font='900 46px '+FONT;x.fillStyle='#F2C36B';x.fillText('NAFAF  ·  نفاف',Wd/2,250);}
     x.fillStyle='#fff';x.font='800 72px '+FONT;x.fillText((window.CUR&&CUR.n)||'',Wd/2,345);
     x.font='600 34px '+FONT;x.fillStyle='rgba(255,255,255,.82)';
     var loc=document.documentElement.lang||'ar';try{x.fillText(new Date().toLocaleDateString(loc,{weekday:'long',day:'numeric',month:'long'}),Wd/2,400)}catch(e){}
@@ -15271,6 +15296,97 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
       window.pushSubscribe.__nxf=1;['__nx','__nxk'].forEach(function(k){window.pushSubscribe[k]=o[k]});try{pushSubscribe=window.pushSubscribe}catch(e){}}
     else if(n<60)setTimeout(function(){hook(n+1)},300)})(0);
   /* the cyclone game counts itself when it opens (cyclone.html), whichever button led there */
+})();
+</script>
+<script>
+/* Event mode. Reads only what Nafaf already fetched for this place (Open-Meteo current + hourly), so it works anywhere on Earth.
+   Now:   thunderstorm codes 95–99 · rain codes 61–67/80–82 (or drizzle with ≥0.3 mm this hour) · dust (Nafaf's own dust state) · gusts ≥ 65 km/h
+   Soon:  thunderstorm code with ≥30 % chance, or ≥1 mm with ≥50 % probability, in any of the next 3 hours.
+   The card sits on top of "Now" with three actions — radar, report what you see, share the story — and the story image carries the headline.
+   Closing it hides that same event for 3 hours. */
+(function(){
+  function P(a,b,c){var r;try{r=pick(a,b,c)}catch(e){r=c}return window.nxTr?nxTr(r):r}
+  function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+  function on(){try{if(window.NXC&&NXC.event===false)return false}catch(e){}try{return typeof feat!=='function'||feat('event')}catch(e){return true}}
+  var RAINC=[61,63,65,66,67,80,81,82],HEAVY=[65,67,82];
+  function detect(){
+    var w=window.W,H=window.HOURLY;if(!w)return null;
+    var c=w.weather_code|0,i=0;try{i=Clock.hourIndex()}catch(e){}
+    var mm=0,pp=0;try{mm=H.precipitation[i]||0;pp=H.precipitation_probability[i]||0}catch(e){}
+    var g=w.wind_gusts_10m||0,st='';try{st=stateOf(w)}catch(e){}
+    if(c>=95)return {k:'storm',now:1,mm:mm,g:g};
+    if(RAINC.indexOf(c)>=0||(c>=51&&c<=57&&mm>=0.3))return {k:'rain',now:1,heavy:HEAVY.indexOf(c)>=0||mm>=4,mm:mm,g:g};
+    if(st==='dust')return {k:'dust',now:1,g:g};
+    if(g>=65)return {k:'wind',now:1,g:g};
+    if(H&&H.time)for(var h=1;h<=3;h++){var j=i+h;if(j>=H.time.length)break;
+      var hc=H.weather_code?H.weather_code[j]|0:0,hm=H.precipitation?H.precipitation[j]||0:0,hp=H.precipitation_probability?H.precipitation_probability[j]||0:0;
+      if(hc>=95&&(!H.precipitation_probability||hp>=30))return {k:'storm',now:0,h:h,mm:hm,p:hp};
+      if(hm>=1&&hp>=50)return {k:'rain',now:0,h:h,mm:hm,p:hp,heavy:hm>=4};
+    }
+    return null;
+  }
+  function head(e){
+    var city='';try{city=(window.cName&&CUR)?cName(CUR):(CUR&&CUR.n)||''}catch(x){}
+    if(e.k==='storm')return e.now?P('رعد وبرق عندك الحين','عاصفة رعدية في موقعك الآن','Thunderstorm at your location now')
+                                 :P('رعد متوقع خلال # ساعة','عاصفة رعدية متوقعة خلال # ساعة','Thunderstorm expected within # h').replace('#',e.h);
+    if(e.k==='rain'){if(e.now)return e.heavy?P('مطر غزير الحين','أمطار غزيرة الآن','Heavy rain now'):P('تمطر عندك الحين','أمطار في موقعك الآن','Raining at your location now');
+      return P('المطر جاي خلال # ساعة','أمطار متوقعة خلال # ساعة','Rain expected within # h').replace('#',e.h)}
+    if(e.k==='dust')return P('غبار وعجاج الحين','غبار في الأجواء الآن','Dust in the air now');
+    return P('رياح قوية الحين','رياح قوية الآن','Strong winds now');
+  }
+  function short(e){ /* the story pill */
+    if(e.k==='storm')return e.now?P('⚡ رعد الحين','⚡ عاصفة رعدية الآن','⚡ Thunderstorm now'):P('⚡ رعد خلال # ساعة','⚡ رعد خلال # ساعة','⚡ Thunder within # h').replace('#',e.h);
+    if(e.k==='rain')return e.now?(e.heavy?P('🌧 مطر غزير الحين','🌧 مطر غزير الآن','🌧 Heavy rain now'):P('🌧 تمطر الحين','🌧 أمطار الآن','🌧 Raining now')):P('🌧 المطر خلال # ساعة','🌧 أمطار خلال # ساعة','🌧 Rain within # h').replace('#',e.h);
+    if(e.k==='dust')return P('🌫 غبار الحين','🌫 غبار الآن','🌫 Dust now');
+    return P('💨 رياح قوية','💨 رياح قوية','💨 Strong winds');
+  }
+  function sub(e){var a=[];
+    try{if(e.mm>=0.1)a.push((Math.round(e.mm*10)/10)+' '+P('ملم/ساعة','ملم/ساعة','mm/h'))}catch(x){}
+    try{if(e.p>=30)a.push(P('احتمال','احتمال','chance')+' '+Math.round(e.p)+'%')}catch(x){}
+    try{if(e.g>=40)a.push(P('هبّات','هبّات','gusts')+' '+wconv(e.g)+' '+wlabel())}catch(x){}
+    return a.join(' · ');
+  }
+  function tip(e){
+    if(e.k==='storm')return P('ابعد عن الأماكن المكشوفة ومجاري الأودية، ولا تتحمّى تحت شجرة.','ابتعد عن الأماكن المكشوفة ومجاري الأودية ولا تحتمِ بالأشجار.','Get indoors, keep away from open ground, trees and flood channels.');
+    if(e.k==='rain')return e.heavy||!e.now?P('لا تقطع وادي جاري ولا شارع غارق — شبر ماي يشيل سيارة.','لا تعبر الأودية الجارية أو الطرق المغمورة.','Never drive through running or standing water — it takes little to float a car.')
+                                          :P('خفّف السرعة وشغّل الأنوار، الشارع زلق.','خفّف السرعة، الطريق زلق.','Slow down and use your lights — roads are slippery.');
+    if(e.k==='dust')return P('سكّر الشبابيك، خفّف السرعة، واللي عنده ربو يحتاط.','أغلق النوافذ وخفّف السرعة واحتطْ إن كنت تعاني الربو.','Close windows, slow down on the road; take care if you have asthma.');
+    return P('ثبّت الأغراض الخفيفة برّا وابعد عن اللوحات والأشجار.','ثبّت الأغراض الخفيفة وابتعد عن اللوحات والأشجار.','Secure loose items outdoors; keep clear of signs and trees.');
+  }
+  function key(e){return e.k+(e.now?'n':'s')+'|'+((window.CUR&&CUR.lat)||0).toFixed(1)}
+  var EV=null;
+  function card(){
+    var b=document.getElementById('nowBody');if(!b)return;
+    var old=document.getElementById('nxEvt');if(old)old.remove();
+    EV=on()?detect():null;window.NX_EVENT=EV?{k:EV.k,now:EV.now,t:short(EV)}:null;
+    document.documentElement.classList.toggle('nxEvOn',!!EV);
+    if(!EV)return;
+    var hid=ls('nx.evx');if(hid){var p=hid.split('@');if(p[0]===key(EV)&&Date.now()-(+p[1]||0)<3*36e5)return}
+    var d=document.createElement('section');d.id='nxEvt';d.className='nxEvt';d.setAttribute('data-k',EV.k);d.setAttribute('role','status');
+    var s=sub(EV);
+    d.innerHTML='<button type="button" class="x" aria-label="'+P('إخفاء','إخفاء','Hide')+'">✕</button>'+
+      '<div class="hd"><span class="dot"></span><span class="tg">'+(EV.now?P('يحدث الآن','يحدث الآن','Happening now'):P('قريبًا','قريبًا','Coming up'))+'</span></div>'+
+      '<h3>'+head(EV)+'</h3>'+(s?'<p class="sb">'+s+'</p>':'')+'<p class="tip">'+tip(EV)+'</p>'+
+      '<div class="ac"><button type="button" class="p" data-a="radar">'+P('الرادار','الرادار','Radar')+'</button>'+
+      '<button type="button" data-a="rep">'+P('بلّغ عن جوّك','أرسل رصدك','Report')+'</button>'+
+      '<button type="button" data-a="share">'+P('شارك','شارك','Share')+'</button></div>';
+    b.insertBefore(d,b.firstChild);
+    d.addEventListener('click',function(ev){var t=ev.target.closest('button');if(!t)return;
+      if(t.classList.contains('x')){ls('nx.evx',key(EV)+'@'+Date.now());d.remove();return}
+      var a=t.getAttribute('data-a');
+      if(a==='radar'){try{showTab('live')}catch(e){}}
+      else if(a==='rep'){try{openSheet('obs')}catch(e){}}
+      else if(a==='share'){try{if(window.nxStory)nxStory();else document.getElementById('shareBtn').click()}catch(e){}}
+    });
+    try{window.nxEv&&nxEv('event')}catch(e){}
+  }
+  (function hook(n){
+    if(typeof window.renderNow==='function'&&!window.renderNow.__nxe){var o=window.renderNow;
+      window.renderNow=function(){var r=o.apply(this,arguments);try{card()}catch(e){}return r};window.renderNow.__nxe=1;
+      try{renderNow=window.renderNow}catch(e){}
+      try{if(window.W&&TAB==='now')card()}catch(e){}}
+    else if(n<80)setTimeout(function(){hook(n+1)},250)})(0);
+  window.nxEventNow=function(){return EV};
 })();
 </script>
 <script type="text/plain" id="nxSceneSrc">

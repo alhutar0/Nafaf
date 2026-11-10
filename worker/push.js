@@ -678,7 +678,7 @@ export default {
        العدّ داخل Durable Object واحد فلا تضيع زيادة حين يصل زائران في نفس اللحظة. */
     if (url.pathname === '/ev' && request.method === 'POST') {
       const b = await request.json().catch(() => null);
-      const E = ['first', 'active', 'install', 'push', 'cyclone', 'story', 'd1', 'd7', 'd30'];
+      const E = ['first', 'active', 'install', 'push', 'cyclone', 'story', 'event', 'd1', 'd7', 'd30'];
       if (!b || E.indexOf(b.e) < 0 || !env.FUNNEL) return json({ ok: false });
       const clean = (x, n) => String(x || '').toLowerCase().replace(/[^a-z0-9_.-]/g, '').slice(0, n) || 'unknown';
       const rec = { e: b.e, src: clean(b.src, 24), cc: clean((request.cf && request.cf.country) || '', 2).toUpperCase(), lang: clean(b.lang, 6), st: b.st ? 1 : 0 };
