@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611101732';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611101752';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -4758,7 +4758,7 @@ var SMELL_ICONS={rain:'◍',soon:'◌',sea:'≈',dust:'⋯',hot:'◈',cool:'❄'
 function smellCard(){
  var sm=smellLine();if(!sm)return '';
  return '<div class="smell"><div class="sm-h">'+
- (SMELL_ICONS[sm.i]||'◍')+' '+pick('رائحة الجو','رائحة الأجواء','The scent of the air')+
+ (SMELL_ICONS[sm.i]||'◍')+' <span>'+pick('رائحة الجو','رائحة الأجواء','The scent of the air')+'</span>'+
  '</div><div class="sm-b">'+sm.t[LI()]+'</div></div>';
 }
 
@@ -13344,7 +13344,7 @@ setTimeout(eventCheck,7000);
   var tn=LI()===2?tc.en:tc.ar, tco=LI()===2?tc.cen:tc.car;
   selectGlobal(tc.lat,tc.lon,tn,tco,'');
   $("locName").innerHTML='<span style="font-size:13px">'+pick('فعّل إذن الموقع','فعّل إذن الموقع','Enable location')+
-  '<small>'+pick('نعرض '+tn+' مؤقتًا','عرض '+tn+' مؤقتًا','Showing '+tn+' for now')+'</small></span>';
+  '<small>'+pick('نعرض '+tn+' مؤقتًا','عرض '+tn+' مؤقتًا',(window.nxTr?nxTr('Showing %s for now'):'Showing %s for now').replace('%s',tn))+'</small></span>';
   return;
  }
  $("locName").innerHTML='<span style="font-size:13px">'+
@@ -13404,7 +13404,6 @@ setInterval(function(){
  else paintSky(stateOf(W)); /* تحديث ناعم للتدرّج كل دقيقة */
  }},60000);
 </script>
-
 
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
@@ -14781,6 +14780,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
           Numbers are lifted out first ("In 3 hours" → "In # hours") so one entry serves every value. ── */
   var D=(XL&&window.NX_DICT&&window.NX_DICT[XL])||null,MISS={};
   var NUM=/\d+(?:[.,]\d+)?/g;
+  var PAT=[[/^Showing (.+) for now$/,'Showing %s for now'],[/^Rain watch — (.+)$/,'Rain watch — %s']];
   function tr(s){
     if(!D||!s||typeof s!=='string')return s;
     var m=s.match(/^(\s*)([\s\S]*?)(\s*)$/),core=m[2].replace(/\s+/g,' ');
@@ -14790,7 +14790,10 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
       /* a fragment like "Humid · " or "— Rain" — look up the words without the separators around them */
       var mm=k.match(/^([\s·•—–:,|-]*)(.*?)([\s·•—–:,|-]*)$/);
       if(mm&&mm[2]&&mm[2]!==k&&D[mm[2]]!=null){v=mm[1]+D[mm[2]]+mm[3]}
-      else{MISS[k]=1;return s}
+      else{ /* sentences that carry a place name: "Showing Karachi for now" → the "%s" entry */
+        var pm=null;for(var q=0;q<PAT.length&&!pm;q++){var r=k.match(PAT[q][0]);if(r&&D[PAT[q][1]]!=null)pm=D[PAT[q][1]].replace('%s',r[1])}
+        if(pm!=null){v=pm}else{MISS[k]=1;return s}
+      }
     }
     var i=0;v=v.replace(/#/g,function(){return i<nums.length?nums[i++]:'#'});
     return m[1]+v+m[3];
