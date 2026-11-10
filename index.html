@@ -1,6 +1,46 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+<!-- ═══════ NAFAF LANG BOOT ═══════ -->
+<script>
+/* Nafaf speaks the phone's language. Runs before anything else on the page:
+   reads the phone's language list in the user's own order and picks the first one Nafaf has.
+     Arabic in a Gulf region (or a Gulf time zone) → the Omani dialect; other Arabic → Fusha
+     English → English
+     a language with a Nafaf dictionary → English engine + that dictionary on top
+   A language picked by hand in Settings always wins (lang.manual). */
+(function(){
+  var XL={ur:{dir:'rtl',n:'اردو'},hi:{dir:'ltr',n:'हिन्दी'},bn:{dir:'ltr',n:'বাংলা'},fr:{dir:'ltr',n:'Français'},de:{dir:'ltr',n:'Deutsch'}};
+  window.NX_XL_LIST=XL;
+  var GULF=/^(OM|AE|SA|KW|QA|BH|YE)$/,TZG=/^Asia\/(Muscat|Dubai|Riyadh|Qatar|Kuwait|Bahrain|Aden)$/;
+  function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}}
+  var tz='';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+  window.NX_GULF_TZ=TZG.test(tz);
+  var lang=ls('lang'),xl=ls('nx.xl');
+  /* existing users: a language they chose before this engine existed stays theirs */
+  if(ls('nx.langv')!=='1'){ls('nx.langv','1');if(lang&&ls('lang.manual')==null)ls('lang.manual','1')}
+  if(ls('lang.manual')!=='1'){
+    var list=(navigator.languages&&navigator.languages.length)?navigator.languages:[navigator.language||'en'];
+    lang='en';xl=null;
+    for(var i=0;i<list.length;i++){
+      var t=String(list[i]||'').replace('_','-'),b=t.split('-')[0].toLowerCase(),r=(t.split('-')[1]||'').toUpperCase();
+      if(b==='ar'){lang=(GULF.test(r)||(!r&&(TZG.test(tz)||!tz)))?'dial':'fus';break}
+      if(b==='en')break;
+      if(XL[b]){xl=b;break}
+    }
+    ls('lang',lang);ls('nx.xl',xl);
+    window.NX_LANG_AUTO=true;
+  }
+  if(xl&&!XL[xl]){xl=null;ls('nx.xl',null)}
+  if(xl&&lang!=='en'){lang='en';ls('lang','en')}
+  window.NX_XL=xl||null;
+  var H=document.documentElement;
+  H.lang=xl||(lang==='en'?'en':'ar');H.dir=xl?XL[xl].dir:(lang==='en'?'ltr':'rtl');
+  if(xl)document.write('<script src="nafaf-lang-'+xl+'.js"><\/script>');
+})();
+</script>
+<!-- /═══════ NAFAF LANG BOOT ═══════ -->
+
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
@@ -11485,7 +11525,7 @@ function pushSubscribe(){
   if(CUR&&typeof CUR.lat==='number'){payload.lat=CUR.lat;payload.lon=CUR.lon;}
   payload.place=(CUR&&CUR.n)||'';
   payload.tz=(typeof TZ_OFF==='number'&&TZ_OFF!=null)?TZ_OFF:(-new Date().getTimezoneOffset()*60);
-  payload.lang=(LI()===2?'en':(LI()===1?'msa':'ar'));payload.widget=!!(WIDGET&&WIDGET.on);payload.v=2;
+  payload.lang=(LI()===2?'en':(LI()===1?'msa':'ar'));payload.xl=window.NX_XL||null;payload.widget=!!(WIDGET&&WIDGET.on);payload.v=2;
  }catch(e){}
  return fetch(PUSH_URL+'/subscribe',{method:'POST',
  headers:{'Content-Type':'application/json'},
@@ -13641,6 +13681,25 @@ html.nx3d:is([data-tod=day],[data-tod=golden]) body.v2 .pgStrip :is(.pgSt){color
 html.nx3d:is([data-tod=day],[data-tod=golden]) body.v2 :is(.pgDesc,.scrubHint){width:fit-content;max-width:100%;margin-inline:auto;padding:3px 12px;border-radius:10px;background:var(--nxSLbl)!important;color:#F7F3FA!important;text-shadow:none!important;opacity:1!important}
 html.nx3d:is([data-tod=day],[data-tod=golden]) body.v2 .scrubHint{color:#F6CF85!important}
 html.nx3d:is([data-tod=day],[data-tod=golden]) body.v2 .pulseIn{text-shadow:0 1px 2px var(--nxSShadow),0 0 18px var(--nxSShadow)}
+/* — account.html — */
+/* the top bar no longer carries sign-in / sign-out / the reporter stamp — Settings and the report sheet do */
+html.nx #authBadge{display:none!important}
+#nxAccRow{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;border-radius:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);cursor:pointer}
+#nxAccRow .av{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#E3A94B;color:#1d1305;font-weight:900}
+#nxAccRow .tx{flex:1;min-width:0}#nxAccRow b{display:block;font-size:14px}#nxAccRow small{display:block;font-size:12px;opacity:.72;line-height:1.45}
+.nxNoGsi{font-size:12.5px;line-height:1.6;opacity:.8;margin-top:6px}
+#nxPushNote{font-size:12px;line-height:1.6;opacity:.75;margin-top:8px}
+/* — lang.html — */
+#nxLangRow{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+#nxLangRow button{height:38px;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:inherit;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+#nxLangRow button.on{background:#E3A94B;color:#1d1305;border-color:#E3A94B}
+#nxLangRow button.auto{grid-column:1/-1}
+#nxLangNote{font-size:12px;opacity:.75;margin-top:6px;line-height:1.5}
+#nxLChip{position:fixed;z-index:70;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 104px);display:none;align-items:center;gap:8px;
+  padding:8px 8px 8px 14px;border-radius:999px;background:rgba(14,22,44,.94);color:#EEF3FA;border:1px solid rgba(255,255,255,.14);box-shadow:0 14px 30px -12px rgba(0,0,0,.7);font-size:13px;white-space:nowrap;max-width:calc(100vw - 24px)}
+#nxLChip.on{display:flex}
+#nxLChip button{border:0;border-radius:999px;height:32px;padding:0 12px;font:inherit;font-weight:800;font-size:13px;cursor:pointer;background:#E3A94B;color:#1d1305}
+#nxLChip button.x{background:transparent;color:rgba(238,243,250,.7);padding:0 8px}
 </style>
 <script>
 /* Defaults = how Nafaf behaves with no portal setting. The portal publishes cfg.next; the app keeps the
@@ -14463,6 +14522,150 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   (function hook(n){if(typeof window.showTab==='function'&&!window.showTab.__nxs){var o=window.showTab;window.showTab=function(){var r=o.apply(this,arguments);soon();setTimeout(soon,700);return r};window.showTab.__nxs=1;try{showTab=window.showTab}catch(e){}}else if(n<60)setTimeout(function(){hook(n+1)},250)})(0);
   document.addEventListener('click',function(){setTimeout(soon,350)},true);
   window.nxSurfaces={run:run};
+})();
+</script>
+<script>
+(function(){
+  function P(a,b,c){try{return pick(a,b,c)}catch(e){return a}}
+  /* Google sign-in cannot work inside an embedded WebView (Google blocks it) or on phones without Google services */
+  var UA=navigator.userAgent||'';
+  var noGsi=/; wv\)/.test(UA)||/HuaweiBrowser|HarmonyOS|HMSCore|OpenHarmony/i.test(UA);
+  window.NX_NO_GSI=noGsi;
+  function who(){try{return {user:USER,corr:CORR&&CORR.status==='approved'}}catch(e){return {}}}
+  /* Settings → My data: one row that signs in, or opens the account */
+  function accRow(){
+    if(document.getElementById('nxAccRow'))return;
+    var del=document.getElementById('delBtn');if(!del)return;
+    var w=who(),r=document.createElement('div');r.id='nxAccRow';r.setAttribute('role','button');
+    if(w.user||w.corr){
+      var nm=(w.user&&w.user.name)||P('مراسل نفاف','مراسل نفاف','Nafaf reporter');
+      r.innerHTML='<span class="av"></span><span class="tx"><b></b><small></small></span>';
+      r.querySelector('.av').textContent=nm.charAt(0);r.querySelector('b').textContent=nm;
+      r.querySelector('small').textContent=(w.corr?P('مراسل معتمد · ','مراسل معتمد · ','Approved reporter · '):'')+P('حسابي وتسجيل الخروج','الحساب وتسجيل الخروج','Account & sign out');
+      r.onclick=function(){try{openAccount()}catch(e){}};
+    }else if(noGsi){
+      r.innerHTML='<span class="av">🔑</span><span class="tx"><b></b><small></small></span>';
+      r.querySelector('b').textContent=P('تسجيل الدخول','تسجيل الدخول','Sign in');
+      r.querySelector('small').textContent=P('ما يشتغل على هالجهاز — افتح nafaf.online من Chrome لترفع صور وتصير مراسل.','غير متاح على هذا الجهاز — استخدم Chrome.','Not available on this device — open nafaf.online in Chrome to post photos or become a reporter.');
+      r.style.cursor='default';
+    }else{
+      r.innerHTML='<span class="av">🔑</span><span class="tx"><b></b><small></small></span>';
+      r.querySelector('b').textContent=P('تسجيل الدخول (اختياري)','تسجيل الدخول (اختياري)','Sign in (optional)');
+      r.querySelector('small').textContent=P('للمراسلين ورفع صور الجو فقط — كل نفاف يشتغل بدونه.','للمراسلين ورفع الصور فقط.','Only for reporters and sky photos — all of Nafaf works without it.');
+      r.onclick=function(){try{doSignIn()}catch(e){}};
+    }
+    del.parentNode.insertBefore(r,del);
+  }
+  /* the line that tells, before switching on, what rain alerts keep on the server */
+  function pushNote(){
+    if(document.getElementById('nxPushNote'))return;
+    var on=document.querySelector('[data-push="1"]');if(!on)return;
+    var n=document.createElement('div');n.id='nxPushNote';
+    n.textContent=P('🔒 عند التفعيل نحفظ منطقتك التقريبية (حوالي ١١ كم، مو عنوانك) عشان نرسل لك تنبيه المطر فقط — تنحذف إذا وقفت التنبيهات.',
+      '🔒 عند التفعيل نحفظ منطقتك التقريبية (نحو ١١ كم) لإرسال تنبيه المطر فقط، وتُحذف بإيقاف التنبيهات.',
+      '🔒 Switching on stores your approximate area (about 11 km, never your address) only to send rain alerts — it is deleted when you switch alerts off.');
+    on.parentNode.appendChild(n);
+  }
+  (function hook(n){if(typeof window.renderSettings==='function'&&!window.renderSettings.__nxa){var o=window.renderSettings;window.renderSettings=function(){var r=o.apply(this,arguments);try{accRow();pushNote()}catch(e){}return r};window.renderSettings.__nxa=1;try{renderSettings=window.renderSettings}catch(e){}}else if(n<60)setTimeout(function(){hook(n+1)},250)})(0);
+  /* report sheet: on devices where Google sign-in fails, replace the button with a plain explanation */
+  if(noGsi){
+    new MutationObserver(function(){var b=document.getElementById('signBtn');if(b&&!b.__nx){b.__nx=1;
+      var m=document.createElement('div');m.className='nxNoGsi';m.textContent=P('تسجيل الدخول ما يشتغل على هالجهاز — افتح nafaf.online من Chrome.','تسجيل الدخول غير متاح على هذا الجهاز.','Sign-in is not available on this device — open nafaf.online in Chrome.');
+      b.replaceWith(m);var g=document.getElementById('gsiBtnHost');if(g)g.remove()}}).observe(document.body,{childList:true,subtree:true});
+  }
+})();
+</script>
+<div id="nxLChip" role="status"><span id="nxLChipT"></span><button type="button" id="nxLChipGo">العامية</button><button type="button" class="x" id="nxLChipX" aria-label="close">✕</button></div>
+<script>
+(function(){
+  var XL=window.NX_XL,LIST=window.NX_XL_LIST||{};
+  function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}}
+
+  /* ── 1. translation layer: English is the pivot; every visible English text is looked up in the dictionary.
+          Numbers are lifted out first ("In 3 hours" → "In # hours") so one entry serves every value. ── */
+  var D=(XL&&window.NX_DICT&&window.NX_DICT[XL])||null,MISS={};
+  var NUM=/\d+(?:[.,]\d+)?/g;
+  function tr(s){
+    if(!D||!s||typeof s!=='string')return s;
+    var m=s.match(/^(\s*)([\s\S]*?)(\s*)$/),core=m[2].replace(/\s+/g,' ');
+    if(!/[A-Za-z]{2}/.test(core))return s;
+    var nums=core.match(NUM)||[],k=core.replace(NUM,'#'),v=D[k];
+    if(v==null){
+      /* a fragment like "Humid · " or "— Rain" — look up the words without the separators around them */
+      var mm=k.match(/^([\s·•—–:,|-]*)(.*?)([\s·•—–:,|-]*)$/);
+      if(mm&&mm[2]&&mm[2]!==k&&D[mm[2]]!=null){v=mm[1]+D[mm[2]]+mm[3]}
+      else{MISS[k]=1;return s}
+    }
+    var i=0;v=v.replace(/#/g,function(){return i<nums.length?nums[i++]:'#'});
+    return m[1]+v+m[3];
+  }
+  window.nxTr=tr;window.nxTrMissing=function(){return Object.keys(MISS)};
+  if(D){
+    /* strings handed to alerts/confirm/toasts go through pick() before reaching the screen */
+    (function hook(n){if(typeof window.pick==='function'&&!window.pick.__nxl){var op=window.pick;
+      window.pick=function(){var r=op.apply(this,arguments);return (typeof r==='string'&&r.indexOf('<')<0)?tr(r):r};window.pick.__nxl=1;try{pick=window.pick}catch(e){}}
+      else if(n<40)setTimeout(function(){hook(n+1)},50)})(0);
+    var SKIP={SCRIPT:1,STYLE:1,NOSCRIPT:1,TEXTAREA:1,INPUT:1,CODE:1,PRE:1};
+    var ATTR=['placeholder','aria-label','title'];
+    function doText(n){var p=n.parentNode;if(!p||SKIP[p.nodeName]||(p.closest&&p.closest('[data-nxl-skip]')))return;
+      var v=n.nodeValue;if(n.__nxt===v)return;var t=tr(v);if(t!==v){n.nodeValue=t}n.__nxt=n.nodeValue}
+    function doEl(el){if(el.nodeType!==1||SKIP[el.nodeName])return;
+      for(var a=0;a<ATTR.length;a++){var v=el.getAttribute(ATTR[a]);if(v){var t=tr(v);if(t!==v)el.setAttribute(ATTR[a],t)}}
+      var w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT),x;
+      while(x=w.nextNode()){if(x.nodeType===3)doText(x);else{if(SKIP[x.nodeName])continue;for(var b=0;b<ATTR.length;b++){var u=x.getAttribute(ATTR[b]);if(u){var q=tr(u);if(q!==u)x.setAttribute(ATTR[b],q)}}}}}
+    var Q=[],qd=0;
+    function flush(){qd=0;var L=Q;Q=[];for(var i=0;i<L.length;i++){var n=L[i];if(n.nodeType===3)doText(n);else doEl(n)}}
+    function queue(n){Q.push(n);if(!qd){qd=1;(window.requestAnimationFrame||setTimeout)(flush)}}
+    new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var m=ms[i];
+      if(m.type==='characterData')queue(m.target);
+      else if(m.type==='attributes')queue(m.target);
+      else for(var j=0;j<m.addedNodes.length;j++)queue(m.addedNodes[j])}})
+      .observe(document.documentElement,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:ATTR});
+    doEl(document.body);
+    var t0=document.title;if(t0)document.title=tr(t0);
+    /* the app writes dir="ltr" for English; a right-to-left phone language keeps its own direction */
+    function dir(){var H=document.documentElement,d=(LIST[XL]&&LIST[XL].dir)||'ltr';if(H.dir!==d)H.dir=d;if(H.lang!==XL)H.lang=XL}
+    new MutationObserver(dir).observe(document.documentElement,{attributes:true,attributeFilter:['dir','lang']});dir();
+  }
+
+  /* ── 2. Settings: "Phone language" plus every language Nafaf speaks; a choice made here is kept ── */
+  function P(a,b,c){try{return pick(a,b,c)}catch(e){return c}}
+  function setLang(lang,xl,manual){
+    if(manual){ls('lang.manual','1');ls('lang',lang);ls('nx.xl',xl||null)}else{ls('lang.manual',null)}
+    location.reload();
+  }
+  function addRow(){
+    var dial=document.querySelector('[data-lang="dial"]');if(!dial||document.getElementById('nxLangRow'))return;
+    var host=dial.parentNode,row=document.createElement('div');row.id='nxLangRow';
+    var auto=ls('lang.manual')!=='1';
+    var h='<button type="button" class="auto'+(auto?' on':'')+'" data-xl="auto">📱 '+P('لغة الجوال (تلقائي)','لغة الهاتف (تلقائي)','Phone language (auto)')+'</button>';
+    for(var k in LIST)h+='<button type="button" data-xl="'+k+'"'+(!auto&&XL===k?' class="on"':'')+' lang="'+k+'">'+LIST[k].n+'</button>';
+    row.innerHTML=h;host.parentNode.insertBefore(row,host.nextSibling);
+    var note=document.createElement('div');note.id='nxLangNote';
+    note.textContent=auto?P('نفاف يتبع لغة جوالك تلقائيًا. اختيار لغة بيدك يثبّتها.','يتبع نفاف لغة الهاتف تلقائيًا.','Nafaf follows your phone’s language. Picking one here pins it.')
+      :P('لغة مثبّتة بيدك — اختر «لغة الجوال» ليرجع تلقائي.','لغة مثبّتة يدويًا.','Pinned by you — choose “Phone language” to go back to automatic.');
+    row.parentNode.insertBefore(note,row.nextSibling);
+    /* the original three buttons (dialect / Fusha / English) also pin the choice */
+    host.querySelectorAll('[data-lang]').forEach(function(b){b.classList.toggle('on',!auto&&!XL&&b.classList.contains('on'));
+      b.addEventListener('click',function(){ls('lang.manual','1');ls('nx.xl',null);if(XL)setTimeout(function(){location.reload()},60)},true)});
+    if(auto)host.querySelectorAll('[data-lang]').forEach(function(b){b.classList.remove('on')});
+    row.addEventListener('click',function(e){var b=e.target.closest('[data-xl]');if(!b)return;e.stopPropagation();
+      var v=b.getAttribute('data-xl');if(v==='auto')setLang(null,null,false);else setLang('en',v,true)});
+  }
+  (function hook(n){if(typeof window.renderSettings==='function'&&!window.renderSettings.__nxl){var o=window.renderSettings;window.renderSettings=function(){var r=o.apply(this,arguments);try{addRow()}catch(e){}return r};window.renderSettings.__nxl=1;try{renderSettings=window.renderSettings}catch(e){}}else if(n<60)setTimeout(function(){hook(n+1)},250)})(0);
+
+  /* ── 3. an English or other-language phone in a Gulf time zone: offer the Omani dialect once ── */
+  (function(){
+    if(!window.NX_LANG_AUTO||!window.NX_GULF_TZ||XL||ls('nx.lchip'))return;
+    var lang=ls('lang');if(lang==='dial'||lang==='fus')return;
+    var c=document.getElementById('nxLChip');if(!c)return;
+    var nm='English';
+    document.getElementById('nxLChipT').textContent=nm+' · تبي نفاف بالعامية؟';
+    setTimeout(function(){c.classList.add('on')},4000);
+    setTimeout(function(){c.classList.remove('on')},16000);
+    document.getElementById('nxLChipGo').onclick=function(){ls('nx.lchip','1');setLang('dial',null,true)};
+    document.getElementById('nxLChipX').onclick=function(){ls('nx.lchip','1');c.classList.remove('on')};
+  })();
 })();
 </script>
 <script type="module">
