@@ -58,8 +58,10 @@
 <meta name="apple-mobile-web-app-title" content="نفاف" />
 <meta name="description" content="طقسك بين يديك بلسان أهلك" />
 <title>نفاف — Nafaf</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Leaflet 1.9.4 (BSD-2, LICENSE-leaflet.txt), served from nafaf.online: no extra connection, and it no longer blocks the first paint -->
+<link rel="preload" href="leaflet.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+<noscript><link rel="stylesheet" href="leaflet.css" /></noscript>
+<script defer src="leaflet.js"></script>
 <style>
 @keyframes sunp{0%,to{transform:scale(1);opacity:.85}
 50%{transform:scale(1.1);opacity:1}
@@ -13310,6 +13312,7 @@ setInterval(function(){
  }},60000);
 </script>
 
+
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -14831,7 +14834,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   window.nxStory=open;
 })();
 </script>
-<script type="module">
+<script type="text/plain" id="nxSceneSrc">
 /* Nafaf Next — live WebGL sky scene behind the app.
    Real sun & moon position for the selected city, weather-driven sky/clouds/rain/dust/fog/lightning,
    procedural Hajar-like ridges lit by the sun. Falls back silently to the existing canvas sky. */
@@ -15408,6 +15411,17 @@ function start() {
 const go = () => { try { start(); } catch (e) {} };
 if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 2500 }); else setTimeout(go, 1200);
 
+</script>
+<script>
+(function(){
+  var done=false;
+  function go(){if(done)return;done=true;var src=document.getElementById('nxSceneSrc');if(!src)return;
+    var s=document.createElement('script');s.type='module';s.textContent=src.textContent;document.body.appendChild(s)}
+  function idle(){if('requestIdleCallback' in window)requestIdleCallback(go,{timeout:1500});else setTimeout(go,300)}
+  var n=0;(function wait(){if(window.W||++n>80)idle();else setTimeout(wait,100)})();
+  /* a map card that asked for the map before Leaflet arrived gets it now */
+  document.addEventListener('DOMContentLoaded',function(){try{if(window.L&&window.V2RAD&&!V2RAD.map&&!V2RAD.lazy&&document.getElementById('v2RadarMap')&&typeof radarV2Start==='function')radarV2Start()}catch(e){}});
+})();
 </script>
 <!-- /═══════ NAFAF NEXT LAYER -->
 </body>

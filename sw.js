@@ -6,7 +6,7 @@
       على حذف النسخة القديمة تلقائيًا دون أي إجراء من المستخدم.
    ============================================================ */
 
-var CACHE = 'nafaf-v32';
+var CACHE = 'nafaf-v33';
 var STATE = 'nafaf-state';   /* موقع المستخدم ولغته للفحص في الخلفية — لا يُمسح مع التحديث */   /* رُفع الرقم — يمسح كل ذاكرة v1 القديمة تلقائيًا */
 
 self.addEventListener('install', function (e) {
@@ -46,7 +46,7 @@ self.addEventListener('fetch', function (e) {
 
   /* مكتبات محلية ثابتة الإصدار (three.js للوادي) وملفات اللغة — تُحفظ مرة وتعمل بلا إنترنت */
   /* ملفات الرسم والصور واللغة صارت في الجذر (بلا مجلدات) — تُحفظ مرة وتعمل بلا إنترنت */
-  if (/\/(three\.module\.min|OrbitControls|Sky|Pass|UnrealBloomPass|CopyShader|LuminosityHighPassShader|nafaf-i18n|nafaf-lang-[a-z]+)\.js(\?|$)|\/earth-(day|night)-[24]k\.jpg|\/earth-land-mask\.png/.test(url)) {
+  if (/\/(three\.module\.min|OrbitControls|Sky|Pass|UnrealBloomPass|CopyShader|LuminosityHighPassShader|nafaf-i18n|nafaf-lang-[a-z]+)\.js(\?|$)|\/leaflet(\.css|\.js|-[a-z0-9-]+\.png)(\?|$)|\/earth-(day|night)-[24]k\.jpg|\/earth-land-mask\.png/.test(url)) {
     e.respondWith(
       caches.match(e.request).then(function (m) {
         var net = fetch(e.request).then(function (r) {
