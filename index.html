@@ -34,11 +34,78 @@
   if(xl&&!XL[xl]){xl=null;ls('nx.xl',null)}
   if(xl&&lang!=='en'){lang='en';ls('lang','en')}
   window.NX_XL=xl||null;
+  /* temperature unit for a first-time user: °F where people read °F (United States and a few others), °C everywhere else */
+  if(ls('tunit')==null){
+    var rg=(String(navigator.language||'').split('-')[1]||'').toUpperCase(),F=/^(US|LR|BS|KY|PW|FM|MH)$/;
+    var usTz=/^(America\/(New_York|Chicago|Denver|Phoenix|Los_Angeles|Anchorage|Detroit|Indiana|Boise)|Pacific\/Honolulu)/.test(tz);
+    if(F.test(rg)||(!rg&&usTz))ls('tunit','f');
+  }
   var H=document.documentElement;
   H.lang=xl||(lang==='en'?'en':'ar');H.dir=xl?XL[xl].dir:(lang==='en'?'ltr':'rtl');
   if(xl)document.write('<script src="nafaf-lang-'+xl+'.js"><\/script>');
 })();
 </script>
+<!-- ═══════ NAFAF GLOBAL: Nafaf works for the whole world, not one country ═══════ -->
+<script>
+/* When a phone gives no location (permission refused, no GPS), Nafaf no longer falls back to Muscat for everyone:
+   it shows the main city of the phone's own time zone. Gulf time zones keep their Gulf city. */
+(function(){
+  /* tz: [English, Arabic, lat, lon, country EN, country AR] */
+  var Z={
+  'Asia/Muscat':['Muscat','مسقط',23.588,58.408,'Oman','عُمان'],'Asia/Dubai':['Dubai','دبي',25.205,55.271,'UAE','الإمارات'],
+  'Asia/Riyadh':['Riyadh','الرياض',24.713,46.675,'Saudi Arabia','السعودية'],'Asia/Qatar':['Doha','الدوحة',25.285,51.531,'Qatar','قطر'],
+  'Asia/Kuwait':['Kuwait City','مدينة الكويت',29.376,47.977,'Kuwait','الكويت'],'Asia/Bahrain':['Manama','المنامة',26.228,50.586,'Bahrain','البحرين'],
+  'Asia/Aden':['Aden','عدن',12.785,45.019,'Yemen','اليمن'],'Asia/Baghdad':['Baghdad','بغداد',33.315,44.366,'Iraq','العراق'],
+  'Asia/Amman':['Amman','عمّان',31.954,35.910,'Jordan','الأردن'],'Asia/Beirut':['Beirut','بيروت',33.894,35.502,'Lebanon','لبنان'],
+  'Asia/Damascus':['Damascus','دمشق',33.513,36.276,'Syria','سوريا'],'Asia/Jerusalem':['Jerusalem','القدس',31.778,35.235,'',''],
+  'Asia/Gaza':['Gaza','غزة',31.501,34.467,'Palestine','فلسطين'],'Asia/Hebron':['Hebron','الخليل',31.532,35.099,'Palestine','فلسطين'],
+  'Africa/Cairo':['Cairo','القاهرة',30.044,31.236,'Egypt','مصر'],'Africa/Khartoum':['Khartoum','الخرطوم',15.501,32.560,'Sudan','السودان'],
+  'Africa/Tripoli':['Tripoli','طرابلس',32.887,13.191,'Libya','ليبيا'],'Africa/Tunis':['Tunis','تونس',36.806,10.181,'Tunisia','تونس'],
+  'Africa/Algiers':['Algiers','الجزائر',36.754,3.059,'Algeria','الجزائر'],'Africa/Casablanca':['Casablanca','الدار البيضاء',33.573,-7.590,'Morocco','المغرب'],
+  'Africa/Nouakchott':['Nouakchott','نواكشوط',18.079,-15.965,'Mauritania','موريتانيا'],'Africa/Mogadishu':['Mogadishu','مقديشو',2.047,45.318,'Somalia','الصومال'],
+  'Africa/Djibouti':['Djibouti','جيبوتي',11.589,43.145,'Djibouti','جيبوتي'],'Africa/Addis_Ababa':['Addis Ababa','أديس أبابا',8.980,38.757,'Ethiopia','إثيوبيا'],
+  'Africa/Nairobi':['Nairobi','نيروبي',-1.292,36.822,'Kenya','كينيا'],'Africa/Lagos':['Lagos','لاغوس',6.524,3.379,'Nigeria','نيجيريا'],
+  'Africa/Johannesburg':['Johannesburg','جوهانسبرغ',-26.204,28.047,'South Africa','جنوب أفريقيا'],'Africa/Dar_es_Salaam':['Dar es Salaam','دار السلام',-6.792,39.208,'Tanzania','تنزانيا'],
+  'Asia/Tehran':['Tehran','طهران',35.689,51.389,'Iran','إيران'],'Europe/Istanbul':['Istanbul','إسطنبول',41.008,28.978,'Türkiye','تركيا'],
+  'Asia/Karachi':['Karachi','كراتشي',24.861,67.010,'Pakistan','باكستان'],'Asia/Kolkata':['Mumbai','مومباي',19.076,72.878,'India','الهند'],
+  'Asia/Calcutta':['Mumbai','مومباي',19.076,72.878,'India','الهند'],'Asia/Dhaka':['Dhaka','دكا',23.811,90.413,'Bangladesh','بنغلاديش'],
+  'Asia/Kathmandu':['Kathmandu','كاتماندو',27.717,85.324,'Nepal','نيبال'],'Asia/Colombo':['Colombo','كولومبو',6.927,79.861,'Sri Lanka','سريلانكا'],
+  'Asia/Kabul':['Kabul','كابل',34.555,69.208,'Afghanistan','أفغانستان'],'Asia/Tashkent':['Tashkent','طشقند',41.299,69.240,'Uzbekistan','أوزبكستان'],
+  'Asia/Almaty':['Almaty','ألماتي',43.238,76.946,'Kazakhstan','كازاخستان'],'Asia/Baku':['Baku','باكو',40.409,49.867,'Azerbaijan','أذربيجان'],
+  'Asia/Manila':['Manila','مانيلا',14.600,120.984,'Philippines','الفلبين'],'Asia/Jakarta':['Jakarta','جاكرتا',-6.208,106.846,'Indonesia','إندونيسيا'],
+  'Asia/Kuala_Lumpur':['Kuala Lumpur','كوالالمبور',3.139,101.687,'Malaysia','ماليزيا'],'Asia/Singapore':['Singapore','سنغافورة',1.352,103.820,'Singapore','سنغافورة'],
+  'Asia/Bangkok':['Bangkok','بانكوك',13.756,100.502,'Thailand','تايلاند'],'Asia/Ho_Chi_Minh':['Ho Chi Minh City','هو تشي منه',10.823,106.630,'Vietnam','فيتنام'],
+  'Asia/Shanghai':['Shanghai','شنغهاي',31.230,121.474,'China','الصين'],'Asia/Hong_Kong':['Hong Kong','هونغ كونغ',22.320,114.169,'Hong Kong','هونغ كونغ'],
+  'Asia/Taipei':['Taipei','تايبيه',25.033,121.565,'Taiwan','تايوان'],'Asia/Seoul':['Seoul','سيول',37.567,126.978,'South Korea','كوريا الجنوبية'],
+  'Asia/Tokyo':['Tokyo','طوكيو',35.677,139.650,'Japan','اليابان'],'Australia/Sydney':['Sydney','سيدني',-33.869,151.209,'Australia','أستراليا'],
+  'Australia/Melbourne':['Melbourne','ملبورن',-37.814,144.963,'Australia','أستراليا'],'Australia/Perth':['Perth','بيرث',-31.951,115.861,'Australia','أستراليا'],
+  'Pacific/Auckland':['Auckland','أوكلاند',-36.849,174.763,'New Zealand','نيوزيلندا'],
+  'Europe/London':['London','لندن',51.507,-0.128,'United Kingdom','المملكة المتحدة'],'Europe/Dublin':['Dublin','دبلن',53.350,-6.260,'Ireland','أيرلندا'],
+  'Europe/Paris':['Paris','باريس',48.857,2.352,'France','فرنسا'],'Europe/Berlin':['Berlin','برلين',52.520,13.405,'Germany','ألمانيا'],
+  'Europe/Madrid':['Madrid','مدريد',40.417,-3.704,'Spain','إسبانيا'],'Europe/Rome':['Rome','روما',41.903,12.496,'Italy','إيطاليا'],
+  'Europe/Amsterdam':['Amsterdam','أمستردام',52.368,4.904,'Netherlands','هولندا'],'Europe/Brussels':['Brussels','بروكسل',50.850,4.352,'Belgium','بلجيكا'],
+  'Europe/Vienna':['Vienna','فيينا',48.208,16.374,'Austria','النمسا'],'Europe/Zurich':['Zurich','زيورخ',47.377,8.541,'Switzerland','سويسرا'],
+  'Europe/Stockholm':['Stockholm','ستوكهولم',59.329,18.069,'Sweden','السويد'],'Europe/Oslo':['Oslo','أوسلو',59.914,10.752,'Norway','النرويج'],
+  'Europe/Copenhagen':['Copenhagen','كوبنهاغن',55.676,12.568,'Denmark','الدنمارك'],'Europe/Helsinki':['Helsinki','هلسنكي',60.170,24.938,'Finland','فنلندا'],
+  'Europe/Warsaw':['Warsaw','وارسو',52.230,21.012,'Poland','بولندا'],'Europe/Prague':['Prague','براغ',50.076,14.438,'Czechia','التشيك'],
+  'Europe/Athens':['Athens','أثينا',37.984,23.728,'Greece','اليونان'],'Europe/Lisbon':['Lisbon','لشبونة',38.722,-9.139,'Portugal','البرتغال'],
+  'Europe/Bucharest':['Bucharest','بوخارست',44.426,26.103,'Romania','رومانيا'],'Europe/Kyiv':['Kyiv','كييف',50.450,30.524,'Ukraine','أوكرانيا'],
+  'Europe/Kiev':['Kyiv','كييف',50.450,30.524,'Ukraine','أوكرانيا'],'Europe/Moscow':['Moscow','موسكو',55.756,37.617,'Russia','روسيا'],
+  'America/New_York':['New York','نيويورك',40.713,-74.006,'United States','الولايات المتحدة'],'America/Chicago':['Chicago','شيكاغو',41.878,-87.630,'United States','الولايات المتحدة'],
+  'America/Denver':['Denver','دنفر',39.739,-104.990,'United States','الولايات المتحدة'],'America/Phoenix':['Phoenix','فينيكس',33.448,-112.074,'United States','الولايات المتحدة'],
+  'America/Los_Angeles':['Los Angeles','لوس أنجلوس',34.052,-118.244,'United States','الولايات المتحدة'],'America/Anchorage':['Anchorage','أنكوريج',61.218,-149.900,'United States','الولايات المتحدة'],
+  'Pacific/Honolulu':['Honolulu','هونولولو',21.307,-157.858,'United States','الولايات المتحدة'],'America/Toronto':['Toronto','تورونتو',43.653,-79.383,'Canada','كندا'],
+  'America/Vancouver':['Vancouver','فانكوفر',49.283,-123.121,'Canada','كندا'],'America/Mexico_City':['Mexico City','مكسيكو سيتي',19.433,-99.133,'Mexico','المكسيك'],
+  'America/Bogota':['Bogotá','بوغوتا',4.711,-74.072,'Colombia','كولومبيا'],'America/Lima':['Lima','ليما',-12.046,-77.043,'Peru','بيرو'],
+  'America/Sao_Paulo':['São Paulo','ساو باولو',-23.551,-46.633,'Brazil','البرازيل'],'America/Argentina/Buenos_Aires':['Buenos Aires','بوينس آيرس',-34.604,-58.382,'Argentina','الأرجنتين'],
+  'America/Santiago':['Santiago','سانتياغو',-33.449,-70.669,'Chile','تشيلي']
+  };
+  var tz='';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+  window.nxTzCity=function(){var r=Z[tz];if(!r)return null;return {tz:tz,en:r[0],ar:r[1],lat:r[2],lon:r[3],cen:r[4],car:r[5]}};
+})();
+</script>
+<!-- /NAFAF GLOBAL -->
+
 <!-- /═══════ NAFAF LANG BOOT ═══════ -->
 
 <meta charset="UTF-8" />
@@ -13237,7 +13304,7 @@ setTimeout(eventCheck,7000);
  }
 
  if(!navigator.geolocation){
- if(!hasSaved)selectCity(0); /* الجهاز لا يدعم الموقع */
+ if(!hasSaved){var tz0=null;try{tz0=window.nxTzCity&&nxTzCity();}catch(e){} if(tz0&&tz0.tz!=='Asia/Muscat')selectGlobal(tz0.lat,tz0.lon,LI()===2?tz0.en:tz0.ar,LI()===2?tz0.cen:tz0.car,''); else selectCity(0);} /* الجهاز لا يدعم الموقع */
  return;
  }
 
@@ -13254,6 +13321,15 @@ setTimeout(eventCheck,7000);
  function(err){
  if(hasSaved)return; /* عندنا موقع محفوظ — يكفي */
  /* رُفض الإذن ولا موقع محفوظ: أخبر المستخدم بصراحة ثم اعرض مدينة مؤقتة */
+ /* ★ نفاف عالمي: المدينة المؤقتة هي مدينة المنطقة الزمنية لجوال المستخدم، لا مسقط للجميع */
+ var tc=null;try{tc=window.nxTzCity&&nxTzCity();}catch(e){}
+ if(tc&&tc.tz!=='Asia/Muscat'){
+  var tn=LI()===2?tc.en:tc.ar, tco=LI()===2?tc.cen:tc.car;
+  selectGlobal(tc.lat,tc.lon,tn,tco,'');
+  $("locName").innerHTML='<span style="font-size:13px">'+pick('فعّل إذن الموقع','فعّل إذن الموقع','Enable location')+
+  '<small>'+pick('نعرض '+tn+' مؤقتًا','عرض '+tn+' مؤقتًا','Showing '+tn+' for now')+'</small></span>';
+  return;
+ }
  $("locName").innerHTML='<span style="font-size:13px">'+
  pick('فعّل إذن الموقع','فعّل إذن الموقع','Enable location')+
  '<small>'+pick('نعرض مسقط مؤقتًا','عرض مسقط مؤقتًا','Showing Muscat for now')+'</small></span>';
