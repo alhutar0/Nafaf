@@ -13312,7 +13312,6 @@ setInterval(function(){
  }},60000);
 </script>
 
-
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -13716,6 +13715,39 @@ html.nx #authBadge{display:none!important}
 #nxSt .bt button{height:48px;border-radius:14px;border:0;font:inherit;font-weight:900;font-size:15px;cursor:pointer;background:#E3A94B;color:#1d1305}
 #nxSt .bt button.g{background:rgba(255,255,255,.1);color:#EEF3FA;border:1px solid rgba(255,255,255,.16)}
 #nxSt .x{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));inset-inline-end:12px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.1);color:#fff;font-size:18px;cursor:pointer}
+/* — wide.html — */
+/* ── computer & iPad landscape ── */
+/* Now: the hero band stays (ring + strip | tiles); below it the cards keep their order in rows of three,
+   and every section title spans the full width directly above its own cards (no backfilling holes) */
+html.nx body.v2.wide #nowBody{grid-auto-flow:row;align-items:start}
+html.nx body.v2.wide #nowBody>.v2h{grid-column:1 / -1;margin:14px 4px -6px}
+html.nx body.v2.wide #nowBody>*:empty,html.nx body.v2.wide #nowBody>.card.rippleHost{display:none}
+
+/* Fitness: two even columns instead of newspaper columns that split cards */
+html.nx body.v2.wide #fitBody{column-count:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 22px;align-items:start}
+html.nx body.v2.wide #fitBody>*{margin:0}
+html.nx body.v2.wide #fitBody>:is(.sec-t,.sec-s,.fitDisc){grid-column:1 / -1}
+
+/* Live: the layer panel beside a tall map */
+html.nx body.v2.wide #liveBody{display:grid;grid-template-columns:minmax(330px,400px) minmax(0,1fr);gap:12px 22px;align-items:start}
+html.nx body.v2.wide #liveBody>*{grid-column:2;margin:0}
+html.nx body.v2.wide #liveBody>:is(.sec-t,.sec-s){grid-column:1 / -1}
+html.nx body.v2.wide #liveBody>#lyrBtns{grid-column:1;grid-row:3 / span 8;position:sticky;top:96px;max-height:calc(100vh - 120px);overflow:auto}
+html.nx body.v2.wide #liveMap{height:calc(100vh - 250px)!important;min-height:440px;border-radius:20px}
+
+/* ── iPad portrait and large phones on their side: a 760px page in two columns, not a 430px phone strip ── */
+@media (min-width:700px){
+  html.nx body.v2:not(.wide) .wrap{max-width:760px}
+  html.nx body.v2:not(.wide) #nowBody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;align-items:start}
+  html.nx body.v2:not(.wide) #nowBody>*{margin-top:0;margin-bottom:0;min-width:0}
+  html.nx body.v2:not(.wide) #nowBody>:is(:first-child,.nxHeroWrap,.nxTilesWrap,.nxWide,.v2h,.sec-t,.sec-s){grid-column:1 / -1}
+  html.nx body.v2:not(.wide) #nowBody>*:empty,html.nx body.v2:not(.wide) #nowBody>.card.rippleHost{display:none}
+  html.nx body.v2:not(.wide) #nowBody>.nxHeroWrap{max-width:560px;width:100%;margin-inline:auto}
+  html.nx body.v2:not(.wide) #fitBody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;align-items:start}
+  html.nx body.v2:not(.wide) #fitBody>*{margin:0;min-width:0}
+  html.nx body.v2:not(.wide) #fitBody>:is(.sec-t,.sec-s,.fitDisc){grid-column:1 / -1}
+  html.nx body.v2:not(.wide) #liveMap{height:min(62vh,640px)!important}
+}
 </style>
 <script>
 /* Defaults = how Nafaf behaves with no portal setting. The portal publishes cfg.next; the app keeps the
@@ -14832,6 +14864,16 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   document.addEventListener('click',function(e){var sb=e.target&&e.target.closest&&e.target.closest('#shareBtn');if(!sb)return;
     e.stopPropagation();e.preventDefault();try{if(navigator.vibrate)navigator.vibrate([12,40,18])}catch(_){}open()},true);
   window.nxStory=open;
+})();
+</script>
+<script>
+/* a Leaflet map must re-measure itself after the page around it changes shape */
+(function(){
+  function fit(){try{if(window.LMAP)LMAP.invalidateSize({pan:false})}catch(e){}try{if(window.V2RAD&&V2RAD.map)V2RAD.map.invalidateSize({pan:false})}catch(e){}}
+  var t=0;function soon(){clearTimeout(t);t=setTimeout(fit,250)}
+  addEventListener('resize',soon);
+  (function hook(n){if(typeof window.showTab==='function'&&!window.showTab.__nxw){var o=window.showTab;window.showTab=function(){var r=o.apply(this,arguments);setTimeout(fit,350);setTimeout(fit,1200);return r};window.showTab.__nxw=1;try{showTab=window.showTab}catch(e){}}else if(n<60)setTimeout(function(){hook(n+1)},250)})(0);
+  new MutationObserver(soon).observe(document.body,{attributes:true,attributeFilter:['class']});
 })();
 </script>
 <script type="text/plain" id="nxSceneSrc">
