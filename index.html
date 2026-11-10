@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611101752';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611101921';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -7115,6 +7115,10 @@ var NAFAF_PRIVACY={
  '• <b>الرصد:</b> نوع الحالة واسم ولايتك وإحداثيات تقريبية — للتدقيق فقط ولا تُعرض للعامة<br>'+
  '• <b>الزوار:</b> رقم عشوائي يولّده جهازك لعدّ الزيارات بلا أي معرّف شخصي، وأرقام مجمّعة مجهولة: كم واحد جديد وصل ومن أي مصدر، وكم ثبّت أو فعّل التنبيهات أو رجع — بدون أي معرّف أو موقع<br>'+
  '• <b>المراسلون:</b> بريدك واسمك من حساب جوجل — للتحقق من هويتك كمراسل فقط<br><br>'+
+ '<b>ما يصل خادمنا تلقائيًا بلا أي معرّف</b><br>'+
+ '• <b>التحذيرات الرسمية:</b> إحداثيات تقريبية (نحو ١٠٠ م) لنجلب تحذيرات مكانك من الجهة الرسمية في بلدك — لا تُخزَّن<br>'+
+ '• <b>عدّادات الاستخدام:</b> خطوات مجهولة (أول زيارة، تثبيت، رجوع) مع مصدر الوصول ولغة التطبيق<br>'+
+ '• <b>الأعطال التقنية:</b> نص الخطأ ونوع الجهاز وإصدار نفاف — لإصلاحه، وتُحذف بعد ٣٠ يومًا<br><br>'+
  '<b>ما لا نجمعه إطلاقًا</b><br>'+
  '• لا نتتبّع تحركاتك<br>'+
  '• لا نبيع بياناتك ولا نشاركها مع معلنين<br>'+
@@ -7128,12 +7132,14 @@ var NAFAF_PRIVACY={
  '<b>بياناتك تبقى في جهازك.</b><br><br>'+
  '<b>محليًا:</b> الإعدادات · السلسلة · السجل · المفضّلة.<br><br>'+
  '<b>على الخادم (بموافقتك):</b> رمز الإشعارات مع المنطقة التقريبية (نحو ١١ كم) ولغة التطبيق لإرسال تنبيه المطر، وتُحذف بإيقافه · بيانات الرصد للتدقيق · عدّاد زوار مجهول · بريد المراسلين للتحقق.<br><br>'+
+ '<b>تلقائيًا بلا معرّف:</b> إحداثيات تقريبية لجلب التحذيرات الرسمية (لا تُخزَّن) · عدّادات استخدام مجهولة · تقارير الأعطال التقنية.<br><br>'+
  '<b>لا نجمع:</b> تتبّع · بيع بيانات · أدوات تتبّع خارجية · إعلانات.<br><br>'+
  '<b>الحذف:</b> امسح بيانات الموقع من المتصفح وأوقف التنبيهات لحذف اشتراكك.',
 
  '<b>Your data stays on your device.</b><br><br>'+
  '<b>Local only:</b> Settings · streak · change log · favourites.<br><br>'+
  '<b>Sent to our server (only if you opt in):</b> push token with your approximate area (about 11 km, never your address) and app language, to send rain alerts — deleted when you switch alerts off or after 120 days unused · observation data for verification · anonymous visit counter · reporter email for identity check.<br><br>'+
+ '<b>Sent automatically, with no identifier:</b> approximate coordinates to fetch official warnings (not stored) · anonymous usage counters · technical error reports.<br><br>'+
  '<b>We never:</b> track you · sell data · use third-party trackers · show ads.<br><br>'+
  '<b>Deletion:</b> Clear site data in your browser; turn off rain alerts to remove your subscription.'
  ]
@@ -13405,6 +13411,7 @@ setInterval(function(){
  }},60000);
 </script>
 
+
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -13876,10 +13883,42 @@ body.v2:not(.wide) .ov>.modal{left:auto;right:auto}
 .nxEvt .ac button.p{background:var(--ec,#ff6b5a);border-color:transparent;color:#160b08}
 .nxEvt .ac button:active{transform:scale(.96)}
 .nxEvt .x{position:absolute;top:8px;inset-inline-end:8px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);font-size:15px;cursor:pointer}
-body.v2.wide .nxEvt{column-span:all;-webkit-column-span:all}
+html.nx body.v2.wide #nowBody>#nxEvt{grid-column:1/-1}
 .nxEvt[data-k="rain"]{--ec:#5fb4ff;--eg:rgba(95,180,255,.24)}
 .nxEvt[data-k="dust"]{--ec:#e8b45a;--eg:rgba(232,180,90,.24)}
 .nxEvt[data-k="wind"]{--ec:#9fe3c8;--eg:rgba(159,227,200,.22)}
+/* — official.html — */
+.nxOf{display:block;margin:0 0 14px;border-radius:20px;background:#140f0c;color:#F6F2EC;border:1.5px solid var(--oc,#ffb020);overflow:hidden;box-shadow:0 14px 34px -20px var(--oc,#ffb020)}
+.nxOf .nxo-oh{display:flex;align-items:center;gap:8px;padding:11px 14px 0;font-size:11.5px;font-weight:900;letter-spacing:.03em;color:var(--oc,#ffb020)}
+.nxOf .nxo-oh b{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nxOf .nxo-oh .nxo-sv{flex:0 0 auto;padding:3px 9px;border-radius:999px;background:var(--oc,#ffb020);color:#140f0c;font-size:11px}
+.nxOf .nxo-ob,.nxOf .nxo-of,.nxOf .nxo-oh{display:block;width:auto;float:none;background:none;box-shadow:none;border:0;border-radius:0;margin:0}
+.nxOf .nxo-oh{display:flex}
+.nxOf .nxo-ob{padding:6px 14px 12px}
+.nxOf h3{margin:0;font-size:17.5px;font-weight:900;line-height:1.35;color:#fff}
+.nxOf .nxo-oa{margin:5px 0 0;font-size:12.5px;font-weight:700;color:rgba(246,242,236,.75);line-height:1.55}
+.nxOf .nxo-ot{margin:4px 0 0;font-size:12.5px;font-weight:800;color:rgba(246,242,236,.92)}
+.nxOf details{margin-top:8px}
+.nxOf summary{cursor:pointer;font-size:13px;font-weight:900;color:var(--oc,#ffb020);list-style:none;min-height:32px;display:flex;align-items:center}
+.nxOf summary::-webkit-details-marker{display:none}
+.nxOf .nxo-od{white-space:pre-line;font-size:13.5px;line-height:1.75;color:#F6F2EC;margin:4px 0 0}
+.nxOf .nxo-oi{white-space:pre-line;margin:8px 0 0;padding:9px 11px;border-radius:12px;background:rgba(255,255,255,.07);font-size:13.5px;font-weight:800;line-height:1.7}
+.nxOf .nxo-of{padding:9px 14px 11px;border-top:1px solid rgba(255,255,255,.08);font-size:11.5px;line-height:1.6;color:rgba(246,242,236,.66)}
+.nxOf .nxo-of a{color:#ffd9a0;font-weight:900;text-decoration:none}
+.nxOf+.nxOf{margin-top:-6px}
+.nxOf[data-s="Extreme"]{--oc:#ff4d8d}
+.nxOf[data-s="Severe"]{--oc:#ff6a3d}
+.nxOf[data-s="Moderate"]{--oc:#ffb020}
+.nxOf[data-s="Minor"],.nxOf[data-s="Unknown"],.nxOf[data-s=""]{--oc:#e7d36a}
+.nxOfC{margin:0 0 14px;padding:10px 14px;border-radius:16px;background:#120f14;color:#F2F4F8;border:1px solid rgba(255,255,255,.12);font-size:13px}
+.nxOfC summary{cursor:pointer;font-weight:900;list-style:none;min-height:30px;display:flex;align-items:center;gap:8px}
+.nxOfC summary::-webkit-details-marker{display:none}
+.nxOfC li{margin:8px 0 0;line-height:1.55}
+.nxOfC li small{display:block;color:rgba(242,244,248,.66);font-weight:700}
+.nxOfC ul{margin:4px 0 0;padding:0 18px}
+.nxOfC .nxo-of{margin-top:8px;font-size:11.5px;color:rgba(242,244,248,.6)}
+.nxOfC .nxo-of a{color:#bcd7ff;font-weight:800}
+html.nx body.v2.wide #nowBody>#nxOfBox{grid-column:1/-1}
 </style>
 <script>
 /* Defaults = how Nafaf behaves with no portal setting. The portal publishes cfg.next; the app keeps the
@@ -15390,6 +15429,85 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
       try{if(window.W&&TAB==='now')card()}catch(e){}}
     else if(n<80)setTimeout(function(){hook(n+1)},250)})(0);
   window.nxEventNow=function(){return EV};
+})();
+</script>
+<script>
+/* Official warnings. Nafaf relays the warnings that the country's registered alerting authority publishes (CAP),
+   as published: the text is never edited or machine-translated, so those blocks are excluded from Nafaf's translator.
+   The worker picks the authority's feed in the reader's language when one exists (e.g. Arabic in the Gulf, German in
+   Germany), else English. "Here" = the warning's own map area contains this location. */
+(function(){
+  var API=(typeof PUSH_URL!=='undefined'&&PUSH_URL)||'';
+  function P(a,b,c){var r;try{r=pick(a,b,c)}catch(e){r=c}return window.nxTr?nxTr(r):r}
+  function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+  function lang(){try{return window.NX_XL||(LI()===2?'en':'ar')}catch(e){return 'ar'}}
+  function loc(){var l=lang();return l==='ar'?'ar-OM':l}
+  function cc(){try{return String((window.CUR&&CUR.cc)||(window.GEO&&GEO.cc)||'').toLowerCase()}catch(e){return ''}}
+  var SEVL={Extreme:['خطر شديد','خطر شديد','Extreme'],Severe:['خطر','خطر','Severe'],Moderate:['تنبيه','تنبيه','Moderate'],Minor:['خفيف','خفيف','Minor'],Unknown:['تحذير','تحذير','Warning']};
+  function sev(s){var a=SEVL[s]||SEVL.Unknown;return P(a[0],a[1],a[2])}
+  function when(a){
+    function f(t){var d=new Date(t);if(isNaN(d))return '';try{return d.toLocaleString(loc(),{weekday:'short',hour:'numeric',minute:'2-digit'})}catch(e){return d.toISOString().slice(0,16).replace('T',' ')}}
+    var on=a.onset&&Date.parse(a.onset)>Date.now()?f(a.onset):'',ex=a.expires?f(a.expires):'';
+    if(on&&ex)return P('من','من','From')+' '+on+' — '+P('إلى','إلى','until')+' '+ex;
+    if(ex)return P('ساري حتى','ساري حتى','In force until')+' '+ex;
+    return on?P('يبدأ','يبدأ','Starts')+' '+on:'';
+  }
+  function srcLine(a){
+    var link=a.web&&/^https?:/.test(a.web)?a.web:(a.cap&&/^https?:/.test(a.cap)?a.cap:'');
+    return P('المصدر','المصدر','Source')+': '+(link?'<a href="'+E(link)+'" target="_blank" rel="noopener">'+E((a.src&&a.src.name)||a.sender)+' ↗</a>':E((a.src&&a.src.name)||a.sender))+
+      ' · '+P('النص كما نشرته الجهة الرسمية، بلا تعديل','النص كما نشرته الجهة الرسمية دون تعديل','Published text, unedited')+
+      (a.src&&a.src.rights?' · '+E(a.src.rights):'');
+  }
+  function card(a){
+    return '<section class="nxOf" data-s="'+E(a.severity||'')+'" role="alert">'+
+      '<div class="nxo-oh"><b>'+P('تحذير رسمي','تحذير رسمي','Official warning')+' · <span data-nxl-skip dir="auto">'+E((a.src&&a.src.name)||a.sender)+'</span></b><span class="nxo-sv">'+sev(a.severity)+'</span></div>'+
+      '<div class="nxo-ob" data-nxl-skip dir="auto"><h3>'+E(a.headline||a.event)+'</h3>'+(a.area?'<p class="nxo-oa">'+E(a.area)+'</p>':'')+'</div>'+
+      '<div class="nxo-ob" style="padding-top:0"><p class="nxo-ot">'+E(when(a))+'</p>'+
+      ((a.description||a.instruction)?'<details><summary>'+P('التفاصيل والتوجيهات ▾','التفاصيل والتعليمات ▾','Details & guidance ▾')+'</summary>'+
+        '<div data-nxl-skip dir="auto">'+(a.description?'<p class="nxo-od">'+E(a.description)+'</p>':'')+(a.instruction?'<p class="nxo-oi">'+E(a.instruction)+'</p>':'')+'</div></details>':'')+
+      '</div><div class="nxo-of">'+srcLine(a)+'</div></section>';
+  }
+  function countryBox(r){
+    var L=(r.country||[]).filter(function(a){return a.severity==='Extreme'||a.severity==='Severe'||a.severity==='Moderate'});
+    if(!L.length)return '';
+    return '<details class="nxOfC"><summary>⚠️ '+P('تحذيرات رسمية في مناطق ثانية من البلد: #','تحذيرات رسمية في مناطق أخرى من البلد: #','Official warnings elsewhere in the country: #').replace('#',L.length)+' ▾</summary><ul>'+
+      L.slice(0,8).map(function(a){return '<li><b data-nxl-skip dir="auto">'+E(a.headline||a.event)+'</b> — '+sev(a.severity)+'<small data-nxl-skip dir="auto">'+E(a.area)+'</small><small>'+E(when(a))+'</small></li>'}).join('')+
+      '</ul><div class="nxo-of">'+P('المصدر','المصدر','Source')+': '+(r.sources||[]).map(function(s){return E(s.name)}).join(' · ')+'</div></details>';
+  }
+  function linkOut(r){
+    if(!r.linkOut||!r.linkOut.length)return '';
+    return '<div class="nxOfC">⚠️ '+P('التحذيرات الرسمية لبلدك','التحذيرات الرسمية لبلدك','Official warnings for your country')+': '+r.linkOut.map(function(s){return '<a href="'+E(s.url)+'" target="_blank" rel="noopener">'+E(s.name)+' ↗</a>'}).join(' · ')+'</div>';
+  }
+  var R=null,KEY='',T=0,BUSY=0;
+  function paint(){
+    var b=document.getElementById('nowBody');if(!b)return;
+    var old=document.getElementById('nxOfBox');if(old)old.remove();
+    if(!R)return;
+    var h=(R.here||[]).map(card).join('')+countryBox(R)+((!(R.here||[]).length)?linkOut(R):'');
+    window.NX_OFFICIAL=(R.here&&R.here[0])||null;
+    if(!h)return;
+    var d=document.createElement('div');d.id='nxOfBox';d.innerHTML=h;b.insertBefore(d,b.firstChild);
+  }
+  function load(force){
+    if(!API||!window.CUR||BUSY)return;
+    var c=cc(),k=c+'|'+(+CUR.lat).toFixed(2)+'|'+(+CUR.lon).toFixed(2)+'|'+lang();
+    if(!force&&k===KEY&&Date.now()-T<10*6e4){paint();return}
+    if(!c){load.n=(load.n||0)+1;if(load.n<=4){setTimeout(function(){load(force)},2500);return}} /* wait for the reverse geocode to tell us the country */
+    load.n=0;KEY=k;BUSY=1;
+    var u=API+'/official?lat='+(+CUR.lat).toFixed(3)+'&lon='+(+CUR.lon).toFixed(3)+'&lang='+lang()+(c?'&cc='+c:'');
+    fetch(u).then(function(r){return r.ok?r.json():null}).then(function(j){BUSY=0;if(!j||j.error)return;R=j;T=Date.now();
+        try{ls('nx.off',JSON.stringify({k:k,t:T,r:j}))}catch(e){}paint()})
+      .catch(function(){BUSY=0;try{var o=JSON.parse(ls('nx.off')||'null');if(o&&o.k===k&&Date.now()-o.t<6*36e5){R=o.r;paint()}}catch(e){}});
+  }
+  (function hook(n){
+    if(typeof window.renderNow==='function'&&!window.renderNow.__nxo){var o=window.renderNow;
+      window.renderNow=function(){var r=o.apply(this,arguments);try{paint();load()}catch(e){}return r};window.renderNow.__nxo=1;
+      try{renderNow=window.renderNow}catch(e){}
+      try{if(window.W)load()}catch(e){}}
+    else if(n<80)setTimeout(function(){hook(n+1)},250)})(0);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)try{load()}catch(e){}});
+  window.nxOfficial=function(){return R};
 })();
 </script>
 <script type="text/plain" id="nxSceneSrc">

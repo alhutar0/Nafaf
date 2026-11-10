@@ -1,4 +1,4 @@
-name: Probe alert feeds (temporary)
+name: Probe live endpoints (manual)
 on: workflow_dispatch
 permissions:
   contents: write
@@ -8,51 +8,12 @@ jobs:
     steps:
       - run: |
           mkdir out && cd out
-          UA="Nafaf/1.0 (https://nafaf.online)"
-          curl -sSL -A "$UA" -m 60 https://alert-hub-sources.s3.amazonaws.com/json -o registry.json || true
-          curl -sSL -A "$UA" -m 30 "https://api.weather.gov/alerts/active?point=39.74,-104.99" -o nws_point.json || true
-          curl -sSL -A "$UA" -m 30 "https://api.weather.gov/alerts/active?status=actual&limit=3" -o nws_any.json || true
-          curl -sSL -A "$UA" -m 30 https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-germany -o ma_de.xml || true
-          curl -sSL -A "$UA" -m 30 https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-france -o ma_fr.xml || true
-          curl -sSL -A "$UA" -m 30 -I https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-france > ma_fr_headers.txt || true
-          python3 - <<'PY'
-          import json,urllib.request,re,os
-          try: R=json.load(open('registry.json'))
-          except Exception as e: print('no registry',e); R=None
-          print(type(R), (list(R.keys())[:10] if isinstance(R,dict) else len(R)))
-          srcs=R.get('sources',R) if isinstance(R,dict) else R
-          json.dump(srcs[:3] if isinstance(srcs,list) else srcs,open('sample_records.json','w'),indent=1,ensure_ascii=False)
-          def g(s,*k):
-              for x in k:
-                  if isinstance(s,dict) and x in s: s=s[x]
-                  else: return None
-              return s
-          want=['om','ae','sa','qa','bh','kw','pk','in','bd','eg','jo','ma','de','fr','gb','ca','au','jp','br','id','ph','tr','ir','iq','ye','us','kr','th','my']
-          os.makedirs('feeds',exist_ok=True)
-          if isinstance(srcs,list):
-            for s in srcs:
-              sid=json.dumps(s)[:4000]
-              src=s.get('source',s)
-              iid=src.get('id') or src.get('sourceId') or ''
-              if iid[:2] in want:
-                url=src.get('capAlertFeed') or src.get('url') or ''
-                open('feeds/index.txt','a').write(iid+' | '+str(src.get('name'))+' | '+str(url)+' | '+str(src.get('authorityCountry'))+' | '+str(src.get('license') or src.get('terms') or '')+'\n')
-                if url:
-                  try:
-                    req=urllib.request.Request(url,headers={'User-Agent':'Nafaf/1.0 (https://nafaf.online)'})
-                    d=urllib.request.urlopen(req,timeout=20).read()[:300000]
-                    open('feeds/'+re.sub(r'[^a-z0-9-]','_',iid)+'.xml','wb').write(d)
-                    m=re.search(rb'<link>([^<]+)</link>',d[d.find(b'<item'):] if b'<item' in d else d[d.find(b'<entry'):])
-                    if m:
-                      u=m.group(1).decode().strip()
-                      d2=urllib.request.urlopen(urllib.request.Request(u,headers={'User-Agent':'Nafaf/1.0'}),timeout=20).read()[:200000]
-                      open('feeds/'+re.sub(r'[^a-z0-9-]','_',iid)+'_cap1.xml','wb').write(d2)
-                  except Exception as e:
-                    open('feeds/index.txt','a').write('   ERR '+str(e)[:200]+'\n')
-          PY
-          ls -la . feeds | head -100
-      - run: |
-          cd out && find . -size +900k -delete
+          W=https://nafa-push.alhutar0.workers.dev
+          for q in "bh&lat=26.2&lon=50.55&lang=ar" "sa&lat=21.42&lon=39.83&lang=ar" "sa&lat=24.7&lon=46.7&lang=en" "om&lat=23.6&lon=58.4&lang=ar" "de&lat=52.52&lon=13.40&lang=de" "fr&lat=48.85&lon=2.35&lang=fr" "us&lat=61.2&lon=-149.9&lang=en" "in&lat=19.07&lon=72.88&lang=hi" "pk&lat=24.86&lon=67.0&lang=ur" "au&lat=-33.87&lon=151.2&lang=en" "kr&lat=37.56&lon=126.97&lang=en" "id&lat=-6.2&lon=106.8&lang=en"; do
+            f=$(echo "$q" | cut -d'&' -f1)
+            curl -sS -m 60 -w '\n%{http_code} %{time_total}s\n' "$W/official?cc=$q" -o "$f.json" > "$f.meta" 2>&1 || true
+            curl -sS -m 30 -o /dev/null -w '%{time_total}s (cached)\n' "$W/official?cc=$q" >> "$f.meta" 2>&1 || true
+          done
           git init -q && git checkout -q -b probe-out && git add -A
           git -c user.name=probe -c user.email=probe@nafaf.online commit -qm probe
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" probe-out

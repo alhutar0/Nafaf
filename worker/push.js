@@ -16,6 +16,7 @@
  *   npx wrangler deploy
  * ============================================================
  */
+import { handleOfficial } from './official.js';
 
 const MODELS = 'ecmwf_ifs025,gfs_seamless,icon_seamless';
 
@@ -501,9 +502,12 @@ export default {
     }
   },
 
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
+
+    /* ★ التحذيرات الرسمية من الجهة المعتمدة في كل دولة (official.js) */
+    if (url.pathname === '/official') return handleOfficial(request, url, ctx, CORS);
 
     /* تسجيل اشتراك */
     if (url.pathname === '/subscribe' && request.method === 'POST') {
