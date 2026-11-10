@@ -8,7 +8,49 @@ Run:  python3 tools/seo/render.py
 import json, os, math, html, re, datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DATA = json.load(open(os.path.join(ROOT, 'data', 'seo', 'cities.json'), encoding='utf-8'))
+RAW = json.load(open(os.path.join(ROOT, 'data', 'seo', 'cities.json'), encoding='utf-8'))
+OVR = json.load(open(os.path.join(ROOT, 'tools', 'seo', 'overrides.json'), encoding='utf-8'))
+import unicodedata
+SCRIPT = {'ar': re.compile('[\u0600-\u06ff]'), 'ur': re.compile('[\u0600-\u06ff]'), 'hi': re.compile('[\u0900-\u097f]'), 'bn': re.compile('[\u0980-\u09ff]')}
+BADW = re.compile(r'\b(airport|aéroport|flughafen|botani|trädgård|town cent|village|koura|east|west)\b', re.I)
+def fold(x): return re.sub(r'[^a-z0-9]', '', unicodedata.normalize('NFKD', x or '').encode('ascii', 'ignore').decode().lower())
+def slugify(x): return re.sub(r'[^a-z0-9]+', '-', unicodedata.normalize('NFKD', x).encode('ascii', 'ignore').decode().lower()).strip('-')
+
+def clean(raw):
+    """Choose trustworthy names: the geocoder's entry is kept only when it is the same place in the right script;
+    otherwise the GeoNames name (English/local) or a reviewed override (Arabic) is used, or the language is skipped."""
+    cn = {}
+    for v in raw.values():
+        for lg, n in (v.get('names') or {}).items():
+            c = (n or {}).get('c')
+            if c and (lg not in SCRIPT or SCRIPT[lg].search(c)): cn.setdefault((v['cc'], lg), c)
+    out = {}
+    for v in raw.values():
+        base = v['geo']; g = ((v['names'].get('en') or {}).get('n')) or ''
+        fb, fg = fold(base), fold(g)
+        same = fg and (fg == fb or ((fb in fg or fg in fb) and abs(len(fg) - len(fb)) <= 6)) and not BADW.search(g)
+        en = g if same else base
+        names = {}
+        for lg in ['en', 'ar', 'fr', 'de', 'ur', 'hi', 'bn']:
+            n = dict(v['names'].get(lg) or {})
+            if lg == 'en': n['n'] = en
+            elif lg == 'ar' and OVR['ar'].get(base + '|' + v['cc']): n['n'] = OVR['ar'][base + '|' + v['cc']]
+            elif lg in SCRIPT:
+                if not n.get('n') or not SCRIPT[lg].search(n['n']) or not same and lg != 'ar': continue
+            elif lg in ('fr', 'de'):
+                if not n.get('n') or BADW.search(n['n']) or not same: continue
+            if not n.get('n'): continue
+            if lg in SCRIPT and n.get('a1') and not SCRIPT[lg].search(n['a1']): n['a1'] = None
+            if not same: n['a1'] = None   # the geocoder matched a different place (garden, airport…): its region is not trusted either
+            n['c'] = cn.get((v['cc'], lg)) or (n.get('c') if lg not in SCRIPT else None) or cn.get((v['cc'], 'en')) or v['cc']
+            if lg in SCRIPT and not SCRIPT[lg].search(n['c'] or ''): continue
+            names[lg] = n
+        if 'en' not in names: names['en'] = {'n': en, 'a1': None, 'c': cn.get((v['cc'], 'en')) or v['cc']}
+        sl = slugify(en) + '-' + v['cc'].lower()
+        while sl in out: sl += '-2'
+        out[sl] = dict(v, names=names)
+    return out
+DATA = clean(RAW)
 MET = json.load(open(os.path.join(ROOT, 'tools', 'seo', 'metservices.json'), encoding='utf-8'))
 SITE = 'https://nafaf.online'
 FAHR = {'US', 'LR', 'BS', 'KY', 'PW', 'FM', 'MH'}
@@ -30,6 +72,7 @@ def mm(lg, v): return f'<bdi>{v} {UNIT.get(lg, ("mm", "km/h"))[0]}</bdi>'
 def kmh(lg, v): return f'<bdi>{v} {UNIT.get(lg, ("mm", "km/h"))[1]}</bdi>'
 T = {
  'en': dict(
+  best1='The most comfortable month is {ms}.', 
   title='{c} weather & climate by month', h1='{c} weather and climate', sub='{r} · average conditions month by month, 1991–2020',
   live='Right now in {c}', loading='Loading live weather…', feels='feels like', hum='humidity', wind='wind',
   sumh='The climate of {c} in brief', hot='The warmest month is {m}, with an average high of {t}.',
@@ -48,6 +91,7 @@ T = {
   desc='{c} weather now and its climate month by month: average highs {a}–{b}, {r} mm of rain a year. Warmest month {m}. Live conditions and official warnings in Nafaf.',
   privacy='Privacy', terms='Terms', wmo=['Clear', 'Mostly clear', 'Cloudy', 'Fog', 'Drizzle', 'Rain', 'Snow', 'Showers', 'Thunderstorm'], today='Today'),
  'ar': dict(
+  best1='أنسب شهر للأجواء المعتدلة: {ms}.', 
   title='طقس {c} ومناخها شهرًا بشهر', h1='طقس {c} ومناخها', sub='{r} · متوسط الأجواء شهرًا بشهر، 1991–2020',
   live='الطقس الآن في {c}', loading='جارٍ جلب الطقس الحي…', feels='المحسوسة', hum='الرطوبة', wind='الرياح',
   sumh='مناخ {c} باختصار', hot='أحرّ الشهور {m}، بمتوسط عظمى {t}.', cold='أبرد الشهور {m}، بمتوسط صغرى {t}.',
@@ -65,6 +109,7 @@ T = {
   desc='طقس {c} الآن ومناخها شهرًا بشهر: متوسط العظمى بين {a} و{b}، ونحو {r} ملم مطر في السنة. أحرّ الشهور {m}. الطقس الحي والتحذيرات الرسمية في نفاف.',
   privacy='الخصوصية', terms='الشروط', wmo=['صحو', 'صحو غالبًا', 'غائم', 'ضباب', 'رذاذ', 'مطر', 'ثلج', 'زخات', 'عاصفة رعدية'], today='اليوم'),
  'fr': dict(
+  best1='Le mois le plus agréable est {ms}.', 
   title='Météo et climat de {c} mois par mois', h1='Météo et climat de {c}', sub='{r} · conditions moyennes mois par mois, 1991–2020',
   live='En ce moment à {c}', loading='Chargement de la météo en direct…', feels='ressenti', hum='humidité', wind='vent',
   sumh='Le climat de {c} en bref', hot='Le mois le plus chaud est {m}, avec une maximale moyenne de {t}.',
@@ -83,6 +128,7 @@ T = {
   desc='Météo de {c} en ce moment et climat mois par mois : maximales moyennes de {a} à {b}, {r} mm de pluie par an. Mois le plus chaud : {m}. Conditions en direct et alertes officielles dans Nafaf.',
   privacy='Confidentialité', terms='Conditions', wmo=['Dégagé', 'Plutôt dégagé', 'Nuageux', 'Brouillard', 'Bruine', 'Pluie', 'Neige', 'Averses', 'Orage'], today='Aujourd\'hui'),
  'de': dict(
+  best1='Der angenehmste Monat ist der {ms}.', 
   title='Wetter und Klima in {c} nach Monaten', h1='Wetter und Klima in {c}', sub='{r} · durchschnittliche Bedingungen Monat für Monat, 1991–2020',
   live='Gerade in {c}', loading='Live-Wetter wird geladen…', feels='gefühlt', hum='Luftfeuchte', wind='Wind',
   sumh='Das Klima von {c} kurz gefasst', hot='Der wärmste Monat ist der {m} mit einer durchschnittlichen Höchsttemperatur von {t}.',
@@ -101,6 +147,7 @@ T = {
   desc='Wetter in {c} jetzt und Klima nach Monaten: mittlere Höchstwerte {a} bis {b}, {r} mm Regen pro Jahr. Wärmster Monat: {m}. Live-Bedingungen und amtliche Warnungen in Nafaf.',
   privacy='Datenschutz', terms='Bedingungen', wmo=['Klar', 'Überwiegend klar', 'Bewölkt', 'Nebel', 'Niesel', 'Regen', 'Schnee', 'Schauer', 'Gewitter'], today='Heute'),
  'ur': dict(
+  best1='سب سے خوشگوار مہینہ: {ms}۔', 
   title='{c} کا موسم اور ماہ بہ ماہ آب و ہوا', h1='{c} کا موسم اور آب و ہوا', sub='{r} · ماہ بہ ماہ اوسط حالات، 1991–2020',
   live='{c} میں اس وقت', loading='براہِ راست موسم لوڈ ہو رہا ہے…', feels='محسوس', hum='نمی', wind='ہوا',
   sumh='{c} کی آب و ہوا مختصراً', hot='سب سے گرم مہینہ {m} ہے، اوسط زیادہ سے زیادہ درجہ حرارت {t}۔',
@@ -119,6 +166,7 @@ T = {
   desc='{c} کا موسم ابھی اور ماہ بہ ماہ آب و ہوا: اوسط زیادہ سے زیادہ {a} سے {b}، سالانہ {r} ملی میٹر بارش۔ سب سے گرم مہینہ {m}۔ نفاف میں براہِ راست حالات اور سرکاری انتباہات۔',
   privacy='رازداری', terms='شرائط', wmo=['صاف', 'زیادہ تر صاف', 'ابر آلود', 'دھند', 'بوندا باندی', 'بارش', 'برف', 'بوچھاڑ', 'گرج چمک'], today='آج'),
  'hi': dict(
+  best1='सबसे सुहावना महीना: {ms}।', 
   title='{c} का मौसम और महीनेवार जलवायु', h1='{c} का मौसम और जलवायु', sub='{r} · महीनेवार औसत स्थिति, 1991–2020',
   live='{c} में अभी', loading='लाइव मौसम लोड हो रहा है…', feels='महसूस', hum='नमी', wind='हवा',
   sumh='{c} की जलवायु संक्षेप में', hot='सबसे गर्म महीना {m} है, औसत अधिकतम तापमान {t}।', cold='सबसे ठंडा महीना {m} है, औसत न्यूनतम तापमान {t}।',
@@ -136,6 +184,7 @@ T = {
   desc='{c} का मौसम अभी और महीनेवार जलवायु: औसत अधिकतम {a} से {b}, सालाना {r} मिमी बारिश। सबसे गर्म महीना {m}। नफ़ाफ़ में लाइव स्थिति और आधिकारिक चेतावनियाँ।',
   privacy='गोपनीयता', terms='शर्तें', wmo=['साफ़', 'ज़्यादातर साफ़', 'बादल', 'कोहरा', 'बूँदाबाँदी', 'बारिश', 'बर्फ़', 'बौछारें', 'आँधी-तूफ़ान'], today='आज'),
  'bn': dict(
+  best1='সবচেয়ে আরামদায়ক মাস: {ms}।', 
   title='{c}-এর আবহাওয়া ও মাসভিত্তিক জলবায়ু', h1='{c}-এর আবহাওয়া ও জলবায়ু', sub='{r} · মাসভিত্তিক গড় অবস্থা, 1991–2020',
   live='{c}-এ এখন', loading='লাইভ আবহাওয়া লোড হচ্ছে…', feels='অনুভূত', hum='আর্দ্রতা', wind='বাতাস',
   sumh='সংক্ষেপে {c}-এর জলবায়ু', hot='সবচেয়ে গরম মাস {m}, গড় সর্বোচ্চ তাপমাত্রা {t}।', cold='সবচেয়ে ঠান্ডা মাস {m}, গড় সর্বনিম্ন তাপমাত্রা {t}।',
@@ -213,8 +262,8 @@ def facts(v, lg, fahr):
             keep.append(i); acc += rn[i]
             if acc >= 0.6 * sum(rn): break
         if len(keep) <= 4: out.append(t['monsoon'].format(ms=mlist(lg, keep)))
-    good = [i for i in range(12) if 18 <= tx[i] <= 31 and rn[i] < 90 and wd[i] < 10]
-    if good and len(good) < 12: out.append(t['best'].format(ms=mlist(lg, good)))
+    good = [i for i in range(12) if 18 <= tx[i] <= 31 and rn[i] < 150 and wd[i] < 15]
+    if good and len(good) < 12: out.append(t['best1' if len(good) == 1 else 'best'].format(ms=mlist(lg, good)))
     elif not good: out.append(t['nobest'].format(ms=mlist(lg, sorted(range(12), key=lambda i: abs(tx[i] - 25))[:3])))
     h40 = [i for i in range(12) if tx[i] >= 40]
     if h40: out.append(t['heat'].format(ms=mlist(lg, h40)))
