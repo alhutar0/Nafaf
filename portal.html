@@ -866,6 +866,11 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
           <div id="healthList"><div class="empty">جارٍ الفحص…</div></div>
           <button class="btn ghost" id="bHealth" style="width:100%;margin-top:12px">إعادة الفحص</button>
         </div>
+        <div class="card">
+          <h3>أخطاء من أجهزة المستخدمين <small style="color:#8b98ab;font-weight:600">آخر ٧ أيام</small></h3>
+          <div id="errList"><div class="empty">جارٍ التحميل…</div></div>
+          <div style="font-size:11px;color:#8b98ab;margin-top:8px;line-height:1.7">نص الخطأ والملف والسطر ونوع الجهاز وإصدار نفاف فقط — بلا أي بيانات عن الشخص. «إصدار» = وقت بناء نفاف (سنة شهر يوم ساعة دقيقة)، فتعرف إن كان الخطأ من نسخة قديمة.</div>
+        </div>
       </section>
 
       <!-- 🕒 الإصدارات -->
@@ -973,7 +978,7 @@ function goPage(p){
  if(p==='licensing')renderLicensing();
  if(p==='billing')renderBilling();
   if(p==='analytics')loadAnalytics();
-  if(p==='health')runHealth();
+  if(p==='health'){runHealth();loadErrors();}
   if(p==='versions')loadVersions();
   if(p==='settings')loadLinks();
 }
@@ -2250,6 +2255,20 @@ function loadFunnel(){
 document.addEventListener('change',function(e){if(e.target&&e.target.id==='fnDays')loadFunnel();});
 
 /* ═══════ صحة النظام ═══════ */
+function loadErrors(){
+  var el=$('errList');if(!el)return;
+  api('/admin/errors',{days:7}).then(function(r){
+    if(!r||r.error){el.innerHTML='<div class="empty">'+(r&&r.error==='no funnel'?'لم يُنشر على الخادم بعد.':'تعذّر الجلب.')+'</div>';return;}
+    if(!r.errors||!r.errors.length){el.innerHTML='<div class="empty">✓ لا أخطاء مسجّلة من الأجهزة.</div>';return;}
+    function top(o){return Object.keys(o).sort(function(a,b){return o[b]-o[a]}).slice(0,3).map(function(k){return esc(k)+' ('+o[k]+')'}).join(' · ')}
+    el.innerHTML=r.errors.map(function(x){
+      return '<div style="padding:9px 0;border-top:1px solid rgba(255,255,255,.08);font-size:12px;line-height:1.6">'+
+        '<div style="display:flex;gap:8px"><b style="color:#ff9a8a;flex:1 1 auto;word-break:break-word;direction:ltr;text-align:left">'+esc(x.m)+'</b><span style="font-weight:900">×'+x.n+'</span></div>'+
+        '<div style="color:#8b98ab;direction:ltr;text-align:left">'+esc(x.f||'?')+':'+x.l+' · '+top(x.ua)+'</div>'+
+        '<div style="color:#8b98ab">إصدار: '+top(x.v)+(Object.keys(x.cc).length?' · '+top(x.cc):'')+' · آخر ظهور '+esc(x.last)+'</div></div>';
+    }).join('');
+  });
+}
 function runHealth(){
   $('healthList').innerHTML='<div class="empty">جارٍ الفحص…</div>';
   var checks=[

@@ -686,6 +686,24 @@ export default {
       await stub.fetch('https://funnel/add', { method: 'POST', body: JSON.stringify(rec) });
       return json({ ok: true });
     }
+    /* ★ أخطاء من أجهزة المستخدمين: نص الخطأ + الملف + السطر + نوع الجهاز فقط — تُجمّع وتُعدّ */
+    if (url.pathname === '/err' && request.method === 'POST') {
+      const b = await request.json().catch(() => null);
+      if (!b || !b.m || !env.FUNNEL) return json({ ok: false });
+      const t = (x, n) => String(x || '').replace(/https?:\/\/[^\s)]+/g, u => u.split('?')[0].split('/').pop()).replace(/[\u0000-\u001f]/g, ' ').slice(0, n);
+      const rec = { m: t(b.m, 180), f: t(b.f, 40), l: parseInt(b.l, 10) || 0, v: t(b.v, 12), ua: t(b.ua, 24), cc: String((request.cf && request.cf.country) || '').slice(0, 2) };
+      const stub = env.FUNNEL.get(env.FUNNEL.idFromName('global'));
+      await stub.fetch('https://funnel/err', { method: 'POST', body: JSON.stringify(rec) });
+      return json({ ok: true });
+    }
+    if (url.pathname === '/admin/errors' && request.method === 'POST') {
+      const b = await request.json().catch(() => null);
+      if (!b || !(await checkPass(env, b.pass))) return json({ error: 'unauthorized' }, 401);
+      if (!env.FUNNEL) return json({ error: 'no funnel' }, 500);
+      const stub = env.FUNNEL.get(env.FUNNEL.idFromName('global'));
+      const r = await stub.fetch('https://funnel/errs?days=' + Math.min(30, Math.max(1, parseInt(b.days, 10) || 7)));
+      return new Response(r.body, { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    }
     if (url.pathname === '/admin/funnel' && request.method === 'POST') {
       const b = await request.json().catch(() => null);
       if (!b || !(await checkPass(env, b.pass))) return json({ error: 'unauthorized' }, 401);
@@ -1965,6 +1983,28 @@ export class Funnel {
       if (Math.random() < 0.01) { const old = new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10); const all = await this.state.storage.list({ prefix: 'd:', end: 'd:' + old }); for (const k of all.keys()) await this.state.storage.delete(k); }
       return new Response('ok');
       });
+    }
+    if (url.pathname === '/err') {
+      const r = await request.json();
+      return this.run(async () => {
+        const day = new Date().toISOString().slice(0, 10), key = 'e:' + day;
+        const d = (await this.state.storage.get(key)) || {};
+        const id = (r.m + '|' + r.f + '|' + r.l).slice(0, 240);
+        if (!d[id] && Object.keys(d).length >= 300) return new Response('full');   /* a broken release cannot flood storage */
+        const x = d[id] || (d[id] = { m: r.m, f: r.f, l: r.l, n: 0, v: {}, ua: {}, cc: {} });
+        x.n++; x.v[r.v] = (x.v[r.v] || 0) + 1; x.ua[r.ua] = (x.ua[r.ua] || 0) + 1; if (r.cc) x.cc[r.cc] = (x.cc[r.cc] || 0) + 1;
+        await this.state.storage.put(key, d);
+        if (Math.random() < 0.01) { const old = new Date(Date.now() - 31 * 864e5).toISOString().slice(0, 10); const all = await this.state.storage.list({ prefix: 'e:', end: 'e:' + old }); for (const k of all.keys()) await this.state.storage.delete(k); }
+        return new Response('ok');
+      });
+    }
+    if (url.pathname === '/errs') {
+      const n = parseInt(url.searchParams.get('days'), 10) || 7, agg = {};
+      for (let i = 0; i < n; i++) { const day = new Date(Date.now() - i * 864e5).toISOString().slice(0, 10), d = (await this.state.storage.get('e:' + day)) || {};
+        for (const id in d) { const x = d[id], a = agg[id] || (agg[id] = { m: x.m, f: x.f, l: x.l, n: 0, v: {}, ua: {}, cc: {}, last: day });
+          a.n += x.n; ['v', 'ua', 'cc'].forEach(k => { for (const q in x[k]) a[k][q] = (a[k][q] || 0) + x[k][q]; }); } }
+      const list = Object.values(agg).sort((a, b) => b.n - a.n).slice(0, 60);
+      return new Response(JSON.stringify({ ok: true, errors: list }), { headers: { 'Content-Type': 'application/json' } });
     }
     if (url.pathname === '/read') {
       const n = parseInt(url.searchParams.get('days'), 10) || 30, out = [];

@@ -104,6 +104,22 @@
   window.nxTzCity=function(){var r=Z[tz];if(!r)return null;return {tz:tz,en:r[0],ar:r[1],lat:r[2],lon:r[3],cen:r[4],car:r[5]}};
 })();
 </script>
+<script>
+/* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
+   At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
+(function(){
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611101727';
+  function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
+    var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
+    var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
+  function rep(m,f,l){try{m=String(m||'');if(!m||/^Script error\.?$/.test(m)||/ResizeObserver loop/.test(m))return;var k=m+'|'+f+'|'+l;if(seen[k]||sent>=5)return;seen[k]=1;sent++;
+    var b=JSON.stringify({m:m,f:String(f||'').split('?')[0].split('/').pop(),l:l||0,v:window.NX_BUILD,ua:fam()});
+    if(!(navigator.sendBeacon&&navigator.sendBeacon(API+'/err',new Blob([b],{type:'text/plain'}))))fetch(API+'/err',{method:'POST',body:b,keepalive:true})}catch(e){}}
+  addEventListener('error',function(e){if(e&&e.message)rep(e.message,e.filename,e.lineno)});
+  addEventListener('unhandledrejection',function(e){var r=e&&e.reason;rep('Unhandled: '+(r&&r.message||r),r&&r.stack&&(/\/([^\/\s:]+):(\d+):\d+/.exec(r.stack)||[])[1],r&&r.stack&&+((/\/[^\/\s:]+:(\d+):\d+/.exec(r.stack)||[])[1]||0))});
+  window.nxReportError=rep;
+})();
+</script>
 <!-- /NAFAF GLOBAL -->
 
 <!-- /═══════ NAFAF LANG BOOT ═══════ -->
@@ -13388,6 +13404,7 @@ setInterval(function(){
  else paintSky(stateOf(W)); /* تحديث ناعم للتدرّج كل دقيقة */
  }},60000);
 </script>
+
 
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
