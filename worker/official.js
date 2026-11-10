@@ -40,10 +40,10 @@ function inPoly(lat, lon, P) {
   return c;
 }
 function km(a, b, c, d) { const R = 6371, r = Math.PI / 180, x = Math.sin((c - a) * r / 2), y = Math.sin((d - b) * r / 2); return 2 * R * Math.asin(Math.sqrt(x * x + Math.cos(a * r) * Math.cos(c * r) * y * y)); }
-function inCircle(lat, lon, s) { const m = s.trim().match(/^(-?[\d.]+),\s*(-?[\d.]+)\s+([\d.]+)/); return m ? km(lat, lon, +m[1], +m[2]) <= +m[3] : false; }
+function insideGeo(lat, lon, g) { if (!g) return null; return g.p.some(P => inPoly(lat, lon, P)) || g.c.some(c => km(lat, lon, c[0], c[1]) <= c[2]); }
 
 /* ── CAP document → alert ── */
-function parseCap(xml, lang, lat, lon) {
+function parseCap(xml, lang) {
   const sent = one(xml, 'sent'), id = one(xml, 'identifier'), status = one(xml, 'status'), msgType = one(xml, 'msgType') || one(xml, 'message_type');
   const refs = one(xml, 'references').split(/\s+/).map(r => r.split(',')[1]).filter(Boolean);
   let infos = all(xml, 'info');
@@ -51,14 +51,11 @@ function parseCap(xml, lang, lat, lon) {
   const want = (lang || 'en').toLowerCase();
   const pickInfo = infos.find(i => one(i, 'language').toLowerCase().startsWith(want)) || infos.find(i => one(i, 'language').toLowerCase().startsWith('en')) || infos[0];
   const I = pickInfo;
-  let inside = null, areas = [];
+  let geo = null, areas = [];
   for (const a of all(I, 'area')) {
     areas.push(one(a, 'areaDesc'));
-    const ps = all(a, 'polygon'), cs = all(a, 'circle');
-    if (ps.length || cs.length) {
-      if (inside !== true) inside = false;
-      if (lat != null && (ps.some(p => inPoly(lat, lon, poly(dec(p)))) || cs.some(c => inCircle(lat, lon, dec(c))))) inside = true;
-    }
+    for (const p of all(a, 'polygon')) { let P = poly(dec(p)); if (P.length < 3) continue; if (P.length > 400) { const k = Math.ceil(P.length / 400); P = P.filter((x, i) => i % k === 0); } (geo = geo || { p: [], c: [] }).p.push(P.map(x => [+x[0].toFixed(4), +x[1].toFixed(4)])); }
+    for (const c of all(a, 'circle')) { const m = dec(c).match(/^(-?[\d.]+),\s*(-?[\d.]+)\s+([\d.]+)/); if (m) (geo = geo || { p: [], c: [] }).c.push([+m[1], +m[2], +m[3]]); }
   }
   areas = [...new Set(areas.filter(x => x && !/^polygonal event area$/i.test(x)))];
   return {
@@ -70,7 +67,7 @@ function parseCap(xml, lang, lat, lon) {
     onset: one(I, 'onset') || one(I, 'effective') || sent, expires: one(I, 'expires'),
     sender: one(I, 'senderName'), web: one(I, 'web'),
     area: clip(areas.slice(0, 6).join(' · ') + (areas.length > 6 ? ' · +' + (areas.length - 6) : ''), 300),
-    inside,
+    geo,
   };
 }
 
@@ -96,7 +93,7 @@ async function get(u, ttl) {
 }
 
 /* one authority: feed → newest CAP documents → active alerts */
-async function fromSource(src, lang, lat, lon, max = 30) {
+async function fromSource(src, lang, max = 30) {
   const [sid, , name, feed] = src;
   const xml = await get(feed, 300);
   const { links, rights } = feedLinks(xml);
@@ -104,7 +101,7 @@ async function fromSource(src, lang, lat, lon, max = 30) {
   const out = [];
   for (const d of docs) {
     if (!d) continue;
-    try { const a = parseCap(d[1], lang, lat, lon); if (a) { a.cap = d[0]; a.src = { id: sid, name, rights, feed }; out.push(a); } } catch (e) { }
+    try { const a = parseCap(d[1], lang); if (a) { a.cap = d[0]; a.src = { id: sid, name, rights, feed }; out.push(a); } } catch (e) { }
   }
   return out;
 }
@@ -122,7 +119,7 @@ async function nws(lat, lon) {
       description: clip(p.description, 1400), instruction: clip(p.instruction, 700),
       severity: p.severity, urgency: p.urgency, certainty: p.certainty,
       onset: p.onset || p.effective, expires: p.ends || p.expires, sender: p.senderName, web: 'https://www.weather.gov',
-      area: clip(p.areaDesc, 300), inside: true, cap: p['@id'] || '',
+      area: clip(p.areaDesc, 300), inside: true, geo: null, cap: p['@id'] || '',
       src: { id: 'us-noaa-nws-en', name: 'National Weather Service', rights: 'Public domain (U.S. Government work)', feed: 'https://api.weather.gov' },
     };
   });
@@ -142,6 +139,28 @@ function sourcesFor(cc, lang) {
   return { pick, linkOut };
 }
 
+/* every active alert of a country in one language, geometry included — cached once per country for everyone */
+async function countryAlerts(cc, lang) {
+  const key = new Request(`https://nafaf-cache.local/official-country/v1/${cc}/${lang}`);
+  const cache = caches.default;
+  const hit = await cache.match(key);
+  if (hit) return await hit.json();
+  const S = sourcesFor(cc, lang);
+  const W = /met|hydro|weather|dwd|bom|imd|ncm|pmd|ema|caa|dom|tmd|kma|bmkg|inmet/i;
+  const ord = S.pick.sort((a, b) => (W.test(b[0]) ? 1 : 0) - (W.test(a[0]) ? 1 : 0)).slice(0, 3);
+  const errors = [];
+  const res = await Promise.all(ord.map(s => fromSource(s, lang).catch(() => { errors.push(s[0]); return []; })));
+  let alerts = [].concat(...res);
+  const now = Date.now();
+  const superseded = new Set(); alerts.forEach(a => (a.refs || []).forEach(r => superseded.add(r)));
+  alerts = alerts.filter(a => (a.status || 'Actual') === 'Actual' && a.msgType !== 'Cancel' && !superseded.has(a.id) && (a.expires ? Date.parse(a.expires) > now : (now - (Date.parse(a.onset) || 0)) < 12 * 36e5));
+  const seen = new Set(); alerts = alerts.filter(a => { const k = a.headline + '|' + a.area + '|' + a.expires; if (seen.has(k)) return false; seen.add(k); return true; });
+  const out = { alerts: alerts.map(({ refs, status, ...r }) => r), sources: ord.map(s => ({ name: s[2], url: s[3] })), linkOut: S.linkOut, errors };
+  const body = JSON.stringify(out);
+  await cache.put(key, new Response(body, { headers: { 'content-type': 'application/json', 'cache-control': `public, max-age=${errors.length ? 60 : 300}` } }));
+  return out;
+}
+
 export async function officialAlerts(cc, lat, lon, lang) {
   cc = String(cc || '').toLowerCase().slice(0, 2);
   lang = String(lang || 'en').toLowerCase().slice(0, 3);
@@ -149,22 +168,15 @@ export async function officialAlerts(cc, lat, lon, lang) {
   let alerts = [], sources = [], linkOut = [], errors = [];
   if (cc === 'us') {
     try { alerts = await nws(lat, lon); sources.push({ name: 'National Weather Service', url: 'https://www.weather.gov' }); } catch (e) { errors.push('nws'); }
+    alerts = alerts.filter(a => (a.status || 'Actual') === 'Actual' && a.msgType !== 'Cancel' && (!a.expires || Date.parse(a.expires) > now));
   } else {
-    const S = sourcesFor(cc, lang);
-    linkOut = S.linkOut;
-    /* weather/hydromet authorities first; at most 3 per country to keep it fast */
-    const ord = S.pick.sort((a, b) => (/met|hydro|weather|dwd|bom|imd|ncm|pmd|ema|caa|dom|tmd|kma|bmkg|inmet/i.test(b[0]) ? 1 : 0) - (/met|hydro|weather|dwd|bom|imd|ncm|pmd|ema|caa|dom|tmd|kma|bmkg|inmet/i.test(a[0]) ? 1 : 0)).slice(0, 3);
-    const res = await Promise.all(ord.map(s => fromSource(s, lang, lat, lon).catch(() => { errors.push(s[0]); return []; })));
-    res.forEach((r, i) => { alerts = alerts.concat(r); sources.push({ name: ord[i][2], url: ord[i][3] }); });
+    const C = await countryAlerts(cc, lang);
+    sources = C.sources; linkOut = C.linkOut; errors = C.errors;
+    alerts = C.alerts.filter(a => !a.expires || Date.parse(a.expires) > now).map(a => ({ ...a, inside: insideGeo(lat, lon, a.geo) }));
   }
-  /* drop cancelled, test, expired and superseded messages */
-  const superseded = new Set(); alerts.forEach(a => (a.refs || []).forEach(r => superseded.add(r)));
-  alerts = alerts.filter(a => (a.status || 'Actual') === 'Actual' && a.msgType !== 'Cancel' && !superseded.has(a.id) && (a.expires ? Date.parse(a.expires) > now : (now - (Date.parse(a.onset) || 0)) < 12 * 36e5));
-  /* one entry per identical message (multi-area feeds repeat it) */
-  const seen = new Set(); alerts = alerts.filter(a => { const k = a.headline + '|' + a.area + '|' + a.expires; if (seen.has(k)) return false; seen.add(k); return true; });
   const rank = a => (SEV[a.severity] || 0) * 10 - (Date.parse(a.onset) > now ? 1 : 0);
   alerts.sort((a, b) => rank(b) - rank(a));
-  const strip = a => { const { refs, status, ...r } = a; return r; };
+  const strip = a => { const { refs, status, geo, ...r } = a; return r; };
   return {
     cc, at: new Date(now).toISOString(),
     here: alerts.filter(a => a.inside === true).slice(0, 8).map(strip),
