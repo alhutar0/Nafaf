@@ -1498,10 +1498,10 @@ export default {
       if (!raw) return json({ ok: false, why: 'unknown' }, 404);
       if (await env.NAFAF_KV.get('pt:' + id)) return json({ ok: false, why: 'wait' }, 429);
       await env.NAFAF_KV.put('pt:' + id, '1', { expirationTtl: 60 });
-      const en = b.lang === 'en';
-      const status = await sendPushStatus(env, JSON.parse(raw), {
-        title: en ? 'Nafaf test alert' : 'تجربة تنبيه نفاف',
-        body: en ? 'If you can read this, rain alerts will reach you even when Nafaf is closed.' : 'إذا وصلك هذا، يوصلك تنبيه المطر حتى ونفاف مسكّر.',
+      const en = b.lang === 'en', sx = JSON.parse(raw), XT = XL[b.xl || sx.xl];
+      const status = await sendPushStatus(env, sx, {
+        title: XT ? XT.test[0] : (en ? 'Nafaf test alert' : 'تجربة تنبيه نفاف'),
+        body: XT ? XT.test[1] : (en ? 'If you can read this, rain alerts will reach you even when Nafaf is closed.' : 'إذا وصلك هذا، يوصلك تنبيه المطر حتى ونفاف مسكّر.'),
         tag: 'nafaf-test', type: 'test', sev: 'notice', lang: en ? 'en' : 'ar', ts: Date.now()
       });
       return json({ ok: status >= 200 && status < 300, status });
@@ -1693,8 +1693,60 @@ function cellEvents(now, prev, cfg, sub) {
     ev('pressureFall', 'info', L2(sub, '📉 الضغط ينزل', '📉 Pressure falling'), nm + ' — ' + Math.round(prev.press - now.press) + ' hPa.');
   if (T.nearbyRain.on && now.peak >= T.nearbyRain.min && (!prev || (prev.peak || 0) < T.nearbyRain.min) && now.mm < 0.1 && now.soon == null)
     ev('nearbyRain', 'info', L2(sub, '🌦️ احتمال مطر', '🌦️ Rain likely'), nm + ' — ' + L2(sub, 'احتمال ', 'chance ') + now.peak + '%' + (now.peakAt ? L2(sub, ' حدود ', ' around ') + now.peakAt : '') + '.', 1);
-  return out;
+  return sub && XL[sub.xl] ? out.map(e => xlEvent(e, now, prev, sub)) : out;
 }
+/* ★ Nafaf is global: rain alerts in the phone's language (sub.xl, sent by the app) on top of Arabic/English.
+   Each template: [title, body]; {nm} place · {mm} millimetres · {min} minutes · {km} distance · {dir} direction ·
+   {w} wind km/h · {t} temperature · {d} drop · {hp} hPa · {p} percent · {at} " around HH:MM" or "". */
+const XL = {
+  fr: { dir: ['au nord', 'au nord-est', 'à l’est', 'au sud-est', 'au sud', 'au sud-ouest', 'à l’ouest', 'au nord-ouest'], area: 'votre zone',
+    rainStart: ['🌧️ La pluie a commencé', 'Il pleut à {nm} — {mm} mm.'], rainHeavy: ['🌧️ Forte pluie', '{nm} — {mm} mm. Description, pas une alerte : consultez le service météo de votre pays.'],
+    rainStop: ['🌤️ La pluie s’est arrêtée', 'La pluie a cessé à {nm}.'], thunder: ['⚡ Orage', 'Activité orageuse près de {nm}.'],
+    rainSoon: ['🌦️ La pluie arrive', '{nm} — elle devrait commencer dans environ {min} minutes.'], rainNear: ['🌧️ Pluie tout près', 'Il pleut à environ {km} km {dir} de {nm}.'], thunderNear: ['⛈️ Orage tout près', 'Orage à environ {km} km {dir} de {nm}.'],
+    windSurge: ['💨 Le vent se lève', '{nm} — {w} km/h.'], dustRise: ['🌫️ Poussière dans l’air', 'La poussière s’est levée à {nm}.'], heatSpike: ['🔥 Forte chaleur', '{nm} — {t}°.'],
+    coldDrop: ['🌡️ Chute de température', '{nm} — {d}° → {t}°.'], pressureFall: ['📉 La pression baisse', '{nm} — {hp} hPa.'], nearbyRain: ['🌦️ Pluie probable', '{nm} — risque {p}%{at}.'], around: ' vers ',
+    test: ['Alerte test Nafaf', 'Si vous lisez ceci, les alertes pluie vous parviendront même quand Nafaf est fermé.'] },
+  de: { dir: ['Norden', 'Nordosten', 'Osten', 'Südosten', 'Süden', 'Südwesten', 'Westen', 'Nordwesten'], area: 'deiner Gegend',
+    rainStart: ['🌧️ Es regnet', 'Regen in {nm} — {mm} mm.'], rainHeavy: ['🌧️ Starkregen', '{nm} — {mm} mm. Beschreibung, keine Warnung: frag den Wetterdienst deines Landes.'],
+    rainStop: ['🌤️ Der Regen hat aufgehört', 'Der Regen in {nm} hat nachgelassen.'], thunder: ['⚡ Gewitter', 'Gewitteraktivität bei {nm}.'],
+    rainSoon: ['🌦️ Regen im Anmarsch', '{nm} — Beginn in etwa {min} Minuten erwartet.'], rainNear: ['🌧️ Regen in der Nähe', 'Regen etwa {km} km im {dir} von {nm}.'], thunderNear: ['⛈️ Gewitter in der Nähe', 'Gewitter etwa {km} km im {dir} von {nm}.'],
+    windSurge: ['💨 Der Wind frischt auf', '{nm} — {w} km/h.'], dustRise: ['🌫️ Staub in der Luft', 'In {nm} ist Staub aufgezogen.'], heatSpike: ['🔥 Große Hitze', '{nm} — {t}°.'],
+    coldDrop: ['🌡️ Temperatursturz', '{nm} — {d}° → {t}°.'], pressureFall: ['📉 Luftdruck fällt', '{nm} — {hp} hPa.'], nearbyRain: ['🌦️ Regen wahrscheinlich', '{nm} — Chance {p}%{at}.'], around: ' gegen ',
+    test: ['Nafaf-Testwarnung', 'Wenn du das liest, erreichen dich Regenwarnungen auch bei geschlossenem Nafaf.'] },
+  hi: { dir: ['उत्तर', 'उत्तर-पूर्व', 'पूर्व', 'दक्षिण-पूर्व', 'दक्षिण', 'दक्षिण-पश्चिम', 'पश्चिम', 'उत्तर-पश्चिम'], area: 'आपका इलाक़ा',
+    rainStart: ['🌧️ बारिश शुरू', '{nm} में बारिश शुरू — {mm} मिमी।'], rainHeavy: ['🌧️ भारी बारिश', '{nm} — {mm} मिमी। यह विवरण है, चेतावनी नहीं: अपने देश की मौसम एजेंसी देखें।'],
+    rainStop: ['🌤️ बारिश रुकी', '{nm} में बारिश थम गई।'], thunder: ['⚡ गरज', '{nm} के पास गरज वाले बादल।'],
+    rainSoon: ['🌦️ बारिश आ रही है', '{nm} — लगभग {min} मिनट में शुरू होने की उम्मीद।'], rainNear: ['🌧️ पास में बारिश', '{nm} से लगभग {km} किमी {dir} में बारिश हो रही है।'], thunderNear: ['⛈️ पास में गरज', '{nm} से लगभग {km} किमी {dir} में गरज।'],
+    windSurge: ['💨 हवा तेज़ हो रही है', '{nm} — {w} किमी/घं।'], dustRise: ['🌫️ हवा में धूल', '{nm} में धूल उठी है।'], heatSpike: ['🔥 भीषण गर्मी', '{nm} — {t}°।'],
+    coldDrop: ['🌡️ तापमान गिरा', '{nm} — {d}° → {t}°।'], pressureFall: ['📉 दबाव गिर रहा है', '{nm} — {hp} hPa।'], nearbyRain: ['🌦️ बारिश की संभावना', '{nm} — संभावना {p}%{at}।'], around: ' लगभग ',
+    test: ['नफ़ाफ़ परीक्षण अलर्ट', 'अगर आप यह पढ़ रहे हैं, तो नफ़ाफ़ बंद होने पर भी बारिश अलर्ट आप तक पहुँचेंगे।'] },
+  ur: { dir: ['شمال', 'شمال مشرق', 'مشرق', 'جنوب مشرق', 'جنوب', 'جنوب مغرب', 'مغرب', 'شمال مغرب'], area: 'آپ کا علاقہ',
+    rainStart: ['🌧️ بارش شروع', '{nm} میں بارش شروع — {mm} ملی میٹر۔'], rainHeavy: ['🌧️ موسلا دھار بارش', '{nm} — {mm} ملی میٹر۔ یہ وضاحت ہے، انتباہ نہیں: اپنے ملک کا محکمۂ موسمیات دیکھیں۔'],
+    rainStop: ['🌤️ بارش رک گئی', '{nm} میں بارش تھم گئی۔'], thunder: ['⚡ گرج چمک', '{nm} کے قریب گرج چمک۔'],
+    rainSoon: ['🌦️ بارش آ رہی ہے', '{nm} — تقریباً {min} منٹ میں شروع ہونے کی توقع۔'], rainNear: ['🌧️ قریب بارش', '{nm} سے تقریباً {km} کلومیٹر {dir} میں بارش ہو رہی ہے۔'], thunderNear: ['⛈️ قریب گرج', '{nm} سے تقریباً {km} کلومیٹر {dir} میں گرج۔'],
+    windSurge: ['💨 ہوا تیز ہو رہی ہے', '{nm} — {w} کلومیٹر/گھنٹہ۔'], dustRise: ['🌫️ ہوا میں گرد', '{nm} میں گرد اٹھی ہے۔'], heatSpike: ['🔥 شدید گرمی', '{nm} — {t}°۔'],
+    coldDrop: ['🌡️ درجہ گرا', '{nm} — {d}° → {t}°۔'], pressureFall: ['📉 دباؤ کم ہو رہا ہے', '{nm} — {hp} hPa۔'], nearbyRain: ['🌦️ بارش کا امکان', '{nm} — امکان {p}%{at}۔'], around: ' تقریباً ',
+    test: ['نفاف آزمائشی الرٹ', 'اگر آپ یہ پڑھ رہے ہیں تو نفاف بند ہونے پر بھی بارش کے الرٹس آپ تک پہنچیں گے۔'] },
+  bn: { dir: ['উত্তর', 'উত্তর-পূর্ব', 'পূর্ব', 'দক্ষিণ-পূর্ব', 'দক্ষিণ', 'দক্ষিণ-পশ্চিম', 'পশ্চিম', 'উত্তর-পশ্চিম'], area: 'আপনার এলাকা',
+    rainStart: ['🌧️ বৃষ্টি শুরু', '{nm}-এ বৃষ্টি শুরু — {mm} মিমি।'], rainHeavy: ['🌧️ ভারী বৃষ্টি', '{nm} — {mm} মিমি। এটি বর্ণনা, সতর্কতা নয়: আপনার দেশের আবহাওয়া সংস্থা দেখুন।'],
+    rainStop: ['🌤️ বৃষ্টি থেমেছে', '{nm}-এ বৃষ্টি কমে গেছে।'], thunder: ['⚡ বজ্রঝড়', '{nm}-এর কাছে বজ্রঝড়।'],
+    rainSoon: ['🌦️ বৃষ্টি আসছে', '{nm} — প্রায় {min} মিনিটে শুরু হওয়ার কথা।'], rainNear: ['🌧️ কাছেই বৃষ্টি', '{nm} থেকে প্রায় {km} কিমি {dir}-এ বৃষ্টি হচ্ছে।'], thunderNear: ['⛈️ কাছেই বজ্রঝড়', '{nm} থেকে প্রায় {km} কিমি {dir}-এ বজ্রঝড়।'],
+    windSurge: ['💨 বাতাস বাড়ছে', '{nm} — {w} কিমি/ঘ।'], dustRise: ['🌫️ বাতাসে ধুলো', '{nm}-এ ধুলো উঠেছে।'], heatSpike: ['🔥 তীব্র গরম', '{nm} — {t}°।'],
+    coldDrop: ['🌡️ তাপমাত্রা কমেছে', '{nm} — {d}° → {t}°।'], pressureFall: ['📉 চাপ কমছে', '{nm} — {hp} hPa।'], nearbyRain: ['🌦️ বৃষ্টির সম্ভাবনা', '{nm} — সম্ভাবনা {p}%{at}।'], around: ' প্রায় ',
+    test: ['নাফাফ পরীক্ষামূলক সতর্কবার্তা', 'এটি পড়তে পারলে নাফাফ বন্ধ থাকলেও বৃষ্টির সতর্কবার্তা আপনার কাছে পৌঁছাবে।'] }
+};
+function xlFill(t, v) { return t.replace(/\{(\w+)\}/g, (_, k) => v[k] != null ? v[k] : ''); }
+/* rewrite one event in the subscriber's own language; keeps type, severity and link */
+function xlEvent(e, now, prev, sub) {
+  const X = XL[sub && sub.xl]; if (!X) return e;
+  const key = e.type === 'rainNear' && now.ring && now.ring.th ? 'thunderNear' : e.type, tpl = X[key]; if (!tpl) return e;
+  const w = Math.max(now.wind || 0, now.gust || 0);
+  const v = { nm: sub.place || X.area, mm: (now.mm || 0).toFixed(1), min: now.soon, km: (now.ring && now.ring.km) || RING_KM, dir: now.ring ? X.dir[now.ring.dir] : '',
+    w: Math.round(w), t: Math.round(now.temp), d: prev ? Math.round(prev.temp - now.temp) : '', hp: prev && prev.press ? Math.round(prev.press - now.press) : '',
+    p: now.peak, at: now.peakAt ? X.around + now.peakAt : '' };
+  return Object.assign({}, e, { title: xlFill(tpl[0], v), body: xlFill(tpl[1], v), lang: sub.xl });
+}
+
 function widgetPayload(now, sub) {
   const place = sub.place ? ' · ' + sub.place : '';
   let body = L2(sub, 'يحس ', 'Feels ') + Math.round(now.feels ?? now.temp) + '° · ' + L2(sub, 'رياح ', 'Wind ') + Math.round(now.wind) + L2(sub, ' كم/س', ' km/h');

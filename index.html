@@ -7095,7 +7095,7 @@ var NAFAF_PRIVACY={
  '• سجل ما تغيّر في سمائك<br>'+
  '• مدنك المفضّلة<br><br>'+
  '<b>ما يصل خادمنا — وفقط إن فعّلته أنت</b><br>'+
- '• <b>الإشعارات:</b> رمز اشتراك مجهول من متصفحك (لا اسم ولا بريد ولا موقع)<br>'+
+ '• <b>تنبيه المطر:</b> رمز اشتراك من متصفحك + منطقتك التقريبية (حوالي ١١ كم، مو عنوانك) ولغة التطبيق — عشان نعرف متى يقرب المطر منك. ما فيه اسم ولا بريد، وينحذف إذا وقفت التنبيهات أو بعد ١٢٠ يوم بدون استخدام<br>'+
  '• <b>الرصد:</b> نوع الحالة واسم ولايتك وإحداثيات تقريبية — للتدقيق فقط ولا تُعرض للعامة<br>'+
  '• <b>الزوار:</b> رقم عشوائي يولّده جهازك لعدّ الزيارات بلا أي معرّف شخصي<br>'+
  '• <b>المراسلون:</b> بريدك واسمك من حساب جوجل — للتحقق من هويتك كمراسل فقط<br><br>'+
@@ -7107,17 +7107,17 @@ var NAFAF_PRIVACY={
  '<b>حقك في الحذف</b><br>'+
  'امسح بيانات الموقع من متصفحك فتُمحى كل بياناتك المحلية فورًا. ولحذف اشتراكك من خادمنا أوقف «تنبيه المطر» من الإعدادات.<br><br>'+
  '<b>الخدمات الخارجية</b><br>'+
- 'نجلب الطقس من Open-Meteo والصور من NASA GIBS وRainViewer. هذه الخدمات ترى عنوان IP الخاص بك كأي موقع تزوره ولها سياساتها الخاصة.',
+ 'نجلب الطقس وأسماء المدن من Open-Meteo، واسم منطقتك من BigDataCloud، والصور من NASA GIBS وRainViewer، والخرائط من OpenStreetMap. هذه الخدمات ترى عنوان IP الخاص بك كأي موقع تزوره ولها سياساتها الخاصة. التفاصيل الكاملة والشروط: <a href="privacy.html" target="_blank" rel="noopener">سياسة الخصوصية</a> · <a href="terms.html" target="_blank" rel="noopener">شروط الاستخدام</a>',
 
  '<b>بياناتك تبقى في جهازك.</b><br><br>'+
  '<b>محليًا:</b> الإعدادات · السلسلة · السجل · المفضّلة.<br><br>'+
- '<b>على الخادم (بموافقتك):</b> رمز إشعارات مجهول · بيانات الرصد للتدقيق · عدّاد زوار مجهول · بريد المراسلين للتحقق.<br><br>'+
+ '<b>على الخادم (بموافقتك):</b> رمز الإشعارات مع المنطقة التقريبية (نحو ١١ كم) ولغة التطبيق لإرسال تنبيه المطر، وتُحذف بإيقافه · بيانات الرصد للتدقيق · عدّاد زوار مجهول · بريد المراسلين للتحقق.<br><br>'+
  '<b>لا نجمع:</b> تتبّع · بيع بيانات · أدوات تتبّع خارجية · إعلانات.<br><br>'+
  '<b>الحذف:</b> امسح بيانات الموقع من المتصفح وأوقف التنبيهات لحذف اشتراكك.',
 
  '<b>Your data stays on your device.</b><br><br>'+
  '<b>Local only:</b> Settings · streak · change log · favourites.<br><br>'+
- '<b>Sent to our server (only if you opt in):</b> anonymous push token · observation data for verification · anonymous visit counter · reporter email for identity check.<br><br>'+
+ '<b>Sent to our server (only if you opt in):</b> push token with your approximate area (about 11 km, never your address) and app language, to send rain alerts — deleted when you switch alerts off or after 120 days unused · observation data for verification · anonymous visit counter · reporter email for identity check.<br><br>'+
  '<b>We never:</b> track you · sell data · use third-party trackers · show ads.<br><br>'+
  '<b>Deletion:</b> Clear site data in your browser; turn off rain alerts to remove your subscription.'
  ]
@@ -12429,6 +12429,7 @@ h+='</div><div class="m-card"><div class="m-sec">'+pick('الوضع السينم
  h+='<div class="m-link" id="lnkAbout"><span>'+pick('من نحن','من نحن','About us')+'</span><span class="m-arw">‹</span></div>';
  h+='<div class="m-link" id="lnkLegal"><span>'+pick('إخلاء المسؤولية','إخلاء المسؤولية','Disclaimer')+'</span><span class="m-arw">‹</span></div>';
  h+='<div class="m-link" id="lnkPriv"><span>'+pick('سياسة الخصوصية','سياسة الخصوصية','Privacy policy')+'</span><span class="m-arw">‹</span></div>';
+ h+='<a class="m-link" href="terms.html" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span>'+pick('شروط الاستخدام والتراخيص','شروط الاستخدام والتراخيص','Terms of use & licences')+'</span><span class="m-arw">‹</span></a>';
  h+='<div class="m-link" id="lnkMail"><span>'+pick('راسلنا أو قدّم شكوى','تواصل معنا','Contact us')+'</span><span class="m-arw">‹</span></div>';
  h+='<div class="m-link" id="lnkTour"><span>'+pick('أعد الجولة التعريفية','إعادة الجولة','Replay tour')+'</span><span class="m-arw">‹</span></div>';
  h+='</div>';
@@ -13388,6 +13389,7 @@ setInterval(function(){
  }},60000);
 </script>
 
+
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -13824,6 +13826,24 @@ html.nx body.v2.wide #liveMap{height:calc(100vh - 250px)!important;min-height:44
   html.nx body.v2:not(.wide) #fitBody>:is(.sec-t,.sec-s,.fitDisc){grid-column:1 / -1}
   html.nx body.v2:not(.wide) #liveMap{height:min(62vh,640px)!important}
 }
+/* — nearby.html — */
+/* old rule .modal{left:5%;right:5%} + a later position:relative pushed every sheet 5% off the edge on phones */
+body.v2:not(.wide) .ov>.modal{left:auto;right:auto}
+#nxNear .nxNh{font-size:12.5px;font-weight:800;opacity:.75;margin:14px 2px 8px;display:flex;align-items:center;gap:6px}
+#nxNear .nxNg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#nxNear .nxNc{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:start;padding:10px 12px;border-radius:13px;border:1px solid rgba(20,40,80,.12);background:rgba(20,40,80,.05);color:inherit;font:inherit;cursor:pointer;min-width:0}
+#nxNear .nxNc b{font-size:14px;font-weight:800;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#nxNear .nxNc small{font-size:11.5px;opacity:.7}
+#nxNear .nxNc:active{transform:scale(.97)}
+#nxNear .nxNm{font-size:12.5px;opacity:.7;padding:6px 2px}
+#nxNear .nxNsrc{font-size:10.5px;opacity:.5;margin-top:12px}
+/* — astro.html — */
+.nxAstro{display:grid;gap:10px;padding:14px 16px;border-radius:22px;background:var(--skyCard,rgba(10,17,34,.6));border:1px solid rgba(255,255,255,.1)}
+.nxAstro .r{display:flex;align-items:center;gap:12px}
+.nxAstro .i{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(227,169,75,.16);font-size:20px}
+.nxAstro b{display:block;font-size:15px}.nxAstro small{display:block;font-size:12.5px;opacity:.75;line-height:1.5}
+.nxAstro .d{margin-inline-start:auto;font-weight:900;font-size:20px;color:#F2C36B;white-space:nowrap}
+.nxAstro .d small{display:inline;font-size:11px;font-weight:700;opacity:.8;color:inherit}
 </style>
 <script>
 /* Defaults = how Nafaf behaves with no portal setting. The portal publishes cfg.next; the app keeps the
@@ -14950,6 +14970,238 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   addEventListener('resize',soon);
   (function hook(n){if(typeof window.showTab==='function'&&!window.showTab.__nxw){var o=window.showTab;window.showTab=function(){var r=o.apply(this,arguments);setTimeout(fit,350);setTimeout(fit,1200);return r};window.showTab.__nxw=1;try{showTab=window.showTab}catch(e){}}else if(n<60)setTimeout(function(){hook(n+1)},250)})(0);
   new MutationObserver(soon).observe(document.body,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+<script>
+(function(){
+  function P(a,b,c){var r;try{r=pick(a,b,c)}catch(e){r=c}return window.nxTr?nxTr(r):r}
+  function lang(){try{return window.NX_XL||(LI()===2?'en':'ar')}catch(e){return 'ar'}}
+  function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+  var R=6371,D2R=Math.PI/180;
+  function km(a,b,c,d){var x=Math.sin((c-a)*D2R/2),y=Math.sin((d-b)*D2R/2),h=x*x+Math.cos(a*D2R)*Math.cos(c*D2R)*y*y;return 2*R*Math.asin(Math.min(1,Math.sqrt(h)))}
+  function here(){
+    var la=parseFloat(ls('myLat')),lo=parseFloat(ls('myLon'));
+    if(!isNaN(la)&&!isNaN(lo))return {la:la,lo:lo,real:true};
+    try{if(window.CUR)return {la:CUR.lat,lo:CUR.lon,real:false}}catch(e){}
+    return null;
+  }
+  /* country names in the reader's language, straight from the phone (Intl) */
+  var DN=null;function cname(cc){try{DN=DN||new Intl.DisplayNames([lang()==='ar'?'ar':lang()],{type:'region'});return DN.of(cc)}catch(e){return cc}}
+  function flag(cc){try{return String.fromCodePoint.apply(null,cc.toUpperCase().split('').map(function(c){return 127397+c.charCodeAt(0)}))}catch(e){return ''}}
+
+  /* 15°×15° tiles of GeoNames cities (10k+ people); the 3×3 tiles around the user are enough for "near me" */
+  var TILE={};
+  function tile(i,j){var k=i+'_'+(((j%24)+24)%24);if(TILE[k])return TILE[k];
+    TILE[k]=fetch('geo/c_'+k+'.json').then(function(r){return r.ok?r.json():[]}).catch(function(){return []});return TILE[k]}
+  function around(la,lo){var i=Math.floor((la+90)/15),j=Math.floor((lo+180)/15),ps=[];
+    for(var a=-1;a<=1;a++)for(var b=-1;b<=1;b++){if(i+a<0||i+a>11)continue;ps.push(tile(i+a,j+b))}
+    return Promise.all(ps).then(function(L){var all=[];L.forEach(function(t){all=all.concat(t)});return all})}
+
+  /* the user's own country = the country of the city nearest to the user's real position */
+  function homeCC(list){return list.length?list[0][1]:''}
+
+  /* names in the reader's language: one Open-Meteo geocoding lookup per city shown, cached on the phone */
+  var NC={};try{NC=JSON.parse(ls('nx.cityNames')||'{}')}catch(e){}
+  var saveT=0;function saveNC(){clearTimeout(saveT);saveT=setTimeout(function(){try{var k=Object.keys(NC);if(k.length>600){var o={};k.slice(-400).forEach(function(x){o[x]=NC[x]});NC=o}ls('nx.cityNames',JSON.stringify(NC))}catch(e){}},400)}
+  function localName(c,L){
+    if(L==='en')return Promise.resolve(c[0]);
+    var key=L+'|'+c[0]+'|'+c[1];if(NC[key])return Promise.resolve(NC[key]);
+    return fetch('https://geocoding-api.open-meteo.com/v1/search?count=5&format=json&language='+encodeURIComponent(L)+'&name='+encodeURIComponent(c[0]))
+      .then(function(r){return r.json()}).then(function(j){var best=null;(j.results||[]).forEach(function(x){if(String(x.country_code).toUpperCase()!==c[1])return;var d=km(c[2],c[3],x.latitude,x.longitude);if(d<25&&(!best||d<best.d))best={d:d,n:x.name}});
+        var n=best?best.n:c[0];NC[key]=n;saveNC();return n}).catch(function(){return c[0]})}
+  function nameQueue(btns,L){var i=0;function next(){if(i>=btns.length)return;var b=btns[i++];var c=b.__c;
+      localName(c,L).then(function(n){if(n&&n!==c[0]){b.__n=n;b.querySelector('b').textContent=n}}).then(next,next)}
+    for(var k=0;k<4;k++)next()}
+
+  function btn(c,dkm){var b=document.createElement('button');b.type='button';b.className='nxNc';b.__c=c;
+    b.innerHTML='<b></b><small></small>';b.querySelector('b').textContent=c[0];
+    b.querySelector('small').textContent=(dkm<1?P('أنت هنا','أنت هنا','You are here'):Math.round(dkm)+' '+P('كم','كم','km'));
+    b.onclick=function(){try{document.getElementById('ovCity').className='ov'}catch(e){}
+      var nm=b.__n||c[0],co=cname(c[1]);try{selectGlobal(c[2],c[3],nm,co,'')}catch(e){}};
+    return b}
+
+  var busy=0,lastKey='';
+  function build(){
+    var host=document.getElementById('cityGrid');if(!host)return;
+    var h=here();if(!h)return;
+    var key=h.la.toFixed(2)+','+h.lo.toFixed(2)+'|'+lang();
+    var box=document.getElementById('nxNear');
+    if(box&&key===lastKey)return;
+    lastKey=key;
+    host.innerHTML='<div id="nxNear"><div class="nxNm">'+P('نجيب المدن اللي حولك…','جارٍ جلب المدن القريبة…','Finding cities around you…')+'</div></div>';
+    var ft=document.getElementById('favT');if(ft)ft.textContent=P('مدن حولك','المدن القريبة منك','Cities around you');
+    var myBusy=++busy;
+    around(h.la,h.lo).then(function(all){
+      if(myBusy!==busy)return;
+      var L=lang();
+      all.forEach(function(c){c.d=km(h.la,h.lo,c[2],c[3])});
+      all=all.filter(function(c){return c.d<1500});
+      all.sort(function(a,b){return a.d-b.d});
+      var cc=homeCC(all),mine=[],near={};
+      /* "gravity" order: a big city a little further away beats a small town next door, so the list is useful
+         in a metropolis (not twenty suburbs) and in the countryside (the real towns around you) */
+      function g(c){return Math.pow(Math.max(c[4],10),0.6)/(c.d+15)}
+      all.forEach(function(c){if(c[1]===cc)mine.push(c);else (near[c[1]]=near[c[1]]||[]).push(c)});
+      var first=mine[0];mine=mine.slice(1).sort(function(a,b){return g(b)-g(a)}).slice(0,19);if(first)mine.unshift(first);
+      for(var q in near)near[q].sort(function(a,b){return g(b)-g(a)});
+      var box=document.createElement('div');box.id='nxNear';
+      var t=document.createElement('div');t.className='nxNh';t.textContent=flag(cc)+' '+(cname(cc)||'');box.appendChild(t);
+      var g=document.createElement('div');g.className='nxNg';mine.forEach(function(c){g.appendChild(btn(c,c.d))});box.appendChild(g);
+      /* neighbouring countries, closest first, three cities each */
+      function md(k){var m=1e9;near[k].forEach(function(c){if(c.d<m)m=c.d});return m}
+      var cs=Object.keys(near).sort(function(a,b){return md(a)-md(b)}).slice(0,5);
+      cs.forEach(function(k){var t2=document.createElement('div');t2.className='nxNh';t2.textContent=flag(k)+' '+cname(k);box.appendChild(t2);
+        var g2=document.createElement('div');g2.className='nxNg';near[k].slice(0,4).forEach(function(c){g2.appendChild(btn(c,c.d))});box.appendChild(g2)});
+      if(!h.real){var m=document.createElement('div');m.className='nxNm';m.textContent=P('فعّل إذن الموقع عشان تشوف المدن اللي حولك بالضبط.','فعّل إذن الموقع لعرض المدن القريبة منك بدقة.','Allow location to see the cities right around you.');box.insertBefore(m,box.firstChild)}
+      var s=document.createElement('div');s.className='nxNsrc';s.textContent=P('بيانات المدن: GeoNames (CC BY 4.0)','بيانات المدن: GeoNames (CC BY 4.0)','City data: GeoNames (CC BY 4.0)');box.appendChild(s);
+      host.innerHTML='';host.appendChild(box);
+      nameQueue([].slice.call(box.querySelectorAll('.nxNc')),L);
+    });
+  }
+  window.nxNearby=build;
+  /* the old fixed list is replaced whenever it is drawn, and refreshed each time the picker opens */
+  (function hook(n){if(typeof window.buildCityGrid==='function'&&!window.buildCityGrid.__nx){var o=window.buildCityGrid;
+      window.buildCityGrid=function(){var r=o.apply(this,arguments);lastKey='';try{build()}catch(e){}return r};window.buildCityGrid.__nx=1;try{buildCityGrid=window.buildCityGrid}catch(e){}build()}
+    else if(n<60)setTimeout(function(){hook(n+1)},250)})(0);
+  document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#pickBtn'))setTimeout(build,30)},true);
+})();
+</script>
+<script>
+/* Inside Oman the card keeps Oman's official station averages (NCSI). Everywhere else it compares with the
+   1991–2020 climate normal of the user's own spot, computed from the ERA5 reanalysis (Copernicus/ECMWF)
+   through Open-Meteo's archive. It is never called "official" outside Oman. */
+(function(){
+  function P(a,b,c){var r;try{r=pick(a,b,c)}catch(e){r=c}return window.nxTr?nxTr(r):r}
+  function key(){return 'nx.clim.'+(Math.round(CUR.lat*4)/4).toFixed(2)+','+(Math.round(CUR.lon*4)/4).toFixed(2)}
+  function get(){try{var o=JSON.parse(localStorage.getItem(key())||'null');if(o&&Date.now()-o.ts<120*864e5)return o}catch(e){}return null}
+  var loading={};
+  function load(){
+    var k=key();if(loading[k])return;loading[k]=1;
+    var la=(Math.round(CUR.lat*4)/4).toFixed(2),lo=(Math.round(CUR.lon*4)/4).toFixed(2);
+    fetch('https://archive-api.open-meteo.com/v1/archive?latitude='+la+'&longitude='+lo+'&start_date=1991-01-01&end_date=2020-12-31&daily=temperature_2m_mean,precipitation_sum&timezone=GMT')
+      .then(function(r){return r.ok?r.json():null}).then(function(j){
+        if(!j||!j.daily||!j.daily.time)return;
+        var T=[],Tn=[],R=[],i,m;for(i=0;i<12;i++){T[i]=0;Tn[i]=0;R[i]=0}
+        var t=j.daily.time,tm=j.daily.temperature_2m_mean,pr=j.daily.precipitation_sum;
+        for(i=0;i<t.length;i++){m=+t[i].slice(5,7)-1;if(tm[i]!=null){T[m]+=tm[i];Tn[m]++}if(pr[i]!=null)R[m]+=pr[i]}
+        var o={ts:Date.now(),t:[],r:[]};for(i=0;i<12;i++){o.t[i]=Tn[i]?Math.round(T[i]/Tn[i]*10)/10:null;o.r[i]=Math.round(R[i]/30)}
+        try{localStorage.setItem(k,JSON.stringify(o))}catch(e){}
+        try{if(window.TAB==='now'&&typeof renderNow==='function')renderNow()}catch(e){}
+      }).catch(function(){}).then(function(){delete loading[k]});
+  }
+  function hook(n){
+    if(typeof window.anomalyInfo!=='function'||typeof window.anomalyCard!=='function'){if(n<60)setTimeout(function(){hook(n+1)},250);return}
+    if(window.anomalyInfo.__nx)return;
+    var oi=window.anomalyInfo,oc=window.anomalyCard;
+    window.anomalyInfo=function(){var a=oi.apply(this,arguments);if(a)return a;
+      try{if(!window.W||!CUR||(typeof inOman==='function'&&inOman(CUR.lat,CUR.lon)))return null;
+        var c=get();if(!c){load();return null}
+        var mo=new Date().getMonth(),nt=c.t[mo];if(nt==null)return null;
+        return {era:true,normT:nt,normR:c.r[mo],diff:W.temperature_2m-nt,yrs:'1991–2020'}}catch(e){return null}};
+    window.anomalyInfo.__nx=1;try{anomalyInfo=window.anomalyInfo}catch(e){}
+    window.anomalyCard=function(){var a=window.anomalyInfo();if(!a||!a.era)return oc.apply(this,arguments);
+      var mo=new Date().getMonth(),loc=document.documentElement.lang||'ar',mn='';
+      try{mn=new Date(2020,mo,15).toLocaleDateString(loc,{month:'long'})}catch(e){mn=String(mo+1)}
+      var d=a.diff,ad=(window.TUNIT==='f')?Math.round(Math.abs(d)*9/5):Math.abs(Math.round(d*10)/10),col,verdict;
+      if(Math.abs(d)<1.5){col='#9fd4f5';verdict=P('اليوم على معدّله','اليوم ضمن المعدّل','Right on the normal')}
+      else if(d>=4){col='#ff8f8f';verdict=P('اليوم أحرّ من معدّله بكثير','اليوم أعلى من المعدّل بوضوح','Well above normal')}
+      else if(d>0){col='#ffd166';verdict=P('اليوم أحرّ من معدّله','اليوم أعلى من المعدّل','Above normal')}
+      else if(d<=-4){col='#7fe39a';verdict=P('اليوم أبرد من معدّله بكثير','اليوم أدنى من المعدّل بوضوح','Well below normal')}
+      else{col='#9fd4f5';verdict=P('اليوم أبرد من معدّله','اليوم أدنى من المعدّل','Below normal')}
+      var sign=d>0?'+':(d<0?'−':'');
+      var body=P('حرارتك الحين','الحرارة الآن','Now')+' '+tconv(W.temperature_2m)+'° · '+P('معدّل الشهر','معدّل الشهر','Monthly normal')+' ('+mn+') '+tconv(a.normT)+'°';
+      if(a.normR>0)body+=' · '+P('مطره المعتاد','الهطول المعتاد','Usual rainfall')+' '+a.normR+' '+P('ملم','ملم','mm');
+      return '<div class="anom"><div class="an-h">'+P('مقابل معدّل ٣٠ سنة','مقارنة بمعدّل ٣٠ عامًا','vs the 30-year normal')+
+        '<span class="an-badge" style="color:'+col+';border-color:'+col+'44;background:'+col+'22">'+sign+ad+'°</span></div>'+
+        '<div class="an-t">'+verdict+'</div><div class="an-b">'+body+'</div>'+
+        '<div class="an-s">'+P('المصدر: إعادة التحليل ERA5 (كوبرنيكوس/ECMWF) عبر Open-Meteo · متوسط ١٩٩١–٢٠٢٠ لموقعك · تقدير نموذجي لا قياس محطة',
+          'المصدر: إعادة التحليل ERA5 (كوبرنيكوس/ECMWF) عبر Open-Meteo · متوسط ١٩٩١–٢٠٢٠ · تقدير نموذجي',
+          'Source: ERA5 reanalysis (Copernicus/ECMWF) via Open-Meteo · 1991–2020 mean for your spot · a model estimate, not a station')+'</div></div>'};
+    try{anomalyCard=window.anomalyCard}catch(e){}
+  }
+  hook(0);
+})();
+</script>
+<script>
+(function(){
+  function P(a,b,c){var r;try{r=pick(a,b,c)}catch(e){r=c}return window.nxTr?nxTr(r):r}
+  /* the Arabian star calendar (Wasm, Murabbaniya, Suhail…) is a culture of the Arabian Peninsula:
+     it stays for Arabic readers and for anyone standing in Arabia; everyone else gets the world sky calendar */
+  function arabian(){try{if(LI()!==2&&!window.NX_XL)return true;return CUR.lat>=12&&CUR.lat<=32.5&&CUR.lon>=34&&CUR.lon<=60}catch(e){return true}}
+  function day(){return Math.floor(Date.now()/864e5)}
+  function nextOf(list){ /* list of [month(1-12), day, payload]; returns the next occurrence */
+    var now=new Date(),y=now.getFullYear(),best=null;
+    for(var k=0;k<2;k++)list.forEach(function(e){var d=new Date(y+k,e[0]-1,e[1]);var dd=Math.ceil((d-now)/864e5);if(dd>=0&&(!best||dd<best.dd))best={dd:dd,d:d,e:e}});
+    return best}
+  function card(){
+    var south=false;try{south=CUR.lat<0}catch(e){}
+    var loc=document.documentElement.lang||'en';
+    function fmt(d){try{return d.toLocaleDateString(loc,{day:'numeric',month:'long'})}catch(e){return d.toDateString()}}
+    /* equinoxes & solstices (UTC dates, accurate to a day for this decade); names follow the hemisphere */
+    var SE=[[3,20,south?P('اعتدال الخريف','الاعتدال الخريفي','Autumn equinox'):P('اعتدال الربيع','الاعتدال الربيعي','Spring equinox')],
+            [6,21,south?P('أقصر نهار بالسنة','الانقلاب الشتوي','Winter solstice'):P('أطول نهار بالسنة','الانقلاب الصيفي','Summer solstice')],
+            [9,23,south?P('اعتدال الربيع','الاعتدال الربيعي','Spring equinox'):P('اعتدال الخريف','الاعتدال الخريفي','Autumn equinox')],
+            [12,21,south?P('أطول نهار بالسنة','الانقلاب الصيفي','Summer solstice'):P('أقصر نهار بالسنة','الانقلاب الشتوي','Winter solstice')]];
+    /* major annual meteor showers (IMO peak dates) */
+    var MS=[[1,4,'Quadrantids',P('الرُّبعيّات','الرُّبعيّات','Quadrantids')],[4,22,'Lyrids',P('الشلياقيّات','الشلياقيّات','Lyrids')],[5,6,'Eta Aquariids',P('إيتا الدلويّات','إيتا الدلويّات','Eta Aquariids')],
+            [8,12,'Perseids',P('البرشاويّات','البرشاويّات','Perseids')],[10,21,'Orionids',P('الجباريّات','الجباريّات','Orionids')],[11,17,'Leonids',P('الأسديّات','الأسديّات','Leonids')],[12,14,'Geminids',P('التوأميّات','التوأميّات','Geminids')]];
+    var s=nextOf(SE),m=nextOf(MS);
+    /* daylight today and its trend, from the sunrise/sunset Nafaf already has */
+    var dl='',tr='';try{var a=new Date(DAILY.sunrise[0]),b=new Date(DAILY.sunset[0]),a2=new Date(DAILY.sunrise[1]),b2=new Date(DAILY.sunset[1]);
+      var len=(b-a)/6e4,len2=(b2-a2)/6e4,dm=Math.round(len2-len);dl=Math.floor(len/60)+':'+String(Math.round(len%60)).padStart(2,'0');
+      tr=dm===0?P('ثابت تقريبًا','ثابت تقريبًا','about the same tomorrow'):(dm>0?P('بكرة أطول بـ'+dm+' دقيقة','غدًا أطول بـ'+dm+' دقيقة','tomorrow '+dm+' min longer'):P('بكرة أقصر بـ'+(-dm)+' دقيقة','غدًا أقصر بـ'+(-dm)+' دقيقة','tomorrow '+(-dm)+' min shorter'))}catch(e){}
+    function row(icon,title,sub,dd){return '<div class="r"><span class="i">'+icon+'</span><span><b>'+title+'</b><small>'+sub+'</small></span>'+
+      (dd!=null?'<span class="d">'+dd+' <small>'+P('يوم','يوم','days')+'</small></span>':'')+'</div>'}
+    var h='<h2 class="v2h">'+P('تقويم السماء','تقويم السماء','Sky calendar')+'</h2><div class="nxAstro fadeIn d3" id="v2Season">';
+    if(dl)h+=row('☀️',P('طول النهار','طول النهار','Daylight')+' '+dl,tr,null);
+    if(s)h+=row(s.e[0]===6||s.e[0]===12?'🌗':'🌓',s.e[2],fmt(s.d),s.dd);
+    if(m)h+=row('☄️',P('زخّة شهب','زخة شهب','Meteor shower')+': '+m.e[3],P('ذروتها','ذروتها','Peak')+' '+fmt(m.d)+' · '+P('بعيد عن أضواء المدينة','بعيدًا عن أضواء المدينة','away from city lights'),m.dd);
+    return h+'</div>';
+  }
+  (function hook(n){if(typeof window.seasonV2!=='function'){if(n<60)setTimeout(function(){hook(n+1)},250);return}
+    if(window.seasonV2.__nx)return;var o=window.seasonV2;
+    window.seasonV2=function(){if(arabian())return o.apply(this,arguments);try{return card()}catch(e){return o.apply(this,arguments)}};
+    window.seasonV2.__nx=1;try{seasonV2=window.seasonV2}catch(e){}})(0);
+  window.nxSkyCalendar=card;
+})();
+</script>
+<script>
+/* Nafaf is not a weather service. Wherever the user is, every disclaimer now names and links the national
+   meteorological service of the country they are looking at. Only services whose address we are sure of are listed;
+   any other country gets the WMO directory of national services. */
+(function(){
+  function P(a,b,c){var r;try{r=pick(a,b,c)}catch(e){r=c}return window.nxTr?nxTr(r):r}
+  var M={
+    OM:['Oman Meteorology','met.gov.om'],AE:['National Center of Meteorology (UAE)','ncm.gov.ae'],SA:['National Center for Meteorology (Saudi Arabia)','ncm.gov.sa'],
+    QA:['Qatar Meteorology Department','qweather.gov.qa'],BH:['Bahrain Meteorological Directorate','bahrainweather.gov.bh'],
+    EG:['Egyptian Meteorological Authority','ema.gov.eg'],JO:['Jordan Meteorological Department','jmd.gov.jo'],MA:['Direction Générale de la Météorologie (Maroc)','marocmeteo.ma'],
+    DZ:['Office National de la Météorologie (Algérie)','meteo.dz'],TN:['Institut National de la Météorologie (Tunisie)','meteo.tn'],
+    US:['National Weather Service (NOAA)','weather.gov'],CA:['Environment and Climate Change Canada','weather.gc.ca'],MX:['Servicio Meteorológico Nacional','smn.conagua.gob.mx'],
+    BR:['INMET','portal.inmet.gov.br'],AR:['Servicio Meteorológico Nacional','smn.gob.ar'],CL:['Dirección Meteorológica de Chile','meteochile.gob.cl'],
+    CO:['IDEAM','ideam.gov.co'],PE:['SENAMHI','senamhi.gob.pe'],
+    GB:['Met Office','metoffice.gov.uk'],IE:['Met Éireann','met.ie'],FR:['Météo-France','meteofrance.com'],DE:['Deutscher Wetterdienst','dwd.de'],
+    ES:['AEMET','aemet.es'],PT:['IPMA','ipma.pt'],IT:['Servizio Meteorologico dell’Aeronautica Militare','meteoam.it'],NL:['KNMI','knmi.nl'],
+    BE:['Institut Royal Météorologique','meteo.be'],CH:['MeteoSwiss','meteoswiss.admin.ch'],AT:['GeoSphere Austria','geosphere.at'],
+    SE:['SMHI','smhi.se'],NO:['Norwegian Meteorological Institute','met.no'],DK:['DMI','dmi.dk'],FI:['Finnish Meteorological Institute','en.ilmatieteenlaitos.fi'],
+    PL:['IMGW-PIB','imgw.pl'],CZ:['ČHMÚ','chmi.cz'],GR:['Hellenic National Meteorological Service','emy.gr'],TR:['Meteoroloji Genel Müdürlüğü','mgm.gov.tr'],
+    IN:['India Meteorological Department','mausam.imd.gov.in'],PK:['Pakistan Meteorological Department','pmd.gov.pk'],BD:['Bangladesh Meteorological Department','bmd.gov.bd'],
+    LK:['Department of Meteorology Sri Lanka','meteo.gov.lk'],NP:['Meteorological Forecasting Division (Nepal)','mfd.gov.np'],
+    PH:['PAGASA','pagasa.dost.gov.ph'],ID:['BMKG','bmkg.go.id'],MY:['MetMalaysia','met.gov.my'],SG:['Meteorological Service Singapore','weather.gov.sg'],
+    TH:['Thai Meteorological Department','tmd.go.th'],CN:['China Meteorological Administration','cma.gov.cn'],JP:['Japan Meteorological Agency','jma.go.jp'],
+    KR:['Korea Meteorological Administration','kma.go.kr'],HK:['Hong Kong Observatory','hko.gov.hk'],TW:['Central Weather Administration','cwa.gov.tw'],
+    AU:['Bureau of Meteorology','bom.gov.au'],NZ:['MetService','metservice.com'],ZA:['South African Weather Service','weathersa.co.za'],
+    KE:['Kenya Meteorological Department','meteo.go.ke'],NG:['Nigerian Meteorological Agency','nimet.gov.ng'],IR:['IRIMO','irimo.ir']
+  };
+  function cc(){try{if(window.GEO&&GEO.cc)return String(GEO.cc).toUpperCase()}catch(e){}return ''}
+  window.nxMetService=function(c){c=(c||cc()).toUpperCase();var m=M[c];
+    return m?{name:m[0],url:'https://'+m[1]+'/',known:true}:{name:P('دليل الجهات الرسمية (المنظمة العالمية للأرصاد)','دليل أعضاء المنظمة العالمية للأرصاد الجوية','WMO directory of national weather services'),url:'https://wmo.int/about-wmo/members',known:false}};
+  function line(){var s=window.nxMetService();
+    return '<div class="doc-official" style="margin-top:8px">'+P('🏛️ الجهة الرسمية للبلد اللي تشوف طقسه: ','🏛️ الجهة الرسمية في البلد المعروض: ','🏛️ Official weather authority for the country shown: ')+
+      '<a href="'+s.url+'" target="_blank" rel="noopener" style="color:#9fd4f5">'+s.name+'</a></div>'}
+  (function hook(n){if(typeof window.docCard!=='function'){if(n<60)setTimeout(function(){hook(n+1)},250);return}
+    if(window.docCard.__nx)return;var o=window.docCard;
+    window.docCard=function(){var h=o.apply(this,arguments);try{var i=h.lastIndexOf('</div>');h=h.slice(0,i)+line()+h.slice(i)}catch(e){}return h};
+    window.docCard.__nx=1;try{docCard=window.docCard}catch(e){}})(0);
 })();
 </script>
 <script type="text/plain" id="nxSceneSrc">

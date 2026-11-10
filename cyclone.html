@@ -419,7 +419,7 @@ function drawRings(lat, lon, V) {
     for (let i = 0; i < RING_N; i++) { const [la, lo] = dest(lat, lon, i / RING_N * 360, r); ll2v(la, lo, 1.008, v); a[i * 3] = v.x; a[i * 3 + 1] = v.y; a[i * 3 + 2] = v.z; }
     l.geometry.attributes.position.needsUpdate = true; l.geometry.computeBoundingSphere(); }
 }
-window.NXCY = { rings: () => rings.map(l => l.visible), radii: (v, pc, lat) => { const V = windField(v, pc, lat); return [V.rm, ...rings.map(l => Math.round(radiusFor(V, l.userData.th)))]; } };
+window.NXCY = { basin: () => BASIN.id, rings: () => rings.map(l => l.visible), radii: (v, pc, lat) => { const V = windField(v, pc, lat); return [V.rm, ...rings.map(l => Math.round(radiusFor(V, l.userData.th)))]; } };
 function hideRings() { rings.forEach(l => l.visible = false); }
 /* environment layers (sandbox only: they show today's ocean, not a past one) */
 const dotTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
@@ -466,7 +466,11 @@ function award(id) {
 }
 
 /* ═════════ state & modes ═════════ */
-let MODE = 'sim', BASIN = basinOf(CYC.basin) || BASINS[0], live = false, playing = false, speed = 1, simAcc = 0;
+/* Nafaf is global: the ocean the game opens on is the one nearest the player (unless the admin portal fixed one) */
+const ME = (() => { try { const a = parseFloat(localStorage.getItem('myLat')), o = parseFloat(localStorage.getItem('myLon')); return isNaN(a) || isNaN(o) ? null : [a, o]; } catch (e) { return null; } })();
+const PINNED = !!(NXCFG && NXCFG.cyclone && NXCFG.cyclone.basin);
+function nearestBasin() { if (!ME) return null; let best = null, bd = 1e9; BASINS.forEach(b => { const d = hav(ME, [b.c[0], b.c[1] > 180 ? b.c[1] - 360 : b.c[1]]); if (d < bd) { bd = d; best = b; } }); return best; }
+let MODE = 'sim', BASIN = (PINNED ? basinOf(CYC.basin) : (nearestBasin() || basinOf(CYC.basin))) || BASINS[0], live = false, playing = false, speed = 1, simAcc = 0;
 let S = null;                    // sandbox storm
 let H = null, hT = 0;            // historical replay: storm + hour
 let FC = null;                   // forecaster round
@@ -639,7 +643,7 @@ async function simPane() {
 let HF = CYC.histFilter || 'om';
 function histPane() {
   H = null; $('tl').classList.remove('on'); $('hud').classList.remove('on'); $('imp').classList.remove('on'); vortex.visible = false; hideRings(); clearTracks();
-  const chips = [['om', T('قرب عُمان', 'Near Oman')], ['all', T('الكل', 'All')], ['strong', T('الأقوى', 'Strongest')], ...BASINS.filter(b => STORMS.some(s => s.basin === b.id)).map(b => [b.id, EN ? b.en : b.ar])];
+  const chips = [['om', ME && !(ME[0] >= 16.4 && ME[0] <= 26.6 && ME[1] >= 51.8 && ME[1] <= 60) ? T('قربك', 'Near you') : T('قرب عُمان', 'Near Oman')], ['all', T('الكل', 'All')], ['strong', T('الأقوى', 'Strongest')], ...BASINS.filter(b => STORMS.some(s => s.basin === b.id)).map(b => [b.id, EN ? b.en : b.ar])];
   let list = STORMS.slice();
   if (HF === 'om') list = list.filter(s => s.om); else if (HF === 'strong') list.sort((a, b) => b.peak - a.peak); else if (HF !== 'all') list = list.filter(s => s.basin === HF);
   if (HF !== 'strong') list.sort((a, b) => b.start.localeCompare(a.start));
@@ -753,9 +757,11 @@ function loop(now) {
   try { const im = mt.image, c = document.createElement('canvas'); c.width = MW; c.height = MH; const x = c.getContext('2d'); x.drawImage(im, 0, 0, MW, MH); MASK = x.getImageData(0, 0, MW, MH).data; } catch (e) {}
   sunV.copy(sunDir(Date.now()));
   requestAnimationFrame(loop); $('boot').classList.add('done');
-  /* storms that came within 250 km of Oman's coast */
+  /* "near you": storms that passed within 250 km of Oman's coast for players in Oman, within 400 km of the player elsewhere */
   const OM = [[17.02, 54.09], [19.66, 57.70], [20.67, 58.87], [22.53, 59.80], [23.59, 58.41], [24.36, 56.75], [26.18, 56.25], [16.7, 53.2]];
-  STORMS.forEach(s => { s.om = s.p.some(q => OM.some(o => hav([q[1], q[2]], o) < 250)); });
+  const inOm = !ME || (ME[0] >= 16.4 && ME[0] <= 26.6 && ME[1] >= 51.8 && ME[1] <= 60);
+  STORMS.forEach(s => { s.om = inOm ? s.p.some(q => OM.some(o => hav([q[1], q[2]], o) < 250)) : s.p.some(q => hav([q[1], q[2]], ME) < 400); });
+  if (!inOm && !STORMS.some(s => s.om) && HF === 'om') HF = 'all';
   document.querySelectorAll('#modes button').forEach(b => { if (CYC.modes && CYC.modes[b.dataset.m] === false) b.hidden = true; });
   const okMode = m => m && !(CYC.modes && CYC.modes[m] === false) && $('modes').querySelector(`[data-m="${m}"]`);
   let m0 = CYC.mode; try { m0 = sessionStorage.getItem('nx.cy.mode') || CYC.mode; } catch (e) {} if (!okMode(m0)) m0 = ['sim', 'history', 'forecast', 'ach'].find(okMode) || 'sim'; setMode(m0);
