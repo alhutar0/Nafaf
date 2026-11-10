@@ -21,3 +21,12 @@ crons = ["*/10 * * * *"]
 
 [observability]
 enabled = true
+
+# ★ مسار المستخدم: عدّاد ذرّي واحد (Durable Object، تخزين SQLite)
+[[durable_objects.bindings]]
+name = "FUNNEL"
+class_name = "Funnel"
+
+[[migrations]]
+tag = "v1-funnel"
+new_sqlite_classes = ["Funnel"]

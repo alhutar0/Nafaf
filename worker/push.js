@@ -674,6 +674,27 @@ export default {
        ★ عدّاد الزوار — لحظي وتراكمي
        ⚠️ لا نخزّن أي معرّف شخصي: بصمة مجهولة يومية فقط
        ============================================================ */
+    /* ★ مسار المستخدم (Funnel): عدّادات مجمّعة فقط — حدث + مصدر + دولة + لغة، بلا أي معرّف شخصي.
+       العدّ داخل Durable Object واحد فلا تضيع زيادة حين يصل زائران في نفس اللحظة. */
+    if (url.pathname === '/ev' && request.method === 'POST') {
+      const b = await request.json().catch(() => null);
+      const E = ['first', 'active', 'install', 'push', 'cyclone', 'story', 'd1', 'd7', 'd30'];
+      if (!b || E.indexOf(b.e) < 0 || !env.FUNNEL) return json({ ok: false });
+      const clean = (x, n) => String(x || '').toLowerCase().replace(/[^a-z0-9_.-]/g, '').slice(0, n) || 'unknown';
+      const rec = { e: b.e, src: clean(b.src, 24), cc: clean((request.cf && request.cf.country) || '', 2).toUpperCase(), lang: clean(b.lang, 6), st: b.st ? 1 : 0 };
+      const stub = env.FUNNEL.get(env.FUNNEL.idFromName('global'));
+      await stub.fetch('https://funnel/add', { method: 'POST', body: JSON.stringify(rec) });
+      return json({ ok: true });
+    }
+    if (url.pathname === '/admin/funnel' && request.method === 'POST') {
+      const b = await request.json().catch(() => null);
+      if (!b || !(await checkPass(env, b.pass))) return json({ error: 'unauthorized' }, 401);
+      if (!env.FUNNEL) return json({ error: 'no funnel' }, 500);
+      const stub = env.FUNNEL.get(env.FUNNEL.idFromName('global'));
+      const r = await stub.fetch('https://funnel/read?days=' + Math.min(90, Math.max(1, parseInt(b.days, 10) || 30)));
+      return new Response(r.body, { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    }
+
     if (url.pathname === '/visit' && request.method === 'POST') {
       const b = await request.json().catch(() => ({}));
       const now = Date.now();
@@ -1920,4 +1941,36 @@ function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status, headers: { 'content-type': 'application/json; charset=utf-8', ...CORS }
   });
+}
+
+/* ============================================================
+   ★ Funnel — عدّاد ذرّي لمسار المستخدم (Durable Object)
+   يوم واحد = مستند واحد: { e: { total, src: {…}, cc: {…}, lang: {…}, st: n } }
+   يُحفظ ١٢٠ يومًا ثم يُحذف تلقائيًا.
+   ============================================================ */
+export class Funnel {
+  constructor(state) { this.state = state; this.q = Promise.resolve(); }
+  /* the platform's input gates already serialise storage work; this queue makes it explicit */
+  run(fn) { const p = this.q.then(fn, fn); this.q = p.catch(() => {}); return p; }
+  async fetch(request) {
+    const url = new URL(request.url);
+    if (url.pathname === '/add') {
+      const r = await request.json();
+      return this.run(async () => {
+      const day = new Date().toISOString().slice(0, 10), key = 'd:' + day;
+      const d = (await this.state.storage.get(key)) || {};
+      const x = d[r.e] || (d[r.e] = { total: 0, src: {}, cc: {}, lang: {}, st: 0 });
+      x.total++; x.src[r.src] = (x.src[r.src] || 0) + 1; x.cc[r.cc] = (x.cc[r.cc] || 0) + 1; x.lang[r.lang] = (x.lang[r.lang] || 0) + 1; if (r.st) x.st++;
+      await this.state.storage.put(key, d);
+      if (Math.random() < 0.01) { const old = new Date(Date.now() - 120 * 864e5).toISOString().slice(0, 10); const all = await this.state.storage.list({ prefix: 'd:', end: 'd:' + old }); for (const k of all.keys()) await this.state.storage.delete(k); }
+      return new Response('ok');
+      });
+    }
+    if (url.pathname === '/read') {
+      const n = parseInt(url.searchParams.get('days'), 10) || 30, out = [];
+      for (let i = n - 1; i >= 0; i--) { const day = new Date(Date.now() - i * 864e5).toISOString().slice(0, 10); out.push({ day, ev: (await this.state.storage.get('d:' + day)) || {} }); }
+      return new Response(JSON.stringify({ ok: true, days: out }), { headers: { 'Content-Type': 'application/json' } });
+    }
+    return new Response('not found', { status: 404 });
+  }
 }

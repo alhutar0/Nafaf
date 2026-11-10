@@ -844,6 +844,15 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
           <h3>آخر ١٤ يومًا</h3>
           <div id="anChart"></div>
         </div>
+        <div class="card">
+          <h3>مسار المستخدم الجديد <select id="fnDays" style="margin-inline-start:8px;background:transparent;color:inherit;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:2px 6px"><option value="7">٧ أيام</option><option value="30" selected>٣٠ يومًا</option><option value="90">٩٠ يومًا</option></select></h3>
+          <div id="fnSteps"><div class="empty">جارٍ التحميل…</div></div>
+          <h3 style="margin-top:16px">من أين جاؤوا — وماذا فعلوا</h3>
+          <div id="fnSrc"></div>
+          <h3 style="margin-top:16px">الدول واللغات (مستخدمون جدد)</h3>
+          <div id="fnGeo"></div>
+          <div style="font-size:11px;color:#8b98ab;margin-top:10px;line-height:1.7">عدّادات مجمّعة بلا أي معرّف شخصي: كل جوال يُحسب مرة واحدة لكل خطوة. «جديد» = أول فتح بعد تشغيل العدّاد (المستخدمون السابقون لا يُحسبون جددًا). العودة = فتح نفاف بعد يوم/أسبوع/شهر من أول فتح. المصدر = أول مصدر جاء منه الجوال (utm_source أو الموقع المُحيل).</div>
+        </div>
       </section>
 
       <!-- 🩺 صحة النظام -->
@@ -2184,26 +2193,61 @@ function row(k,v){
 
 /* ═══════ الإحصاءات ═══════ */
 function loadAnalytics(){
+  try{loadFunnel()}catch(e){}
   api('/admin/visitors').then(function(r){
     if(r.error)return;
+    /* the server sends liveNow/total/days[{day,unique,opens}] — newest first */
+    var days=(r.days||[]).map(function(d){return {d:d.day||d.d,n:(d.unique!=null?d.unique:d.n)||0,o:d.opens||0};}).reverse();
+    var td=days.length?days[days.length-1]:null;
     $('anKpi').innerHTML=
-      kpi(r.live!=null?r.live:'—','نشط الآن')+
-      kpi(r.today!=null?r.today:'—','اليوم')+
+      kpi(r.liveNow!=null?r.liveNow:(r.live!=null?r.live:'—'),'نشط الآن')+
+      kpi(td?td.n:'—','زوار اليوم')+
       kpi(r.total!=null?r.total:'—','الإجمالي')+
-      kpi(r.opens!=null?r.opens:'—','مرات الفتح');
-    var days=r.days||[];
+      kpi(td?td.o:'—','فتحات اليوم');
     if(!days.length){$('anChart').innerHTML='<div class="empty">لا بيانات.</div>';return;}
     var mx=Math.max.apply(null,days.map(function(d){return d.n||0;}))||1;
     $('anChart').innerHTML=days.map(function(d){
       var pct=Math.round((d.n||0)/mx*100);
       return '<div style="display:flex;align-items:center;gap:9px;padding:4px 0;font-size:11px">'+
-        '<span style="color:#8b98ab;flex:0 0 62px">'+esc(d.d||'')+'</span>'+
+        '<span style="color:#8b98ab;flex:0 0 62px">'+esc(String(d.d||'').slice(5))+'</span>'+
         '<span style="flex:1 1 auto;height:7px;border-radius:99px;background:rgba(255,255,255,.08)">'+
         '<span style="display:block;height:100%;width:'+pct+'%;border-radius:99px;background:#e6b45e"></span></span>'+
         '<span style="font-weight:800;flex:0 0 34px;text-align:end">'+(d.n||0)+'</span></div>';
     }).join('');
   });
 }
+
+/* ═══════ مسار المستخدم ═══════ */
+var FN_STEPS=[['first','زوار جدد'],['install','ثبّتوا التطبيق'],['push','فعّلوا تنبيه المطر'],['cyclone','لعبوا الأعاصير'],['story','شاركوا قصة'],['d1','رجعوا بعد يوم'],['d7','رجعوا بعد أسبوع'],['d30','رجعوا بعد شهر']];
+var FN_LANG={dial:'العامية',fus:'الفصحى',en:'English',ur:'اردو',hi:'हिन्दी',bn:'বাংলা',fr:'Français',de:'Deutsch'};
+function loadFunnel(){
+  var dd=parseInt(($('fnDays')||{}).value||'30',10);
+  api('/admin/funnel',{days:dd}).then(function(r){
+    if(!r||r.error||!r.days){$('fnSteps').innerHTML='<div class="empty">'+(r&&r.error==='no funnel'?'العدّاد لم يُنشر بعد على الخادم.':'تعذّر الجلب.')+'</div>';return;}
+    var T={},S={},C={},Lg={},act=0;
+    r.days.forEach(function(d){for(var e in d.ev){var x=d.ev[e];T[e]=(T[e]||0)+x.total;
+      if(e==='active'){act+=x.total;continue}
+      for(var k in x.src){(S[k]=S[k]||{})[e]=(S[k][e]||0)+x.src[k]}
+      if(e==='first'){for(var c in x.cc)C[c]=(C[c]||0)+x.cc[c];for(var l in x.lang)Lg[l]=(Lg[l]||0)+x.lang[l]}}});
+    var base=T.first||0;
+    function pct(n){return base?Math.round(n/base*100)+'%':'—'}
+    $('fnSteps').innerHTML='<div style="font-size:12px;color:#8b98ab;margin-bottom:6px">مستخدمون نشطون (مجموع الأيام): '+act+'</div>'+FN_STEPS.map(function(st,i){
+      var n=T[st[0]]||0,w=base?Math.min(100,Math.round(n/base*100)):0;
+      return '<div style="display:flex;align-items:center;gap:9px;padding:5px 0;font-size:12.5px">'+
+        '<span style="flex:0 0 120px">'+st[1]+'</span>'+
+        '<span style="flex:1 1 auto;height:9px;border-radius:99px;background:rgba(255,255,255,.08)"><span style="display:block;height:100%;width:'+(i?w:(base?100:0))+'%;border-radius:99px;background:'+(i?'#7fc8a9':'#e6b45e')+'"></span></span>'+
+        '<span style="font-weight:800;flex:0 0 40px;text-align:end">'+n+'</span>'+
+        '<span style="color:#8b98ab;flex:0 0 40px;text-align:end">'+(i?pct(n):'')+'</span></div>';
+    }).join('');
+    var keys=Object.keys(S).sort(function(a,b){return (S[b].first||0)-(S[a].first||0)});
+    $('fnSrc').innerHTML=keys.length?'<div style="overflow:auto"><table style="width:100%;font-size:12px;border-collapse:collapse"><tr style="color:#8b98ab"><th style="text-align:start;padding:4px">المصدر</th><th>جدد</th><th>ثبّتوا</th><th>تنبيه</th><th>أسبوع</th></tr>'+
+      keys.map(function(k){var x=S[k],f=x.first||0;function c(e){var n=x[e]||0;return '<td style="text-align:center;padding:4px">'+n+(f?' <small style="color:#8b98ab">'+Math.round(n/f*100)+'%</small>':'')+'</td>'}
+        return '<tr style="border-top:1px solid rgba(255,255,255,.08)"><td style="padding:4px;font-weight:800">'+esc(k)+'</td><td style="text-align:center">'+f+'</td>'+c('install')+c('push')+c('d7')+'</tr>'}).join('')+'</table></div>':'<div class="empty">لا بيانات بعد.</div>';
+    function top(o,map){return Object.keys(o).sort(function(a,b){return o[b]-o[a]}).slice(0,10).map(function(k){return '<span style="display:inline-block;margin:3px;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.07);font-size:12px">'+esc(map?(map[k]||k):k)+' · <b>'+o[k]+'</b></span>'}).join('')||'—'}
+    $('fnGeo').innerHTML='<div>'+top(C)+'</div><div style="margin-top:6px">'+top(Lg,FN_LANG)+'</div>';
+  });
+}
+document.addEventListener('change',function(e){if(e.target&&e.target.id==='fnDays')loadFunnel();});
 
 /* ═══════ صحة النظام ═══════ */
 function runHealth(){

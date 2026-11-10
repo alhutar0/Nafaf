@@ -161,6 +161,12 @@ b.innerHTML='<div style="max-width:320px;line-height:1.7;padding:20px"><div styl
   <div id="pane"></div>
 </section>
 <div id="credit"></div>
+<script>
+/* funnel: the first time this phone opens the cyclone game (anonymous step count, see the privacy policy) */
+(function(){try{if(localStorage.getItem('nx.f.cyclone'))return;localStorage.setItem('nx.f.cyclone',String(Date.now()));
+  var st=matchMedia('(display-mode: standalone)').matches?1:0,b=JSON.stringify({e:'cyclone',src:localStorage.getItem('nx.f.src')||'direct',lang:localStorage.getItem('nx.xl')||({en:'en',fus:'fus'}[localStorage.getItem('lang')]||'dial'),st:st});
+  if(!(navigator.sendBeacon&&navigator.sendBeacon('https://nafa-push.alhutar0.workers.dev/ev',new Blob([b],{type:'text/plain'}))))fetch('https://nafa-push.alhutar0.workers.dev/ev',{method:'POST',body:b,keepalive:true})}catch(e){}})();
+</script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/OrbitControls.js';

@@ -7097,7 +7097,7 @@ var NAFAF_PRIVACY={
  '<b>ما يصل خادمنا — وفقط إن فعّلته أنت</b><br>'+
  '• <b>تنبيه المطر:</b> رمز اشتراك من متصفحك + منطقتك التقريبية (حوالي ١١ كم، مو عنوانك) ولغة التطبيق — عشان نعرف متى يقرب المطر منك. ما فيه اسم ولا بريد، وينحذف إذا وقفت التنبيهات أو بعد ١٢٠ يوم بدون استخدام<br>'+
  '• <b>الرصد:</b> نوع الحالة واسم ولايتك وإحداثيات تقريبية — للتدقيق فقط ولا تُعرض للعامة<br>'+
- '• <b>الزوار:</b> رقم عشوائي يولّده جهازك لعدّ الزيارات بلا أي معرّف شخصي<br>'+
+ '• <b>الزوار:</b> رقم عشوائي يولّده جهازك لعدّ الزيارات بلا أي معرّف شخصي، وأرقام مجمّعة مجهولة: كم واحد جديد وصل ومن أي مصدر، وكم ثبّت أو فعّل التنبيهات أو رجع — بدون أي معرّف أو موقع<br>'+
  '• <b>المراسلون:</b> بريدك واسمك من حساب جوجل — للتحقق من هويتك كمراسل فقط<br><br>'+
  '<b>ما لا نجمعه إطلاقًا</b><br>'+
  '• لا نتتبّع تحركاتك<br>'+
@@ -13389,7 +13389,6 @@ setInterval(function(){
  }},60000);
 </script>
 
-
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -14948,7 +14947,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   function file(){return new File([BLOB],'nafaf-story.png',{type:'image/png'})}
   function save(){if(!BLOB)return;var a=document.createElement('a');a.href=URL.createObjectURL(BLOB);a.download='nafaf-story.png';document.body.appendChild(a);a.click();a.remove();try{toast(P('حفظنا الصورة بجهازك','تم حفظ الصورة','Image saved'))}catch(e){}}
   document.getElementById('nxStShare').onclick=function(){if(!BLOB)return;var f=file();
-    try{if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],text:P('طقسي اليوم مع نفاف','طقس اليوم مع نفاف','Today’s weather with Nafaf')+' 🌤 '+LINK}).catch(function(){});return}}catch(e){}
+    try{if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],text:P('طقسي اليوم مع نفاف','طقس اليوم مع نفاف','Today’s weather with Nafaf')+' 🌤 '+LINK}).then(function(){try{nxEv('story')}catch(_){}}).catch(function(){});return}}catch(e){}
     save()};
   document.getElementById('nxStSave').onclick=save;
   document.getElementById('nxStX').onclick=function(){box.classList.remove('on')};
@@ -15202,6 +15201,59 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     if(window.docCard.__nx)return;var o=window.docCard;
     window.docCard=function(){var h=o.apply(this,arguments);try{var i=h.lastIndexOf('</div>');h=h.slice(0,i)+line()+h.slice(i)}catch(e){}return h};
     window.docCard.__nx=1;try{docCard=window.docCard}catch(e){}})(0);
+})();
+</script>
+<script>
+/* What the admin portal learns: how many new people arrived, from where (first-touch source), and how many of them
+   installed, switched on rain alerts, played the cyclone game, shared a story and came back after 1 / 7 / 30 days.
+   Sent: the step name, the source, the app language, whether Nafaf runs installed. Never a name, an id or a position;
+   the country is added by the server from the connection and only counted. Each step is sent once per phone
+   (the daily "active" once per day). */
+(function(){
+  var API=(typeof PUSH_URL!=='undefined'&&PUSH_URL)||'';
+  function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}}
+  var standalone=false;try{standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true||document.referrer.indexOf('android-app://')===0}catch(e){}
+  /* first-touch source: utm_source / ?s= / the site that sent the visitor / the store app */
+  function source(){
+    var q={};try{location.search.slice(1).split('&').forEach(function(p){var a=p.split('=');if(a[0])q[decodeURIComponent(a[0])]=decodeURIComponent(a[1]||'')})}catch(e){}
+    var s=q.utm_source||q.s||'';if(s)return s;
+    var r='';try{r=document.referrer||''}catch(e){}
+    if(r.indexOf('android-app://')===0)return 'play';
+    var h='';try{h=r?new URL(r).hostname.replace(/^www\./,''):''}catch(e){}
+    if(!h||h.indexOf('nafaf.online')>=0)return standalone?'app':'direct';
+    var M=[['google','google'],['bing','bing'],['instagram','instagram'],['snapchat','snapchat'],['tiktok','tiktok'],['facebook','facebook'],['fb.','facebook'],['whatsapp','whatsapp'],['wa.me','whatsapp'],['t.co','x'],['twitter','x'],['x.com','x'],['youtube','youtube'],['linkedin','linkedin'],['reddit','reddit'],['telegram','telegram'],['t.me','telegram']];
+    for(var i=0;i<M.length;i++)if(h.indexOf(M[i][0])>=0)return M[i][1];
+    return 'web';
+  }
+  var src=ls('nx.f.src');if(!src){src=source();ls('nx.f.src',src)}
+  function lang(){try{return window.NX_XL||(LI()===2?'en':(LI()===1?'fus':'dial'))}catch(e){return 'dial'}}
+  function send(e){
+    if(!API)return;
+    var body=JSON.stringify({e:e,src:src,lang:lang(),st:standalone?1:0});
+    try{if(navigator.sendBeacon&&navigator.sendBeacon(API+'/ev',new Blob([body],{type:'text/plain'})))return}catch(x){}
+    try{fetch(API+'/ev',{method:'POST',body:body,keepalive:true,headers:{'Content-Type':'text/plain'}})}catch(x){}
+  }
+  function once(e){if(ls('nx.f.'+e))return;ls('nx.f.'+e,String(Date.now()));send(e)}
+  window.nxEv=once;
+
+  var now=Date.now(),day=new Date().toISOString().slice(0,10);
+  var first=parseInt(ls('nx.f.first')||'0',10);
+  /* an existing user (who has used Nafaf before this counter existed) is not counted as new */
+  if(!first){ if(ls('myLat')||ls('nx.cfg')){ls('nx.f.first',String(now));ls('nx.f.vet','1')} else {once('first');first=now} }
+  else {
+    var d=(now-first)/864e5;
+    if(!ls('nx.f.vet')){ if(d>=1)once('d1'); if(d>=7)once('d7'); if(d>=30)once('d30'); }
+  }
+  if(ls('nx.f.day')!==day){ls('nx.f.day',day);send('active')}
+  if(standalone)once('install');
+  addEventListener('appinstalled',function(){once('install')});
+
+  /* rain alerts switched on */
+  (function hook(n){if(typeof window.pushSubscribe==='function'&&!window.pushSubscribe.__nxf){var o=window.pushSubscribe;
+      window.pushSubscribe=function(){var r=o.apply(this,arguments);try{Promise.resolve(r).then(function(x){if(x&&x.ok)once('push')})}catch(e){}return r};
+      window.pushSubscribe.__nxf=1;['__nx','__nxk'].forEach(function(k){window.pushSubscribe[k]=o[k]});try{pushSubscribe=window.pushSubscribe}catch(e){}}
+    else if(n<60)setTimeout(function(){hook(n+1)},300)})(0);
+  /* the cyclone game counts itself when it opens (cyclone.html), whichever button led there */
 })();
 </script>
 <script type="text/plain" id="nxSceneSrc">
