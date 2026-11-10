@@ -13,8 +13,9 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
-      - run: mkdir -p data/seo && SEO_LIMIT=${{ github.event.inputs.limit }} python3 tools/seo/fetch.py
-      - run: |
+      - run: mkdir -p data/seo && SEO_LIMIT=${{ github.event.inputs.limit }} SEO_BUDGET_MIN=75 timeout 95m python3 tools/seo/fetch.py
+      - if: always()
+        run: |
           git config user.name "Nafaf data bot"
           git config user.email "noreply@nafaf.online"
           git add data/seo/cities.json

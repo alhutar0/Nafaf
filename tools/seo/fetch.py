@@ -18,10 +18,10 @@ LOCAL = {'FR': 'fr', 'BE': 'fr', 'LU': 'fr', 'MC': 'fr', 'CH': 'de', 'DE': 'de',
 MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
 DAYS = [31, 28.25, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
-def get(url, tries=4):
+def get(url, tries=3):
     for i in range(tries):
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=90) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=45) as r:
                 return json.load(r)
         except Exception as e:
             if i == tries - 1: raise
@@ -98,17 +98,23 @@ def main():
         except Exception as e:
             return r, None, None, str(e)[:200]
     done = 0
-    with cf.ThreadPoolExecutor(4) as ex:
-        for r, nm, cl, err in ex.map(work, todo):
-            if err: print('ERR', r[0], r[1], err, flush=True); continue
+    budget = time.time() + 60 * float(os.environ.get('SEO_BUDGET_MIN', '80') or 80)   # stop starting new cities after this
+    def save():
+        os.makedirs(os.path.dirname(OUT), exist_ok=True)
+        json.dump(data, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    with cf.ThreadPoolExecutor(6) as ex:
+        futs = []
+        for r in todo:
+            futs.append(ex.submit(lambda r=r: work(r) if time.time() < budget else (r, None, None, 'budget')))
+        for f in cf.as_completed(futs):
+            r, nm, cl, err = f.result()
+            if err: print('SKIP' if err == 'budget' else 'ERR', r[0], r[1], err if err != 'budget' else '', flush=True); continue
             en = (nm.get('en') or {}).get('n') or r[0]
             slug = ascii_slug(en) + '-' + r[1].lower()
             while slug in data: slug += '-2'
             data[slug] = {'geo': r[0], 'cc': r[1], 'lat': r[2], 'lon': r[3], 'pop': r[4], 'names': nm, 'clim': cl}
             done += 1
-            if done % 25 == 0:
-                json.dump(data, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
-                print('saved', done, flush=True)
+            if done % 25 == 0: save(); print('saved', done, flush=True)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(data, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     print('total cities', len(data))
