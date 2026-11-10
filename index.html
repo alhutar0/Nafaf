@@ -13700,6 +13700,19 @@ html.nx #authBadge{display:none!important}
 #nxLChip.on{display:flex}
 #nxLChip button{border:0;border-radius:999px;height:32px;padding:0 12px;font:inherit;font-weight:800;font-size:13px;cursor:pointer;background:#E3A94B;color:#1d1305}
 #nxLChip button.x{background:transparent;color:rgba(238,243,250,.7);padding:0 8px}
+/* — story.html — */
+#nxSt{position:fixed;inset:0;z-index:82;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(3,6,14,.82);padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+#nxSt.on{display:flex}
+#nxSt .pv{position:relative;height:min(64vh,620px);aspect-ratio:9/16;border-radius:22px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(0,0,0,.9);background:#0b1428}
+#nxSt .pv img{width:100%;height:100%;object-fit:cover;display:block}
+#nxSt .pv .ld{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.7);font-size:14px}
+#nxSt .seg{display:flex;gap:6px;background:rgba(255,255,255,.08);border-radius:999px;padding:4px}
+#nxSt .seg button{height:34px;padding:0 14px;border:0;border-radius:999px;background:transparent;color:#EEF3FA;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+#nxSt .seg button.on{background:#EEF3FA;color:#0b1428}
+#nxSt .bt{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:min(420px,100%)}
+#nxSt .bt button{height:48px;border-radius:14px;border:0;font:inherit;font-weight:900;font-size:15px;cursor:pointer;background:#E3A94B;color:#1d1305}
+#nxSt .bt button.g{background:rgba(255,255,255,.1);color:#EEF3FA;border:1px solid rgba(255,255,255,.16)}
+#nxSt .x{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));inset-inline-end:12px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.1);color:#fff;font-size:18px;cursor:pointer}
 </style>
 <script>
 /* Defaults = how Nafaf behaves with no portal setting. The portal publishes cfg.next; the app keeps the
@@ -14666,6 +14679,139 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     document.getElementById('nxLChipGo').onclick=function(){ls('nx.lchip','1');setLang('dial',null,true)};
     document.getElementById('nxLChipX').onclick=function(){ls('nx.lchip','1');c.classList.remove('on')};
   })();
+})();
+</script>
+<div id="nxSt" role="dialog" aria-modal="true">
+  <button type="button" class="x" id="nxStX" aria-label="close">✕</button>
+  <div class="seg" id="nxStSeg"><button type="button" data-f="story" class="on"></button><button type="button" data-f="post"></button></div>
+  <div class="pv"><img id="nxStImg" alt=""><div class="ld" id="nxStLd">…</div></div>
+  <div class="bt"><button type="button" id="nxStShare"></button><button type="button" class="g" id="nxStSave"></button></div>
+</div>
+<script>
+(function(){
+  function P(a,b,c){var r;try{r=pick(a,b,c)}catch(e){r=c}return window.nxTr?nxTr(r):r}
+  var FONT='-apple-system,system-ui,"Segoe UI","Noto Sans Arabic","Noto Sans Devanagari","Noto Sans Bengali",Tahoma,Arial,sans-serif';
+  var LINK='https://nafaf.online/?utm_source=share&utm_medium=story';
+  var BLOB=null,FMT='story';
+
+  function tempCol(c){ /* one colour scale for the ring: cool teal → sand → amber → hot red */
+    var s=[[10,[96,178,222]],[20,[126,214,196]],[28,[240,210,140]],[35,[240,160,70]],[42,[226,92,64]],[48,[190,40,60]]];
+    if(c<=s[0][0])return s[0][1];for(var i=1;i<s.length;i++)if(c<=s[i][0]){var a=s[i-1],b=s[i],t=(c-a[0])/(b[0]-a[0]);return a[1].map(function(v,k){return Math.round(v+(b[1][k]-v)*t)})}return s[s.length-1][1];
+  }
+  function wrap(x,text,cx,y,maxW,lh,maxLines){
+    var words=String(text||'').split(/\s+/),line='',lines=[];
+    for(var i=0;i<words.length;i++){var t=line?line+' '+words[i]:words[i];if(x.measureText(t).width>maxW&&line){lines.push(line);line=words[i]}else line=t}
+    if(line)lines.push(line);
+    if(lines.length>maxLines){lines=lines.slice(0,maxLines);lines[maxLines-1]=lines[maxLines-1].replace(/\s*\S*$/,'')+'…'}
+    for(var j=0;j<lines.length;j++)x.fillText(lines[j],cx,y+j*lh);
+    return lines.length;
+  }
+  function rr(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath()}
+
+  function draw(ico){
+    var Wd=1080,Hd=1920,c=document.createElement('canvas');c.width=Wd;c.height=Hd;var x=c.getContext('2d');
+    var L=0;try{L=LI()}catch(e){}
+    var rtl=document.documentElement.dir==='rtl';
+    var st='clear',m={t:['','','']};try{st=stateOf(W);m=META[st]||META.clear}catch(e){}
+    var tod=document.documentElement.dataset.tod||'day';
+    /* sky */
+    var sky=[[30,70,130],[90,150,205],[200,225,240]];try{if(window.Sky2&&Sky2.colors)sky=Sky2.colors()}catch(e){}
+    var g=x.createLinearGradient(0,0,0,Hd);
+    g.addColorStop(0,'rgb('+sky[0].map(Math.round)+')');g.addColorStop(.5,'rgb('+sky[1].map(Math.round)+')');g.addColorStop(.78,'rgb('+sky[2].map(Math.round)+')');g.addColorStop(1,'rgb(8,16,30)');
+    x.fillStyle=g;x.fillRect(0,0,Wd,Hd);
+    if(tod==='night'){x.fillStyle='rgba(255,255,255,.8)';for(var s=0;s<140;s++){var sx=(s*397)%Wd,sy=(s*733)%(Hd*.5);x.globalAlpha=.25+((s*13)%10)/14;x.fillRect(sx,sy,s%7?2:3,s%7?2:3)}x.globalAlpha=1}
+    /* coast: Hajar ridge, sea, beach */
+    x.fillStyle='rgba(20,28,54,.55)';x.beginPath();x.moveTo(0,Hd*.74);
+    for(var i=0;i<=30;i++)x.lineTo(i/30*Wd,Hd*.70-Math.abs(Math.sin(i*.7+.4))*70-Math.sin(i*.31)*40);x.lineTo(Wd,Hd*.76);x.lineTo(0,Hd*.76);x.fill();
+    var sea=x.createLinearGradient(0,Hd*.74,0,Hd*.86);sea.addColorStop(0,'rgba(40,80,130,.9)');sea.addColorStop(1,'rgba(14,30,60,.95)');x.fillStyle=sea;x.fillRect(0,Hd*.74,Wd,Hd*.12);
+    x.fillStyle='rgba(255,255,255,.10)';for(i=0;i<18;i++){x.fillRect((i*211)%Wd,Hd*.75+(i*37)%(Hd*.1),120+(i*29)%160,3)}
+    x.fillStyle='rgba(6,12,24,.92)';x.fillRect(0,Hd*.86,Wd,Hd*.14);
+    /* scrim behind the ring so the numbers read on any sky */
+    var sc=x.createRadialGradient(Wd/2,820,60,Wd/2,820,560);sc.addColorStop(0,'rgba(6,12,28,.45)');sc.addColorStop(1,'rgba(6,12,28,0)');x.fillStyle=sc;x.fillRect(0,200,Wd,1240);
+
+    x.textAlign='center';x.direction=rtl?'rtl':'ltr';x.fillStyle='#fff';
+    /* header (inside the safe zone below the app's top bar) */
+    x.shadowColor='rgba(0,0,0,.35)';x.shadowBlur=20;
+    x.font='900 46px '+FONT;x.fillStyle='#F2C36B';x.fillText('NAFAF  ·  نفاف',Wd/2,250);
+    x.fillStyle='#fff';x.font='800 72px '+FONT;x.fillText((window.CUR&&CUR.n)||'',Wd/2,345);
+    x.font='600 34px '+FONT;x.fillStyle='rgba(255,255,255,.82)';
+    var loc=document.documentElement.lang||'ar';try{x.fillText(new Date().toLocaleDateString(loc,{weekday:'long',day:'numeric',month:'long'}),Wd/2,400)}catch(e){}
+
+    /* pulse ring: the next 24 hours, each arc coloured by its temperature, rain as inner beads */
+    var cx=Wd/2,cy=820,R=330;x.shadowBlur=0;
+    var H=window.HOURLY,si=0;try{si=Clock.hourIndex()}catch(e){}
+    x.lineWidth=10;x.strokeStyle='rgba(255,255,255,.12)';x.beginPath();x.arc(cx,cy,R,0,Math.PI*2);x.stroke();
+    if(H&&H.time){
+      for(i=0;i<24;i++){var k=si+i;if(k>=H.time.length)break;
+        var a0=-Math.PI/2+i/24*Math.PI*2+.02,a1=-Math.PI/2+(i+1)/24*Math.PI*2-.02,tc=tempCol(H.temperature_2m[k]);
+        x.lineCap='round';x.lineWidth=i===0?30:22;x.strokeStyle='rgb('+tc+')';x.beginPath();x.arc(cx,cy,R,a0,a1);x.stroke();
+        var pp=H.precipitation_probability?H.precipitation_probability[k]:0;
+        if(pp>=20){var am=(a0+a1)/2;x.fillStyle='rgba(120,190,255,'+(.35+pp/160)+')';x.beginPath();x.arc(cx+Math.cos(am)*(R-46),cy+Math.sin(am)*(R-46),5+pp/14,0,Math.PI*2);x.fill()}
+      }
+      /* hour ticks at 6-hour steps */
+      x.font='700 28px '+FONT;x.fillStyle='rgba(255,255,255,.75)';
+      for(i=6;i<24;i+=6){var k2=si+i;if(k2>=H.time.length)break;var aa=-Math.PI/2+i/24*Math.PI*2,hh=new Date(H.time[k2]).getHours();
+        x.fillText((hh<10?'0':'')+hh,cx+Math.cos(aa)*(R+52),cy+Math.sin(aa)*(R+52)+10)}
+      x.fillStyle='#fff';x.beginPath();x.arc(cx,cy-R,16,0,Math.PI*2);x.fill();
+    }
+    if(ico){x.drawImage(ico,cx-80,cy-250,160,160)}
+    x.shadowColor='rgba(0,0,0,.35)';x.shadowBlur=24;x.fillStyle='#fff';
+    var T='';try{T=tconv(W.temperature_2m)}catch(e){}
+    x.font='200 230px '+FONT;x.fillText(T+'°',cx+22,cy+90);
+    x.font='800 52px '+FONT;x.fillText(window.nxTr?nxTr((m.t&&m.t[L])||''):((m.t&&m.t[L])||''),cx,cy+170);
+    x.shadowBlur=0;
+    /* feels / high-low */
+    try{x.font='700 36px '+FONT;x.fillStyle='rgba(255,255,255,.9)';
+      x.fillText(P('الإحساس','الإحساس','Feels')+' '+tconv(W.apparent_temperature)+'°   ·   '+tconv(DAILY.temperature_2m_max[0])+'° / '+tconv(DAILY.temperature_2m_min[0])+'°',cx,cy+R+120)}catch(e){}
+
+    /* the elder's line + the star season, on a glass plate */
+    var say='';try{say=pickLocal(st)}catch(e){}
+    var star='';try{star=starLine()}catch(e){}
+    if(window.nxTr){say=nxTr(say);star=nxTr(star)}
+    var py=1300,ph=230;x.fillStyle='rgba(8,14,30,.55)';rr(x,80,py,Wd-160,ph,34);x.fill();
+    x.strokeStyle='rgba(242,195,107,.35)';x.lineWidth=2;rr(x,80,py,Wd-160,ph,34);x.stroke();
+    x.fillStyle='#F2C36B';x.font='800 30px '+FONT;x.fillText(P('يقول الجد','يقول الجد','Grandpa says'),cx,py+52);
+    x.fillStyle='#fff';x.font='600 38px '+FONT;var n=wrap(x,'«'+say+'»',cx,py+108,Wd-240,50,2);
+    if(star){x.fillStyle='rgba(255,255,255,.72)';x.font='500 28px '+FONT;wrap(x,'✦ '+star,cx,py+108+n*50+6,Wd-240,36,1)}
+
+    /* footer, above the bottom safe zone */
+    x.fillStyle='#F2C36B';x.font='900 44px '+FONT;x.fillText('nafaf.online',cx,Hd-300);
+    x.fillStyle='rgba(255,255,255,.78)';x.font='600 30px '+FONT;x.fillText(P('شوف جوّك بعيون نفاف','اطّلع على طقسك مع نفاف','See your sky with Nafaf'),cx,Hd-252);
+    return c;
+  }
+
+  function build(cb){
+    var ico=new Image(),done=false;
+    function go(){if(done)return;done=true;var c=null;try{c=FMT==='story'?draw(ico.complete&&ico.naturalWidth?ico:null):null}catch(e){}cb(c)}
+    try{var svg=v2Icon(v2IconKey(stateOf(W)),160).replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ');ico.onload=go;ico.onerror=go;ico.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)}catch(e){go()}
+    setTimeout(go,900);
+  }
+  var box=document.getElementById('nxSt'),img=document.getElementById('nxStImg'),ld=document.getElementById('nxStLd');
+  function labels(){
+    var b=box.querySelectorAll('#nxStSeg button');b[0].textContent=P('قصة 9:16','قصة 9:16','Story 9:16');b[1].textContent=P('منشور','منشور','Post');
+    document.getElementById('nxStShare').textContent=P('شارك','مشاركة','Share');document.getElementById('nxStSave').textContent=P('احفظ الصورة','حفظ الصورة','Save image');
+  }
+  function render(){
+    BLOB=null;img.removeAttribute('src');ld.style.display='grid';
+    if(FMT==='post'){ /* the original 4:5 card keeps its own share flow */
+      box.classList.remove('on');try{shareCard()}catch(e){}return}
+    build(function(c){if(!c){ld.textContent=P('ما قدرت أجهّز الصورة','تعذّر إنشاء الصورة','Could not create the image');return}
+      c.toBlob(function(b){BLOB=b;if(b){img.src=URL.createObjectURL(b);ld.style.display='none'}},'image/png')});
+  }
+  function open(){if(!window.W)return;labels();FMT='story';box.querySelectorAll('#nxStSeg button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-f')==='story')});box.classList.add('on');render()}
+  function file(){return new File([BLOB],'nafaf-story.png',{type:'image/png'})}
+  function save(){if(!BLOB)return;var a=document.createElement('a');a.href=URL.createObjectURL(BLOB);a.download='nafaf-story.png';document.body.appendChild(a);a.click();a.remove();try{toast(P('حفظنا الصورة بجهازك','تم حفظ الصورة','Image saved'))}catch(e){}}
+  document.getElementById('nxStShare').onclick=function(){if(!BLOB)return;var f=file();
+    try{if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],text:P('طقسي اليوم مع نفاف','طقس اليوم مع نفاف','Today’s weather with Nafaf')+' 🌤 '+LINK}).catch(function(){});return}}catch(e){}
+    save()};
+  document.getElementById('nxStSave').onclick=save;
+  document.getElementById('nxStX').onclick=function(){box.classList.remove('on')};
+  box.addEventListener('click',function(e){if(e.target===box)box.classList.remove('on')});
+  document.getElementById('nxStSeg').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;FMT=b.getAttribute('data-f');
+    box.querySelectorAll('#nxStSeg button').forEach(function(z){z.classList.toggle('on',z===b)});render()});
+  /* the camera button in the top bar now opens this sheet (story first, the 4:5 post one tap away) */
+  (function hook(n){var sb=document.getElementById('shareBtn');if(sb&&!sb.__nxs){sb.__nxs=1;sb.onclick=function(){try{if(navigator.vibrate)navigator.vibrate([12,40,18])}catch(e){}open()}}else if(n<80)setTimeout(function(){hook(n+1)},250)})(0);
+  window.nxStory=open;
 })();
 </script>
 <script type="module">
