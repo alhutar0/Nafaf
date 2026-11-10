@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611101929';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611101949';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -13888,12 +13888,25 @@ html.nx body.v2.wide #nowBody>#nxEvt{grid-column:1/-1}
 .nxEvt[data-k="wind"]{--ec:#9fe3c8;--eg:rgba(159,227,200,.22)}
 /* — official.html — */
 .nxOf{display:block;margin:0 0 14px;border-radius:20px;background:#140f0c;color:#F6F2EC;border:1.5px solid var(--oc,#ffb020);overflow:hidden;box-shadow:0 14px 34px -20px var(--oc,#ffb020)}
+.nxOf .nxo-sm{display:flex;align-items:center;gap:11px;padding:12px 14px;min-height:56px;cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent}
+.nxOf .nxo-sm::-webkit-details-marker{display:none}
+.nxOf .nxo-dt{flex:0 0 auto;width:11px;height:11px;border-radius:50%;background:var(--oc,#ffb020);box-shadow:0 0 0 4px rgba(255,255,255,.06)}
+.nxOf .nxo-tl{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px}
+.nxOf .nxo-tl small{font-size:11px;font-weight:900;color:var(--oc,#ffb020);letter-spacing:.02em}
+.nxOf .nxo-tl b{font-size:15.5px;font-weight:900;color:#fff;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nxOf[open] .nxo-tl b{white-space:normal}
+.nxOf .nxo-cv{flex:0 0 auto;color:var(--oc,#ffb020);font-size:14px;transition:transform .2s}
+.nxOf[open] .nxo-cv{transform:rotate(180deg)}
+.nxOf .nxo-au{font-size:12px;font-weight:900;color:var(--oc,#ffb020)}
+.nxOf[open] .nxo-ob{animation:nxoIn .22s ease-out}
+@keyframes nxoIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.nxOf[open] .nxo-ob{animation:none}.nxOf .nxo-cv{transition:none}}
 .nxOf .nxo-oh{display:flex;align-items:center;gap:8px;padding:11px 14px 0;font-size:11.5px;font-weight:900;letter-spacing:.03em;color:var(--oc,#ffb020)}
 .nxOf .nxo-oh b{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nxOf .nxo-oh .nxo-sv{flex:0 0 auto;padding:3px 9px;border-radius:999px;background:var(--oc,#ffb020);color:#140f0c;font-size:11px}
 .nxOf .nxo-ob,.nxOf .nxo-of,.nxOf .nxo-oh{display:block;width:auto;float:none;background:none;box-shadow:none;border:0;border-radius:0;margin:0}
 .nxOf .nxo-oh{display:flex}
-.nxOf .nxo-ob{padding:6px 14px 12px}
+.nxOf .nxo-ob{padding:0 14px 12px}
 .nxOf h3{margin:0;font-size:17.5px;font-weight:900;line-height:1.35;color:#fff}
 .nxOf .nxo-oa{margin:5px 0 0;font-size:12.5px;font-weight:700;color:rgba(246,242,236,.75);line-height:1.55}
 .nxOf .nxo-ot{margin:4px 0 0;font-size:12.5px;font-weight:800;color:rgba(246,242,236,.92)}
@@ -15458,14 +15471,28 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
       ' · '+P('النص كما نشرته الجهة الرسمية، بلا تعديل','النص كما نشرته الجهة الرسمية دون تعديل','Published text, unedited')+
       (a.src&&a.src.rights?' · '+E(a.src.rights):'');
   }
+  /* collapsed: one line (severity · headline). The reader opens it — with a soft chime — to see the whole warning. */
+  var OPEN={};
   function card(a){
-    return '<section class="nxOf" data-s="'+E(a.severity||'')+'" role="alert">'+
-      '<div class="nxo-oh"><b>'+P('تحذير رسمي','تحذير رسمي','Official warning')+' · <span data-nxl-skip dir="auto">'+E((a.src&&a.src.name)||a.sender)+'</span></b><span class="nxo-sv">'+sev(a.severity)+'</span></div>'+
-      '<div class="nxo-ob" data-nxl-skip dir="auto"><h3>'+E(a.headline||a.event)+'</h3>'+(a.area?'<p class="nxo-oa">'+E(a.area)+'</p>':'')+'</div>'+
-      '<div class="nxo-ob" style="padding-top:0"><p class="nxo-ot">'+E(when(a))+'</p>'+
-      ((a.description||a.instruction)?'<details><summary>'+P('التفاصيل والتوجيهات ▾','التفاصيل والتعليمات ▾','Details & guidance ▾')+'</summary>'+
-        '<div data-nxl-skip dir="auto">'+(a.description?'<p class="nxo-od">'+E(a.description)+'</p>':'')+(a.instruction?'<p class="nxo-oi">'+E(a.instruction)+'</p>':'')+'</div></details>':'')+
-      '</div><div class="nxo-of">'+srcLine(a)+'</div></section>';
+    var k=E(String(a.id||a.headline).slice(0,120));
+    return '<details class="nxOf" data-s="'+E(a.severity||'')+'" data-k="'+k+'"'+(OPEN[k]?' open':'')+'>'+
+      '<summary class="nxo-sm" role="alert"><span class="nxo-dt"></span><span class="nxo-tl"><small>'+P('تحذير رسمي','تحذير رسمي','Official warning')+' · '+sev(a.severity)+'</small>'+
+        '<b data-nxl-skip dir="auto">'+E(a.headline||a.event)+'</b></span><span class="nxo-cv">▾</span></summary>'+
+      '<div class="nxo-ob"><div class="nxo-au" data-nxl-skip dir="auto">'+E((a.src&&a.src.name)||a.sender)+'</div>'+
+        (a.area?'<p class="nxo-oa" data-nxl-skip dir="auto">'+E(a.area)+'</p>':'')+'<p class="nxo-ot">'+E(when(a))+'</p>'+
+        '<div data-nxl-skip dir="auto">'+(a.description?'<p class="nxo-od">'+E(a.description)+'</p>':'')+(a.instruction?'<p class="nxo-oi">'+E(a.instruction)+'</p>':'')+'</div>'+
+      '</div><div class="nxo-of">'+srcLine(a)+'</div></details>';
+  }
+  /* a short, quiet two-note chime (Web Audio — no file, only after the reader's own tap) */
+  var AX=null;
+  function chime(sev){
+    try{AX=AX||new (window.AudioContext||window.webkitAudioContext)();if(AX.state==='suspended')AX.resume();
+      var t=AX.currentTime,notes=sev==='Extreme'||sev==='Severe'?[660,880]:[880,1175];
+      notes.forEach(function(f,i){var o=AX.createOscillator(),g=AX.createGain();o.type='sine';o.frequency.value=f;
+        g.gain.setValueAtTime(0.0001,t+i*.14);g.gain.exponentialRampToValueAtTime(0.07,t+i*.14+.02);g.gain.exponentialRampToValueAtTime(0.0001,t+i*.14+.45);
+        o.connect(g);g.connect(AX.destination);o.start(t+i*.14);o.stop(t+i*.14+.5)});
+      if(navigator.vibrate)navigator.vibrate(12);
+    }catch(e){}
   }
   function countryBox(r){
     var L=(r.country||[]).filter(function(a){return a.severity==='Extreme'||a.severity==='Severe'||a.severity==='Moderate'});
@@ -15487,6 +15514,10 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     window.NX_OFFICIAL=(R.here&&R.here[0])||null;
     if(!h)return;
     var d=document.createElement('div');d.id='nxOfBox';d.innerHTML=h;b.insertBefore(d,b.firstChild);
+    var TAP=0;d.addEventListener('click',function(ev){if(ev.target.closest&&ev.target.closest('summary'))TAP=Date.now()},true);
+    d.addEventListener('toggle',function(ev){var t=ev.target;if(!t||t.tagName!=='DETAILS')return;
+      var k=t.getAttribute('data-k');if(k)OPEN[k]=t.open;
+      if(t.open&&Date.now()-TAP<800)chime(t.getAttribute('data-s'))},true);   /* only the reader's own tap sounds — never a re-render */
   }
   function load(force){
     if(!API||!window.CUR||BUSY)return;
