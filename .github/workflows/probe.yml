@@ -9,7 +9,7 @@ jobs:
       - run: |
           mkdir out && cd out
           W=https://nafa-push.alhutar0.workers.dev
-          for q in "bh&lat=26.2&lon=50.55&lang=ar" "sa&lat=21.42&lon=39.83&lang=ar" "sa&lat=24.7&lon=46.7&lang=en" "om&lat=23.6&lon=58.4&lang=ar" "de&lat=52.52&lon=13.40&lang=de" "fr&lat=48.85&lon=2.35&lang=fr" "us&lat=61.2&lon=-149.9&lang=en" "in&lat=19.07&lon=72.88&lang=hi" "pk&lat=24.86&lon=67.0&lang=ur" "au&lat=-33.87&lon=151.2&lang=en" "kr&lat=37.56&lon=126.97&lang=en" "id&lat=-6.2&lon=106.8&lang=en"; do
+          for q in "bh&lat=26.2&lon=50.55&lang=ar" "sa&lat=21.42&lon=39.83&lang=ar" "sa2&lat=24.7&lon=46.7&lang=en" "om&lat=23.6&lon=58.4&lang=ar" "de&lat=52.52&lon=13.40&lang=de" "fr&lat=48.85&lon=2.35&lang=fr" "us&lat=61.2&lon=-149.9&lang=en" "in&lat=19.07&lon=72.88&lang=hi" "pk&lat=24.86&lon=67.0&lang=ur" "au&lat=-33.87&lon=151.2&lang=en" "kr&lat=37.56&lon=126.97&lang=en" "id&lat=-6.2&lon=106.8&lang=en"; do
             f=$(echo "$q" | cut -d'&' -f1)
             curl -sS -m 60 -w '\n%{http_code} %{time_total}s\n' "$W/official?cc=$q" -o "$f.json" > "$f.meta" 2>&1 || true
             curl -sS -m 30 -o /dev/null -w '%{time_total}s (cached)\n' "$W/official?cc=$q" >> "$f.meta" 2>&1 || true

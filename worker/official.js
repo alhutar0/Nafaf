@@ -140,11 +140,11 @@ function sourcesFor(cc, lang) {
 }
 
 /* every active alert of a country in one language, geometry included — cached once per country for everyone */
-async function countryAlerts(cc, lang) {
-  const key = new Request(`https://nafaf-cache.local/official-country/v1/${cc}/${lang}`);
-  const cache = caches.default;
-  const hit = await cache.match(key);
-  if (hit) return await hit.json();
+/* (the Cache API is a no-op on *.workers.dev, so the shared copy lives in KV: one small write per country every 5 min at most) */
+async function countryAlerts(cc, lang, env) {
+  const kvKey = `oc:${cc}:${lang}`;
+  const KV = env && env.NAFAF_KV;
+  if (KV) { try { const raw = await KV.get(kvKey); if (raw) { const o = JSON.parse(raw); if (Date.now() - o.t < (o.d.errors && o.d.errors.length ? 60e3 : 300e3)) return o.d; } } catch (e) { } }
   const S = sourcesFor(cc, lang);
   const W = /met|hydro|weather|dwd|bom|imd|ncm|pmd|ema|caa|dom|tmd|kma|bmkg|inmet/i;
   const ord = S.pick.sort((a, b) => (W.test(b[0]) ? 1 : 0) - (W.test(a[0]) ? 1 : 0)).slice(0, 3);
@@ -156,12 +156,11 @@ async function countryAlerts(cc, lang) {
   alerts = alerts.filter(a => (a.status || 'Actual') === 'Actual' && a.msgType !== 'Cancel' && !superseded.has(a.id) && (a.expires ? Date.parse(a.expires) > now : (now - (Date.parse(a.onset) || 0)) < 12 * 36e5));
   const seen = new Set(); alerts = alerts.filter(a => { const k = a.headline + '|' + a.area + '|' + a.expires; if (seen.has(k)) return false; seen.add(k); return true; });
   const out = { alerts: alerts.map(({ refs, status, ...r }) => r), sources: ord.map(s => ({ name: s[2], url: s[3] })), linkOut: S.linkOut, errors };
-  const body = JSON.stringify(out);
-  await cache.put(key, new Response(body, { headers: { 'content-type': 'application/json', 'cache-control': `public, max-age=${errors.length ? 60 : 300}` } }));
+  if (KV) { try { await KV.put(kvKey, JSON.stringify({ t: Date.now(), d: out }), { expirationTtl: 3600 }); } catch (e) { } }
   return out;
 }
 
-export async function officialAlerts(cc, lat, lon, lang) {
+export async function officialAlerts(cc, lat, lon, lang, env) {
   cc = String(cc || '').toLowerCase().slice(0, 2);
   lang = String(lang || 'en').toLowerCase().slice(0, 3);
   const now = Date.now();
@@ -170,7 +169,7 @@ export async function officialAlerts(cc, lat, lon, lang) {
     try { alerts = await nws(lat, lon); sources.push({ name: 'National Weather Service', url: 'https://www.weather.gov' }); } catch (e) { errors.push('nws'); }
     alerts = alerts.filter(a => (a.status || 'Actual') === 'Actual' && a.msgType !== 'Cancel' && (!a.expires || Date.parse(a.expires) > now));
   } else {
-    const C = await countryAlerts(cc, lang);
+    const C = await countryAlerts(cc, lang, env);
     sources = C.sources; linkOut = C.linkOut; errors = C.errors;
     alerts = C.alerts.filter(a => !a.expires || Date.parse(a.expires) > now).map(a => ({ ...a, inside: insideGeo(lat, lon, a.geo) }));
   }
@@ -186,18 +185,16 @@ export async function officialAlerts(cc, lat, lon, lang) {
 }
 
 /* edge-cached handler: one answer per country, ~1 km cell and language, for 5 minutes */
-export async function handleOfficial(request, url, ctx, CORS) {
+export async function handleOfficial(request, url, ctx, CORS, env) {
   const lat = parseFloat(url.searchParams.get('lat')), lon = parseFloat(url.searchParams.get('lon'));
   const cc = (url.searchParams.get('cc') || (request.cf && request.cf.country) || '').toLowerCase();
   const lang = (url.searchParams.get('lang') || 'en').toLowerCase();
   if (!isFinite(lat) || !isFinite(lon) || !/^[a-z]{2}$/.test(cc)) return new Response(JSON.stringify({ error: 'lat, lon, cc required' }), { status: 400, headers: { 'content-type': 'application/json', ...CORS } });
   const key = new Request(`https://nafaf-cache.local/official/${cc}/${lat.toFixed(2)}/${lon.toFixed(2)}/${lang}`);
-  const cache = caches.default;
-  let hit = await cache.match(key);
-  if (hit) { const r = new Response(hit.body, hit); r.headers.set('x-nafaf-cache', 'hit'); return r; }
-  const body = JSON.stringify(await officialAlerts(cc, lat, lon, lang));
+  const cache = (typeof caches !== 'undefined' && caches.default) || null;   /* a no-op on workers.dev; works on a custom domain */
+  try { const hit = cache && await cache.match(key); if (hit) { const r = new Response(hit.body, hit); r.headers.set('x-nafaf-cache', 'hit'); return r; } } catch (e) { }
+  const body = JSON.stringify(await officialAlerts(cc, lat, lon, lang, env));
   const res = new Response(body, { headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=300', ...CORS } });
-  const put = cache.put(key, res.clone());
-  if (ctx && ctx.waitUntil) ctx.waitUntil(put); else await put;
+  if (cache) { try { const put = cache.put(key, res.clone()).catch(() => { }); if (ctx && ctx.waitUntil) ctx.waitUntil(put); } catch (e) { } }
   return res;
 }

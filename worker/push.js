@@ -509,7 +509,7 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
 
     /* ★ التحذيرات الرسمية من الجهة المعتمدة في كل دولة (official.js) */
-    if (url.pathname === '/official') return handleOfficial(request, url, ctx, CORS);
+    if (url.pathname === '/official') return handleOfficial(request, url, ctx, CORS, env);
 
     /* تسجيل اشتراك */
     if (url.pathname === '/subscribe' && request.method === 'POST') {
@@ -2045,7 +2045,7 @@ async function runOfficial(env) {
   }
   const day = new Date().toISOString().slice(0, 10);
   for (const g of groups.values()) {
-    let r; try { r = await officialAlerts(g.cc, g.lat, g.lon, g.lang); } catch (_) { continue; }
+    let r; try { r = await officialAlerts(g.cc, g.lat, g.lon, g.lang, env); } catch (_) { continue; }
     const hot = (r.here || []).filter(a => a.severity === 'Severe' || a.severity === 'Extreme');
     if (!hot.length) continue;
     for (const sub of g.subs) {
