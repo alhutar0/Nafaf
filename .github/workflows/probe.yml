@@ -8,12 +8,35 @@ jobs:
     steps:
       - run: |
           mkdir out && cd out
-          W=https://nafa-push.alhutar0.workers.dev
-          for q in "bh&lat=26.2&lon=50.55&lang=ar" "sa&lat=21.42&lon=39.83&lang=ar" "sa2&lat=24.7&lon=46.7&lang=en" "om&lat=23.6&lon=58.4&lang=ar" "de&lat=52.52&lon=13.40&lang=de" "fr&lat=48.85&lon=2.35&lang=fr" "us&lat=61.2&lon=-149.9&lang=en" "in&lat=19.07&lon=72.88&lang=hi" "pk&lat=24.86&lon=67.0&lang=ur" "au&lat=-33.87&lon=151.2&lang=en" "kr&lat=37.56&lon=126.97&lang=en" "id&lat=-6.2&lon=106.8&lang=en"; do
-            f=$(echo "$q" | cut -d'&' -f1)
-            curl -sS -m 60 -w '\n%{http_code} %{time_total}s\n' "$W/official?cc=$q" -o "$f.json" > "$f.meta" 2>&1 || true
-            curl -sS -m 30 -o /dev/null -w '%{time_total}s (cached)\n' "$W/official?cc=$q" >> "$f.meta" 2>&1 || true
-          done
+          cat > c.py <<'PY'
+          import json,urllib.request,time
+          UA={'User-Agent':'Nafaf/1.0 (+https://nafaf.online)'}
+          def g(u):
+              t=time.time();d=json.load(urllib.request.urlopen(urllib.request.Request(u,headers=UA),timeout=180));return d,time.time()-t
+          M=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
+          out={}
+          for nm,lat,lon in [('moscow',55.75,37.62),('muscat',23.59,58.41),('delhi',28.65,77.23),('london',51.51,-0.13),('riyadh',24.69,46.72)]:
+              r={}
+              try:
+                  d,t=g(f'https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M,T2M_RANGE,T2M_MAX,T2M_MIN&community=RE&longitude={lon}&latitude={lat}&start=1991&end=2020&format=JSON')
+                  p=d['properties']['parameter'];r['clim']={k:[p[k][m] for m in M] for k in p};r['clim_t']=t
+              except Exception as e: r['clim_err']=str(e)
+              try:
+                  d,t=g(f'https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M_MAX,T2M_MIN,PRECTOTCORR&community=RE&longitude={lon}&latitude={lat}&start=19910101&end=20201231&format=JSON')
+                  p=d['properties']['parameter'];r['daily_t']=t
+                  agg={}
+                  for k,v in p.items():
+                      s=[0]*12;n=[0]*12
+                      for day,val in v.items():
+                          if val is None or val<-900: continue
+                          mi=int(day[4:6])-1;s[mi]+=val;n[mi]+=1
+                      agg[k]=[round(s[i]/n[i],2) if n[i] else None for i in range(12)]
+                  r['daily']=agg
+              except Exception as e: r['daily_err']=str(e)[:300]
+              out[nm]=r
+          json.dump(out,open('check.json','w'),indent=0)
+          PY
+          python3 c.py
           git init -q && git checkout -q -b probe-out && git add -A
           git -c user.name=probe -c user.email=probe@nafaf.online commit -qm probe
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" probe-out
