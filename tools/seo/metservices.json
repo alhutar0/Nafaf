@@ -1,0 +1,234 @@
+{
+"OM": [
+"Oman Meteorology",
+"met.gov.om"
+],
+"AE": [
+"National Center of Meteorology (UAE)",
+"ncm.gov.ae"
+],
+"SA": [
+"National Center for Meteorology (Saudi Arabia)",
+"ncm.gov.sa"
+],
+"QA": [
+"Qatar Meteorology Department",
+"qweather.gov.qa"
+],
+"BH": [
+"Bahrain Meteorological Directorate",
+"bahrainweather.gov.bh"
+],
+"EG": [
+"Egyptian Meteorological Authority",
+"ema.gov.eg"
+],
+"JO": [
+"Jordan Meteorological Department",
+"jmd.gov.jo"
+],
+"MA": [
+"Direction Générale de la Météorologie (Maroc)",
+"marocmeteo.ma"
+],
+"DZ": [
+"Office National de la Météorologie (Algérie)",
+"meteo.dz"
+],
+"TN": [
+"Institut National de la Météorologie (Tunisie)",
+"meteo.tn"
+],
+"US": [
+"National Weather Service (NOAA)",
+"weather.gov"
+],
+"CA": [
+"Environment and Climate Change Canada",
+"weather.gc.ca"
+],
+"MX": [
+"Servicio Meteorológico Nacional",
+"smn.conagua.gob.mx"
+],
+"BR": [
+"INMET",
+"portal.inmet.gov.br"
+],
+"AR": [
+"Servicio Meteorológico Nacional",
+"smn.gob.ar"
+],
+"CL": [
+"Dirección Meteorológica de Chile",
+"meteochile.gob.cl"
+],
+"CO": [
+"IDEAM",
+"ideam.gov.co"
+],
+"PE": [
+"SENAMHI",
+"senamhi.gob.pe"
+],
+"GB": [
+"Met Office",
+"metoffice.gov.uk"
+],
+"IE": [
+"Met Éireann",
+"met.ie"
+],
+"FR": [
+"Météo-France",
+"meteofrance.com"
+],
+"DE": [
+"Deutscher Wetterdienst",
+"dwd.de"
+],
+"ES": [
+"AEMET",
+"aemet.es"
+],
+"PT": [
+"IPMA",
+"ipma.pt"
+],
+"IT": [
+"Servizio Meteorologico dell’Aeronautica Militare",
+"meteoam.it"
+],
+"NL": [
+"KNMI",
+"knmi.nl"
+],
+"BE": [
+"Institut Royal Météorologique",
+"meteo.be"
+],
+"CH": [
+"MeteoSwiss",
+"meteoswiss.admin.ch"
+],
+"AT": [
+"GeoSphere Austria",
+"geosphere.at"
+],
+"SE": [
+"SMHI",
+"smhi.se"
+],
+"NO": [
+"Norwegian Meteorological Institute",
+"met.no"
+],
+"DK": [
+"DMI",
+"dmi.dk"
+],
+"FI": [
+"Finnish Meteorological Institute",
+"en.ilmatieteenlaitos.fi"
+],
+"PL": [
+"IMGW-PIB",
+"imgw.pl"
+],
+"CZ": [
+"ČHMÚ",
+"chmi.cz"
+],
+"GR": [
+"Hellenic National Meteorological Service",
+"emy.gr"
+],
+"TR": [
+"Meteoroloji Genel Müdürlüğü",
+"mgm.gov.tr"
+],
+"IN": [
+"India Meteorological Department",
+"mausam.imd.gov.in"
+],
+"PK": [
+"Pakistan Meteorological Department",
+"pmd.gov.pk"
+],
+"BD": [
+"Bangladesh Meteorological Department",
+"bmd.gov.bd"
+],
+"LK": [
+"Department of Meteorology Sri Lanka",
+"meteo.gov.lk"
+],
+"NP": [
+"Meteorological Forecasting Division (Nepal)",
+"mfd.gov.np"
+],
+"PH": [
+"PAGASA",
+"pagasa.dost.gov.ph"
+],
+"ID": [
+"BMKG",
+"bmkg.go.id"
+],
+"MY": [
+"MetMalaysia",
+"met.gov.my"
+],
+"SG": [
+"Meteorological Service Singapore",
+"weather.gov.sg"
+],
+"TH": [
+"Thai Meteorological Department",
+"tmd.go.th"
+],
+"CN": [
+"China Meteorological Administration",
+"cma.gov.cn"
+],
+"JP": [
+"Japan Meteorological Agency",
+"jma.go.jp"
+],
+"KR": [
+"Korea Meteorological Administration",
+"kma.go.kr"
+],
+"HK": [
+"Hong Kong Observatory",
+"hko.gov.hk"
+],
+"TW": [
+"Central Weather Administration",
+"cwa.gov.tw"
+],
+"AU": [
+"Bureau of Meteorology",
+"bom.gov.au"
+],
+"NZ": [
+"MetService",
+"metservice.com"
+],
+"ZA": [
+"South African Weather Service",
+"weathersa.co.za"
+],
+"KE": [
+"Kenya Meteorological Department",
+"meteo.go.ke"
+],
+"NG": [
+"Nigerian Meteorological Agency",
+"nimet.gov.ng"
+],
+"IR": [
+"IRIMO",
+"irimo.ir"
+]
+}

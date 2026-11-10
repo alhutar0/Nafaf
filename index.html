@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611101949';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611102021';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -130,7 +130,9 @@
 <style>html,body{background:#0E1830}</style>
 <meta name="theme-color" content="#141c2b" />
 <link rel="manifest" id="mf" href="manifest.json" />
-<meta name="description" content="نفاف — مشروع ثقافي تعليمي يحفظ معرفة أهل الجزيرة بالسماء: التقويم النجمي والمواسم وعلوم الجو وأرشيف مناخي موثّق بثلاث لغات مع تحليل نماذج جوية مفتوحة." />
+<meta name="description" content="نفاف — طقس مكانك بلغتك أينما كنت: تنبيهات المطر قبل وصوله، الرادار، التحذيرات الرسمية من جهة بلدك، ومناخ مدن العالم شهرًا بشهر. مجاني وبلا إعلانات." />
+<link rel="canonical" href="https://nafaf.online/" />
+<meta property="og:type" content="website" /><meta property="og:site_name" content="Nafaf" /><meta property="og:url" content="https://nafaf.online/" /><meta property="og:title" content="نفاف — Nafaf" /><meta property="og:description" content="طقس مكانك بلغتك أينما كنت: تنبيهات المطر والرادار والتحذيرات الرسمية ومناخ مدن العالم." /><meta property="og:image" content="https://nafaf.online/icons/icon-512.png" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png" />
@@ -139,7 +141,6 @@
 <link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-title" content="نفاف" />
-<meta name="description" content="طقسك بين يديك بلسان أهلك" />
 <title>نفاف — Nafaf</title>
 <!-- Leaflet 1.9.4 (BSD-2, LICENSE-leaflet.txt), served from nafaf.online: no extra connection, and it no longer blocks the first paint -->
 <link rel="preload" href="leaflet.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
@@ -1925,6 +1926,7 @@ body.v2.wide #ovSet .modal{top:50%;bottom:auto;transform:translateY(-50%);max-he
 
 </head>
 <body class="anim">
+<noscript><nav style="padding:16px;font:15px system-ui"><a href="/cities/" style="color:#f2c36b">Weather &amp; climate of world cities</a> · <a href="/ar/cities/" style="color:#f2c36b">طقس ومناخ مدن العالم</a> · <a href="/privacy.html" style="color:#f2c36b">Privacy</a> · <a href="/terms.html" style="color:#f2c36b">Terms</a></nav></noscript>
 
 <!-- ═══════ شاشة الافتتاح: قطرة نفاف ═══════ -->
 <div id="splash" class="splash">
@@ -12451,6 +12453,7 @@ h+='</div><div class="m-card"><div class="m-sec">'+pick('الوضع السينم
  h+='<div class="m-link" id="lnkAbout"><span>'+pick('من نحن','من نحن','About us')+'</span><span class="m-arw">‹</span></div>';
  h+='<div class="m-link" id="lnkLegal"><span>'+pick('إخلاء المسؤولية','إخلاء المسؤولية','Disclaimer')+'</span><span class="m-arw">‹</span></div>';
  h+='<div class="m-link" id="lnkPriv"><span>'+pick('سياسة الخصوصية','سياسة الخصوصية','Privacy policy')+'</span><span class="m-arw">‹</span></div>';
+ h+='<a class="m-link" href="'+(window.NX_XL&&['fr','de','ur','hi','bn'].indexOf(window.NX_XL)>=0?'/'+window.NX_XL+'/cities/':(LI()===2?'/cities/':'/ar/cities/'))+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span>'+pick('مناخ مدن العالم شهر بشهر','مناخ مدن العالم شهرًا بشهر','World cities: climate by month')+'</span><span class="m-arw">‹</span></a>';
  h+='<a class="m-link" href="terms.html" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><span>'+pick('شروط الاستخدام والتراخيص','شروط الاستخدام والتراخيص','Terms of use & licences')+'</span><span class="m-arw">‹</span></a>';
  h+='<div class="m-link" id="lnkMail"><span>'+pick('راسلنا أو قدّم شكوى','تواصل معنا','Contact us')+'</span><span class="m-arw">‹</span></div>';
  h+='<div class="m-link" id="lnkTour"><span>'+pick('أعد الجولة التعريفية','إعادة الجولة','Replay tour')+'</span><span class="m-arw">‹</span></div>';
@@ -15159,6 +15162,21 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
       window.buildCityGrid=function(){var r=o.apply(this,arguments);lastKey='';try{build()}catch(e){}return r};window.buildCityGrid.__nx=1;try{buildCityGrid=window.buildCityGrid}catch(e){}build()}
     else if(n<60)setTimeout(function(){hook(n+1)},250)})(0);
   document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#pickBtn'))setTimeout(build,30)},true);
+})();
+</script>
+<script>
+/* Deep link from a city page: /?lat=..&lon=..&n=Name opens that place once (the saved location is untouched). */
+(function(){
+  var q={};try{location.search.slice(1).split('&').forEach(function(p){var a=p.split('=');if(a[0])q[decodeURIComponent(a[0])]=decodeURIComponent((a[1]||'').replace(/\+/g,' '))})}catch(e){}
+  var lat=parseFloat(q.lat),lon=parseFloat(q.lon);
+  if(!isFinite(lat)||!isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return;
+  var nm=String(q.n||'').replace(/[<>"&]/g,'').slice(0,60)||(lat.toFixed(2)+', '+lon.toFixed(2));
+  (function go(n){
+    if(window.W&&typeof window.selectGlobal==='function'&&document.readyState!=='loading'){ /* after the whole page ran, so the visit counter has read utm_source first */
+      try{var d=window.CUR?Math.hypot(CUR.lat-lat,CUR.lon-lon):9;if(d>0.02)selectGlobal(lat,lon,nm,'','')}catch(e){}
+      try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
+    } else if(n<80)setTimeout(function(){go(n+1)},250);
+  })(0);
 })();
 </script>
 <script>
