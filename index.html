@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611101921';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611101929';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -11616,7 +11616,7 @@ function pushSubscribe(){
   if(CUR&&typeof CUR.lat==='number'){payload.lat=CUR.lat;payload.lon=CUR.lon;}
   payload.place=(CUR&&CUR.n)||'';
   payload.tz=(typeof TZ_OFF==='number'&&TZ_OFF!=null)?TZ_OFF:(-new Date().getTimezoneOffset()*60);
-  payload.lang=(LI()===2?'en':(LI()===1?'msa':'ar'));payload.xl=window.NX_XL||null;payload.widget=!!(WIDGET&&WIDGET.on);payload.v=2;
+  payload.lang=(LI()===2?'en':(LI()===1?'msa':'ar'));payload.xl=window.NX_XL||null;try{payload.cc=String((CUR&&CUR.cc)||(GEO&&GEO.cc)||'').toLowerCase().slice(0,2)}catch(e){}payload.widget=!!(WIDGET&&WIDGET.on);payload.v=2;
  }catch(e){}
  return fetch(PUSH_URL+'/subscribe',{method:'POST',
  headers:{'Content-Type':'application/json'},
@@ -13410,7 +13410,6 @@ setInterval(function(){
  else paintSky(stateOf(W)); /* تحديث ناعم للتدرّج كل دقيقة */
  }},60000);
 </script>
-
 
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>

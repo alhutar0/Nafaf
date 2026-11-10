@@ -16,7 +16,7 @@
  *   npx wrangler deploy
  * ============================================================
  */
-import { handleOfficial } from './official.js';
+import { handleOfficial, officialAlerts } from './official.js';
 
 const MODELS = 'ecmwf_ifs025,gfs_seamless,icon_seamless';
 
@@ -492,14 +492,16 @@ export default {
         thunder: now.thunder, day: today, total, dryDays, phase, ts: Date.now()
       }));
 
-      /* ★ حارس السلسلة — يعمل في نفس الدورة */
-      await runStreakGuard(env);
-
-      /* ★ محرك التنبيهات الشامل — لكل مستخدم حسب موقعه */
-      await runAlerts(env);
     } catch (e) {
       console.error('scheduled error', e);
     }
+    /* كل مرحلة مستقلة: تعطّل مسح المطر العام لا يوقف تنبيهات المستخدمين ولا التحذيرات الرسمية */
+    /* ★ حارس السلسلة — يعمل في نفس الدورة */
+    try { await runStreakGuard(env); } catch (e) { console.error('streak guard', e); }
+    /* ★ محرك التنبيهات الشامل — لكل مستخدم حسب موقعه */
+    try { await runAlerts(env); } catch (e) { console.error('alerts', e); }
+    /* ★ التحذيرات الرسمية الشديدة لمكان كل مشترك — من الجهة المعتمدة في بلده (official.js) */
+    try { await runOfficial(env); } catch (e) { console.error('official push', e); }
   },
 
   async fetch(request, env, ctx) {
@@ -521,6 +523,7 @@ export default {
       if (typeof sub.lat === 'number') rec.lat = Math.round(sub.lat * 10) / 10;
       if (typeof sub.lon === 'number') rec.lon = Math.round(sub.lon * 10) / 10;
       if (sub.place) rec.place = String(sub.place).slice(0, 60);
+      rec.cc = /^[a-z]{2}$/.test(String(sub.cc || '')) ? sub.cc : undefined;   /* بلد الموقع — لاختيار الجهة الرسمية للتحذيرات */
       if (typeof sub.tz === 'number') rec.tz = sub.tz;
       rec.ts = Date.now();
       await env.NAFAF_KV.put(id, JSON.stringify(rec), { expirationTtl: 60 * 60 * 24 * 120 });
@@ -2018,3 +2021,58 @@ export class Funnel {
     return new Response('not found', { status: 404 });
   }
 }
+
+
+/* ============================================================
+   ★ التحذيرات الرسمية كإشعار — Official warnings as push
+   • only what the registered national authority issued, for the subscriber's own cell (≈11 km), Severe or Extreme
+   • each warning is sent once per subscriber (remembered 4 days), at most 3 a day
+   • quiet hours are respected except for Extreme
+   ============================================================ */
+const OW_T = { ar: 'تحذير رسمي', msa: 'تحذير رسمي', en: 'Official warning', fr: 'Alerte officielle', de: 'Amtliche Warnung', ur: 'سرکاری انتباہ', hi: 'आधिकारिक चेतावनी', bn: 'সরকারি সতর্কবার্তা' };
+async function runOfficial(env) {
+  const cfg = await getAlertCfg(env);
+  if (!cfg.enabled || (cfg.types && cfg.types.official && cfg.types.official.on === false)) return;
+  const list = await env.NAFAF_KV.list({ prefix: 'sub:' });
+  const groups = new Map();
+  for (const k of list.keys) {
+    let sub; try { sub = JSON.parse(await env.NAFAF_KV.get(k.name)); } catch (_) { continue; }
+    if (!sub || !sub.endpoint || !sub.cc || sub.lat == null || sub.lon == null) continue;
+    const lang = sub.xl || (sub.lang === 'en' ? 'en' : 'ar');
+    const key = sub.cc + '|' + lang + '|' + sub.lat.toFixed(1) + ',' + sub.lon.toFixed(1);
+    if (!groups.has(key)) groups.set(key, { cc: sub.cc, lang, lat: sub.lat, lon: sub.lon, subs: [] });
+    groups.get(key).subs.push(sub);
+  }
+  const day = new Date().toISOString().slice(0, 10);
+  for (const g of groups.values()) {
+    let r; try { r = await officialAlerts(g.cc, g.lat, g.lon, g.lang); } catch (_) { continue; }
+    const hot = (r.here || []).filter(a => a.severity === 'Severe' || a.severity === 'Extreme');
+    if (!hot.length) continue;
+    for (const sub of g.subs) {
+      const hk = 'ow:' + hashStr(sub.endpoint);
+      let seen = {}; try { seen = JSON.parse((await env.NAFAF_KV.get(hk)) || '{}'); } catch (_) {}
+      if ((seen[day] || 0) >= 3) continue;
+      let changed = false;
+      for (const a of hot) {
+        const id = String(a.id || a.headline).slice(0, 120);
+        if (seen[id]) continue;
+        if (a.severity !== 'Extreme' && inQuiet(sub, cfg)) continue;
+        const L = OW_T[sub.xl] || OW_T[sub.lang] || OW_T.ar;
+        const ok = await sendPush(env, sub, {
+          title: '⚠️ ' + L + ' · ' + String((a.src && a.src.name) || a.sender || '').slice(0, 60),
+          body: String(a.headline || a.event).slice(0, 140) + (a.area ? '\n' + String(a.area).slice(0, 120) : ''),
+          tag: 'nafaf-official-' + hashStr(id), type: 'official', sev: a.severity === 'Extreme' ? 'alert' : 'notice',
+          urgency: 'high', renotify: true, lang: sub.xl || (sub.lang === 'en' ? 'en' : 'ar'), url: './', ts: Date.now()
+        });
+        if (ok) { seen[id] = Date.now(); seen[day] = (seen[day] || 0) + 1; changed = true; }
+        if ((seen[day] || 0) >= 3) break;
+      }
+      /* keep 4 days of memory */
+      if (!changed) continue;
+      const cut = Date.now() - 4 * 864e5;
+      for (const k in seen) { if (/^\d{4}-\d\d-\d\d$/.test(k) ? k !== day : seen[k] < cut) delete seen[k]; }
+      await env.NAFAF_KV.put(hk, JSON.stringify(seen), { expirationTtl: 60 * 60 * 24 * 5 });
+    }
+  }
+}
+

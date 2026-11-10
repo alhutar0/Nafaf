@@ -6,7 +6,7 @@
       على حذف النسخة القديمة تلقائيًا دون أي إجراء من المستخدم.
    ============================================================ */
 
-var CACHE = 'nafaf-v41';
+var CACHE = 'nafaf-v42';
 var STATE = 'nafaf-state';   /* موقع المستخدم ولغته للفحص في الخلفية — لا يُمسح مع التحديث */   /* رُفع الرقم — يمسح كل ذاكرة v1 القديمة تلقائيًا */
 
 self.addEventListener('install', function (e) {
@@ -151,7 +151,7 @@ self.addEventListener('push', function (e) {
     renotify: d.renotify != null ? !!d.renotify : sev !== 'info',
     silent: d.silent != null ? !!d.silent : sev === 'info',
     dir: 'auto',
-    lang: d.lang === 'en' ? 'en' : 'ar',
+    lang: /^(ar|en|fr|de|ur|hi|bn|msa)$/.test(d.lang || '') ? (d.lang === 'msa' ? 'ar' : d.lang) : 'ar',
     icon: 'icons/icon-192.png',
     badge: 'icons/icon-96.png',
     timestamp: d.ts || Date.now(),
