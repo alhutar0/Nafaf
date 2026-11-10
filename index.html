@@ -14484,6 +14484,21 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   window.nxAlerts={auto:auto,state:state,paint:paint};
 })();
 </script>
+
+<script>
+/* keep the open app current: each time Nafaf comes back to the screen it asks for a newer version,
+   and when a new one has taken over it reloads once — so a phone that never closes the app still updates */
+(function(){
+  if(!('serviceWorker' in navigator))return;
+  var had=!!navigator.serviceWorker.controller,done=false;
+  navigator.serviceWorker.addEventListener('controllerchange',function(){if(!had||done)return;done=true;
+    var busy=document.querySelector('.sheet.on,#nxSt.on,#nxPD.on');if(busy){addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')location.reload()},{once:true});return}
+    location.reload()});
+  function check(){navigator.serviceWorker.getRegistration().then(function(r){if(r)r.update()}).catch(function(){})}
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')check()});
+  setInterval(check,30*60*1000);
+})();
+</script>
 <script>
 /* Finds, inside the app's main column, every box and caption that sits directly on the sky
    (its own background is see-through and nothing opaque is behind it) and marks it:
@@ -14809,8 +14824,10 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   box.addEventListener('click',function(e){if(e.target===box)box.classList.remove('on')});
   document.getElementById('nxStSeg').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;FMT=b.getAttribute('data-f');
     box.querySelectorAll('#nxStSeg button').forEach(function(z){z.classList.toggle('on',z===b)});render()});
-  /* the camera button in the top bar now opens this sheet (story first, the 4:5 post one tap away) */
-  (function hook(n){var sb=document.getElementById('shareBtn');if(sb&&!sb.__nxs){sb.__nxs=1;sb.onclick=function(){try{if(navigator.vibrate)navigator.vibrate([12,40,18])}catch(e){}open()}}else if(n<80)setTimeout(function(){hook(n+1)},250)})(0);
+  /* the camera button in the top bar opens this sheet (story first, the 4:5 post one tap away).
+     Caught at the document in the capture phase, so it works however late the button is created. */
+  document.addEventListener('click',function(e){var sb=e.target&&e.target.closest&&e.target.closest('#shareBtn');if(!sb)return;
+    e.stopPropagation();e.preventDefault();try{if(navigator.vibrate)navigator.vibrate([12,40,18])}catch(_){}open()},true);
   window.nxStory=open;
 })();
 </script>
