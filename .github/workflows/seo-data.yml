@@ -1,0 +1,22 @@
+name: SEO city data (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Max new cities this run (0 = all)'
+        default: '0'
+permissions:
+  contents: write
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - run: mkdir -p data/seo && SEO_LIMIT=${{ github.event.inputs.limit }} python3 tools/seo/fetch.py
+      - run: |
+          git config user.name "Nafaf data bot"
+          git config user.email "noreply@nafaf.online"
+          git add data/seo/cities.json
+          git commit -m "SEO city data: names + 1991–2020 climate normals (NASA POWER, Open-Meteo geocoding)" || exit 0
+          git pull --rebase -q && git push
