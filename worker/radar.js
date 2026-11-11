@@ -108,10 +108,14 @@ export async function sampleAt(getTile, lat, lon, R = 25, strong = 30) {
   const [fx, fy] = tileXY(lat, lon), kmpp = 40075 * Math.cos(lat * Math.PI / 180) / (2 ** Z * 256), rp = Math.ceil(R / kmpp) + 1;
   const gx0 = Math.floor(fx * 256), gy0 = Math.floor(fy * 256);
   let here = null, here8 = null, max = null, closest = null;
+  /* fetch the (at most four) tiles first, then scan synchronously */
+  const T = new Map();
+  for (const ty of new Set([Math.floor((gy0 - rp) / 256), Math.floor((gy0 + rp) / 256)]))
+    for (const tx of new Set([Math.floor((gx0 - rp) / 256), Math.floor((gx0 + rp) / 256)])) T.set(tx + '/' + ty, await getTile(tx, ty));
   for (let gy = gy0 - rp; gy <= gy0 + rp; gy++) {
     for (let gx = gx0 - rp; gx <= gx0 + rp; gx++) {
       const dpx = Math.hypot(gx - fx * 256, gy - fy * 256), dk = dpx * kmpp; if (dk > R) continue;
-      const tile = await getTile(Math.floor(gx / 256), Math.floor(gy / 256)); if (!tile) continue;
+      const tile = T.get(Math.floor(gx / 256) + '/' + Math.floor(gy / 256)); if (!tile) continue;
       const v = tile[(gy & 255) * 256 + (gx & 255)]; if (v === -128) continue;
       if (dk <= 4 && (here == null || v > here)) here = v;
       if (dk <= 8 && (here8 == null || v > here8)) here8 = v;
