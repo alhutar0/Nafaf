@@ -8,9 +8,34 @@ jobs:
     steps:
       - run: |
           mkdir out && cd out
-          for u in / /robots.txt /sitemap.xml /cities/ /ar/cities/ /city/muscat-om/ /ar/city/sohar-om/ /fr/city/paris-fr/ /ur/city/lahore-pk/ "/?lat=24.36&lon=56.73&n=x&utm_source=seo"; do
-            curl -sS -o /dev/null -w "%{http_code} %{size_download} %{time_total}s $u\n" "https://nafaf.online$u" >> pages.txt
-          done
+          W=https://nafa-push.alhutar0.workers.dev
+          curl -sS -m 20 $W/state -o state.json; curl -sS -m 20 $W/config -o config.json; curl -sS -m 20 $W/cfg/live -o cfglive.json
+          date -u > now.txt
+          P="latitude=24.347,24.172,24.531,24.742,23.977&longitude=56.709,56.888,56.564,56.468,57.096"
+          curl -sS -m 60 "https://api.open-meteo.com/v1/forecast?$P&current=precipitation,rain,showers,weather_code,cloud_cover&hourly=precipitation,weather_code&past_hours=8&forecast_hours=4&models=ecmwf_ifs025,gfs_seamless,icon_seamless,best_match&timezone=Asia/Muscat" -o om_models.json
+          curl -sS -m 60 "https://api.open-meteo.com/v1/forecast?$P&minutely_15=precipitation,weather_code&past_minutely_15=24&forecast_minutely_15=8&timezone=Asia/Muscat" -o om_15.json
+          curl -sS -m 30 https://api.rainviewer.com/public/weather-maps.json -o rv.json
+          python3 - <<'PY'
+          import json,urllib.request,math,io
+          rv=json.load(open('rv.json'));print('host',rv.get('host'),'frames',len(rv['radar']['past']))
+          last=rv['radar']['past'][-1]['path'];print(last)
+          lat,lon=24.347,56.709
+          for z in (6,7):
+              n=2**z;x=(lon+180)/360*n;y=(1-math.log(math.tan(math.radians(lat))+1/math.cos(math.radians(lat)))/math.pi)/2*n
+              for kind,u in [('radar',f"{rv['host']}{last}/256/{z}/{int(x)}/{int(y)}/2/1_1.png")]+([('sat',f"{rv['host']}{rv['satellite']['infrared'][-1]['path']}/256/{z}/{int(x)}/{int(y)}/0/0_0.png")] if rv.get('satellite',{}).get('infrared') else []):
+                  try:
+                      d=urllib.request.urlopen(u,timeout=20).read();open(f'{kind}_z{z}.png','wb').write(d);print(kind,z,len(d),u)
+                  except Exception as e: print(kind,z,'ERR',e,u)
+          PY
+          curl -sS -m 60 "https://view.eumetsat.int/geoserver/ows?service=WMS&request=GetCapabilities" -o eumv_caps.xml || true
+          python3 - <<'PY'
+          import re
+          s=open('eumv_caps.xml',encoding='utf-8',errors='ignore').read()
+          names=re.findall(r'<Layer[^>]*>\s*<Name>([^<]+)</Name>\s*<Title>([^<]*)</Title>',s)
+          open('eumv_layers.txt','w').write('\n'.join(a+' | '+b for a,b in names))
+          print(len(names))
+          PY
+          rm -f eumv_caps.xml
           git init -q && git checkout -q -b probe-out && git add -A
           git -c user.name=probe -c user.email=probe@nafaf.online commit -qm probe
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" probe-out
