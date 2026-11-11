@@ -30,3 +30,12 @@ class_name = "Funnel"
 [[migrations]]
 tag = "v1-funnel"
 new_sqlite_classes = ["Funnel"]
+
+# ★ الزوار مباشرة: كائن واحد بتخزين SQLite (presence.js)
+[[durable_objects.bindings]]
+name = "PRESENCE"
+class_name = "Presence"
+
+[[migrations]]
+tag = "v2-presence"
+new_sqlite_classes = ["Presence"]

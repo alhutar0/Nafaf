@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611111551';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611111600';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -13442,7 +13442,6 @@ setInterval(function(){
  }},60000);
 </script>
 
-
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -15424,6 +15423,19 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
       window.pushSubscribe.__nxf=1;['__nx','__nxk'].forEach(function(k){window.pushSubscribe[k]=o[k]});try{pushSubscribe=window.pushSubscribe}catch(e){}}
     else if(n<60)setTimeout(function(){hook(n+1)},300)})(0);
   /* the cyclone game counts itself when it opens (cyclone.html), whichever button led there */
+
+  /* ★ live presence: a beat every 30 s while Nafaf is on screen, a goodbye when it is hidden (presence.js).
+     Sent: the anonymous visitor id, the open tab, language, device type, installed or not, first-touch source. */
+  function vid(){try{return visitorId()}catch(e){var v=ls('nx.vid');if(!v){v=Math.random().toString(36).slice(2)+Date.now().toString(36);ls('nx.vid',v)}return v}}
+  function dev(){try{var c=matchMedia('(pointer:coarse)').matches,w=Math.min(screen.width,screen.height);return !c?'d':(w>=700?'t':'m')}catch(e){return 'm'}}
+  function beatBody(){var tab='';try{tab=TAB||''}catch(e){}return JSON.stringify({vid:vid(),tab:tab,lang:lang(),dev:dev(),st:standalone?1:0,src:src,page:'app'})}
+  function beat(){if(!API||document.hidden)return;try{fetch(API+'/live/beat',{method:'POST',body:beatBody(),keepalive:true,headers:{'Content-Type':'text/plain'}}).catch(function(){})}catch(e){}}
+  function bye(){if(!API)return;try{navigator.sendBeacon(API+'/live/bye',new Blob([beatBody()],{type:'text/plain'}))}catch(e){}}
+  setTimeout(beat,1500);setInterval(beat,30000);
+  document.addEventListener('visibilitychange',function(){if(document.hidden)bye();else beat()});
+  addEventListener('pagehide',bye);
+  /* tab changes count at once */
+  (function hook(n){if(typeof window.showTab==='function'&&!window.showTab.__nxl){var o=window.showTab;window.showTab=function(){var r=o.apply(this,arguments);setTimeout(beat,300);return r};window.showTab.__nxl=1;try{showTab=window.showTab}catch(e){}}else if(n<60)setTimeout(function(){hook(n+1)},300)})(0);
 })();
 </script>
 <script>

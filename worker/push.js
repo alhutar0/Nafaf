@@ -19,6 +19,7 @@
 import { handleOfficial, officialAlerts } from './official.js';
 import { radarScan, frames as radarFrames, makeTileCache, sampleAt, mmh } from './radar.js';
 import { cellsAround, etaFor } from './tracker.js';
+export { Presence } from './presence.js';
 
 const MODELS = 'ecmwf_ifs025,gfs_seamless,icon_seamless';
 
@@ -534,6 +535,26 @@ export default {
       const lat = parseFloat(c.latitude), lon = parseFloat(c.longitude);
       return new Response(JSON.stringify(isFinite(lat) && isFinite(lon) ? { lat, lon, city: c.city || '', cc: (c.country || '').toLowerCase(), approx: true } : { error: 'unknown' }),
         { headers: { 'content-type': 'application/json', 'cache-control': 'private, no-store', ...CORS } });
+    }
+
+    /* ★ الزوار مباشرة (presence.js): نبضة كل ٣٠ ثانية والتطبيق ظاهر، ووداع عند إخفائه */
+    if ((url.pathname === '/live/beat' || url.pathname === '/live/bye') && request.method === 'POST') {
+      if (!env.PRESENCE) return json({ ok: false });
+      let b = {}; try { b = JSON.parse(await request.text()); } catch (_) {}
+      const c = request.cf || {};
+      const body = { vid: String(b.vid || '').slice(0, 40), tab: b.tab, lang: b.lang, dev: b.dev, st: b.st, src: b.src, page: b.page,
+        cc: String(c.country || '??').toUpperCase().slice(0, 2), city: String(c.city || '').slice(0, 40), region: String(c.region || '').slice(0, 40) };
+      const stub = env.PRESENCE.get(env.PRESENCE.idFromName('live'));
+      const r = await stub.fetch('https://p' + (url.pathname === '/live/beat' ? '/beat' : '/bye'), { method: 'POST', body: JSON.stringify(body) });
+      return new Response(await r.text(), { headers: { 'content-type': 'application/json', ...CORS } });
+    }
+    if ((url.pathname === '/admin/live' || url.pathname === '/admin/visits') && request.method === 'POST') {
+      const b = await request.json().catch(() => null);
+      if (!b || !(await checkPass(env, b.pass))) return json({ error: 'unauthorized' }, 401);
+      if (!env.PRESENCE) return json({ error: 'no presence' });
+      const stub = env.PRESENCE.get(env.PRESENCE.idFromName('live'));
+      const r = await stub.fetch('https://p' + (url.pathname === '/admin/live' ? '/snap' : '/stats'), { method: 'POST', body: JSON.stringify({ days: b.days }) });
+      return new Response(await r.text(), { headers: { 'content-type': 'application/json', ...CORS } });
     }
 
     /* ★ متتبّع الخلايا الرعدية حول نقطة (tracker.js) */

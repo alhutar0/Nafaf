@@ -114,6 +114,20 @@ html[dir=rtl] .side.closed{transform:translateX(100%)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 
 /* بطاقات الإحصاء */
+.lvHero{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.lvDot{width:18px;height:18px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.7);animation:lvP 1.6s infinite}
+@keyframes lvP{0%{box-shadow:0 0 0 0 rgba(34,197,94,.7)}100%{box-shadow:0 0 0 18px rgba(34,197,94,0)}}
+.lvN{font-size:56px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.lvL{color:#8b98ab;font-weight:700;margin-top:4px}
+.lvMeta{flex:1 1 220px;display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px}
+.lvMeta div{background:rgba(255,255,255,.05);border-radius:12px;padding:8px 10px}.lvMeta b{display:block;font-size:20px}.lvMeta span{font-size:11px;color:#8b98ab}
+.lvGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.lvRow{display:flex;align-items:center;gap:9px;padding:5px 0;font-size:13px}
+.lvRow .f{flex:0 0 26px;font-size:18px;text-align:center}.lvRow .n{flex:0 0 120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lvRow .bar{flex:1 1 auto;height:8px;border-radius:99px;background:rgba(255,255,255,.08)}.lvRow .bar i{display:block;height:100%;border-radius:99px;background:#22c55e;transition:width .6s}
+.lvRow .v{flex:0 0 auto;min-width:34px;text-align:end;font-weight:800;font-variant-numeric:tabular-nums}
+.lvChip{display:inline-block;margin:3px 4px 3px 0;padding:4px 9px;border-radius:99px;background:rgba(255,255,255,.07);font-size:12px}
+.lvNew{animation:lvIn .8s ease-out}@keyframes lvIn{from{background:rgba(34,197,94,.25)}to{background:transparent}}
 .kpiGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
 .kpi{background:#18212f;border:1px solid rgba(255,255,255,.08);
   border-radius:15px;padding:14px}
@@ -276,6 +290,7 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
     <nav class="side closed" id="side">
       <div class="navGrp">الرئيسية</div>
       <div class="navItem on" data-p="dash"><span class="ni">▣</span>لوحة القيادة</div>
+      <div class="navItem" data-p="live"><span class="ni">🟢</span>الزوار مباشرة<span class="nb" id="badgeLive" style="display:none;background:#22c55e;color:#04210f">0</span></div>
 
       <div class="navGrp">التطبيق</div>
       <div class="navItem" data-p="tabs"><span class="ni">🧭</span>التبويبات</div>
@@ -833,6 +848,31 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
         </div>
       </section>
 
+      <!-- 🟢 الزوار مباشرة -->
+      <section class="sec" data-s="live">
+        <div class="pageHead">
+          <div class="pageTitle">الزوار مباشرة</div>
+          <div class="pageSub">يتحدّث كل ٥ ثوانٍ · زائر «الآن» = نفاف ظاهر على شاشته خلال آخر ٧٥ ثانية</div>
+        </div>
+        <div class="card lvHero"><div class="lvDot"></div><div><div class="lvN" id="lvN">—</div><div class="lvL">على نفاف الآن</div></div><div class="lvMeta" id="lvMeta"></div></div>
+        <div class="card"><h3>آخر ساعتين (أعلى عدد في كل دقيقة)</h3><div id="lvSpark"></div></div>
+        <div class="lvGrid">
+          <div class="card"><h3>الدول الآن</h3><div id="lvCc"><div class="empty">—</div></div></div>
+          <div class="card"><h3>المدن الآن</h3><div id="lvCity"><div class="empty">—</div></div></div>
+          <div class="card"><h3>ماذا يشاهدون</h3><div id="lvTab"><div class="empty">—</div></div></div>
+          <div class="card"><h3>الأجهزة · اللغة · المصدر</h3><div id="lvMix"><div class="empty">—</div></div></div>
+        </div>
+        <div class="card"><h3>الجلسات الآن</h3><div id="lvSess"><div class="empty">—</div></div></div>
+        <div class="card">
+          <h3>الإحصاءات حسب الدول <select id="lvDays" style="margin-inline-start:8px;background:transparent;color:inherit;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:2px 6px"><option value="1">اليوم</option><option value="7" selected>٧ أيام</option><option value="30">٣٠ يومًا</option><option value="90">٩٠ يومًا</option></select></h3>
+          <div class="kpiGrid" id="lvStatKpi"></div>
+          <div id="lvDaysChart"></div>
+          <h3 style="margin-top:14px">الدول</h3><div id="lvStatCc"></div>
+          <h3 style="margin-top:14px">المصادر · اللغات · الأجهزة</h3><div id="lvStatMix"></div>
+          <div style="font-size:11px;color:#8b98ab;margin-top:10px;line-height:1.7">بلا أي معرّف شخصي: معرّف عشوائي مجهول لكل جهاز، والدولة من الاتصال. المدينة تُعرض مباشرةً فقط ولا تُخزَّن. «الدقائق» تقدير من النبضات (كل ٣٠ ثانية).</div>
+        </div>
+      </section>
+
       <!-- 📊 الإحصاءات -->
       <section class="sec" data-s="analytics">
         <div class="pageHead">
@@ -977,6 +1017,7 @@ function goPage(p){
  if(p==='fusion')renderFusion();
  if(p==='licensing')renderLicensing();
  if(p==='billing')renderBilling();
+  if(p==='live')liveStart(); else liveStop();
   if(p==='analytics')loadAnalytics();
   if(p==='health'){runHealth();loadErrors();}
   if(p==='versions')loadVersions();
@@ -2221,6 +2262,63 @@ function loadAnalytics(){
     }).join('');
   });
 }
+
+/* ═══════ 🟢 الزوار مباشرة ═══════ */
+var LV_T=null,LV_PREV={};
+var LV_TAB={now:'الآن',fc:'القادم',life:'يومك',fit:'رياضتي',live:'الرصد المباشر',world:'نافذة العالم',gallery:'المعرض',quake:'الزلازل',src:'المصادر',cyclone:'🌀 لعبة الأعاصير'};
+var LV_DEV={m:'📱 جوال',t:'📟 لوحي',d:'💻 حاسوب'};
+var LV_SRC={direct:'🔗 مباشر',wa_cells:'⛈️ نشرة الواتساب',seo:'🔎 محركات البحث',share:'📸 قصة/مشاركة',google:'Google',instagram:'Instagram',whatsapp:'WhatsApp',x:'X',app:'📲 التطبيق المثبت',play:'Google Play',web:'مواقع أخرى',tiktok:'TikTok',snapchat:'Snapchat',facebook:'Facebook',telegram:'Telegram',youtube:'YouTube'};
+var LV_LANG={dial:'العامية',fus:'الفصحى',en:'English',ur:'اردو',hi:'हिन्दी',bn:'বাংলা',fr:'Français',de:'Deutsch',ar:'العربية',msa:'الفصحى'};
+function lvFlag(cc){cc=String(cc||'').toUpperCase();if(!/^[A-Z]{2}$/.test(cc))return '🌐';return String.fromCodePoint(127397+cc.charCodeAt(0),127397+cc.charCodeAt(1));}
+var LV_DN=null;try{LV_DN=new Intl.DisplayNames(['ar'],{type:'region'});}catch(e){}
+function lvCname(cc){try{return LV_DN?LV_DN.of(String(cc).toUpperCase()):cc;}catch(e){return cc;}}
+function lvRows(obj,label,flag){
+  var a=Object.keys(obj||{}).map(function(k){return [k,obj[k]];}).sort(function(x,y){return y[1]-x[1];});
+  if(!a.length)return '<div class="empty">لا أحد الآن</div>';
+  var mx=a[0][1]||1;
+  return a.slice(0,15).map(function(r){return '<div class="lvRow"><span class="f">'+(flag?flag(r[0]):'')+'</span><span class="n">'+esc(label?label(r[0]):r[0])+'</span><span class="bar"><i style="width:'+Math.round(r[1]/mx*100)+'%"></i></span><span class="v">'+r[1]+'</span></div>';}).join('');
+}
+function lvSpark(pts){
+  if(!pts||!pts.length)return '<div class="empty">لا بيانات بعد — تبدأ مع أول زائر.</div>';
+  var now=Math.floor(Date.now()/60000),m0=now-119,W=600,H=90,mx=1,map={};
+  pts.forEach(function(p){map[p.m]=p.n;mx=Math.max(mx,p.n);});
+  var d='',x,y,i;for(i=0;i<120;i++){x=i/119*W;y=H-4-((map[m0+i]||0)/mx)*(H-12);d+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1);}
+  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:90px;display:block"><path d="'+d+' L'+W+','+H+' L0,'+H+'Z" fill="rgba(34,197,94,.15)"/><path d="'+d+'" fill="none" stroke="#22c55e" stroke-width="2"/>'+
+    '<text x="4" y="12" fill="#8b98ab" font-size="11">'+mx+'</text></svg><div style="display:flex;justify-content:space-between;font-size:11px;color:#8b98ab"><span>قبل ساعتين</span><span>الآن</span></div>';
+}
+function liveLoad(){
+  api('/admin/live').then(function(r){
+    if(!r||r.error){$('lvN').textContent='—';$('lvMeta').innerHTML='<div class="empty">'+(r&&r.error==='no presence'?'لم يُنشر على الخادم بعد.':'تعذّر الجلب.')+'</div>';return;}
+    var n=r.now||0,el=$('lvN');if(String(el.textContent)!==String(n)){el.textContent=n;el.classList.remove('lvNew');void el.offsetWidth;el.classList.add('lvNew');}
+    var b=$('badgeLive');if(b){b.textContent=n;b.style.display=n?'':'none';}
+    var T=r.today||{};
+    $('lvMeta').innerHTML='<div><b>'+(T.unique||0)+'</b><span>زوار اليوم</span></div><div><b>'+(T.newv||0)+'</b><span>جدد اليوم</span></div><div><b>'+(T.peak||0)+'</b><span>ذروة اليوم</span></div><div><b>'+(T.sessions||0)+'</b><span>جلسات اليوم</span></div><div><b>'+(r.inst||0)+'</b><span>مثبّت (الآن)</span></div>';
+    $('lvSpark').innerHTML=lvSpark(r.spark);
+    $('lvCc').innerHTML=lvRows(r.cc,lvCname,lvFlag);
+    $('lvCity').innerHTML=lvRows(r.city,function(k){var p=k.split('|');return p[1]+' · '+lvCname(p[0]);},function(k){return lvFlag(k.split('|')[0]);});
+    $('lvTab').innerHTML=lvRows(r.tab,function(k){return LV_TAB[k]||k;});
+    var mix='';
+    [[r.dev,LV_DEV],[r.lang,LV_LANG],[r.src,LV_SRC]].forEach(function(g){Object.keys(g[0]||{}).sort(function(a,b){return g[0][b]-g[0][a];}).forEach(function(k){mix+='<span class="lvChip">'+esc((g[1]&&g[1][k])||k||'—')+' · <b>'+g[0][k]+'</b></span>';});mix+='<br>';});
+    $('lvMix').innerHTML=mix||'<div class="empty">—</div>';
+    $('lvSess').innerHTML=(r.sessions&&r.sessions.length)?r.sessions.map(function(x){return '<div class="lvRow"><span class="f">'+lvFlag(x.cc)+'</span><span class="n" style="flex:1 1 auto">'+esc((x.city?x.city+' · ':'')+lvCname(x.cc))+'</span><span class="lvChip">'+esc(LV_TAB[x.tab]||x.tab||'الآن')+'</span><span class="lvChip">'+(LV_DEV[x.dev]||'')+(x.st?' · مثبّت':'')+'</span><span class="v">'+x.min+' د</span></div>';}).join(''):'<div class="empty">لا أحد الآن</div>';
+  });
+}
+function liveStats(){
+  var d=parseInt(($('lvDays')||{}).value||'7',10);
+  api('/admin/visits',{days:d}).then(function(r){
+    if(!r||r.error)return;
+    var t=r.total||{},ret=(r.returning||{}).r||0;
+    $('lvStatKpi').innerHTML=kpi(t.u||0,'زوار فريدون')+kpi(t.s||0,'جلسات')+kpi((t.mins||0)+' د','متوسط الوقت للزائر يوميًا')+kpi(t.u?Math.round(ret/t.u*100)+'%':'—','نسبة العائدين')+kpi((r.allTime||{}).u||0,'كل الزوار منذ البداية');
+    var days=r.perDay||[],mx=Math.max.apply(null,days.map(function(x){return x.u;}).concat([1]));
+    $('lvDaysChart').innerHTML=days.map(function(x){return '<div class="lvRow"><span class="n" style="flex:0 0 62px;color:#8b98ab">'+esc(x.day.slice(5))+'</span><span class="bar"><i style="width:'+Math.round(x.u/mx*100)+'%"></i></span><span class="v">'+x.u+'</span><span style="font-size:11px;color:#8b98ab;flex:0 0 70px;text-align:end">'+(x.nw||0)+' جديد</span></div>';}).join('')||'<div class="empty">لا بيانات بعد</div>';
+    var cc=r.cc||[],mc=cc.length?cc[0].u:1;
+    $('lvStatCc').innerHTML=cc.length?cc.map(function(x){return '<div class="lvRow"><span class="f">'+lvFlag(x.cc)+'</span><span class="n">'+esc(lvCname(x.cc))+'</span><span class="bar"><i style="width:'+Math.round(x.u/mc*100)+'%"></i></span><span class="v">'+x.u+'</span><span style="font-size:11px;color:#8b98ab;flex:0 0 120px;text-align:end">'+x.s+' جلسة · '+Math.round((x.b||0)*0.5/Math.max(1,x.u))+' د/زائر</span></div>';}).join(''):'<div class="empty">لا بيانات بعد</div>';
+    var mix='';[[r.src,'src',LV_SRC],[r.lang,'lang',LV_LANG],[r.dev,'dev',LV_DEV]].forEach(function(g){(g[0]||[]).forEach(function(x){mix+='<span class="lvChip">'+esc((g[2]&&g[2][x[g[1]]])||x[g[1]]||'—')+' · <b>'+x.u+'</b></span>';});mix+='<br>';});
+    $('lvStatMix').innerHTML=mix;
+  });
+}
+function liveStart(){liveStop();liveLoad();liveStats();LV_T=setInterval(function(){if(!document.hidden)liveLoad();},5000);var s=$('lvDays');if(s&&!s.__b){s.__b=1;s.onchange=liveStats;}}
+function liveStop(){if(LV_T){clearInterval(LV_T);LV_T=null;}}
 
 /* ═══════ مسار المستخدم ═══════ */
 var FN_STEPS=[['first','زوار جدد'],['install','ثبّتوا التطبيق'],['push','فعّلوا تنبيه المطر'],['cyclone','لعبوا الأعاصير'],['story','شاركوا قصة'],['event','شافوا وضع الحدث (مطر/رعد قربهم)'],['cellshare','نشروا نشرة الخلايا للواتساب'],['d1','رجعوا بعد يوم'],['d7','رجعوا بعد أسبوع'],['d30','رجعوا بعد شهر']];

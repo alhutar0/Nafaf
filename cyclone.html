@@ -166,6 +166,13 @@ b.innerHTML='<div style="max-width:320px;line-height:1.7;padding:20px"><div styl
 (function(){try{if(localStorage.getItem('nx.f.cyclone'))return;localStorage.setItem('nx.f.cyclone',String(Date.now()));
   var st=matchMedia('(display-mode: standalone)').matches?1:0,b=JSON.stringify({e:'cyclone',src:localStorage.getItem('nx.f.src')||'direct',lang:localStorage.getItem('nx.xl')||({en:'en',fus:'fus'}[localStorage.getItem('lang')]||'dial'),st:st});
   if(!(navigator.sendBeacon&&navigator.sendBeacon('https://nafa-push.alhutar0.workers.dev/ev',new Blob([b],{type:'text/plain'}))))fetch('https://nafa-push.alhutar0.workers.dev/ev',{method:'POST',body:b,keepalive:true})}catch(e){}})();
+
+/* live presence while the game is open (same anonymous visitor id as the app) */
+(function(){var API='https://nafa-push.alhutar0.workers.dev';function v(){try{return localStorage.getItem('vid')||''}catch(e){return ''}}
+  function body(){return JSON.stringify({vid:v(),tab:'cyclone',page:'cyclone',lang:(function(){try{return localStorage.getItem('nx.xl')||({en:'en',fus:'fus'}[localStorage.getItem('lang')]||'dial')}catch(e){return ''}})(),dev:matchMedia('(pointer:coarse)').matches?'m':'d',st:matchMedia('(display-mode: standalone)').matches?1:0,src:(function(){try{return localStorage.getItem('nx.f.src')||''}catch(e){return ''}})()})}
+  function beat(){if(!v()||document.hidden)return;try{fetch(API+'/live/beat',{method:'POST',body:body(),keepalive:true,headers:{'Content-Type':'text/plain'}}).catch(function(){})}catch(e){}}
+  function bye(){if(!v())return;try{navigator.sendBeacon(API+'/live/bye',new Blob([body()],{type:'text/plain'}))}catch(e){}}
+  setTimeout(beat,1200);setInterval(beat,30000);document.addEventListener('visibilitychange',function(){document.hidden?bye():beat()});addEventListener('pagehide',bye);})();
 </script>
 <script type="module">
 import * as THREE from 'three';
