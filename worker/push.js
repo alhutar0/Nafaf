@@ -131,11 +131,11 @@ async function scanRain() {
     }
     if (hits > 0) wet.push({ name: SPOTS[i][0], region: SPOTS[i][3], mm: maxMM, hits });
   }
-  /* ★ the radar sees what the models miss: a spot with a ≥25 dBZ echo within 4 km is wet, whatever the models say */
+  /* ★ the radar sees what the models miss: a spot with a ≥22 dBZ echo within 4 km is wet, whatever the models say */
   try {
     const rs = await radarScan(SPOTS.map(s => ({ lat: s[1], lon: s[2] })));
     if (rs) rs.res.forEach((r, i) => {
-      if (!r || r.here == null || r.here < 25) return;
+      if (!r || r.here == null || r.here < 22) return;
       const mm = mmh(r.here8 != null ? r.here8 : r.here) / 6;   /* mm/h → mm in this 10-min step, comparable with the models' figure */
       const w = wet.find(x => x.name === SPOTS[i][0]);
       if (w) { w.mm = Math.max(w.mm, mm); w.radar = r.here; } else wet.push({ name: SPOTS[i][0], region: SPOTS[i][3], mm, hits: 1, radar: r.here });
