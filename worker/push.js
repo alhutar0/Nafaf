@@ -194,15 +194,17 @@ async function broadcast(env, phase, data) {
   };
 
   const list = await env.NAFAF_KV.list({ prefix: 'sub:' });
-  let sent = 0;
+  let sent = 0; const codes = {};
   for (const k of list.keys) {
     try {
       const sub = JSON.parse(await env.NAFAF_KV.get(k.name));
-      const ok = await sendPush(env, sub, payload);   /* الوحدة المُختبرة أعلاه */
-      if (ok) sent++;
-      else await env.NAFAF_KV.delete(k.name);   /* اشتراك ميت */
+      const st = await sendPushStatus(env, sub, payload);   /* الوحدة المُختبرة أعلاه */
+      codes[st] = (codes[st] || 0) + 1;
+      if (st >= 200 && st < 300) sent++;
+      else if (st === 404 || st === 410) await env.NAFAF_KV.delete(k.name);   /* اشتراك ميت فعلًا — لا نحذف عند خطأ مؤقت */
     } catch (_) {}
   }
+  try { await env.NAFAF_KV.put('bc:last', JSON.stringify({ phase, at: Date.now(), subs: list.keys.length, sent, codes }), { expirationTtl: 60 * 60 * 24 * 7 }); } catch (_) {}
   return sent;
 }
 
@@ -1571,7 +1573,7 @@ export default {
       return json({
         known: !!rec, hasLoc: !!(rec && typeof rec.lat === 'number'), place: rec ? (rec.place || '') : '',
         savedAt: rec ? rec.ts : null, lastScan: s0 ? s0.ts : null, vapid: !!(env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY),
-        radar: JSON.parse((await env.NAFAF_KV.get('radar:last')) || 'null')
+        radar: JSON.parse((await env.NAFAF_KV.get('radar:last')) || 'null'), broadcast: JSON.parse((await env.NAFAF_KV.get('bc:last')) || 'null')
       });
     }
     /* ★ إشعار تجريبي لهذا الجهاز فقط — مرة كل دقيقة كحد أقصى */
@@ -2163,7 +2165,8 @@ async function runRadar(env) {
   }
   const keys = [...cells.keys()];
   const scan = keys.length ? await radarScan(keys.map(k => cells.get(k))) : null;
-  const log = { t: scan ? scan.t : null, at: Date.now(), cells: keys.length, wet: 0, near: 0, sent: 0 };
+  const log = { t: scan ? scan.t : null, at: Date.now(), subs: list.keys.length, cells: keys.length, wet: 0, near: 0, sent: 0, why: {} };
+  const why = k => { log.why[k] = (log.why[k] || 0) + 1; };
   if (scan) for (let i = 0; i < keys.length; i++) {
     const r = scan.res[i]; if (!r) continue;
     const startHit = r.here != null && r.here >= 22, heavyHit = r.here8 != null && r.here8 >= 40;
@@ -2175,14 +2178,18 @@ async function runRadar(env) {
         const hk = 'rd:' + hashStr(sub.endpoint); let st = {}; try { st = JSON.parse((await env.NAFAF_KV.get(hk)) || '{}'); } catch (_) {}
         const now = Date.now(), quiet = inQuiet(sub, cfg); let changed = false;
         const send = async (type, kind, v, sev) => {
-          if (T[type] && T[type].on === false) return false;
-          if (!(await underCap(env, sub.endpoint, type, cfg))) return false;
+          if (T[type] && T[type].on === false) { why('off:' + type); return false; }
+          if (!(await underCap(env, sub.endpoint, type, cfg))) { why('cap:' + type); return false; }
           const [title, body] = rdText(sub, kind, v);
-          const ok = await sendPush(env, sub, { type, sev, title, body, tag: 'nafaf-radar-' + kind, url: './#live', urgency: 'high', renotify: kind !== 'near',
+          const st = await sendPushStatus(env, sub, { type, sev, title, body, tag: 'nafaf-radar-' + kind, url: './#live', urgency: 'high', renotify: kind !== 'near',
             lang: sub.xl || (isEn(sub) ? 'en' : 'ar'), ts: now });
+          why('http:' + st);
+          const ok = st >= 200 && st < 300;
           if (ok) { await bumpCap(env, sub.endpoint, type); log.sent++; }
           return ok;
         };
+        if (quiet && !heavyHit) why('quiet');
+        if ((heavyHit && now - (st.h || 0) <= 3 * 36e5) || (startHit && now - (st.s || 0) <= 3 * 36e5)) why('cooldown');
         if (heavyHit && now - (st.h || 0) > 3 * 36e5) { if (await send('rainHeavy', 'heavy', { mm: mmh(r.here8) }, 'alert')) { st.h = now; st.s = now; changed = true; } }
         else if (startHit && !quiet && now - (st.s || 0) > 3 * 36e5) { if (await send('rainStart', 'start', { mm: mmh(r.here) }, 'alert')) { st.s = now; changed = true; } }
         else if (nearHit && !quiet && now - (st.n || 0) > 90 * 6e4 && now - (st.s || 0) > 60 * 6e4) {
