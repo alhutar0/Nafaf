@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611111420';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611111533';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -13440,7 +13440,6 @@ setInterval(function(){
  }},60000);
 </script>
 
-
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -13961,6 +13960,31 @@ html.nx body.v2.wide #nowBody>#nxEvt{grid-column:1/-1}
 .nxOfC .nxo-of{margin-top:8px;font-size:11.5px;color:rgba(242,244,248,.6)}
 .nxOfC .nxo-of a{color:#bcd7ff;font-weight:800}
 html.nx body.v2.wide #nowBody>#nxOfBox{grid-column:1/-1}
+/* — cells.html — */
+.nxCl{margin:0 0 14px;border-radius:20px;background:#0f1422;color:#EEF2F8;border:1.5px solid #ff6a3d;overflow:hidden;box-shadow:0 14px 34px -20px #ff6a3d}
+.nxCl .ch{display:flex;align-items:center;gap:8px;padding:12px 14px 0;font-size:11.5px;font-weight:900;color:#ff9a6b;letter-spacing:.02em}
+.nxCl .ch i{flex:0 0 auto;width:10px;height:10px;border-radius:50%;background:#ff6a3d;animation:nxEvP 1.6s ease-out infinite}
+.nxCl h3{margin:6px 14px 0;font-size:18px;font-weight:900;line-height:1.35;color:#fff}
+.nxCl .cs{margin:3px 14px 0;font-size:12.5px;color:rgba(238,242,248,.72);font-weight:700}
+.nxCl ul{list-style:none;margin:10px 0 0;padding:0 14px}
+.nxCl li{display:flex;gap:10px;padding:9px 0;border-top:1px solid rgba(255,255,255,.08);font-size:13.5px;line-height:1.55}
+.nxCl li b{display:block;color:#fff;font-size:14px}
+.nxCl li .d{flex:0 0 auto;width:12px;height:12px;border-radius:50%;margin-top:5px}
+.nxCl li small{display:block;color:rgba(238,242,248,.72);font-weight:700}
+.nxCl .ac{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 14px 12px}
+.nxCl .ac button{min-height:44px;border-radius:13px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#fff;font:inherit;font-size:13.5px;font-weight:900;cursor:pointer}
+.nxCl .ac button.p{background:#25D366;border-color:transparent;color:#05220f}
+.nxCl .nt{padding:0 14px 11px;font-size:11px;color:rgba(238,242,248,.55);line-height:1.6}
+html.nx body.v2.wide #nowBody>#nxCl{grid-column:1/-1}
+.nxClLbl{background:rgba(15,20,34,.85);color:#fff;border:0;border-radius:8px;padding:2px 6px;font:800 11px system-ui;box-shadow:none;white-space:nowrap}
+.nxClLbl:before{display:none}
+#nxClShare{position:fixed;inset:0;z-index:2147483000;background:rgba(5,8,14,.86);display:flex;align-items:center;justify-content:center;padding:16px}
+#nxClShare .bx{width:min(420px,100%);max-height:94vh;overflow:auto;background:#0f1422;border-radius:20px;padding:14px;color:#EEF2F8;border:1px solid rgba(255,255,255,.12)}
+#nxClShare img{width:100%;border-radius:12px;display:block}
+#nxClShare pre{white-space:pre-wrap;font:600 13px/1.6 system-ui;background:rgba(255,255,255,.06);border-radius:12px;padding:10px;margin:10px 0}
+#nxClShare .bt{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#nxClShare button{min-height:46px;border-radius:13px;border:0;font:inherit;font-weight:900;font-size:14px;cursor:pointer;background:rgba(255,255,255,.1);color:#fff}
+#nxClShare button.p{background:#25D366;color:#05220f;grid-column:1/-1}
 </style>
 <script>
 /* Defaults = how Nafaf behaves with no portal setting. The portal publishes cfg.next; the app keeps the
@@ -15611,6 +15635,182 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     else if(n<80)setTimeout(function(){hook(n+1)},250)})(0);
   document.addEventListener('visibilitychange',function(){if(!document.hidden)try{load()}catch(e){}});
   window.nxOfficial=function(){return R};
+})();
+</script>
+<script>
+/* Storm cells. The worker (tracker.js) finds ≥35 dBZ cells in the last radar frames, measures how each one moved,
+   and projects it in a straight line for up to an hour. Shown here as a card, as arrows on the live map, and as a
+   bulletin people can post to their WhatsApp groups (picture + text). It is an estimate — always said so. */
+(function(){
+  var API=(typeof PUSH_URL!=='undefined'&&PUSH_URL)||'';
+  function P(a,b,c){var r;try{r=pick(a,b,c)}catch(e){r=c}return window.nxTr?nxTr(r):r}
+  function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function L(){try{return window.NX_XL||(LI()===2?'en':'ar')}catch(e){return 'ar'}}
+  var DIR=[['الشمال','الشمال','north'],['الشمال الشرقي','الشمال الشرقي','north-east'],['الشرق','الشرق','east'],['الجنوب الشرقي','الجنوب الشرقي','south-east'],
+           ['الجنوب','الجنوب','south'],['الجنوب الغربي','الجنوب الغربي','south-west'],['الغرب','الغرب','west'],['الشمال الغربي','الشمال الغربي','north-west']];
+  var ARW=['⬆','↗','➡','↘','⬇','↙','⬅','↖'];
+  function dir(i){var d=DIR[i]||DIR[0];return P(d[0],d[1],d[2])}
+  function col(z){return z>=55?'#ff3df5':z>=50?'#ff3b3b':z>=45?'#ff8a1f':z>=40?'#ffd21f':'#7fd3ff'}
+  function strength(z){return z>=55?P('خلية عنيفة (بَرَد محتمل)','خلية عنيفة (احتمال بَرَد)','Severe cell (hail possible)'):z>=48?P('خلية قوية','خلية قوية','Strong cell'):z>=42?P('خلية رعدية','خلية رعدية','Thunderstorm cell'):P('خلية مطر','خلية ممطرة','Rain cell')}
+  function bearing(a,b,c,d){var r=Math.PI/180,y=Math.sin((d-b)*r)*Math.cos(c*r),x=Math.cos(a*r)*Math.sin(c*r)-Math.sin(a*r)*Math.cos(c*r)*Math.cos((d-b)*r);return Math.round(((Math.atan2(y,x)/r+360)%360)/45)%8}
+  function kmTo(a,b,c,d){var R=6371,r=Math.PI/180,x=Math.sin((c-a)*r/2),y=Math.sin((d-b)*r/2);return 2*R*Math.asin(Math.sqrt(x*x+Math.cos(a*r)*Math.cos(c*r)*y*y))}
+  function mins(m,pm){return m===0?P('الحين','الآن','now'):'~'+m+' '+P('د','د','min')+(pm?' (±'+pm+')':'')}
+  function hhmm(t){try{return new Date(t*1000).toLocaleTimeString(L()==='ar'?'ar-OM':L(),{hour:'numeric',minute:'2-digit'})}catch(e){return ''}}
+
+  var D=null,K='',T=0,BUSY=0;
+  window.NX_CELLS=null;
+  function load(force){
+    if(!API||!window.CUR||BUSY)return;
+    var k=(+CUR.lat).toFixed(2)+','+(+CUR.lon).toFixed(2);
+    if(!force&&k===K&&Date.now()-T<4*6e4)return;
+    K=k;T=Date.now();BUSY=1;
+    fetch(API+'/cells?lat='+(+CUR.lat).toFixed(3)+'&lon='+(+CUR.lon).toFixed(3)).then(function(r){return r.ok?r.json():null}).then(function(j){
+      BUSY=0;if(!j||!j.ok)return;D=j;window.NX_CELLS=j;paint();drawMap();
+    }).catch(function(){BUSY=0});
+  }
+  function relevant(){
+    if(!D||!D.cells||D.age>45*60)return [];
+    return D.cells.filter(function(c){return c.dbz>=40||c.here});
+  }
+  function line(c){
+    var me=window.CUR,km=me?Math.round(kmTo(me.lat,me.lon,c.lat,c.lon)):null,where=me?bearing(me.lat,me.lon,c.lat,c.lon):0;
+    var a=strength(c.dbz)+' · '+c.dbz+' dBZ';
+    var b=(c.over?P('قرب ','قرب ','near ')+c.over+' · ':'')+(km!=null?km+' '+P('كم جهة ','كم جهة ','km ')+dir(where):'');
+    var m=c.speed>=3?ARW[c.dir]+' '+P('تتجه نحو ','تتجه نحو ','moving ')+dir(c.dir)+' '+c.speed+' '+P('كم/س','كم/س','km/h')+(c.est?' '+P('(تقدير)','(تقدير)','(est.)'):''):P('شبه ثابتة','شبه ثابتة','almost stationary');
+    var e=[];if(c.here)e.push(P('عندك ','موقعك ','you ')+mins(c.here.min,c.here.pm));
+    (c.near||[]).slice(0,3).forEach(function(n){if(!c.here||n.min!==c.here.min)e.push(n.n+' '+mins(n.min,n.pm))});
+    return {a:a,b:b,m:m,e:e};
+  }
+  function paint(){
+    var b=document.getElementById('nowBody');if(!b)return;
+    var old=document.getElementById('nxCl');if(old)old.remove();
+    var C=relevant();if(!C.length)return;
+    var h0=D.here?P('⛈️ خلية تصلك خلال ','⛈️ خلية رعدية تصلك خلال ','⛈️ A storm cell reaches you in ')+mins(D.here.min,D.here.pm):
+      (function(){var c=C[0],me=window.CUR,km=Math.round(kmTo(me.lat,me.lon,c.lat,c.lon));return P('أقرب خلية على بُعد ','أقرب خلية على بُعد ','Nearest cell ')+km+' '+P('كم جهة ','كم جهة ','km to the ')+dir(bearing(me.lat,me.lon,c.lat,c.lon))})();
+    var d=document.createElement('section');d.id='nxCl';d.className='nxCl';
+    d.innerHTML='<div class="ch"><i></i>'+P('متتبّع الخلايا الرعدية · رادار ','متتبّع الخلايا الرعدية · رادار ','Storm-cell tracker · radar ')+hhmm(D.t)+'</div>'+
+      '<h3>'+E(h0)+'</h3><p class="cs">'+E(P('عدد الخلايا ضمن ١٥٠ كم: #','عدد الخلايا ضمن ١٥٠ كم: #','Cells within 150 km: #').replace('#',C.length))+'</p><ul>'+
+      C.slice(0,3).map(function(c){var l=line(c);return '<li><span class="d" style="background:'+col(c.dbz)+'"></span><div><b>'+E(l.a)+'</b><small>'+E(l.b)+'</small><small>'+E(l.m)+'</small>'+(l.e.length?'<small>'+E(P('تصل: ','تصل: ','Reaches: ')+l.e.join(' · '))+'</small>':'')+'</div></li>'}).join('')+'</ul>'+
+      '<div class="ac"><button type="button" data-a="map">'+P('على الخريطة','على الخريطة','On the map')+'</button><button type="button" class="p" data-a="share">'+P('انشر للمجموعة','انشر للمجموعة','Share bulletin')+'</button></div>'+
+      '<div class="nt">'+E(P('تقدير من حركة الرادار خلال آخر ٢٠ دقيقة — الخلايا تكبر وتتلاشى بسرعة. ليس تحذيرًا رسميًا.','تقدير من حركة الرادار خلال آخر ٢٠ دقيقة؛ الخلايا تتغير بسرعة. ليس تحذيرًا رسميًا.','Estimated from the last 20 min of radar motion — cells grow and die fast. Not an official warning.'))+'</div>';
+    var ev=document.getElementById('nxEvt'),of=document.getElementById('nxOfBox'),anchor=ev||of;
+    if(anchor&&anchor.parentNode===b)b.insertBefore(d,anchor.nextSibling);else b.insertBefore(d,b.firstChild);
+    d.addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;var a=t.getAttribute('data-a');
+      if(a==='map'){try{showTab('live')}catch(x){}setTimeout(drawMap,900)}
+      else if(a==='share')share();});
+  }
+
+  /* ── arrows on the live map ── */
+  var LAY=null;
+  function drawMap(){
+    try{if(!window.L||typeof LMAP==='undefined'||!LMAP)return}catch(e){return}
+    try{if(LAY)LMAP.removeLayer(LAY)}catch(e){}
+    LAY=L.layerGroup();
+    (relevant()).forEach(function(c){
+      var cc=col(c.dbz);
+      L.circle([c.lat,c.lon],{radius:c.rKm*1000,color:cc,weight:2,fillOpacity:.12}).addTo(LAY);
+      if(c.speed>=3){
+        var pts=[[c.lat,c.lon]].concat(c.track);
+        L.polyline(pts,{color:cc,weight:3,dashArray:'6 6'}).addTo(LAY);
+        c.track.forEach(function(p,i){L.circleMarker(p,{radius:3,color:cc,weight:2,fillOpacity:1}).addTo(LAY).bindTooltip('+'+((i+1)*15)+P('د','د','m'),{permanent:i===1||i===3,direction:'top',className:'nxClLbl'})});
+      }
+      L.marker([c.lat,c.lon],{opacity:0}).addTo(LAY).bindTooltip(c.dbz+' dBZ'+(c.here?' · '+mins(c.here.min,c.here.pm):''),{permanent:true,direction:'right',className:'nxClLbl'});
+    });
+    LAY.addTo(LMAP);
+  }
+
+  /* ── WhatsApp bulletin: text + picture ── */
+  function bulletinText(){
+    var C=relevant(),out=['⛈️ '+P('نفاف — رصد الخلايا الرعدية','نفاف — رصد الخلايا الرعدية','Nafaf — storm cells')+' ('+hhmm(D.t)+')'];
+    if(D.here)out.push(P('📍 تصل موقعي خلال ','📍 تصل موقعي خلال ','📍 Reaching my location in ')+mins(D.here.min,D.here.pm));
+    C.slice(0,3).forEach(function(c){var l=line(c);out.push('• '+l.a+(l.b?' — '+l.b:''));out.push('   '+l.m);if(l.e.length)out.push('   '+P('تصل: ','تصل: ','Reaches: ')+l.e.join(' · '))});
+    out.push(P('تقدير من حركة الرادار (±٢٥٪) — ليس تحذيرًا رسميًا.','تقدير من حركة الرادار (±٢٥٪)، وليس تحذيرًا رسميًا.','Estimate from radar motion (±25%) — not an official warning.'));
+    out.push('https://nafaf.online/?utm_source=wa_cells');
+    return out.join('\n');
+  }
+  function img(src){return new Promise(function(res){var i=new Image();i.crossOrigin='anonymous';i.onload=function(){res(i)};i.onerror=function(){res(null)};i.src=src})}
+  async function bulletinImage(){
+    var W=1080,H=1350,MAP=1000,me=window.CUR;
+    /* zoom so the nearest cells, their next hour and your location fill the picture (zoom 8–10) */
+    var far=20;relevant().slice(0,3).forEach(function(c){far=Math.max(far,kmTo(me.lat,me.lon,c.lat,c.lon),kmTo(me.lat,me.lon,c.track[3][0],c.track[3][1]))});
+    var Z=Math.max(8,Math.min(10,Math.floor(Math.log2(40075*Math.cos(me.lat*Math.PI/180)*(MAP/2)/(256*far*1.3)))));
+    var cv=document.createElement('canvas');cv.width=W;cv.height=H;var x=cv.getContext('2d');
+    x.fillStyle='#0b1020';x.fillRect(0,0,W,H);
+    var n=Math.pow(2,Z)*256,gx=function(lon){return (lon+180)/360*n},gy=function(lat){var s=Math.sin(lat*Math.PI/180);return (0.5-Math.log((1+s)/(1-s))/(4*Math.PI))*n};
+    var c0=relevant()[0],clat=c0?(me.lat+c0.lat)/2:me.lat,clon=c0?(me.lon+c0.lon)/2:me.lon;
+    var cx=gx(clon),cy=gy(clat),ox=cx-W/2,oy=cy-MAP/2,top=140;
+    function px(lat,lon){return [gx(lon)-ox,gy(lat)-oy+top]}
+    x.save();x.beginPath();x.rect(0,top,W,MAP);x.clip();
+    /* base map (OpenStreetMap) dimmed */
+    var tx0=Math.floor(ox/256),tx1=Math.floor((ox+W)/256),ty0=Math.floor(oy/256),ty1=Math.floor((oy+MAP)/256),jobs=[];
+    for(var ty=ty0;ty<=ty1;ty++)for(var tx=tx0;tx<=tx1;tx++)(function(tx,ty){jobs.push(img('https://tile.openstreetmap.org/'+Z+'/'+tx+'/'+ty+'.png').then(function(i){if(i)x.drawImage(i,tx*256-ox,ty*256-oy+top)}))})(tx,ty);
+    await Promise.all(jobs);
+    x.fillStyle='rgba(8,12,24,.55)';x.fillRect(0,top,W,MAP);
+    /* radar (zoom 7, scaled ×4) */
+    try{
+      var j=await fetch('https://api.rainviewer.com/public/weather-maps.json').then(function(r){return r.json()});
+      var host=j.host,pth=j.radar.past[j.radar.past.length-1].path,s=Math.pow(2,Z-7),o7x=ox/s,o7y=oy/s,jobs2=[];
+      for(var ry=Math.floor(o7y/256);ry<=Math.floor((o7y+MAP/s)/256);ry++)for(var rx=Math.floor(o7x/256);rx<=Math.floor((o7x+W/s)/256);rx++)(function(rx,ry){
+        jobs2.push(img(host+pth+'/256/7/'+rx+'/'+ry+'/2/1_1.png').then(function(i){if(i){x.imageSmoothingEnabled=true;x.drawImage(i,(rx*256-o7x)*s,(ry*256-o7y)*s+top,256*s,256*s)}}))})(rx,ry);
+      await Promise.all(jobs2);
+    }catch(e){}
+    /* cells */
+    relevant().forEach(function(c){
+      var p=px(c.lat,c.lon),cc=col(c.dbz),rpx=c.rKm/(40075*Math.cos(c.lat*Math.PI/180)/n);
+      x.strokeStyle=cc;x.lineWidth=5;x.beginPath();x.arc(p[0],p[1],Math.max(14,rpx),0,7);x.stroke();
+      if(c.speed>=3){var q=px(c.track[3][0],c.track[3][1]);x.setLineDash([16,12]);x.beginPath();x.moveTo(p[0],p[1]);x.lineTo(q[0],q[1]);x.stroke();x.setLineDash([]);
+        var a=Math.atan2(q[1]-p[1],q[0]-p[0]);x.fillStyle=cc;x.beginPath();x.moveTo(q[0],q[1]);x.lineTo(q[0]-26*Math.cos(a-.45),q[1]-26*Math.sin(a-.45));x.lineTo(q[0]-26*Math.cos(a+.45),q[1]-26*Math.sin(a+.45));x.fill();
+        c.track.forEach(function(t,i){var r=px(t[0],t[1]);x.fillStyle=cc;x.beginPath();x.arc(r[0],r[1],8,0,7);x.fill();if(i%2){x.font='900 30px system-ui';x.textAlign='center';x.strokeStyle='rgba(0,0,0,.7)';x.lineWidth=6;x.strokeText('+'+((i+1)*15)+' '+P('د','د','m'),r[0],r[1]-16);x.fillStyle='#fff';x.fillText('+'+((i+1)*15)+' '+P('د','د','m'),r[0],r[1]-16)}});}
+      x.font='900 32px system-ui';x.textAlign='center';x.strokeStyle='rgba(0,0,0,.7)';x.lineWidth=6;x.strokeText(c.dbz+' dBZ',p[0],p[1]-Math.max(14,rpx)-14);x.fillStyle='#fff';x.fillText(c.dbz+' dBZ',p[0],p[1]-Math.max(14,rpx)-14);
+    });
+    /* me */
+    var m=px(me.lat,me.lon);x.fillStyle='#25D366';x.strokeStyle='#fff';x.lineWidth=5;x.beginPath();x.arc(m[0],m[1],13,0,7);x.fill();x.stroke();
+    x.restore();
+    /* header & footer */
+    var rtl=L()==='ar'||L()==='ur';x.direction=rtl?'rtl':'ltr';x.textAlign=rtl?'right':'left';var X0=rtl?W-48:48;
+    x.fillStyle='#ff9a6b';x.font='900 30px system-ui';x.fillText('⛈️ '+P('نفاف · متتبّع الخلايا الرعدية','نفاف · متتبّع الخلايا الرعدية','Nafaf · storm-cell tracker'),X0,62);
+    x.fillStyle='#fff';x.font='900 40px system-ui';
+    var hd=D.here?P('تصل ','تصل ','Reaches ')+(me.n||'')+' '+mins(D.here.min,D.here.pm):(function(){var c=relevant()[0];return strength(c.dbz)+' '+(c.over?P('قرب ','قرب ','near ')+c.over:'')})();
+    x.fillText(hd.slice(0,46),X0,116);
+    x.font='700 26px system-ui';x.fillStyle='rgba(238,242,248,.85)';
+    var y=top+MAP+46;relevant().slice(0,2).forEach(function(c){var l=line(c);x.fillText((l.m+(l.e.length?' · '+l.e[0]:'')).slice(0,60),X0,y);y+=40});
+    x.font='600 21px system-ui';x.fillStyle='rgba(238,242,248,.55)';
+    x.fillText(P('رادار ','رادار ','Radar ')+hhmm(D.t)+' · '+P('تقدير ±٢٥٪ · ليس تحذيرًا رسميًا','تقدير ±٢٥٪ · ليس تحذيرًا رسميًا','estimate ±25% · not an official warning'),X0,H-62);
+    x.fillText('© OpenStreetMap · RainViewer · nafaf.online',X0,H-28);
+    return await new Promise(function(res){cv.toBlob(function(b){res(b)},'image/png')});
+  }
+  async function share(){
+    if(!D)return;
+    var txt=bulletinText(),ov=document.createElement('div');ov.id='nxClShare';
+    ov.innerHTML='<div class="bx"><div style="text-align:center;padding:30px 0;font-weight:800">'+E(P('نجهّز النشرة…','جارٍ تجهيز النشرة…','Preparing the bulletin…'))+'</div></div>';
+    document.body.appendChild(ov);ov.addEventListener('click',function(e){if(e.target===ov)ov.remove()});
+    var blob=null;try{blob=await bulletinImage()}catch(e){}
+    var url=blob?URL.createObjectURL(blob):'';
+    ov.querySelector('.bx').innerHTML=(url?'<img src="'+url+'" alt="">':'')+'<pre dir="auto">'+E(txt)+'</pre><div class="bt">'+
+      '<button class="p" data-a="go">'+E(P('أرسل للواتساب','أرسل للواتساب','Send to WhatsApp'))+'</button>'+
+      '<button data-a="copy">'+E(P('انسخ النص','انسخ النص','Copy text'))+'</button><button data-a="x">'+E(P('إغلاق','إغلاق','Close'))+'</button></div>';
+    ov.querySelector('.bt').addEventListener('click',async function(e){var b=e.target.closest('button');if(!b)return;var a=b.getAttribute('data-a');
+      if(a==='x'){ov.remove();return}
+      if(a==='copy'){try{await navigator.clipboard.writeText(txt);b.textContent='✓'}catch(x){}return}
+      try{window.nxEv&&nxEv('cellshare')}catch(x){}
+      var f=blob?new File([blob],'nafaf-storm.png',{type:'image/png'}):null;
+      if(f&&navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],text:txt});return}catch(x){if(x&&x.name==='AbortError')return}}
+      try{if(navigator.clipboard)await navigator.clipboard.writeText(txt)}catch(x){}
+      if(url){var dl=document.createElement('a');dl.href=url;dl.download='nafaf-storm.png';document.body.appendChild(dl);dl.click();dl.remove()}
+      location.href='https://wa.me/?text='+encodeURIComponent(txt);
+    });
+  }
+  window.nxCellsShare=share;
+
+  (function hook(n){
+    if(typeof window.renderNow==='function'&&!window.renderNow.__nxc){var o=window.renderNow;
+      window.renderNow=function(){var r=o.apply(this,arguments);try{paint();load()}catch(e){}return r};window.renderNow.__nxc=1;
+      try{renderNow=window.renderNow}catch(e){}
+      try{if(window.W)load()}catch(e){}}
+    else if(n<80)setTimeout(function(){hook(n+1)},250)})(0);
+  setInterval(function(){if(!document.hidden)try{load()}catch(e){}},60e3);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)try{load(true)}catch(e){}});
+  (function mapHook(n){try{if(typeof LMAP!=='undefined'&&LMAP&&D){drawMap();return}}catch(e){} if(n<600)setTimeout(function(){mapHook(n+1)},2000)})(0);
 })();
 </script>
 <script type="text/plain" id="nxSceneSrc">

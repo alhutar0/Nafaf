@@ -18,6 +18,7 @@
  */
 import { handleOfficial, officialAlerts } from './official.js';
 import { radarScan, frames as radarFrames, makeTileCache, sampleAt, mmh } from './radar.js';
+import { cellsAround, etaFor } from './tracker.js';
 
 const MODELS = 'ecmwf_ifs025,gfs_seamless,icon_seamless';
 
@@ -535,6 +536,17 @@ export default {
         { headers: { 'content-type': 'application/json', 'cache-control': 'private, no-store', ...CORS } });
     }
 
+    /* ★ متتبّع الخلايا الرعدية حول نقطة (tracker.js) */
+    if (url.pathname === '/cells') {
+      const lat = parseFloat(url.searchParams.get('lat')), lon = parseFloat(url.searchParams.get('lon'));
+      if (!isFinite(lat) || !isFinite(lon)) return json({ error: 'lat, lon required' }, 400);
+      try {
+        const r = await cellsCached(lat, lon);
+        return new Response(JSON.stringify({ ok: true, t: r.t, age: r.t ? Math.round(Date.now() / 1000 - r.t) : null, here: r.here, cells: r.cells, src: 'RainViewer' }),
+          { headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=120', ...CORS } });
+      } catch (e) { return json({ ok: false, error: String(e).slice(0, 80) }); }
+    }
+
     /* ★ الرادار الحي حول نقطة — للتطبيق (radar.js) */
     if (url.pathname === '/radar') {
       const lat = parseFloat(url.searchParams.get('lat')), lon = parseFloat(url.searchParams.get('lon'));
@@ -725,7 +737,7 @@ export default {
        العدّ داخل Durable Object واحد فلا تضيع زيادة حين يصل زائران في نفس اللحظة. */
     if (url.pathname === '/ev' && request.method === 'POST') {
       const b = await request.json().catch(() => null);
-      const E = ['first', 'active', 'install', 'push', 'cyclone', 'story', 'event', 'd1', 'd7', 'd30'];
+      const E = ['first', 'active', 'install', 'push', 'cyclone', 'story', 'event', 'cellshare', 'd1', 'd7', 'd30'];
       if (!b || E.indexOf(b.e) < 0 || !env.FUNNEL) return json({ ok: false });
       const clean = (x, n) => String(x || '').toLowerCase().replace(/[^a-z0-9_.-]/g, '').slice(0, n) || 'unknown';
       const rec = { e: b.e, src: clean(b.src, 24), cc: clean((request.cf && request.cf.country) || '', 2).toUpperCase(), lang: clean(b.lang, 6), st: b.st ? 1 : 0 };
@@ -2127,27 +2139,28 @@ async function runOfficial(env) {
      rainNear   no rain on you, ≥ 30 dBZ echo within 20 km that is closer than 10 km or moving in — once per 90 min
    ============================================================ */
 const RD_T = {
-  ar: { start: ['🌧️ المطر عندك الحين', 'الرادار يرصد مطرًا على {nm} الآن ({mm} ملم/س تقريبًا).'],
+  ar: { cell: ['⛈️ خلية رعدية تتجه نحوك', 'خلية قوية ({dbz} dBZ){over} تصل {nm} خلال ~{mins} دقيقة (±{pm}). تابعها على رادار نفاف.'], overW: ' قرب {o}', start: ['🌧️ المطر عندك الحين', 'الرادار يرصد مطرًا على {nm} الآن ({mm} ملم/س تقريبًا).'],
         heavy: ['⛈️ مطر غزير عندك', 'الرادار يرصد هطولًا غزيرًا على {nm} (~{mm} ملم/س). انتبه للأودية والطرق المنخفضة، وتابع تحذيرات جهة الأرصاد في بلدك.'],
         near: ['🌧️ المطر قريب منك', 'الرادار يرصد مطرًا على بُعد {km} كم جهة {dir} من {nm}{trend}.'], trend: ' ويقترب', dirs: DIRS.dial },
-  en: { start: ['🌧️ It’s raining at you', 'Radar shows rain over {nm} now (about {mm} mm/h).'],
+  en: { cell: ['⛈️ Storm cell heading your way', 'A strong cell ({dbz} dBZ){over} should reach {nm} in ~{mins} min (±{pm}). Track it on Nafaf’s radar.'], overW: ' near {o}', start: ['🌧️ It’s raining at you', 'Radar shows rain over {nm} now (about {mm} mm/h).'],
         heavy: ['⛈️ Heavy rain at you', 'Radar shows heavy rain over {nm} (~{mm} mm/h). Keep away from wadis and low roads; follow your national weather service.'],
         near: ['🌧️ Rain close to you', 'Radar shows rain {km} km to the {dir} of {nm}{trend}.'], trend: ', moving closer', dirs: DIRS.en },
-  fr: { start: ['🌧️ Il pleut chez vous', 'Le radar montre de la pluie sur {nm} (environ {mm} mm/h).'], heavy: ['⛈️ Forte pluie chez vous', 'Le radar montre une forte pluie sur {nm} (~{mm} mm/h). Évitez les zones basses ; suivez le service météo national.'],
+  fr: { cell: ['⛈️ Une cellule orageuse arrive', 'Une forte cellule ({dbz} dBZ){over} devrait atteindre {nm} dans ~{mins} min (±{pm}).'], overW: ' près de {o}', start: ['🌧️ Il pleut chez vous', 'Le radar montre de la pluie sur {nm} (environ {mm} mm/h).'], heavy: ['⛈️ Forte pluie chez vous', 'Le radar montre une forte pluie sur {nm} (~{mm} mm/h). Évitez les zones basses ; suivez le service météo national.'],
         near: ['🌧️ Pluie toute proche', 'Le radar montre de la pluie à {km} km {dir} de {nm}{trend}.'], trend: ', qui se rapproche', dirs: ['au nord', 'au nord-est', 'à l’est', 'au sud-est', 'au sud', 'au sud-ouest', 'à l’ouest', 'au nord-ouest'] },
-  de: { start: ['🌧️ Bei dir regnet es', 'Das Radar zeigt Regen über {nm} (etwa {mm} mm/h).'], heavy: ['⛈️ Starkregen bei dir', 'Das Radar zeigt Starkregen über {nm} (~{mm} mm/h). Meide tiefe Straßen; folge dem Wetterdienst.'],
+  de: { cell: ['⛈️ Gewitterzelle zieht heran', 'Eine starke Zelle ({dbz} dBZ){over} erreicht {nm} voraussichtlich in ~{mins} Min. (±{pm}).'], overW: ' bei {o}', start: ['🌧️ Bei dir regnet es', 'Das Radar zeigt Regen über {nm} (etwa {mm} mm/h).'], heavy: ['⛈️ Starkregen bei dir', 'Das Radar zeigt Starkregen über {nm} (~{mm} mm/h). Meide tiefe Straßen; folge dem Wetterdienst.'],
         near: ['🌧️ Regen ganz nah', 'Das Radar zeigt Regen {km} km im {dir} von {nm}{trend}.'], trend: ', kommt näher', dirs: ['Norden', 'Nordosten', 'Osten', 'Südosten', 'Süden', 'Südwesten', 'Westen', 'Nordwesten'] },
-  ur: { start: ['🌧️ آپ کے ہاں بارش', 'ریڈار {nm} پر اس وقت بارش دکھا رہا ہے (تقریباً {mm} ملی میٹر/گھنٹہ)۔'], heavy: ['⛈️ آپ کے ہاں تیز بارش', 'ریڈار {nm} پر تیز بارش دکھا رہا ہے (~{mm} ملی میٹر/گھنٹہ)۔ نشیبی سڑکوں سے بچیں؛ محکمۂ موسمیات کی ہدایات پر عمل کریں۔'],
+  ur: { cell: ['⛈️ طوفانی بادل آپ کی طرف', 'ایک طاقتور طوفانی سیل ({dbz} dBZ){over} تقریباً {mins} منٹ (±{pm}) میں {nm} پہنچ سکتا ہے۔'], overW: ' {o} کے قریب', start: ['🌧️ آپ کے ہاں بارش', 'ریڈار {nm} پر اس وقت بارش دکھا رہا ہے (تقریباً {mm} ملی میٹر/گھنٹہ)۔'], heavy: ['⛈️ آپ کے ہاں تیز بارش', 'ریڈار {nm} پر تیز بارش دکھا رہا ہے (~{mm} ملی میٹر/گھنٹہ)۔ نشیبی سڑکوں سے بچیں؛ محکمۂ موسمیات کی ہدایات پر عمل کریں۔'],
         near: ['🌧️ بارش قریب ہے', 'ریڈار {nm} سے {km} کلومیٹر {dir} کی جانب بارش دکھا رہا ہے{trend}۔'], trend: ' اور قریب آ رہی ہے', dirs: ['شمال', 'شمال مشرق', 'مشرق', 'جنوب مشرق', 'جنوب', 'جنوب مغرب', 'مغرب', 'شمال مغرب'] },
-  hi: { start: ['🌧️ आपके यहाँ बारिश', 'रडार {nm} पर अभी बारिश दिखा रहा है (लगभग {mm} मिमी/घंटा)।'], heavy: ['⛈️ आपके यहाँ तेज़ बारिश', 'रडार {nm} पर तेज़ बारिश दिखा रहा है (~{mm} मिमी/घंटा)। निचली सड़कों से बचें; मौसम विभाग की सलाह मानें।'],
+  hi: { cell: ['⛈️ तूफ़ानी बादल आपकी ओर', 'एक तेज़ तूफ़ानी सेल ({dbz} dBZ){over} लगभग {mins} मिनट (±{pm}) में {nm} पहुँच सकता है।'], overW: ' {o} के पास', start: ['🌧️ आपके यहाँ बारिश', 'रडार {nm} पर अभी बारिश दिखा रहा है (लगभग {mm} मिमी/घंटा)।'], heavy: ['⛈️ आपके यहाँ तेज़ बारिश', 'रडार {nm} पर तेज़ बारिश दिखा रहा है (~{mm} मिमी/घंटा)। निचली सड़कों से बचें; मौसम विभाग की सलाह मानें।'],
         near: ['🌧️ बारिश पास है', 'रडार {nm} से {km} किमी {dir} की ओर बारिश दिखा रहा है{trend}।'], trend: ' और पास आ रही है', dirs: ['उत्तर', 'उत्तर-पूर्व', 'पूर्व', 'दक्षिण-पूर्व', 'दक्षिण', 'दक्षिण-पश्चिम', 'पश्चिम', 'उत्तर-पश्चिम'] },
-  bn: { start: ['🌧️ আপনার এখানে বৃষ্টি', 'রাডারে {nm}-এ এখন বৃষ্টি দেখা যাচ্ছে (প্রায় {mm} মিমি/ঘণ্টা)।'], heavy: ['⛈️ আপনার এখানে ভারী বৃষ্টি', 'রাডারে {nm}-এ ভারী বৃষ্টি (~{mm} মিমি/ঘণ্টা)। নিচু রাস্তা এড়িয়ে চলুন; আবহাওয়া দপ্তরের নির্দেশনা মানুন।'],
+  bn: { cell: ['⛈️ ঝড়ের মেঘ আপনার দিকে', 'একটি শক্তিশালী ঝড়-কোষ ({dbz} dBZ){over} প্রায় {mins} মিনিটে (±{pm}) {nm} পৌঁছাতে পারে।'], overW: ' {o}-এর কাছে', start: ['🌧️ আপনার এখানে বৃষ্টি', 'রাডারে {nm}-এ এখন বৃষ্টি দেখা যাচ্ছে (প্রায় {mm} মিমি/ঘণ্টা)।'], heavy: ['⛈️ আপনার এখানে ভারী বৃষ্টি', 'রাডারে {nm}-এ ভারী বৃষ্টি (~{mm} মিমি/ঘণ্টা)। নিচু রাস্তা এড়িয়ে চলুন; আবহাওয়া দপ্তরের নির্দেশনা মানুন।'],
         near: ['🌧️ বৃষ্টি কাছেই', 'রাডারে {nm} থেকে {km} কিমি {dir} দিকে বৃষ্টি দেখা যাচ্ছে{trend}।'], trend: ', এগিয়ে আসছে', dirs: ['উত্তর', 'উত্তর-পূর্ব', 'পূর্ব', 'দক্ষিণ-পূর্ব', 'দক্ষিণ', 'দক্ষিণ-পশ্চিম', 'পশ্চিম', 'উত্তর-পশ্চিম'] },
 };
 function rdText(sub, kind, v) {
   const L = RD_T[sub.xl] || (isEn(sub) ? RD_T.en : RD_T.ar);
   const nm = sub.place || (L === RD_T.ar ? 'منطقتك' : L === RD_T.en ? 'your area' : ((XL[sub.xl] && XL[sub.xl].area) || 'your area'));
-  const f = s => s.replace('{nm}', nm).replace('{mm}', v.mm).replace('{km}', v.km).replace('{dir}', L.dirs[v.dir] || '').replace('{trend}', v.trend ? L.trend : '');
+  const f = s => s.replace('{nm}', nm).replace('{mm}', v.mm).replace('{km}', v.km).replace('{dir}', L.dirs[v.dir] || '').replace('{trend}', v.trend ? L.trend : '')
+    .replace('{dbz}', v.dbz).replace('{mins}', v.mins).replace('{pm}', v.pm).replace('{over}', v.over ? L.overW.replace('{o}', v.over) : '');
   return [f(L[kind][0]), f(L[kind][1])];
 }
 async function runRadar(env) {
@@ -2171,12 +2184,18 @@ async function runRadar(env) {
     const r = scan.res[i]; if (!r) continue;
     const startHit = r.here != null && r.here >= 22, heavyHit = r.here8 != null && r.here8 >= 40;
     const nearHit = !startHit && r.closest && r.closest.km <= 20 && (r.closest.km <= 10 || (r.trend || 0) >= 2);
+    /* a strong cell (≥45 dBZ) heading here within 45 min — checked only when the radar shows ≥40 dBZ within 25 km */
+    const cellFor = async sub => {
+      if (!(r.max != null && r.max >= 40)) return null;
+      try { const C = await cellsCached(sub.lat, sub.lon); const c = C.cells.find(x => x.here && x.here.min > 0 && x.here.min <= 45 && x.dbz >= 45);
+        return c ? { mins: c.here.min, pm: c.here.pm, dbz: c.dbz, over: c.over, dir: c.dir, speed: c.speed } : null; } catch (_) { return null; }
+    };
     if (startHit) log.wet++; else if (nearHit) log.near++;
-    if (!startHit && !heavyHit && !nearHit) continue;
+    if (!startHit && !heavyHit && !nearHit && !(r.max != null && r.max >= 40)) continue;
     for (const sub of cells.get(keys[i]).subs) {
       try {
         const hk = 'rd:' + hashStr(sub.endpoint); let st = {}; try { st = JSON.parse((await env.NAFAF_KV.get(hk)) || '{}'); } catch (_) {}
-        const now = Date.now(), quiet = inQuiet(sub, cfg); let changed = false;
+        const now = Date.now(), quiet = inQuiet(sub, cfg); let changed = false, cellHit = null;
         const send = async (type, kind, v, sev) => {
           if (T[type] && T[type].on === false) { why('off:' + type); return false; }
           if (!(await underCap(env, sub.endpoint, type, cfg))) { why('cap:' + type); return false; }
@@ -2192,6 +2211,9 @@ async function runRadar(env) {
         if ((heavyHit && now - (st.h || 0) <= 3 * 36e5) || (startHit && now - (st.s || 0) <= 3 * 36e5)) why('cooldown');
         if (heavyHit && now - (st.h || 0) > 3 * 36e5) { if (await send('rainHeavy', 'heavy', { mm: mmh(r.here8) }, 'alert')) { st.h = now; st.s = now; changed = true; } }
         else if (startHit && !quiet && now - (st.s || 0) > 3 * 36e5) { if (await send('rainStart', 'start', { mm: mmh(r.here) }, 'alert')) { st.s = now; changed = true; } }
+        else if (!startHit && !quiet && now - (st.c || 0) > 90 * 6e4 && now - (st.s || 0) > 60 * 6e4 && (cellHit = await cellFor(sub))) {
+          if (await send('rainNear', 'cell', cellHit, 'alert')) { st.c = now; st.n = now; changed = true; }
+        }
         else if (nearHit && !quiet && now - (st.n || 0) > 90 * 6e4 && now - (st.s || 0) > 60 * 6e4) {
           if (await send('rainNear', 'near', { km: r.closest.km, dir: r.closest.dir, trend: (r.trend || 0) >= 2 }, 'notice')) { st.n = now; changed = true; }
         }
@@ -2200,5 +2222,40 @@ async function runRadar(env) {
     }
   }
   await env.NAFAF_KV.put('radar:last', JSON.stringify(log), { expirationTtl: 60 * 60 * 24 * 3 });
+}
+
+
+/* ============================================================
+   ★ متتبّع الخلايا — أماكن للتسمية ونتائج مخبّأة
+   Places: in Oman the 52 rain-watch spots (Arabic names); elsewhere GeoNames towns ≥10k from Nafaf's /geo tiles.
+   One computation per ~0.5° region and radar frame, shared by the app and the push engine.
+   ============================================================ */
+const CELLS_MEM = new Map();
+async function placesNear(lat, lon) {
+  if (lat > 16 && lat < 27 && lon > 51 && lon < 60.5) return SPOTS.map(s => ({ n: s[0], lat: s[1], lon: s[2] }));
+  const out = [], bands = new Set();
+  for (const dla of [-1.5, 0, 1.5]) for (const dlo of [-1.5, 0, 1.5])
+    bands.add(Math.floor((lat + dla + 90) / 15) + '_' + Math.floor((lon + dlo + 180) / 15));
+  for (const b of bands) {
+    try {
+      const r = await fetch('https://nafaf.online/geo/c_' + b + '.json', { cf: { cacheTtl: 86400 } }); if (!r.ok) continue;
+      for (const c of await r.json()) if (Math.abs(c[2] - lat) < 1.6 && Math.abs(c[3] - lon) < 1.8) out.push({ n: c[0], lat: c[2], lon: c[3], pop: c[4] });
+    } catch (_) {}
+  }
+  return out.sort((a, b) => b.pop - a.pop).slice(0, 120);
+}
+async function cellsCached(lat, lon) {
+  const F = await radarFrames(); const t = F.past.length ? F.past[F.past.length - 1].time : 0;
+  const key = (Math.round(lat * 2) / 2) + ',' + (Math.round(lon * 2) / 2);
+  const hit = CELLS_MEM.get(key);
+  let base;
+  if (hit && hit.t === t) base = hit.r;
+  else { const clat = Math.round(lat * 2) / 2, clon = Math.round(lon * 2) / 2; base = await cellsAround(clat, clon, 180, await placesNear(clat, clon)); CELLS_MEM.set(key, { t, r: base }); if (CELLS_MEM.size > 200) CELLS_MEM.delete(CELLS_MEM.keys().next().value); }
+  /* re-centre on the asker: ETA to their own point, nearest first */
+  const cells = base.cells.map(c => Object.assign({}, c, { here: etaFor(c, lat, lon) }))
+    .filter(c => Math.abs(c.lat - lat) < 1.4 && Math.abs(c.lon - lon) < 1.6)
+    .sort((a, b) => (a.here ? a.here.min : 999) - (b.here ? b.here.min : 999) || b.dbz - a.dbz);
+  const hitc = cells.find(c => c.here);
+  return { t: base.t, cells: cells.slice(0, 10), here: hitc ? { min: hitc.here.min, pm: hitc.here.pm, dbz: hitc.dbz } : null };
 }
 
