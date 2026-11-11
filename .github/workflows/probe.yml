@@ -8,12 +8,12 @@ jobs:
     steps:
       - run: |
           mkdir out && cd out
-          P=$(curl -sS https://api.rainviewer.com/public/weather-maps.json | python3 -c "import sys,json;j=json.load(sys.stdin);print(j['host']+j['radar']['past'][-1]['path'])")
-          echo "$P" > path.txt
-          curl -sS -D - -o /dev/null -H "Origin: https://nafaf.online" "$P/256/7/84/55/2/0_0.png" > rv_headers.txt
-          curl -sS -D - -o /dev/null -H "Origin: https://nafaf.online" -A "Nafaf/1.0" "https://tile.openstreetmap.org/7/84/55.png" > osm_headers.txt
-          curl -sS -D - -o /dev/null -H "Origin: https://nafaf.online" "https://a.basemaps.cartocdn.com/dark_all/7/84/55.png" > carto_headers.txt
-          curl -sS -D - -o /dev/null -H "Origin: https://nafaf.online" "https://api.rainviewer.com/public/weather-maps.json" > rvapi_headers.txt
+          W=https://nafa-push.alhutar0.workers.dev
+          date -u > now.txt
+          for p in "24.347,56.709" "23.6,58.4" "21.5,39.2" "25.2,55.3" "19.07,72.88" "51.5,-0.12"; do
+            /usr/bin/time -f "%e s" curl -sS -m 60 "$W/cells?lat=${p%,*}&lon=${p#*,}" -o "cells_$p.json" 2>> times.txt; echo "$p" >> times.txt
+          done
+          curl -sS -m 20 -X POST -H 'content-type: application/json' -d '{"endpoint":"https://x/none"}' $W/push/check > pushcheck.json
           git init -q && git checkout -q -b probe-out && git add -A
           git -c user.name=probe -c user.email=probe@nafaf.online commit -qm probe
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" probe-out
