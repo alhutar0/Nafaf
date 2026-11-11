@@ -1204,7 +1204,7 @@ var NX_DEF={
   theme:{tod:'auto'},
   island:{on:true,peekSec:6,pos:'corner'},
   palette:{heroCyclone:true},
-  rail:{on:true},
+  rail:{on:false},
   nudge:{on:true,minSec:60,maxSec:120,showSec:10,pauseMin:15},
   summon:{on:true,delaySec:20,showSec:10,ignoreLimit:3},
   install:{pill:true},
@@ -1315,10 +1315,10 @@ function renderNX(p){
 }
 function renderNXLabs(host){
   var C=nxCfg();
-  if(!C.labs||!C.labs.length) C.labs=NX_LABS.map(function(l,i){return {id:l[0],icon:l[1],label:l[2],en:l[3],enabled:true,order:i+1,star:(l[0]==='cyclone'||l[0]==='wadi')};});
-  NX_LABS.forEach(function(l){ if(!C.labs.some(function(x){return x.id===l[0];})) C.labs.push({id:l[0],icon:l[1],label:l[2],en:l[3],enabled:true,order:C.labs.length+1}); });
+  if(!C.labs||!C.labs.length) C.labs=NX_LABS.map(function(l,i){return {id:l[0],icon:l[1],label:l[2],en:l[3],enabled:l[0]==='cyclone',order:i+1,star:l[0]==='cyclone'};});   /* الافتراضي: لعبة الأعاصير فقط */
+  NX_LABS.forEach(function(l){ if(!C.labs.some(function(x){return x.id===l[0];})) C.labs.push({id:l[0],icon:l[1],label:l[2],en:l[3],enabled:false,order:C.labs.length+1}); });
   C.labs.sort(function(a,b){return (a.order||99)-(b.order||99);});
-  host.innerHTML='<div class="card"><h3>الترتيب والظهور</h3><div class="note" style="margin-bottom:8px">الترتيب يطبَّق على الشريط الجانبي ولوحة الأوامر ودعوة المختبرات ومعرض المختبرات. المختبر المخفي يعرض لمن يفتح رابطه رسالة «متوقف مؤقتًا» مع زر رجوع.</div><div id="nxLabList"></div></div>'+
+  host.innerHTML='<div class="card"><h3>الترتيب والظهور</h3><div class="note" style="margin-bottom:8px">المفعَّل يظهر في «المزيد» داخل التطبيق (الافتراضي: لعبة الأعاصير فقط). الترتيب يطبَّق أيضًا على الشريط الجانبي ولوحة الأوامر ودعوة المختبرات. المختبر المخفي يعرض لمن يفتح رابطه رسالة «متوقف مؤقتًا» مع زر رجوع.</div><div id="nxLabList"></div></div>'+
     '<div class="card"><h3>المميَّزة ★</h3><div class="note">النجمة تظهر على الأيقونة في اللوحة والشريط.</div><div id="nxStars"></div></div>'+
     '<div class="card"><h3>الاسم الإنجليزي</h3><div id="nxEn"></div></div>';
   dragList('nxLabList',C.labs,function(){markDirty();renderNX('nxlabs');},{rename:true});

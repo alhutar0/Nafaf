@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611111533';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611111551';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -9536,7 +9536,9 @@ function moreOpen(){
   var lb=(NAV_LABELS&&NAV_LABELS[k]&&NAV_LABELS[k].label&&L!==2)?NAV_LABELS[k].label:o[i].t[L];
   h+='<button class="v2more-it'+(TAB===k?' on':'')+'" data-mk="'+k+'">'+dockSvg(DOCK_ICONS[k]?k:'more')+'<span>'+lb+'</span></button>';
  }
- h+='<button class="v2more-it" data-mk="__wadi"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20l6-11 4 6 3-4 7 9z"/><path d="M6 20c2-2 3-5 6-6s5 1 6 6"/></svg><span>'+pick('مختبر الوادي','مختبر الوادي','Wadi Lab')+'</span></button>';
+ try{(typeof NAFAF_LABS!=='undefined'?NAFAF_LABS:[]).forEach(function(l){
+   h+='<button class="v2more-it" data-mk="__lab" data-f="'+l.f+'"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="'+l.p+'"/></svg><span>'+(L===2?l.e:l.n)+'</span></button>';
+ });}catch(e){}
  h+='<button class="v2more-it" data-mk="__set">'+dockSvg('set')+'<span>'+pick('الإعدادات','الإعدادات','Settings')+'</span></button>';
  var sh=document.getElementById('v2More'), bd=document.getElementById('v2MoreBack');
  document.getElementById('v2MoreBody').innerHTML=h;
@@ -9546,7 +9548,7 @@ function moreOpen(){
   var k=this.getAttribute('data-mk'); moreClose();
   try{ if(navigator.vibrate)navigator.vibrate(6); }catch(e){}
   if(k==='__set'){ var g=document.getElementById('gearBtn'); if(g)g.click(); return; }
-  if(k==='__wadi'){ location.href='wadi.html'; return; }
+  if(k==='__lab'){ location.href=this.getAttribute('data-f'); return; }
   if(typeof showTab==='function')showTab(k);
  };
 }
@@ -13440,6 +13442,7 @@ setInterval(function(){
  }},60000);
 </script>
 
+
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -13995,7 +13998,7 @@ html.nx body.v2.wide #nowBody>#nxCl{grid-column:1/-1}
     theme:{tod:'auto'},
     island:{on:true,peekSec:6,pos:'corner'},
     palette:{heroCyclone:true},
-    rail:{on:true},
+    rail:{on:false},     /* 11 Nov 2026: hidden by default — the cyclone game lives in «More» */
     nudge:{on:true,minSec:60,maxSec:120,showSec:10,pauseMin:15},
     summon:{on:true,delaySec:20,showSec:10,ignoreLimit:3},
     install:{pill:true},
@@ -14101,9 +14104,11 @@ var NAFAF_LABS=[
 var NAFAF_GROUPS={water:['الماء والسيول','Water & floods'],air:['الجو والكواكب','Air & planets'],you:['رحلتك وجسمك','Your trip & body'],make:['إبداع ولعب','Create & play']};
 function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){return false}}
 /* the admin portal can hide, rename, reorder and feature labs (cfg.next.labs, kept in localStorage nx.cfg) */
-(function(){try{var c=JSON.parse(localStorage.getItem('nx.cfg')||'null'),L=c&&c.labs;if(!L||!L.length)return;
+/* ★ 11 Nov 2026: by default only the cyclone game is shown (the other labs wait until the portal switches them on) */
+(function(){try{var c=JSON.parse(localStorage.getItem('nx.cfg')||'null'),L=c&&c.labs;
+  if(!L||!L.length){NAFAF_LABS=NAFAF_LABS.filter(function(l){return l.id==='cyclone'});return;}
   var by={};L.forEach(function(x){by[x.id]=x});
-  NAFAF_LABS=NAFAF_LABS.filter(function(l){return !by[l.id]||by[l.id].enabled!==false}).map(function(l){var o=by[l.id];if(!o)return l;var n={};for(var k in l)n[k]=l[k];if(o.label)n.n=o.label;if(o.en)n.e=o.en;if(o.star!=null)n.star=o.star?1:0;n._o=o.order;return n})
+  NAFAF_LABS=NAFAF_LABS.filter(function(l){return by[l.id]&&by[l.id].enabled!==false}).map(function(l){var o=by[l.id];if(!o)return l;var n={};for(var k in l)n[k]=l[k];if(o.label)n.n=o.label;if(o.en)n.e=o.en;if(o.star!=null)n.star=o.star?1:0;n._o=o.order;return n})
     .sort(function(a,b){return (a._o==null?99:a._o)-(b._o==null?99:b._o)});
 }catch(e){}})();
 
