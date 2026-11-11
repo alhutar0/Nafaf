@@ -8,16 +8,14 @@ jobs:
     steps:
       - run: |
           mkdir out && cd out
-          curl -sS -m 30 https://www.rainviewer.com/files/rainviewer_api_colors_table.csv -o colors.csv
-          curl -sS -m 30 https://api.rainviewer.com/public/weather-maps.json -o rv.json
-          python3 - <<'PY'
-          import json,urllib.request
-          rv=json.load(open('rv.json'));h=rv['host']
-          for i,f in enumerate(rv['radar']['past']):
-              u=f"{h}{f['path']}/256/7/84/55/2/0_0.png"
-              try: open(f"f{i:02d}_{f['time']}.png",'wb').write(urllib.request.urlopen(u,timeout=20).read())
-              except Exception as e: print(e)
-          PY
+          W=https://nafa-push.alhutar0.workers.dev
+          date -u > now.txt
+          for p in "24.347,56.709" "24.531,56.564" "24.45,56.45" "24.172,56.888" "23.588,58.383"; do
+            curl -sS -m 60 "$W/radar?lat=${p%,*}&lon=${p#*,}" >> radar.txt; echo " <- $p" >> radar.txt
+          done
+          curl -sS -m 20 $W/whereami > whereami.json
+          curl -sS -m 20 -X POST -H 'content-type: application/json' -d '{"endpoint":"https://x/none"}' $W/push/check > pushcheck.json
+          curl -sS -m 20 $W/state > state.json
           git init -q && git checkout -q -b probe-out && git add -A
           git -c user.name=probe -c user.email=probe@nafaf.online commit -qm probe
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" probe-out
