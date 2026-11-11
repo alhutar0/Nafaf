@@ -17,7 +17,7 @@ id = "0070863de928403bbf9ef36d46550ac6"   # nafaf-subscribers
 
 # فحص المطر الدوري — كل ١٠ دقائق
 [triggers]
-crons = ["*/10 * * * *"]
+crons = ["*/5 * * * *"]
 
 [observability]
 enabled = true

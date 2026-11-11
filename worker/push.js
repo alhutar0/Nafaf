@@ -17,6 +17,7 @@
  * ============================================================
  */
 import { handleOfficial, officialAlerts } from './official.js';
+import { radarScan, frames as radarFrames, makeTileCache, sampleAt, mmh } from './radar.js';
 
 const MODELS = 'ecmwf_ifs025,gfs_seamless,icon_seamless';
 
@@ -130,6 +131,17 @@ async function scanRain() {
     }
     if (hits > 0) wet.push({ name: SPOTS[i][0], region: SPOTS[i][3], mm: maxMM, hits });
   }
+  /* ★ the radar sees what the models miss: a spot with a ≥25 dBZ echo within 4 km is wet, whatever the models say */
+  try {
+    const rs = await radarScan(SPOTS.map(s => ({ lat: s[1], lon: s[2] })));
+    if (rs) rs.res.forEach((r, i) => {
+      if (!r || r.here == null || r.here < 25) return;
+      const mm = mmh(r.here8 != null ? r.here8 : r.here) / 6;   /* mm/h → mm in this 10-min step, comparable with the models' figure */
+      const w = wet.find(x => x.name === SPOTS[i][0]);
+      if (w) { w.mm = Math.max(w.mm, mm); w.radar = r.here; } else wet.push({ name: SPOTS[i][0], region: SPOTS[i][3], mm, hits: 1, radar: r.here });
+      if (r.here8 >= 50) thunder = true;
+    });
+  } catch (e) { }
   wet.sort((a, b) => b.mm - a.mm || b.hits - a.hits);
   return { wet, thunder };
 }
@@ -459,7 +471,10 @@ const CORS = {
 export default {
   /* الفحص الدوري — كل ١٠ دقائق */
   async scheduled(event, env, ctx) {
-    try {
+    /* the cron runs every 5 min for the radar; the model-based stages keep their 10-min rhythm */
+    const minute = new Date(event && event.scheduledTime || Date.now()).getUTCMinutes();
+    const modelTurn = minute % 10 < 5;
+    if (modelTurn) try {
       const now = await scanRain();
       const raw = await env.NAFAF_KV.get('state');
       const prev = raw ? JSON.parse(raw) : null;
@@ -497,16 +512,39 @@ export default {
     }
     /* كل مرحلة مستقلة: تعطّل مسح المطر العام لا يوقف تنبيهات المستخدمين ولا التحذيرات الرسمية */
     /* ★ حارس السلسلة — يعمل في نفس الدورة */
-    try { await runStreakGuard(env); } catch (e) { console.error('streak guard', e); }
+    if (modelTurn) try { await runStreakGuard(env); } catch (e) { console.error('streak guard', e); }
     /* ★ محرك التنبيهات الشامل — لكل مستخدم حسب موقعه */
-    try { await runAlerts(env); } catch (e) { console.error('alerts', e); }
+    if (modelTurn) try { await runAlerts(env); } catch (e) { console.error('alerts', e); }
+    /* ★ الرصد بالرادار — المطر الحقيقي حولك الآن، لا تنبؤ النماذج (radar.js) */
+    try { await runRadar(env); } catch (e) { console.error('radar', e); }
     /* ★ التحذيرات الرسمية الشديدة لمكان كل مشترك — من الجهة المعتمدة في بلده (official.js) */
-    try { await runOfficial(env); } catch (e) { console.error('official push', e); }
+    if (modelTurn) try { await runOfficial(env); } catch (e) { console.error('official push', e); }
   },
 
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
+
+    /* ★ موقع تقريبي من الاتصال — لأول زيارة قبل إذن الموقع أو عند رفضه (لا يُخزَّن) */
+    if (url.pathname === '/whereami') {
+      const c = request.cf || {};
+      const lat = parseFloat(c.latitude), lon = parseFloat(c.longitude);
+      return new Response(JSON.stringify(isFinite(lat) && isFinite(lon) ? { lat, lon, city: c.city || '', cc: (c.country || '').toLowerCase(), approx: true } : { error: 'unknown' }),
+        { headers: { 'content-type': 'application/json', 'cache-control': 'private, no-store', ...CORS } });
+    }
+
+    /* ★ الرادار الحي حول نقطة — للتطبيق (radar.js) */
+    if (url.pathname === '/radar') {
+      const lat = parseFloat(url.searchParams.get('lat')), lon = parseFloat(url.searchParams.get('lon'));
+      if (!isFinite(lat) || !isFinite(lon)) return json({ error: 'lat, lon required' }, 400);
+      try {
+        const s = await radarScan([{ lat, lon }]); const r = s && s.res[0];
+        if (!r) return json({ ok: false });
+        return new Response(JSON.stringify({ ok: true, t: s.t, age: Math.round(Date.now() / 1000 - s.t), here: r.here, here8: r.here8, max: r.max,
+          mmh: mmh(r.here8 != null ? r.here8 : r.here), closest: r.closest, trend: r.trend, src: 'RainViewer' }),
+          { headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=120', ...CORS } });
+      } catch (e) { return json({ ok: false, error: String(e).slice(0, 80) }); }
+    }
 
     /* ★ التحذيرات الرسمية من الجهة المعتمدة في كل دولة (official.js) */
     if (url.pathname === '/official') return handleOfficial(request, url, ctx, CORS, env);
@@ -1532,7 +1570,8 @@ export default {
       const s0 = st ? JSON.parse(st) : null;
       return json({
         known: !!rec, hasLoc: !!(rec && typeof rec.lat === 'number'), place: rec ? (rec.place || '') : '',
-        savedAt: rec ? rec.ts : null, lastScan: s0 ? s0.ts : null, vapid: !!(env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY)
+        savedAt: rec ? rec.ts : null, lastScan: s0 ? s0.ts : null, vapid: !!(env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY),
+        radar: JSON.parse((await env.NAFAF_KV.get('radar:last')) || 'null')
       });
     }
     /* ★ إشعار تجريبي لهذا الجهاز فقط — مرة كل دقيقة كحد أقصى */
@@ -2074,5 +2113,85 @@ async function runOfficial(env) {
       await env.NAFAF_KV.put(hk, JSON.stringify(seen), { expirationTtl: 60 * 60 * 24 * 5 });
     }
   }
+}
+
+
+/* ============================================================
+   ★ الرصد بالرادار كإشعار — Radar-observed rain as push
+   The models missed the 11 Nov 2026 Batinah storm completely; the radar showed 50 dBZ. So the radar decides
+   whether it is raining on you now; the models only forecast.
+     rainStart  echo ≥ 22 dBZ within 4 km (≈0.9 mm/h)            — once per 3 h
+     rainHeavy  echo ≥ 40 dBZ within 8 km (≈12 mm/h)             — once per 3 h, also in quiet hours
+     rainNear   no rain on you, ≥ 30 dBZ echo within 20 km that is closer than 10 km or moving in — once per 90 min
+   ============================================================ */
+const RD_T = {
+  ar: { start: ['🌧️ المطر عندك الحين', 'الرادار يرصد مطرًا على {nm} الآن ({mm} ملم/س تقريبًا).'],
+        heavy: ['⛈️ مطر غزير عندك', 'الرادار يرصد هطولًا غزيرًا على {nm} (~{mm} ملم/س). انتبه للأودية والطرق المنخفضة، وتابع تحذيرات جهة الأرصاد في بلدك.'],
+        near: ['🌧️ المطر قريب منك', 'الرادار يرصد مطرًا على بُعد {km} كم جهة {dir} من {nm}{trend}.'], trend: ' ويقترب', dirs: DIRS.dial },
+  en: { start: ['🌧️ It’s raining at you', 'Radar shows rain over {nm} now (about {mm} mm/h).'],
+        heavy: ['⛈️ Heavy rain at you', 'Radar shows heavy rain over {nm} (~{mm} mm/h). Keep away from wadis and low roads; follow your national weather service.'],
+        near: ['🌧️ Rain close to you', 'Radar shows rain {km} km to the {dir} of {nm}{trend}.'], trend: ', moving closer', dirs: DIRS.en },
+  fr: { start: ['🌧️ Il pleut chez vous', 'Le radar montre de la pluie sur {nm} (environ {mm} mm/h).'], heavy: ['⛈️ Forte pluie chez vous', 'Le radar montre une forte pluie sur {nm} (~{mm} mm/h). Évitez les zones basses ; suivez le service météo national.'],
+        near: ['🌧️ Pluie toute proche', 'Le radar montre de la pluie à {km} km {dir} de {nm}{trend}.'], trend: ', qui se rapproche', dirs: ['au nord', 'au nord-est', 'à l’est', 'au sud-est', 'au sud', 'au sud-ouest', 'à l’ouest', 'au nord-ouest'] },
+  de: { start: ['🌧️ Bei dir regnet es', 'Das Radar zeigt Regen über {nm} (etwa {mm} mm/h).'], heavy: ['⛈️ Starkregen bei dir', 'Das Radar zeigt Starkregen über {nm} (~{mm} mm/h). Meide tiefe Straßen; folge dem Wetterdienst.'],
+        near: ['🌧️ Regen ganz nah', 'Das Radar zeigt Regen {km} km im {dir} von {nm}{trend}.'], trend: ', kommt näher', dirs: ['Norden', 'Nordosten', 'Osten', 'Südosten', 'Süden', 'Südwesten', 'Westen', 'Nordwesten'] },
+  ur: { start: ['🌧️ آپ کے ہاں بارش', 'ریڈار {nm} پر اس وقت بارش دکھا رہا ہے (تقریباً {mm} ملی میٹر/گھنٹہ)۔'], heavy: ['⛈️ آپ کے ہاں تیز بارش', 'ریڈار {nm} پر تیز بارش دکھا رہا ہے (~{mm} ملی میٹر/گھنٹہ)۔ نشیبی سڑکوں سے بچیں؛ محکمۂ موسمیات کی ہدایات پر عمل کریں۔'],
+        near: ['🌧️ بارش قریب ہے', 'ریڈار {nm} سے {km} کلومیٹر {dir} کی جانب بارش دکھا رہا ہے{trend}۔'], trend: ' اور قریب آ رہی ہے', dirs: ['شمال', 'شمال مشرق', 'مشرق', 'جنوب مشرق', 'جنوب', 'جنوب مغرب', 'مغرب', 'شمال مغرب'] },
+  hi: { start: ['🌧️ आपके यहाँ बारिश', 'रडार {nm} पर अभी बारिश दिखा रहा है (लगभग {mm} मिमी/घंटा)।'], heavy: ['⛈️ आपके यहाँ तेज़ बारिश', 'रडार {nm} पर तेज़ बारिश दिखा रहा है (~{mm} मिमी/घंटा)। निचली सड़कों से बचें; मौसम विभाग की सलाह मानें।'],
+        near: ['🌧️ बारिश पास है', 'रडार {nm} से {km} किमी {dir} की ओर बारिश दिखा रहा है{trend}।'], trend: ' और पास आ रही है', dirs: ['उत्तर', 'उत्तर-पूर्व', 'पूर्व', 'दक्षिण-पूर्व', 'दक्षिण', 'दक्षिण-पश्चिम', 'पश्चिम', 'उत्तर-पश्चिम'] },
+  bn: { start: ['🌧️ আপনার এখানে বৃষ্টি', 'রাডারে {nm}-এ এখন বৃষ্টি দেখা যাচ্ছে (প্রায় {mm} মিমি/ঘণ্টা)।'], heavy: ['⛈️ আপনার এখানে ভারী বৃষ্টি', 'রাডারে {nm}-এ ভারী বৃষ্টি (~{mm} মিমি/ঘণ্টা)। নিচু রাস্তা এড়িয়ে চলুন; আবহাওয়া দপ্তরের নির্দেশনা মানুন।'],
+        near: ['🌧️ বৃষ্টি কাছেই', 'রাডারে {nm} থেকে {km} কিমি {dir} দিকে বৃষ্টি দেখা যাচ্ছে{trend}।'], trend: ', এগিয়ে আসছে', dirs: ['উত্তর', 'উত্তর-পূর্ব', 'পূর্ব', 'দক্ষিণ-পূর্ব', 'দক্ষিণ', 'দক্ষিণ-পশ্চিম', 'পশ্চিম', 'উত্তর-পশ্চিম'] },
+};
+function rdText(sub, kind, v) {
+  const L = RD_T[sub.xl] || (isEn(sub) ? RD_T.en : RD_T.ar);
+  const nm = sub.place || (L === RD_T.ar ? 'منطقتك' : L === RD_T.en ? 'your area' : ((XL[sub.xl] && XL[sub.xl].area) || 'your area'));
+  const f = s => s.replace('{nm}', nm).replace('{mm}', v.mm).replace('{km}', v.km).replace('{dir}', L.dirs[v.dir] || '').replace('{trend}', v.trend ? L.trend : '');
+  return [f(L[kind][0]), f(L[kind][1])];
+}
+async function runRadar(env) {
+  const cfg = await getAlertCfg(env);
+  if (!cfg.enabled) return;
+  const T = cfg.types;
+  const list = await env.NAFAF_KV.list({ prefix: 'sub:' });
+  const cells = new Map();
+  for (const k of list.keys) {
+    let sub; try { sub = JSON.parse(await env.NAFAF_KV.get(k.name)); } catch (_) { continue; }
+    if (!sub || !sub.endpoint || sub.lat == null || sub.lon == null) continue;
+    const key = (Math.round(sub.lat * 50) / 50).toFixed(2) + ',' + (Math.round(sub.lon * 50) / 50).toFixed(2);   /* ≈2 km cells */
+    if (!cells.has(key)) cells.set(key, { lat: sub.lat, lon: sub.lon, subs: [] });
+    cells.get(key).subs.push(sub);
+  }
+  const keys = [...cells.keys()];
+  const scan = keys.length ? await radarScan(keys.map(k => cells.get(k))) : null;
+  const log = { t: scan ? scan.t : null, at: Date.now(), cells: keys.length, wet: 0, near: 0, sent: 0 };
+  if (scan) for (let i = 0; i < keys.length; i++) {
+    const r = scan.res[i]; if (!r) continue;
+    const startHit = r.here != null && r.here >= 22, heavyHit = r.here8 != null && r.here8 >= 40;
+    const nearHit = !startHit && r.closest && r.closest.km <= 20 && (r.closest.km <= 10 || (r.trend || 0) >= 2);
+    if (startHit) log.wet++; else if (nearHit) log.near++;
+    if (!startHit && !heavyHit && !nearHit) continue;
+    for (const sub of cells.get(keys[i]).subs) {
+      try {
+        const hk = 'rd:' + hashStr(sub.endpoint); let st = {}; try { st = JSON.parse((await env.NAFAF_KV.get(hk)) || '{}'); } catch (_) {}
+        const now = Date.now(), quiet = inQuiet(sub, cfg); let changed = false;
+        const send = async (type, kind, v, sev) => {
+          if (T[type] && T[type].on === false) return false;
+          if (!(await underCap(env, sub.endpoint, type, cfg))) return false;
+          const [title, body] = rdText(sub, kind, v);
+          const ok = await sendPush(env, sub, { type, sev, title, body, tag: 'nafaf-radar-' + kind, url: './#live', urgency: 'high', renotify: kind !== 'near',
+            lang: sub.xl || (isEn(sub) ? 'en' : 'ar'), ts: now });
+          if (ok) { await bumpCap(env, sub.endpoint, type); log.sent++; }
+          return ok;
+        };
+        if (heavyHit && now - (st.h || 0) > 3 * 36e5) { if (await send('rainHeavy', 'heavy', { mm: mmh(r.here8) }, 'alert')) { st.h = now; st.s = now; changed = true; } }
+        else if (startHit && !quiet && now - (st.s || 0) > 3 * 36e5) { if (await send('rainStart', 'start', { mm: mmh(r.here) }, 'alert')) { st.s = now; changed = true; } }
+        else if (nearHit && !quiet && now - (st.n || 0) > 90 * 6e4 && now - (st.s || 0) > 60 * 6e4) {
+          if (await send('rainNear', 'near', { km: r.closest.km, dir: r.closest.dir, trend: (r.trend || 0) >= 2 }, 'notice')) { st.n = now; changed = true; }
+        }
+        if (changed) await env.NAFAF_KV.put(hk, JSON.stringify(st), { expirationTtl: 60 * 60 * 24 });
+      } catch (_) {}
+    }
+  }
+  await env.NAFAF_KV.put('radar:last', JSON.stringify(log), { expirationTtl: 60 * 60 * 24 * 3 });
 }
 

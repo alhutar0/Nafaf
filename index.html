@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611102021';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611111420';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -11615,10 +11615,17 @@ function pushSubscribe(){
  /* ★ نرسل موقعك مع الاشتراك ليصلك ما يخصّ منطقتك أنت */
  var payload=sub.toJSON?sub.toJSON():JSON.parse(JSON.stringify(sub));
  try{
+  /* ★ v2 (11 Nov 2026): التنبيهات تتبع موقعك الحقيقي المحفوظ، لا أي مدينة تتصفّحها
+     (كانت تنتقل لمسقط أو باريس لمجرد فتحها فيصمت نفاف عن مطر منطقتك) */
+  var hl=parseFloat(stGet('myLat')||'NaN'),ho=parseFloat(stGet('myLon')||'NaN'),home=isFinite(hl)&&isFinite(ho);
+  if(home){payload.lat=hl;payload.lon=ho;payload.place=stGet('myName')||'';payload.tz=-new Date().getTimezoneOffset()*60;
+   try{var gj=JSON.parse(stGet('geo')||'null');if(gj&&gj.cc)payload.cc=String(gj.cc).toLowerCase().slice(0,2)}catch(e){}}
+  else{
   if(CUR&&typeof CUR.lat==='number'){payload.lat=CUR.lat;payload.lon=CUR.lon;}
   payload.place=(CUR&&CUR.n)||'';
   payload.tz=(typeof TZ_OFF==='number'&&TZ_OFF!=null)?TZ_OFF:(-new Date().getTimezoneOffset()*60);
-  payload.lang=(LI()===2?'en':(LI()===1?'msa':'ar'));payload.xl=window.NX_XL||null;try{payload.cc=String((CUR&&CUR.cc)||(GEO&&GEO.cc)||'').toLowerCase().slice(0,2)}catch(e){}payload.widget=!!(WIDGET&&WIDGET.on);payload.v=2;
+  }
+  payload.lang=(LI()===2?'en':(LI()===1?'msa':'ar'));payload.xl=window.NX_XL||null;if(!payload.cc)try{payload.cc=String((CUR&&CUR.cc)||(GEO&&GEO.cc)||'').toLowerCase().slice(0,2)}catch(e){}payload.widget=!!(WIDGET&&WIDGET.on);payload.v=2;
  }catch(e){}
  return fetch(PUSH_URL+'/subscribe',{method:'POST',
  headers:{'Content-Type':'application/json'},
@@ -12698,9 +12705,9 @@ $("meBtn").onclick=function(){
  if(!navigator.geolocation){$("locName").innerHTML='<span style="font-size:12px">'+pick('جهازك ما يدعم تحديد الموقع','غير مدعوم','Not supported')+'</span>';return;}
  $("locName").innerHTML=pick('نحدّد موقعك…','جارٍ التحديد…','Locating…');
  navigator.geolocation.getCurrentPosition(
- function(p){useRealLocation(p.coords.latitude,p.coords.longitude);},
+ function(p){try{localStorage.removeItem('locApprox')}catch(e){}useRealLocation(p.coords.latitude,p.coords.longitude);},
  function(){$("locName").innerHTML='<span style="font-size:12px">'+pick('فعّل إذن الموقع من إعدادات المتصفح','فعّل إذن الموقع','Enable location permission')+'</span>';},
- {timeout:10000,enableHighAccuracy:true,maximumAge:0});};
+ {timeout:20000,enableHighAccuracy:true,maximumAge:30000});};
 $("pickBtn").onclick=function(){$("ovCity").className="ov on";};
 
 /* دوال الإعدادات الموحّدة */
@@ -13329,41 +13336,60 @@ setTimeout(eventCheck,7000);
  $("locName").innerHTML=pick('نحدّد موقعك…','جارٍ تحديد موقعك…','Finding your location…');
  }
 
- if(!navigator.geolocation){
- if(!hasSaved){var tz0=null;try{tz0=window.nxTzCity&&nxTzCity();}catch(e){} if(tz0&&tz0.tz!=='Asia/Muscat')selectGlobal(tz0.lat,tz0.lon,LI()===2?tz0.en:tz0.ar,LI()===2?tz0.cen:tz0.car,''); else selectCity(0);} /* الجهاز لا يدعم الموقع */
- return;
+ /* ★ v2 (11 Nov 2026): تحديد الموقع تلقائيًا وبإصرار
+    ⚠️ كان طلبًا واحدًا عالي الدقة بمهلة ١٢ ثانية؛ داخل البيوت يفشل بالمهلة فيبقى المستخدم على مسقط للأبد.
+    الآن: ① موقع سريع من الشبكة (ثوانٍ) ② ثم تدقيق بالـGPS في الخلفية ③ عند الفشل المؤقت نعيد المحاولة
+    ④ إن رُفض الإذن ولا موقع محفوظ: الموقع التقريبي من اتصال الإنترنت (مدينتك، لا مسقط) مع زر «حدّد موقعي بدقة». */
+ function approxFromNet(){
+  if(hasSaved||!PUSH_URL)return fallbackTz();
+  fetch(PUSH_URL+'/whereami').then(function(r){return r.ok?r.json():null}).then(function(j){
+   if(j&&isFinite(j.lat)&&isFinite(j.lon)&&!stGet('myLat')){try{stSet('locApprox','1')}catch(e){} useRealLocation(j.lat,j.lon);}
+   else fallbackTz();
+  }).catch(fallbackTz);
  }
-
- /* اطلب الموقع الحقيقي دائمًا — حتى لو عندنا محفوظ (قد يكون المستخدم انتقل) */
- navigator.geolocation.getCurrentPosition(
- function(p){
- /* لو تحرّك أكثر من ٣ كم عن المحفوظ حدّث */
- if(hasSaved){
- var moved=kmBetween(savedLat,savedLon,p.coords.latitude,p.coords.longitude);
- if(moved<3)return; /* نفس المكان — لا تُعد الجلب بلا داعٍ */
+ function fallbackTz(){
+  if(hasSaved||stGet('myLat'))return;
+  var tc=null;try{tc=window.nxTzCity&&nxTzCity();}catch(e){}
+  if(tc){selectGlobal(tc.lat,tc.lon,LI()===2?tc.en:tc.ar,LI()===2?tc.cen:tc.car,'');return;}
+  var mi=0,i;for(i=0;i<CITIES.length;i++)if(CITIES[i].n==='مسقط'){mi=i;break;}selectCity(mi);
  }
- useRealLocation(p.coords.latitude,p.coords.longitude);
- },
- function(err){
- if(hasSaved)return; /* عندنا موقع محفوظ — يكفي */
- /* رُفض الإذن ولا موقع محفوظ: أخبر المستخدم بصراحة ثم اعرض مدينة مؤقتة */
- /* ★ نفاف عالمي: المدينة المؤقتة هي مدينة المنطقة الزمنية لجوال المستخدم، لا مسقط للجميع */
- var tc=null;try{tc=window.nxTzCity&&nxTzCity();}catch(e){}
- if(tc&&tc.tz!=='Asia/Muscat'){
-  var tn=LI()===2?tc.en:tc.ar, tco=LI()===2?tc.cen:tc.car;
-  selectGlobal(tc.lat,tc.lon,tn,tco,'');
-  $("locName").innerHTML='<span style="font-size:13px">'+pick('فعّل إذن الموقع','فعّل إذن الموقع','Enable location')+
-  '<small>'+pick('نعرض '+tn+' مؤقتًا','عرض '+tn+' مؤقتًا',(window.nxTr?nxTr('Showing %s for now'):'Showing %s for now').replace('%s',tn))+'</small></span>';
-  return;
+ function gotFix(p,precise){
+  var la=p.coords.latitude,lo=p.coords.longitude;
+  var cl=parseFloat(stGet('myLat')||'NaN'),co=parseFloat(stGet('myLon')||'NaN');
+  var approx=stGet('locApprox')==='1';
+  if(!isNaN(cl)&&!approx&&kmBetween(cl,co,la,lo)<(precise?1.5:3))return; /* نفس المكان */
+  try{localStorage.removeItem('locApprox')}catch(e){}
+  useRealLocation(la,lo);
  }
- $("locName").innerHTML='<span style="font-size:13px">'+
- pick('فعّل إذن الموقع','فعّل إذن الموقع','Enable location')+
- '<small>'+pick('نعرض مسقط مؤقتًا','عرض مسقط مؤقتًا','Showing Muscat for now')+'</small></span>';
- var mi=0,i;
- for(i=0;i<CITIES.length;i++)if(CITIES[i].n==='مسقط'){mi=i;break;}
- selectCity(mi);
- },
- {timeout:12000,enableHighAccuracy:true,maximumAge:120000});
+ var tries=0;
+ window.nxLocate=function(manual){
+  if(!navigator.geolocation){approxFromNet();return;}
+  /* ① سريع: من الشبكة/آخر موقع معروف */
+  navigator.geolocation.getCurrentPosition(function(p){gotFix(p,false);
+    /* ② دقيق في الخلفية */
+    navigator.geolocation.getCurrentPosition(function(q){gotFix(q,true)},function(){},{timeout:30000,enableHighAccuracy:true,maximumAge:0});
+   },
+   function(err){
+    if(err&&err.code===1){ /* رفض الإذن */
+     if(!hasSaved&&!stGet('myLat'))approxFromNet();
+     if(!hasSaved||manual)$("locName").innerHTML='<span style="font-size:13px">'+pick('فعّل إذن الموقع','فعّل إذن الموقع','Enable location')+'<small>'+pick('اضغط 📍 لتحديد موقعك','اضغط 📍 لتحديد موقعك','Tap 📍 to find you')+'</small></span>';
+     return;
+    }
+    /* مهلة أو تعذّر مؤقت: موقع تقريبي الآن، ثم إعادة المحاولة */
+    if(!hasSaved&&!stGet('myLat'))approxFromNet();
+    if(++tries<=3)setTimeout(function(){window.nxLocate()},tries*15000);
+   },
+   {timeout:9000,enableHighAccuracy:false,maximumAge:600000});
+ };
+ /* أول زيارة: نسأل بعد ضغطة «ابدأ» في التعريف (طلب ناتج عن لمسة المستخدم أوثق في كل المتصفحات)،
+    ونعرض مدينتك التقريبية من الاتصال حتى يأذن. الزيارات التالية: نسأل فورًا. */
+ if(!hasSaved&&typeof needsOnboard==='function'&&needsOnboard()){
+  approxFromNet();
+  document.addEventListener('click',function h(e){var t=e.target&&e.target.closest&&e.target.closest('#obDone');if(t&&!t.disabled){document.removeEventListener('click',h,true);setTimeout(function(){window.nxLocate(true)},300);}},true);
+ } else window.nxLocate();
+ /* عند الرجوع للتطبيق بعد ساعة أو أكثر: تحقّق إن تحرّك المستخدم */
+ document.addEventListener('visibilitychange',function(){if(document.hidden)return;var t=+(stGet('locAt')||0);if(Date.now()-t>36e5){try{stSet('locAt',String(Date.now()))}catch(e){} window.nxLocate();}});
+ try{stSet('locAt',String(Date.now()))}catch(e){}
 })();
 
 /* يحوّل الإحداثيات الحقيقية إلى موقع نشط ويحفظها */
@@ -13413,6 +13439,7 @@ setInterval(function(){
  else paintSky(stateOf(W)); /* تحديث ناعم للتدرّج كل دقيقة */
  }},60000);
 </script>
+
 
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
@@ -15381,7 +15408,29 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
   function on(){try{if(window.NXC&&NXC.event===false)return false}catch(e){}try{return typeof feat!=='function'||feat('event')}catch(e){return true}}
   var RAINC=[61,63,65,66,67,80,81,82],HEAVY=[65,67,82];
+  /* ★ the radar first: it observes, the models only forecast (they missed the 11 Nov 2026 Batinah storm entirely) */
+  var DIRS={0:['الشمال','الشمال','north'],1:['الشمال الشرقي','الشمال الشرقي','north-east'],2:['الشرق','الشرق','east'],3:['الجنوب الشرقي','الجنوب الشرقي','south-east'],
+            4:['الجنوب','الجنوب','south'],5:['الجنوب الغربي','الجنوب الغربي','south-west'],6:['الغرب','الغرب','west'],7:['الشمال الغربي','الشمال الغربي','north-west']};
+  var RAD=null,RADK='',RADT=0;
+  function radarLoad(){
+    var API=(typeof PUSH_URL!=='undefined'&&PUSH_URL)||'';if(!API||!window.CUR)return;
+    var k=(+CUR.lat).toFixed(2)+','+(+CUR.lon).toFixed(2);if(k===RADK&&Date.now()-RADT<4*6e4)return;
+    RADK=k;RADT=Date.now();
+    fetch(API+'/radar?lat='+(+CUR.lat).toFixed(3)+'&lon='+(+CUR.lon).toFixed(3)).then(function(r){return r.ok?r.json():null}).then(function(j){
+      if(!j||!j.ok)return;var was=JSON.stringify(RAD&&[RAD.here,RAD.closest]);RAD=j;window.NX_RADAR=j;
+      if(JSON.stringify([j.here,j.closest])!==was)try{card()}catch(e){}
+    }).catch(function(){});
+  }
+  function fromRadar(){
+    var R=RAD;if(!R||R.age>40*60)return null;
+    var mm=R.mmh||0;
+    if(R.here8!=null&&R.here8>=50)return {k:'storm',now:1,radar:1,mm:mm};
+    if(R.here!=null&&R.here>=22)return {k:'rain',now:1,radar:1,heavy:(R.here8||0)>=40,mm:mm};
+    if(R.closest&&R.closest.km<=25)return {k:'rain',now:0,near:1,radar:1,km:R.closest.km,dir:R.closest.dir,trend:(R.trend||0)>=2};
+    return null;
+  }
   function detect(){
+    var rd=fromRadar();if(rd)return rd;
     var w=window.W,H=window.HOURLY;if(!w)return null;
     var c=w.weather_code|0,i=0;try{i=Clock.hourIndex()}catch(e){}
     var mm=0,pp=0;try{mm=H.precipitation[i]||0;pp=H.precipitation_probability[i]||0}catch(e){}
@@ -15401,6 +15450,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     var city='';try{city=(window.cName&&CUR)?cName(CUR):(CUR&&CUR.n)||''}catch(x){}
     if(e.k==='storm')return e.now?P('رعد وبرق عندك الحين','عاصفة رعدية في موقعك الآن','Thunderstorm at your location now')
                                  :P('رعد متوقع خلال # ساعة','عاصفة رعدية متوقعة خلال # ساعة','Thunderstorm expected within # h').replace('#',e.h);
+    if(e.near){var d=DIRS[e.dir]||DIRS[0];return (e.trend?P('المطر يقترب منك — # كم جهة %d','المطر يقترب — على بُعد # كم جهة %d','Rain moving in — # km to the %d'):P('مطر على بُعد # كم جهة %d','أمطار على بُعد # كم جهة %d','Rain # km to the %d')).replace('#',e.km).replace('%d',P(d[0],d[1],d[2]))}
     if(e.k==='rain'){if(e.now)return e.heavy?P('مطر غزير الحين','أمطار غزيرة الآن','Heavy rain now'):P('تمطر عندك الحين','أمطار في موقعك الآن','Raining at your location now');
       return P('المطر جاي خلال # ساعة','أمطار متوقعة خلال # ساعة','Rain expected within # h').replace('#',e.h)}
     if(e.k==='dust')return P('غبار وعجاج الحين','غبار في الأجواء الآن','Dust in the air now');
@@ -15408,12 +15458,14 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   }
   function short(e){ /* the story pill */
     if(e.k==='storm')return e.now?P('⚡ رعد الحين','⚡ عاصفة رعدية الآن','⚡ Thunderstorm now'):P('⚡ رعد خلال # ساعة','⚡ رعد خلال # ساعة','⚡ Thunder within # h').replace('#',e.h);
+    if(e.near)return P('🌧 المطر على # كم','🌧 أمطار على # كم','🌧 Rain # km away').replace('#',e.km);
     if(e.k==='rain')return e.now?(e.heavy?P('🌧 مطر غزير الحين','🌧 مطر غزير الآن','🌧 Heavy rain now'):P('🌧 تمطر الحين','🌧 أمطار الآن','🌧 Raining now')):P('🌧 المطر خلال # ساعة','🌧 أمطار خلال # ساعة','🌧 Rain within # h').replace('#',e.h);
     if(e.k==='dust')return P('🌫 غبار الحين','🌫 غبار الآن','🌫 Dust now');
     return P('💨 رياح قوية','💨 رياح قوية','💨 Strong winds');
   }
   function sub(e){var a=[];
-    try{if(e.mm>=0.1)a.push((Math.round(e.mm*10)/10)+' '+P('ملم/ساعة','ملم/ساعة','mm/h'))}catch(x){}
+    if(e.radar&&RAD){var m=Math.max(1,Math.round(RAD.age/60));a.push(P('رادار · قبل # د','الرادار · قبل # دقيقة','radar · # min ago').replace('#',m))}
+    try{if(e.mm>=0.1&&!e.near)a.push((e.radar?'~':'')+(Math.round(e.mm*10)/10)+' '+P('ملم/ساعة','ملم/ساعة','mm/h'))}catch(x){}
     try{if(e.p>=30)a.push(P('احتمال','احتمال','chance')+' '+Math.round(e.p)+'%')}catch(x){}
     try{if(e.g>=40)a.push(P('هبّات','هبّات','gusts')+' '+wconv(e.g)+' '+wlabel())}catch(x){}
     return a.join(' · ');
@@ -15425,7 +15477,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     if(e.k==='dust')return P('سكّر الشبابيك، خفّف السرعة، واللي عنده ربو يحتاط.','أغلق النوافذ وخفّف السرعة واحتطْ إن كنت تعاني الربو.','Close windows, slow down on the road; take care if you have asthma.');
     return P('ثبّت الأغراض الخفيفة برّا وابعد عن اللوحات والأشجار.','ثبّت الأغراض الخفيفة وابتعد عن اللوحات والأشجار.','Secure loose items outdoors; keep clear of signs and trees.');
   }
-  function key(e){return e.k+(e.now?'n':'s')+'|'+((window.CUR&&CUR.lat)||0).toFixed(1)}
+  function key(e){return e.k+(e.now?'n':e.near?'r':'s')+'|'+((window.CUR&&CUR.lat)||0).toFixed(1)}
   var EV=null;
   function card(){
     var b=document.getElementById('nowBody');if(!b)return;
@@ -15454,11 +15506,14 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   }
   (function hook(n){
     if(typeof window.renderNow==='function'&&!window.renderNow.__nxe){var o=window.renderNow;
-      window.renderNow=function(){var r=o.apply(this,arguments);try{card()}catch(e){}return r};window.renderNow.__nxe=1;
+      window.renderNow=function(){var r=o.apply(this,arguments);try{card();radarLoad()}catch(e){}return r};window.renderNow.__nxe=1;
       try{renderNow=window.renderNow}catch(e){}
       try{if(window.W&&TAB==='now')card()}catch(e){}}
     else if(n<80)setTimeout(function(){hook(n+1)},250)})(0);
   window.nxEventNow=function(){return EV};
+  /* refresh the radar every 4 min while Nafaf is open and visible, and on return to the app */
+  setInterval(function(){if(!document.hidden)try{radarLoad()}catch(e){}},60e3);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)try{RADT=0;radarLoad()}catch(e){}});
 })();
 </script>
 <script>
