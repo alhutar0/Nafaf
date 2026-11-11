@@ -8,34 +8,28 @@ jobs:
     steps:
       - run: |
           mkdir out && cd out
-          W=https://nafa-push.alhutar0.workers.dev
-          curl -sS -m 20 $W/state -o state.json; curl -sS -m 20 $W/config -o config.json; curl -sS -m 20 $W/cfg/live -o cfglive.json
           date -u > now.txt
-          P="latitude=24.347,24.172,24.531,24.742,23.977&longitude=56.709,56.888,56.564,56.468,57.096"
-          curl -sS -m 60 "https://api.open-meteo.com/v1/forecast?$P&current=precipitation,rain,showers,weather_code,cloud_cover&hourly=precipitation,weather_code&past_hours=8&forecast_hours=4&models=ecmwf_ifs025,gfs_seamless,icon_seamless,best_match&timezone=Asia/Muscat" -o om_models.json
-          curl -sS -m 60 "https://api.open-meteo.com/v1/forecast?$P&minutely_15=precipitation,weather_code&past_minutely_15=24&forecast_minutely_15=8&timezone=Asia/Muscat" -o om_15.json
+          E="https://view.eumetsat.int/geoserver/ows?service=WMS&version=1.3.0"
+          curl -sS -m 60 "$E&request=GetMap&layers=msg_iodc:h63&styles=&crs=EPSG:4326&bbox=21,54,27,60&width=600&height=600&format=image/png&transparent=true" -o h63.png
+          curl -sS -m 60 "$E&request=GetMap&layers=msg_iodc:rgb_convection&styles=&crs=EPSG:4326&bbox=21,54,27,60&width=600&height=600&format=image/png" -o conv.png
+          for p in "24.35,56.55" "24.35,56.70" "24.25,56.45" "24.50,56.40"; do
+            la=${p%,*}; lo=${p#*,}
+            curl -sS -m 60 "$E&request=GetFeatureInfo&layers=msg_iodc:h63&query_layers=msg_iodc:h63&styles=&crs=EPSG:4326&bbox=$(python3 -c "print(f'{$la-0.05},{$lo-0.05},{$la+0.05},{$lo+0.05}')")&width=11&height=11&i=5&j=5&info_format=application/json&format=image/png" -o "fi_$p.json"
+          done
+          curl -sS -m 60 "$E&request=GetCapabilities" | python3 -c "
+          import sys,re;s=sys.stdin.read();i=s.find('<Name>msg_iodc:h63</Name>');print(s[i-200:i+2500])" > h63_caps.txt
           curl -sS -m 30 https://api.rainviewer.com/public/weather-maps.json -o rv.json
           python3 - <<'PY'
-          import json,urllib.request,math,io
-          rv=json.load(open('rv.json'));print('host',rv.get('host'),'frames',len(rv['radar']['past']))
-          last=rv['radar']['past'][-1]['path'];print(last)
-          lat,lon=24.347,56.709
-          for z in (6,7):
-              n=2**z;x=(lon+180)/360*n;y=(1-math.log(math.tan(math.radians(lat))+1/math.cos(math.radians(lat)))/math.pi)/2*n
-              for kind,u in [('radar',f"{rv['host']}{last}/256/{z}/{int(x)}/{int(y)}/2/1_1.png")]+([('sat',f"{rv['host']}{rv['satellite']['infrared'][-1]['path']}/256/{z}/{int(x)}/{int(y)}/0/0_0.png")] if rv.get('satellite',{}).get('infrared') else []):
-                  try:
-                      d=urllib.request.urlopen(u,timeout=20).read();open(f'{kind}_z{z}.png','wb').write(d);print(kind,z,len(d),u)
-                  except Exception as e: print(kind,z,'ERR',e,u)
+          import json,urllib.request,math
+          rv=json.load(open('rv.json'));last=rv['radar']['past'][-1]['path'];h=rv['host']
+          lat,lon=24.347,56.6
+          for z in (7,8,9):
+            n=2**z;x=int((lon+180)/360*n);y=int((1-math.log(math.tan(math.radians(lat))+1/math.cos(math.radians(lat)))/math.pi)/2*n)
+            for cs in (0,1,2):
+              u=f"{h}{last}/256/{z}/{x}/{y}/{cs}/0_0.png"
+              try: d=urllib.request.urlopen(u,timeout=20).read();open(f'rv_z{z}_c{cs}.png','wb').write(d);print(z,cs,len(d))
+              except Exception as e: print(z,cs,'ERR',e)
           PY
-          curl -sS -m 60 "https://view.eumetsat.int/geoserver/ows?service=WMS&request=GetCapabilities" -o eumv_caps.xml || true
-          python3 - <<'PY'
-          import re
-          s=open('eumv_caps.xml',encoding='utf-8',errors='ignore').read()
-          names=re.findall(r'<Layer[^>]*>\s*<Name>([^<]+)</Name>\s*<Title>([^<]*)</Title>',s)
-          open('eumv_layers.txt','w').write('\n'.join(a+' | '+b for a,b in names))
-          print(len(names))
-          PY
-          rm -f eumv_caps.xml
           git init -q && git checkout -q -b probe-out && git add -A
           git -c user.name=probe -c user.email=probe@nafaf.online commit -qm probe
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" probe-out
