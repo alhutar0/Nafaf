@@ -541,7 +541,7 @@ export default {
       const lat = parseFloat(url.searchParams.get('lat')), lon = parseFloat(url.searchParams.get('lon'));
       if (!isFinite(lat) || !isFinite(lon)) return json({ error: 'lat, lon required' }, 400);
       try {
-        const r = await cellsCached(lat, lon);
+        const r = await cellsCached(lat, lon, env);
         return new Response(JSON.stringify({ ok: true, t: r.t, age: r.t ? Math.round(Date.now() / 1000 - r.t) : null, here: r.here, cells: r.cells, src: 'RainViewer' }),
           { headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=120', ...CORS } });
       } catch (e) { return json({ ok: false, error: String(e).slice(0, 80) }); }
@@ -2187,7 +2187,7 @@ async function runRadar(env) {
     /* a strong cell (≥45 dBZ) heading here within 45 min — checked only when the radar shows ≥40 dBZ within 25 km */
     const cellFor = async sub => {
       if (!(r.max != null && r.max >= 40)) return null;
-      try { const C = await cellsCached(sub.lat, sub.lon); const c = C.cells.find(x => x.here && x.here.min > 0 && x.here.min <= 45 && x.dbz >= 45);
+      try { const C = await cellsCached(sub.lat, sub.lon, env); const c = C.cells.find(x => x.here && x.here.min > 0 && x.here.min <= 45 && x.dbz >= 45);
         return c ? { mins: c.here.min, pm: c.here.pm, dbz: c.dbz, over: c.over, dir: c.dir, speed: c.speed } : null; } catch (_) { return null; }
     };
     if (startHit) log.wet++; else if (nearHit) log.near++;
@@ -2244,13 +2244,23 @@ async function placesNear(lat, lon) {
   }
   return out.sort((a, b) => b.pop - a.pop).slice(0, 120);
 }
-async function cellsCached(lat, lon) {
+async function cellsCached(lat, lon, env) {
   const F = await radarFrames(); const t = F.past.length ? F.past[F.past.length - 1].time : 0;
   const key = (Math.round(lat * 2) / 2) + ',' + (Math.round(lon * 2) / 2);
   const hit = CELLS_MEM.get(key);
   let base;
   if (hit && hit.t === t) base = hit.r;
-  else { const clat = Math.round(lat * 2) / 2, clon = Math.round(lon * 2) / 2; base = await cellsAround(clat, clon, 180, await placesNear(clat, clon)); CELLS_MEM.set(key, { t, r: base }); if (CELLS_MEM.size > 200) CELLS_MEM.delete(CELLS_MEM.keys().next().value); }
+  else {
+    /* shared across Worker instances through KV: one computation per region and radar frame */
+    const KV = env && env.NAFAF_KV;
+    if (KV) { try { const o = JSON.parse((await KV.get('cells:' + key)) || 'null'); if (o && o.t === t) base = o.r; } catch (_) {} }
+    if (!base) {
+      const clat = Math.round(lat * 2) / 2, clon = Math.round(lon * 2) / 2;
+      base = await cellsAround(clat, clon, 180, await placesNear(clat, clon));
+      if (KV) { try { await KV.put('cells:' + key, JSON.stringify({ t, r: base }), { expirationTtl: 1800 }); } catch (_) {} }
+    }
+    CELLS_MEM.set(key, { t, r: base }); if (CELLS_MEM.size > 200) CELLS_MEM.delete(CELLS_MEM.keys().next().value);
+  }
   /* re-centre on the asker: ETA to their own point, nearest first */
   const cells = base.cells.map(c => Object.assign({}, c, { here: etaFor(c, lat, lon) }))
     .filter(c => Math.abs(c.lat - lat) < 1.4 && Math.abs(c.lon - lon) < 1.6)
