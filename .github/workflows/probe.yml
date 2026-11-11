@@ -8,14 +8,12 @@ jobs:
     steps:
       - run: |
           mkdir out && cd out
-          W=https://nafa-push.alhutar0.workers.dev
-          date -u > now.txt
-          for p in "24.347,56.709" "24.531,56.564" "24.45,56.45" "24.172,56.888" "23.588,58.383"; do
-            curl -sS -m 60 "$W/radar?lat=${p%,*}&lon=${p#*,}" >> radar.txt; echo " <- $p" >> radar.txt
-          done
-          curl -sS -m 20 $W/whereami > whereami.json
-          curl -sS -m 20 -X POST -H 'content-type: application/json' -d '{"endpoint":"https://x/none"}' $W/push/check > pushcheck.json
-          curl -sS -m 20 $W/state > state.json
+          P=$(curl -sS https://api.rainviewer.com/public/weather-maps.json | python3 -c "import sys,json;j=json.load(sys.stdin);print(j['host']+j['radar']['past'][-1]['path'])")
+          echo "$P" > path.txt
+          curl -sS -D - -o /dev/null -H "Origin: https://nafaf.online" "$P/256/7/84/55/2/0_0.png" > rv_headers.txt
+          curl -sS -D - -o /dev/null -H "Origin: https://nafaf.online" -A "Nafaf/1.0" "https://tile.openstreetmap.org/7/84/55.png" > osm_headers.txt
+          curl -sS -D - -o /dev/null -H "Origin: https://nafaf.online" "https://a.basemaps.cartocdn.com/dark_all/7/84/55.png" > carto_headers.txt
+          curl -sS -D - -o /dev/null -H "Origin: https://nafaf.online" "https://api.rainviewer.com/public/weather-maps.json" > rvapi_headers.txt
           git init -q && git checkout -q -b probe-out && git add -A
           git -c user.name=probe -c user.email=probe@nafaf.online commit -qm probe
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" probe-out
