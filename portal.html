@@ -630,6 +630,11 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
 
       <!-- 💳 الاشتراكات -->
       <section class="sec" data-s="billing">
+        <div class="card" style="border:1.5px solid #ff6a3d;background:#2a1410">
+          <h3 style="color:#ff9a6b">⚠️ إذن RainViewer مشروط بأن يبقى نفاف مجانيًا تمامًا</h3>
+          <div style="font-size:13px;line-height:1.8">بموافقة مكتوبة من فريق RainViewer (١٢ نوفمبر ٢٠٢٦): يحق لنفاف استخدام الرادار ما دام <b>بلا إعلانات ولا اشتراكات ولا مشتريات ولا أي دفع</b>، مع الإسناد ورابط rainviewer.com.
+          تفعيل التبرع أو نفاف Plus أو أي إعلان <b>يُنهي الإذن</b> — ويتوقف معه الرادار ومتتبّع الخلايا وتنبيهات المطر بالرادار. لا تفعّلها قبل بديل رادار مرخّص تجاريًا.</div>
+        </div>
         <div class="pageHead">
           <div class="pageTitle">الاشتراكات والدعم</div>
           <div class="pageSub">نظام الربح — معطّل حتى تفعّله بنفسك</div>
@@ -1813,6 +1818,7 @@ $('swLicense').onclick=function(){
  markDirty();renderBilling();
 };
 $('swDonate').onclick=function(){
+ if(!DRAFT.billing.donateOn&&!confirm('⚠️ تفعيل التبرع يُنهي إذن RainViewer (الرادار ومتتبّع الخلايا وتنبيهات المطر بالرادار).\nهل أنت متأكد؟'))return;
  DRAFT.billing.donateOn=!DRAFT.billing.donateOn;
  DRAFT.billing.enabled=DRAFT.billing.donateOn||DRAFT.billing.plusOn;
  markDirty();renderBilling();
@@ -1821,7 +1827,7 @@ $('swPlus').onclick=function(){
  if(!DRAFT.billing.plusOn){
   if(!DRAFT.billing.dataLicenseOk){
    toast('فعّل إقرار ترقية البيانات أولًا',true);return;}
-  if(!confirm('تفعيل الاشتراك المدفوع؟ تأكّد أنك رقّيت Open-Meteo للخطة التجارية.'))return;
+  if(!confirm('تفعيل الاشتراك المدفوع؟ تأكّد أنك رقّيت Open-Meteo للخطة التجارية.\n⚠️ وسيُنهي إذن RainViewer (الرادار ومتتبّع الخلايا وتنبيهات المطر بالرادار).'))return;
  }
  DRAFT.billing.plusOn=!DRAFT.billing.plusOn;
  DRAFT.billing.enabled=DRAFT.billing.donateOn||DRAFT.billing.plusOn;
