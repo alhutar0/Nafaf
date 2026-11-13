@@ -19,6 +19,7 @@
 import { handleOfficial, officialAlerts } from './official.js';
 import { radarScan, frames as radarFrames, makeTileCache, sampleAt, mmh } from './radar.js';
 import { cellsAround, etaFor } from './tracker.js';
+import { regionMotion, nowcastAt } from './nowcast.js';
 export { Presence } from './presence.js';
 
 const MODELS = 'ecmwf_ifs025,gfs_seamless,icon_seamless';
@@ -557,6 +558,18 @@ export default {
       return new Response(await r.text(), { headers: { 'content-type': 'application/json', ...CORS } });
     }
 
+    /* ★ مطر الساعة القادمة دقيقة بدقيقة (nowcast.js) */
+    if (url.pathname === '/nowcast') {
+      const lat = parseFloat(url.searchParams.get('lat')), lon = parseFloat(url.searchParams.get('lon'));
+      if (!isFinite(lat) || !isFinite(lon) || Math.abs(lat) > 85) return json({ error: 'lat, lon required' }, 400);
+      try {
+        const r = await nowcastCached(lat, lon, env);
+        if (!r) return json({ ok: false });
+        return new Response(JSON.stringify(Object.assign({ ok: true, age: r.t ? Math.round(Date.now() / 1000 - r.t) : null, src: 'RainViewer' }, r)),
+          { headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=120', ...CORS } });
+      } catch (e) { return json({ ok: false, error: String(e).slice(0, 80) }); }
+    }
+
     /* ★ متتبّع الخلايا الرعدية حول نقطة (tracker.js) */
     if (url.pathname === '/cells') {
       const lat = parseFloat(url.searchParams.get('lat')), lon = parseFloat(url.searchParams.get('lon'));
@@ -758,7 +771,7 @@ export default {
        العدّ داخل Durable Object واحد فلا تضيع زيادة حين يصل زائران في نفس اللحظة. */
     if (url.pathname === '/ev' && request.method === 'POST') {
       const b = await request.json().catch(() => null);
-      const E = ['first', 'active', 'install', 'push', 'cyclone', 'story', 'event', 'cellshare', 'd1', 'd7', 'd30'];
+      const E = ['first', 'active', 'install', 'push', 'cyclone', 'story', 'event', 'cellshare', 'nowcast', 'nowcastmap', 'd1', 'd7', 'd30'];
       if (!b || E.indexOf(b.e) < 0 || !env.FUNNEL) return json({ ok: false });
       const clean = (x, n) => String(x || '').toLowerCase().replace(/[^a-z0-9_.-]/g, '').slice(0, n) || 'unknown';
       const rec = { e: b.e, src: clean(b.src, 24), cc: clean((request.cf && request.cf.country) || '', 2).toUpperCase(), lang: clean(b.lang, 6), st: b.st ? 1 : 0 };
@@ -2265,6 +2278,28 @@ async function placesNear(lat, lon) {
   }
   return out.sort((a, b) => b.pop - a.pop).slice(0, 120);
 }
+/* nowcast: the motion is computed once per 0.5° region and radar frame, the series once per ~5 km and frame;
+   both shared across Worker instances through KV */
+const NC_MEM = new Map();
+async function ncGet(env, key, t, make) {
+  const hit = NC_MEM.get(key); if (hit && hit.t === t) return hit.r;
+  const KV = env && env.NAFAF_KV; let r;
+  if (KV) { try { const o = JSON.parse((await KV.get(key)) || 'null'); if (o && o.t === t) r = o.r; } catch (_) {} }
+  if (r === undefined) { r = await make(); if (KV) { try { await KV.put(key, JSON.stringify({ t, r }), { expirationTtl: 1800 }); } catch (_) {} } }
+  NC_MEM.set(key, { t, r }); if (NC_MEM.size > 400) NC_MEM.delete(NC_MEM.keys().next().value);
+  return r;
+}
+async function nowcastCached(lat, lon, env) {
+  const F = await radarFrames(); if (!F.past.length) return null;
+  const t = F.past[F.past.length - 1].time;
+  const clat = Math.round(lat * 2) / 2, clon = Math.round(lon * 2) / 2;
+  const M = await ncGet(env, 'ncm:' + clat + ',' + clon, t, () => regionMotion(clat, clon));
+  const plat = Math.round(lat * 20) / 20, plon = Math.round(lon * 20) / 20;
+  const S = await ncGet(env, 'ncp:' + plat + ',' + plon, t, () => nowcastAt(plat, plon, M));
+  if (!S) return null;
+  return { t, step: S.step, s: S.s, past: S.past, motion: M.motion, region: M.region };
+}
+
 async function cellsCached(lat, lon, env) {
   const F = await radarFrames(); const t = F.past.length ? F.past[F.past.length - 1].time : 0;
   const key = (Math.round(lat * 2) / 2) + ',' + (Math.round(lon * 2) / 2);

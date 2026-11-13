@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611121344';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611130013';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -10216,7 +10216,7 @@ function fetchModels(lat,lon){
  ⚠️ الرادار غير متوفّر فوق الخليج (لا شبكة رادار في المجمّعات المجانية).
  الأقمار الصناعية تغطّي المنطقة كاملة.
  ============================================================ */
-var LMAP=null,LFRAMES=[],LPOS=0,LTIMER=null,LLAYER=null,LCACHE={},LHOST='',LKIND='satellite',LDATA=null;
+var LMAP=null,LFRAMES=[],LPOS=0,LTIMER=null,LLAYER=null,LCACHE={},LHOST='',LKIND='radar',LDATA=null,LNOW=0,LMO=null;
 function renderLive(){
  var h='<div class="sec-t">'+pick('الرصد المباشر','الرصد المباشر','Live monitoring')+'</div>'+
  '<div class="sec-s">'+pick('صور حيّة تُحدَّث كل دقائق — اسحب الخريطة وكبّرها','صور محدّثة كل دقائق','Live imagery, updated every few minutes')+'</div>'+
@@ -10322,66 +10322,90 @@ function initLiveMap(){
  }
 }
 function loadFrames(){
+ /* RainViewer (free API since Jan 2026): radar only, past 2 h every 10 min, zoom ≤ 7, Universal Blue colours.
+    The next hour is Nafaf's own: the newest frame slid forward by the rain motion measured in the worker (nowcast.js). */
+ if(LKIND==='satellite')LKIND='radar';
  fetch('https://api.rainviewer.com/public/weather-maps.json')
 .then(function(r){if(!r.ok)throw 0;return r.json();})
 .then(function(d){
  LDATA=d;LHOST=d.host||'https://tilecache.rainviewer.com';
- LFRAMES=[];
- if(LKIND==='radar'){
- if(d.radar&&d.radar.past)LFRAMES=LFRAMES.concat(d.radar.past);
- if(d.radar&&d.radar.nowcast)LFRAMES=LFRAMES.concat(d.radar.nowcast);
- }else{
- if(d.satellite&&d.satellite.infrared)LFRAMES=d.satellite.infrared.slice();
- }
+ LFRAMES=(d.radar&&d.radar.past)?d.radar.past.slice():[];
  if(!LFRAMES.length){coverageNote(true);return;}
- LPOS=LKIND==='radar'?Math.max(0,(d.radar&&d.radar.past?d.radar.past.length-1:0)):LFRAMES.length-1;
+ LNOW=LFRAMES.length-1;LPOS=LNOW;LMO=null;
  var rg=$("tlRange");rg.max=LFRAMES.length-1;rg.value=LPOS;
  rg.oninput=function(){stopAnim();showFrame(parseInt(this.value,10));};
  $("playB").onclick=toggleAnim;
  showFrame(LPOS);
  coverageNote(false);
+ addFuture();
  }).catch(function(){coverageNote(true);});
+}
+function addFuture(){
+ if(typeof window.nxNowcastGet!=='function')return;
+ var base=LFRAMES[LNOW];
+ window.nxNowcastGet(function(nc){
+  if(!nc||!nc.motion||!LMAP||LKIND!=='radar'||LFRAMES[LNOW]!==base)return;
+  LMO=nc.motion;
+  for(var k=1;k<=7;k++){var t=base.time+k*600;if(t*1000>Date.now()+65*60000)break;LFRAMES.push({time:t,path:base.path,fut:k*10});}
+  var rg=$("tlRange");if(rg)rg.max=LFRAMES.length-1;
+  var tl=$("tlTime");if(tl&&LPOS===LNOW)showFrame(LPOS);
+ });
+}
+/* the projected frames: one copy of the newest frame in its own pane, moved by motion × minutes (zoom-7 pixels → this zoom) */
+function futPane(){
+ if(!LMAP)return null;
+ var p=LMAP.getPane('nxFut');
+ if(!p){p=LMAP.createPane('nxFut');p.style.zIndex=420;p.className+=' nxFutPane';p.style.pointerEvents='none';
+  LMAP.on('zoomend',function(){if(LFRAMES[LPOS]&&LFRAMES[LPOS].fut)futShift(LFRAMES[LPOS].fut);});}
+ return p;
+}
+function futShift(m){
+ var p=futPane();if(!p||!LMO)return;
+ var sc=Math.pow(2,LMAP.getZoom()-7);
+ p.style.transform='translate('+(LMO.vx*m/60*sc).toFixed(1)+'px,'+(LMO.vy*m/60*sc).toFixed(1)+'px)';
 }
 function coverageNote(fail){
  var el=$("covNote");if(!el)return;
  if(fail){el.innerHTML='<div class="cov">'+pick('تعذّر جلب صور الرصد الآن. جرّب بعد قليل.','تعذّر جلب البيانات.',"Couldn't load imagery right now.")+'</div>';return;}
- if(LKIND==='radar'&&inGulfBox(CUR.lat,CUR.lon)){
+ if(LKIND==='radar'){
  el.innerHTML='<div class="cov">'+pick(
- 'صراحة: ما في شبكة رادار مفتوحة فوق الخليج فالطبقة غالبًا بتطلع فاضية عندك. استخدم «قمر صناعي» — يغطّي منطقتنا كاملة.',
- 'لا تتوفر بيانات رادار مفتوحة فوق الخليج؛ استخدم طبقة القمر الصناعي التي تغطي المنطقة.',
- 'No open radar network covers the Gulf — this layer will likely be empty here. Use Satellite instead.')+'</div>';
+ 'آخر ساعتين رصد، وبعدها ساعة <b>متوقعة تقريبًا</b> (باهتة اللون): نحرّك آخر صورة رادار بسرعة المطر الحالية. ما فيها اشتداد ولا ضعف المطر. وإذا ما ظهر شي: إما ما في مطر أو المكان خارج تغطية الرادار.',
+ 'آخر ساعتين رصد، ثم ساعة <b>متوقعة تقريبية</b> (بلون باهت) بتحريك آخر صورة رادار بسرعة الهطول الحالية، دون حساب الاشتداد أو الضعف. غياب الصدى قد يعني الخروج عن تغطية الرادار.',
+ 'Last 2 hours observed, then an <b>approximate next hour</b> (faded): the newest radar frame slid at the current rain speed — growth and decay are not included. No echo can also mean no radar coverage.')+'</div>';
  } else el.innerHTML='';
 }
 function inGulfBox(la,lo){return la>=16&&la<=30&&lo>=48&&lo<=62;}
 function frameUrl(f){
- var col=LKIND==='radar'?'4':'0'; /* لوحة ألوان */
- var opt=LKIND==='radar'?'1_1':'0_0'; /* تنعيم + حدود */
- return LHOST+f.path+'/512/{z}/{x}/{y}/'+col+'/'+opt+'.png';
+ return LHOST+f.path+'/512/{z}/{x}/{y}/2/1_1.png'; /* Universal Blue, smoothed — the only free colours */
 }
 function showFrame(i){
  if(!LFRAMES.length||!LMAP)return;
  i=Math.max(0,Math.min(i,LFRAMES.length-1));LPOS=i;
- var f=LFRAMES[i],key=LKIND+f.path;
+ var f=LFRAMES[i],key=(f.fut?'fut':'')+LKIND+f.path;
  if(!LCACHE[key]){
- LCACHE[key]=L.tileLayer(frameUrl(f),{opacity:0,zIndex:10,tileSize:512,zoomOffset:-1,maxZoom:12,updateWhenIdle:true,keepBuffer:1});
+ var o={opacity:0,zIndex:10,tileSize:512,zoomOffset:-1,maxNativeZoom:8,maxZoom:12,updateWhenIdle:true,keepBuffer:1};
+ if(f.fut&&futPane())o.pane='nxFut';
+ LCACHE[key]=L.tileLayer(frameUrl(f),o);
  LCACHE[key].addTo(LMAP);
  }
+ if(f.fut)futShift(f.fut);
  if(LLAYER&&LLAYER!==LCACHE[key])LLAYER.setOpacity(0);
- LLAYER=LCACHE[key];LLAYER.setOpacity(LKIND==='radar'?0.75:0.6);
+ LLAYER=LCACHE[key];LLAYER.setOpacity(f.fut?0.6:0.75);
  var rg=$("tlRange");if(rg)rg.value=i;
  var d=new Date(f.time*1000);
  var hhmm=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
- var isFuture=(f.time*1000)>Date.now();
- var lbl=isFuture?pick('توقّع قريب','تنبؤ قريب','Nowcast'):pick('رصد','رصد','Observed');
+ var lbl=f.fut?pick('متوقّع تقريبًا','تقدير تقريبي','Approx. forecast'):(i===LNOW?pick('آخر رصد','آخر رصد','Latest'):pick('رصد','رصد','Observed'));
  var el=$("tlTime");
- if(el)el.innerHTML=hhmm+' <small>· '+lbl+' · '+(i+1)+'/'+LFRAMES.length+'</small>';
+ if(el)el.innerHTML=(f.fut?'<span style="color:#8cc6ff">':'<span>')+hhmm+'</span> <small>· '+lbl+(f.fut?'':' · '+(i+1)+'/'+(LNOW+1))+'</small>';
 }
 function toggleAnim(){if(LTIMER)stopAnim();else startAnim();}
 function startAnim(){
  if(!LFRAMES.length)return;
  $("playB").innerHTML='❚❚';
+ var hold=0;
  LTIMER=setInterval(function(){
- var n=LPOS+1;if(n>=LFRAMES.length)n=0;showFrame(n);},600);
+ if((LPOS===LNOW||LPOS===LFRAMES.length-1)&&hold<2){hold++;return;}
+ hold=0;var n=LPOS+1;if(n>=LFRAMES.length)n=0;showFrame(n);},600);
 }
 function stopAnim(){if(LTIMER){clearInterval(LTIMER);LTIMER=null;}var b=$("playB");if(b)b.innerHTML='▶';}
 
@@ -11952,7 +11976,6 @@ var LAYER_GROUPS=[
   d:['ما تراه الأقمار فوقك','صور مباشرة من الفضاء','What satellites see above you'],
   col:'#9fd4f5',
   items:[
-   {k:'satellite', ic:'cloud',  n:['سحب حيّة','سحب حيّة','Live clouds']},
    {k:'nasa',      ic:'globe',  n:['ألوان حقيقية','ألوان حقيقية','True color']},
    {k:'dust',      ic:'dust',   n:['كشف الغبار','كشف الغبار','Dust detection']},
    {k:'aerosol',   ic:'haze',   n:['كثافة العوالق','مؤشر العوالق','Aerosol index']},
@@ -13442,7 +13465,6 @@ setInterval(function(){
  }},60000);
 </script>
 
-
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -13988,6 +14010,27 @@ html.nx body.v2.wide #nowBody>#nxCl{grid-column:1/-1}
 #nxClShare .bt{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #nxClShare button{min-height:46px;border-radius:13px;border:0;font:inherit;font-weight:900;font-size:14px;cursor:pointer;background:rgba(255,255,255,.1);color:#fff}
 #nxClShare button.p{background:#25D366;color:#05220f;grid-column:1/-1}
+/* — nowcast.html — */
+.nxNc{margin:0 0 14px;border-radius:20px;background:#0f1422;color:#EEF2F8;border:1.5px solid #3fa0ff;overflow:hidden;box-shadow:0 14px 34px -22px #3fa0ff}
+.nxNc .ch{display:flex;align-items:center;gap:8px;padding:12px 14px 0;font-size:11.5px;font-weight:900;color:#8cc6ff;letter-spacing:.02em}
+.nxNc h3{margin:6px 14px 0;font-size:18px;font-weight:900;line-height:1.4;color:#fff}
+.nxNc .cs{margin:3px 14px 0;font-size:12.5px;color:rgba(238,242,248,.72);font-weight:700}
+.nxNc .gr{position:relative;margin:12px 14px 0;height:86px;display:flex;align-items:flex-end;gap:2px;border-bottom:1px solid rgba(255,255,255,.18)}
+.nxNc .gr i{flex:1 1 0;min-width:0;border-radius:3px 3px 0 0;background:#3fa0ff;transition:height .4s}
+.nxNc .gr i.pa{flex:.7 1 0;filter:saturate(.35);opacity:.55}
+.nxNc .gr b{flex:0 0 2px;align-self:stretch;background:#E3A94B;border-radius:2px}
+.nxNc .gr .lv{position:absolute;inset-inline:0;border-top:1px dashed rgba(255,255,255,.12);font-size:9.5px;color:rgba(238,242,248,.45);font-weight:800;line-height:1.3}
+.nxNc .ax{position:relative;height:16px;margin:4px 14px 0;font-size:10.5px;font-weight:800;color:rgba(238,242,248,.6)}
+.nxNc .ax span{position:absolute;top:0;transform:translateX(50%);white-space:nowrap}
+html[dir=ltr] .nxNc .ax span{transform:translateX(-50%)}
+.nxNc .ax span.n{color:#E3A94B}
+.nxNc .ax span.s{transform:none!important}
+.nxNc .ax span.e{transform:none!important;inset-inline-start:auto!important;inset-inline-end:0}
+.nxNc .ac{display:flex;gap:8px;padding:10px 14px 12px}
+.nxNc .ac button{flex:1;min-height:44px;border-radius:13px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#fff;font:inherit;font-size:13.5px;font-weight:900;cursor:pointer}
+.nxNc .nt{padding:0 14px 11px;font-size:11px;color:rgba(238,242,248,.55);line-height:1.6}
+html.nx body.v2.wide #nowBody>#nxNc{grid-column:1/-1}
+.nxFutPane{filter:saturate(.45) brightness(1.15)}
 </style>
 <script>
 /* Defaults = how Nafaf behaves with no portal setting. The portal publishes cfg.next; the app keeps the
@@ -15830,6 +15873,131 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   setInterval(function(){if(!document.hidden)try{load()}catch(e){}},60e3);
   document.addEventListener('visibilitychange',function(){if(!document.hidden)try{load(true)}catch(e){}});
   (function mapHook(n){try{if(typeof LMAP!=='undefined'&&LMAP&&D){drawMap();return}}catch(e){} if(n<600)setTimeout(function(){mapHook(n+1)},2000)})(0);
+})();
+</script>
+<script>
+/* Rain in the next 90 minutes. Thresholds (rain = p ≥ 0.3) are the ones that beat persistence in the hindcast of the
+   11 Nov 2026 storm (see worker/nowcast.js). The worker (nowcast.js) measures how the rain field moved over the last 20 min of
+   radar and slides the newest frame forward; this card turns the series into one sentence and a bar strip.
+   It also lends the measured motion to the live map, which shows the next hour as shifted (approximate) frames. */
+(function(){
+  var API=(typeof PUSH_URL!=='undefined'&&PUSH_URL)||'';
+  function P(a,b,c){var r;try{r=pick(a,b,c)}catch(e){r=c}return window.nxTr?nxTr(r):r}
+  function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function LG(){try{return window.NX_XL||(LI()===2?'en':'ar')}catch(e){return 'ar'}}
+  var DIR=[['الشمال','الشمال','north'],['الشمال الشرقي','الشمال الشرقي','north-east'],['الشرق','الشرق','east'],['الجنوب الشرقي','الجنوب الشرقي','south-east'],
+           ['الجنوب','الجنوب','south'],['الجنوب الغربي','الجنوب الغربي','south-west'],['الغرب','الغرب','west'],['الشمال الغربي','الشمال الغربي','north-west']];
+  function dir(i){var d=DIR[i]||DIR[0];return P(d[0],d[1],d[2])}
+  function mmh(z){return z==null?0:Math.pow(Math.pow(10,z/10)/200,1/1.6)}
+  function kind(z){var r=mmh(z);return r<1?P('خفيف','خفيف','light'):r<4?P('متوسط','متوسط','moderate'):r<16?P('غزير','غزير','heavy'):P('غزير جدًا','غزير جدًا','very heavy')}
+  function colr(z){var r=mmh(z);return r<1?'#7fd3ff':r<4?'#3fa0ff':r<16?'#ffd21f':'#ff6a3d'}
+  function hhmm(t){try{return new Date(t*1000).toLocaleTimeString(LG()==='ar'?'ar-OM':LG(),{hour:'numeric',minute:'2-digit'})}catch(e){return ''}}
+  function pm(m){return Math.max(5,Math.round(m*.25/5)*5)}
+  function dm(m){return m<=0?P('الحين','الآن','now'):'~'+m+' '+P('د','د','min')}
+
+  var D=null,K='',T=0,BUSY=0,WAIT=[],SEEN=0;
+  window.NX_NC=null;
+  function load(force,cb){
+    if(cb)WAIT.push(cb);
+    if(!API||!window.CUR||BUSY)return;
+    var k=(+CUR.lat).toFixed(2)+','+(+CUR.lon).toFixed(2);
+    if(!force&&k===K&&D&&Date.now()-T<3*6e4){flush();return}
+    K=k;T=Date.now();BUSY=1;
+    fetch(API+'/nowcast?lat='+(+CUR.lat).toFixed(3)+'&lon='+(+CUR.lon).toFixed(3)).then(function(r){return r.ok?r.json():null}).then(function(j){
+      BUSY=0;if(j&&j.ok){D=j;D.at=Date.now();window.NX_NC=j}flush();paint();
+    }).catch(function(){BUSY=0;flush()});
+  }
+  function flush(){var w=WAIT;WAIT=[];w.forEach(function(f){try{f(D)}catch(e){}})}
+  /* for the live map: calls back with the nowcast (motion may be null) */
+  window.nxNowcastGet=function(cb){if(D&&Date.now()-T<5*6e4)cb(D);else load(false,cb)};
+
+  /* the series from now: value every 5 min for 0..90 min (lead from the frame = minutes from now + frame age) */
+  function series(){
+    if(!D||!D.s)return null;
+    var off=(D.age||0)/60+(Date.now()-D.at)/6e4,out=[];
+    for(var m=0;m<=90;m+=5){
+      var L=(m+off)/D.step,i=Math.floor(L),f=L-i,a=D.s[i],b=D.s[i+1];
+      if(!a){out.push(null);continue}
+      if(!b){out.push({p:a[0],z:a[1]});continue}
+      out.push({p:a[0]*(1-f)+b[0]*f,z:a[1]==null?b[1]:b[1]==null?a[1]:a[1]*(1-f)+b[1]*f});
+    }
+    return out;
+  }
+  function verdict(S){
+    var now=S[0],i,n=S.length,wet=function(x){return x&&x.p>=.3&&x.z!=null},dry=function(x){return !x||x.p<.15};
+    var peak=null;S.forEach(function(x){if(x&&x.z!=null&&(!peak||x.z>peak.z))peak=x});
+    if(wet(now)){
+      for(i=1;i<n-1;i++)if(dry(S[i])&&dry(S[i+1]))break;
+      if(i<n-1)return {h:P('🌧️ مطر # عندك الحين — يخف بعد ','🌧️ هطول # في موقعك الآن — يتوقف بعد ','🌧️ # rain at your location — easing in ').replace('#',kind(now.z))+dm(i*5)+' (±'+pm(i*5)+')',w:1};
+      return {h:P('🌧️ مطر # عندك الحين ومستمر الساعة الجاية على الأقل','🌧️ هطول # مستمر في موقعك خلال الساعة القادمة','🌧️ # rain at your location, continuing for the next hour at least').replace('#',kind(now.z)),w:1};
+    }
+    for(i=1;i<n;i++)if(wet(S[i]))break;
+    if(i<n){
+      var st=i;for(i=st+1;i<n-1;i++)if(dry(S[i])&&dry(S[i+1]))break;
+      var mx=null;for(var k=st;k<i&&k<n;k++)if(S[k]&&S[k].z!=null&&(mx==null||S[k].z>mx))mx=S[k].z;
+      var dur=i<n-1?' · '+P('يستمر ~','يستمر ~','lasting ~')+((i-st)*5)+' '+P('د','د','min'):'';
+      return {h:P('☔ مطر # يبدأ عندك بعد ','☔ هطول # يبدأ في موقعك بعد ','☔ # rain starting at your location in ').replace('#',kind(mx))+dm(st*5)+' (±'+pm(st*5)+')'+dur,w:2};
+    }
+    var best=0,at=0;for(i=1;i<n;i++)if(S[i]&&S[i].p>best){best=S[i].p;at=i}
+    if(best>=.12)return {h:P('🌦️ زخات قريبة منك خلال ','🌦️ زخات قريبة خلال ','🌦️ Showers passing close by in ')+dm(at*5)+' — '+P('فرصة تصيبك ~','احتمال أن تصيبك ~','chance of hitting you ~')+Math.round(best*100)+'%',w:3};
+    return {h:P('🌤️ وقف المطر عندك — ما في مطر متوقع خلال ٩٠ دقيقة','🌤️ توقف الهطول — لا هطول متوقع خلال ٩٠ دقيقة','🌤️ Rain has stopped — none expected in the next 90 min'),w:4};
+  }
+  function show(S){
+    if(!S||!D||D.age>40*60)return false;
+    var fut=S.some(function(x){return x&&x.p>=.1}),past=(D.past||[]).slice(-3).some(function(x){return x[1]>=.3});
+    return fut||past;
+  }
+  function bars(S){
+    var h='',top=Math.log2(33);
+    (D.past||[]).slice(-7,-1).forEach(function(x){var v=x[1]<.05||x[2]==null?0:Math.max(.1,Math.min(1,Math.log2(mmh(x[2])+1)/top))*(.35+.65*x[1]);
+      h+='<i class="pa" style="height:'+(v*100).toFixed(0)+'%;background:'+colr(x[2])+'"></i>'});
+    h+='<b title="'+E(P('الحين','الآن','now'))+'"></b>';
+    S.forEach(function(x){var v=!x||x.p<.05||x.z==null?0:Math.max(.1,Math.min(1,Math.log2(mmh(x.z)+1)/top));
+      h+='<i style="height:'+(v*100).toFixed(0)+'%;background:'+(x&&x.z!=null?colr(x.z):'transparent')+';opacity:'+(x?(.3+.7*x.p).toFixed(2):0)+'"></i>'});
+    return h;
+  }
+  /* labels at the exact bar positions: 6 past bars (weight .7) + the now line + 19 future bars (weight 1) */
+  function axis(){
+    var tot=6*.7+19,at=function(k){return ((6*.7+k+.5)/tot*100).toFixed(1)+'%'};
+    return '<div class="ax"><span class="s" style="inset-inline-start:0">−'+E(P('ساعة','ساعة','1 h'))+'</span>'+
+      '<span class="n" style="inset-inline-start:'+((6*.7)/tot*100).toFixed(1)+'%">'+E(P('الحين','الآن','now'))+'</span>'+
+      '<span style="inset-inline-start:'+at(6)+'">+30</span><span style="inset-inline-start:'+at(12)+'">+60</span>'+
+      '<span class="e">+90 '+E(P('د','د','min'))+'</span></div>';
+  }
+  function paint(){
+    var b=document.getElementById('nowBody');if(!b)return;
+    var old=document.getElementById('nxNc');if(old)old.remove();
+    var S=series();if(!show(S))return;
+    var v=verdict(S),mo=D.motion;
+    var d=document.createElement('section');d.id='nxNc';d.className='nxNc';
+    d.innerHTML='<div class="ch">⏱ '+E(P('مطر الساعة الجاية · رادار ','الهطول خلال الساعة القادمة · رادار ','Rain, next 90 min · radar '))+hhmm(D.t)+'</div>'+
+      '<h3>'+E(v.h)+'</h3>'+
+      (mo&&mo.speed>=3?'<p class="cs">'+E(P('السحب الممطرة تتجه نحو ','الهطول يتحرك نحو ','Rain is moving ')+dir(mo.dir)+' · ~'+mo.speed+' '+P('كم/س','كم/س','km/h'))+'</p>':
+        (mo?'<p class="cs">'+E(P('المطر شبه ثابت في مكانه','الهطول شبه ثابت','Rain is almost stationary'))+'</p>':''))+
+      '<div class="gr" role="img" aria-label="'+E(v.h)+'">'+bars(S)+'</div>'+
+      axis()+
+      '<div class="ac"><button type="button" data-a="map">'+E(P('شوف حركة المطر على الخريطة','حركة الهطول على الخريطة','Watch it move on the map'))+'</button></div>'+
+      '<div class="nt">'+E(P('تقدير بتحريك صدى الرادار بسرعته الحالية: يفترض أن المطر لا يقوى ولا يضعف، والدقة تقل بعد ٣٠ دقيقة. غياب الصدى قد يعني أن المكان خارج تغطية الرادار. ليس تحذيرًا رسميًا.',
+        'تقدير بتحريك صدى الرادار بسرعته الحالية؛ لا يحسب اشتداد الهطول أو ضعفه، وتقل الدقة بعد ٣٠ دقيقة. غياب الصدى قد يعني الخروج عن تغطية الرادار. ليس تحذيرًا رسميًا.',
+        'Estimated by sliding the radar echo at its current speed: it assumes the rain neither grows nor weakens, and accuracy drops after 30 min. No echo can also mean no radar coverage. Not an official warning.'))+
+      ' · <a href="https://www.rainviewer.com" target="_blank" rel="noopener" style="color:inherit">Weather data by RainViewer</a></div>';
+    var anchor=document.getElementById('nxCl')||document.getElementById('nxEvt')||document.getElementById('nxOfBox');
+    if(anchor&&anchor.parentNode===b)b.insertBefore(d,anchor.nextSibling);else b.insertBefore(d,b.firstChild);
+    d.addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;
+      try{window.nxEv&&nxEv('nowcastmap')}catch(x){}
+      try{if(typeof stopAnim==='function')stopAnim();LKIND='radar'}catch(x){}
+      try{showTab('live')}catch(x){}});
+    if(!SEEN){SEEN=1;try{window.nxEv&&nxEv('nowcast')}catch(x){}}
+  }
+  (function hook(n){
+    if(typeof window.renderNow==='function'&&!window.renderNow.__nxn){var o=window.renderNow;
+      window.renderNow=function(){var r=o.apply(this,arguments);try{paint();load()}catch(e){}return r};window.renderNow.__nxn=1;
+      try{renderNow=window.renderNow}catch(e){}
+      try{if(window.W)load()}catch(e){}}
+    else if(n<80)setTimeout(function(){hook(n+1)},250)})(0);
+  /* keep the strip moving with the clock, and fetch each new radar frame */
+  setInterval(function(){if(document.hidden)return;try{if(TAB==='now')paint()}catch(e){}try{load()}catch(e){}},60e3);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)try{load(true)}catch(e){}});
 })();
 </script>
 <script type="text/plain" id="nxSceneSrc">

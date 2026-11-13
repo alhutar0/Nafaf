@@ -20,7 +20,7 @@ const latOf = gy => Math.atan(Math.sinh(Math.PI * (1 - 2 * gy / N))) * 180 / Mat
 function km(a, b, c, d) { const R = 6371, r = Math.PI / 180, x = Math.sin((c - a) * r / 2), y = Math.sin((d - b) * r / 2); return 2 * R * Math.asin(Math.sqrt(x * x + Math.cos(a * r) * Math.cos(c * r) * y * y)); }
 
 /* a dBZ mosaic of the box [gx0,gx1)×[gy0,gy1) in global pixels */
-async function mosaic(getTile, gx0, gy0, w, h) {
+export async function mosaic(getTile, gx0, gy0, w, h) {
   const g = new Int8Array(w * h).fill(-128);
   const tx0 = Math.floor(gx0 / 256), tx1 = Math.floor((gx0 + w - 1) / 256), ty0 = Math.floor(gy0 / 256), ty1 = Math.floor((gy0 + h - 1) / 256);
   for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
