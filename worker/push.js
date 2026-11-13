@@ -975,6 +975,8 @@ export default {
       const valid = ['clear','clouds','rain','dust','humid','cold'];
       if (valid.indexOf(kind) < 0) return json({ error: 'bad kind' }, 400);
 
+      /* ★ a contributor banned by moderation cannot post again */
+      if (await env.NAFAF_KV.get('ban:' + vid)) return json({ error: 'banned' }, 403);
       /* ★ منع التكرار — رصد واحد لكل جهاز كل ٣٠ دقيقة (يتحقق الخادم لا التطبيق) */
       const last = await env.NAFAF_KV.get('rlim:' + vid);
       if (last && (Date.now() - parseInt(last, 10)) < 30 * 60000) {
@@ -982,6 +984,8 @@ export default {
         return json({ error: 'rate', minutes: left }, 429);
       }
       await env.NAFAF_KV.put('rlim:' + vid, String(Date.now()), { expirationTtl: 2400 });
+      const author = await authorOf(vid);
+      await env.NAFAF_KV.put('ah:' + author, vid, { expirationTtl: 60 * 60 * 24 * 120 });
 
       /* هل هو مراسل معتمد؟ */
       const corrRaw = await env.NAFAF_KV.get('corr:' + vid);
@@ -996,12 +1000,13 @@ export default {
 
       const item = {
         id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-        vid, kind,
+        vid, kind, author,
         photo: (typeof b.photo === 'string' && b.photo.indexOf('data:image/') === 0
                 && b.photo.length < 700000) ? b.photo : null,
         wilaya: String(b.wilaya || '').slice(0, 40),
-        lat: (typeof b.lat === 'number') ? Math.round(b.lat * 1000) / 1000 : null,
-        lon: (typeof b.lon === 'number') ? Math.round(b.lon * 1000) / 1000 : null,
+        /* about 1 km: enough for a moderator to check the report against the weather there, never a home */
+        lat: (typeof b.lat === 'number') ? Math.round(b.lat * 100) / 100 : null,
+        lon: (typeof b.lon === 'number') ? Math.round(b.lon * 100) / 100 : null,
         note: String(b.note || '').slice(0, 200),
         isCorr, corrName,
         ts: Date.now(),
@@ -1036,7 +1041,7 @@ export default {
       /* ★ رصد المراسلين المعتمدين — تبويب منفصل */
       const corr = live.filter(r => r.isCorr && r.status === 'approved')
         .sort((a, b2) => b2.ts - a.ts)
-        .map(r => ({ kind: r.kind, wilaya: r.wilaya, note: r.note,
+        .map(r => ({ id: r.id, a: r.author || '', kind: r.kind, wilaya: r.wilaya, note: r.note,
                      name: r.corrName, ts: r.ts, photo: r.photo || null }));
 
       /* ★ الإجماع التلقائي — ٣ أشخاص فأكثر بنفس الولاية والحالة */
@@ -1059,7 +1064,7 @@ export default {
       /* الرصد الفردي المعتمد يدويًا */
       const solo = live.filter(r => !r.isCorr && r.status === 'approved')
         .sort((a, b2) => b2.ts - a.ts)
-        .map(r => ({ kind: r.kind, wilaya: r.wilaya, note: r.note, ts: r.ts, photo: r.photo || null }));
+        .map(r => ({ id: r.id, a: r.author || '', kind: r.kind, wilaya: r.wilaya, note: r.note, ts: r.ts, photo: r.photo || null }));
 
       return json({ ok: true, corr, consensus, solo });
     }
@@ -1185,41 +1190,38 @@ export default {
       if (!vid) return json({ error: 'no vid' }, 400);
 
       let removed = 0;
-      /* ١ · الحساب والهوية */
-      for (const k of ['auth:' + vid, 'corr:' + vid, 'sub:' + vid,
-                       'vis:' + vid, 'streak:' + vid, 'fbq:' + vid]) {
-        try { await env.NAFAF_KV.delete(k); removed++; } catch (_) {}
+      const del = async k => { try { if ((await env.NAFAF_KV.get(k)) != null) { await env.NAFAF_KV.delete(k); removed++; } } catch (_) {} };
+      /* ١ · the Google sign-in profile (name, email, picture) and the email → account link */
+      try {
+        const u = JSON.parse((await env.NAFAF_KV.get('user:' + vid)) || 'null');
+        if (u && u.email && (await env.NAFAF_KV.get('email:' + u.email)) === vid) await del('email:' + u.email);
+      } catch (_) {}
+      /* ٢ · every key named after the account */
+      const author = await authorOf(vid);
+      for (const k of ['user:', 'corr:', 'capp:', 'cfgv:', 'sub_plus:', 'rlim:', 'live:', 'auth:', 'sub:', 'vis:', 'streak:', 'fbq:']) await del(k + vid);
+      await del('ah:' + author);
+      /* ٣ · rain-alert subscription and its approximate area (stored by the push endpoint, not by account) */
+      if (b.endpoint) { const h = btoa(String(b.endpoint)).slice(-40); await del('sub:' + h); await del('hb:' + h); }
+      /* ٤ · reports, gallery photos and messages */
+      const ids = new Set();
+      for (const [pre, mine] of [['rep:', r => r.vid === vid], ['gal:', r => r.vid === vid || r.author === author || ids.has(r.id)], ['fb:', r => r.vid === vid]]) {
+        try {
+          const list = await env.NAFAF_KV.list({ prefix: pre });
+          for (const k of list.keys) {
+            try { const r = JSON.parse(await env.NAFAF_KV.get(k.name)); if (r && mine(r)) { if (pre === 'rep:') ids.add(r.id); await env.NAFAF_KV.delete(k.name); removed++; } } catch (_) {}
+          }
+        } catch (_) {}
       }
-      /* ٢ · رصداته وصوره */
+      /* ٥ · abuse reports this person filed are kept for moderation, without their id */
       try {
-        const list = await env.NAFAF_KV.list({ prefix: 'rep:' });
+        const list = await env.NAFAF_KV.list({ prefix: 'abuse:' });
         for (const k of list.keys) {
-          try {
-            const r = JSON.parse(await env.NAFAF_KV.get(k.name));
-            if (r && r.vid === vid) { await env.NAFAF_KV.delete(k.name); removed++; }
-          } catch (_) {}
+          try { const r = JSON.parse(await env.NAFAF_KV.get(k.name)); if (r && r.vid === vid) { r.vid = ''; await env.NAFAF_KV.put(k.name, JSON.stringify(r), { expirationTtl: 60 * 60 * 24 * 90 }); } } catch (_) {}
         }
       } catch (_) {}
-      /* ٣ · صوره في المعرض */
-      try {
-        const gl = await env.NAFAF_KV.list({ prefix: 'gal:' });
-        for (const k of gl.keys) {
-          try {
-            const g = JSON.parse(await env.NAFAF_KV.get(k.name));
-            if (g && g.vid === vid) { await env.NAFAF_KV.delete(k.name); removed++; }
-          } catch (_) {}
-        }
-      } catch (_) {}
-      /* ٤ · ملاحظاته */
-      try {
-        const fb = await env.NAFAF_KV.list({ prefix: 'fb:' });
-        for (const k of fb.keys) {
-          try {
-            const f = JSON.parse(await env.NAFAF_KV.get(k.name));
-            if (f && f.vid === vid) { await env.NAFAF_KV.delete(k.name); removed++; }
-          } catch (_) {}
-        }
-      } catch (_) {}
+      /* ٦ · the live-visitor log keeps one row per visitor per day: remove this visitor's rows */
+      try { if (env.PRESENCE) { const st = env.PRESENCE.get(env.PRESENCE.idFromName('live')); const r = await st.fetch('https://p/forget', { method: 'POST', body: JSON.stringify({ vid }) }); const j = await r.json(); removed += j.n || 0; } } catch (_) {}
+      /* kept on purpose: a moderation ban ('ban:'), for up to a year, so a banned person cannot simply start again */
 
       return json({ ok: true, deleted: removed,
         note: 'كل البيانات المرتبطة بهذا الحساب حُذفت نهائيًا.' });
@@ -1305,12 +1307,42 @@ export default {
       const key = 'abuse:' + Date.now() + ':' + Math.random().toString(36).slice(2, 8);
       await env.NAFAF_KV.put(key, JSON.stringify({
         contentId: String(b.id).slice(0, 120),
+        author: String(b.a || '').slice(0, 16),
+        kind: String(b.kind || '').slice(0, 16),
         reason: String(b.reason || '').slice(0, 200),
         vid: String(b.vid || '').slice(0, 60),
         ts: b.ts || Date.now(),
         status: 'pending'
       }), { expirationTtl: 60 * 60 * 24 * 90 });
       return json({ ok: true, received: true });
+    }
+
+    /* ★ moderation of a report: dismiss · remove the content · ban its author (and remove all their content) */
+    if (url.pathname === '/admin/abuse/act' && request.method === 'POST') {
+      const b = await request.json().catch(() => null);
+      if (!b || !(await checkPass(env, b.pass))) return json({ error: 'unauthorized' }, 401);
+      const key = String(b.key || '');
+      if (!key.startsWith('abuse:')) return json({ error: 'bad key' }, 400);
+      const rec = JSON.parse((await env.NAFAF_KV.get(key)) || 'null');
+      if (!rec) return json({ error: 'not found' }, 404);
+      let removed = 0;
+      const drop = async id => { for (const pre of ['rep:', 'gal:']) { if (await env.NAFAF_KV.get(pre + id)) { await env.NAFAF_KV.delete(pre + id); removed++; } } };
+      if (b.action === 'remove' || b.action === 'ban') await drop(rec.contentId);
+      if (b.action === 'ban' && rec.author) {
+        const vid = await env.NAFAF_KV.get('ah:' + rec.author);
+        if (vid) {
+          await env.NAFAF_KV.put('ban:' + vid, JSON.stringify({ ts: Date.now(), reason: rec.reason }), { expirationTtl: 60 * 60 * 24 * 365 });
+          await env.NAFAF_KV.delete('corr:' + vid);
+          for (const pre of ['rep:', 'gal:']) {
+            const l = await env.NAFAF_KV.list({ prefix: pre });
+            for (const k of l.keys) { try { const r = JSON.parse(await env.NAFAF_KV.get(k.name)); if (r && r.vid === vid) { await env.NAFAF_KV.delete(k.name); removed++; } } catch (_) {} }
+          }
+        }
+      }
+      rec.status = b.action === 'dismiss' ? 'dismissed' : b.action === 'ban' ? 'banned' : 'removed';
+      rec.decided = Date.now();
+      await env.NAFAF_KV.put(key, JSON.stringify(rec), { expirationTtl: 60 * 60 * 24 * 90 });
+      return json({ ok: true, status: rec.status, removed });
     }
 
     /* ★ قائمة البلاغات — للبوابة */
@@ -1358,7 +1390,7 @@ export default {
       for (const k of list.keys) {
         try {
           const g = JSON.parse(await env.NAFAF_KV.get(k.name));
-          if (g && g.photo) out.push(g);
+          if (g && g.photo) out.push({ id: g.id, photo: g.photo, wilaya: g.wilaya, name: g.name || '', kind: g.kind, ts: g.ts, a: g.author || '' });
         } catch (_) {}
       }
       out.sort((a, b2) => b2.ts - a.ts);
@@ -1376,7 +1408,8 @@ export default {
       if (!r.photo) return json({ error: 'no photo' }, 400);
       await env.NAFAF_KV.put('gal:' + r.id, JSON.stringify({
         id: r.id, photo: r.photo, wilaya: r.wilaya,
-        name: r.corrName || '', kind: r.kind, ts: r.ts
+        name: r.corrName || '', kind: r.kind, ts: r.ts,
+        vid: r.vid, author: r.author || await authorOf(r.vid)   /* so account deletion and bans can find it */
       }), { expirationTtl: 60 * 60 * 24 * 90 });
       return json({ ok: true });
     }
@@ -2047,6 +2080,13 @@ function defaultCfg() {
     /* قواعد العرض الشرطي */
     rules: []
   };
+}
+
+/* public author handle: lets people block or report a contributor without exposing the device id */
+async function authorOf(vid) {
+  if (!vid) return '';
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('nafaf-author:' + vid));
+  return [...new Uint8Array(d)].slice(0, 6).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 function json(obj, status = 200) {

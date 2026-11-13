@@ -51,6 +51,15 @@ export class Presence {
       if (v) v.t = now - 76e3;   /* gone from "now" at once; the session itself may resume */
       return new Response('ok');
     }
+    /* account deletion: every row of this visitor */
+    if (url.pathname === '/forget') {
+      const b = await request.json().catch(() => ({})); const vid = String(b.vid || '').slice(0, 40);
+      if (!vid) return Response.json({ n: 0 });
+      const n = this.sql.exec('SELECT COUNT(*) AS n FROM visits WHERE vid=?', vid).toArray()[0].n;
+      this.sql.exec('DELETE FROM visits WHERE vid=?', vid); this.sql.exec('DELETE FROM seen WHERE vid=?', vid);
+      this.live.delete(vid); this.wrote.delete(vid);
+      return Response.json({ n });
+    }
     if (url.pathname === '/snap') {
       const L = [...this.live.values()].filter(v => now - v.t < 75e3);
       const grp = f => { const o = {}; L.forEach(v => { const k = f(v); if (k) o[k] = (o[k] || 0) + 1; }); return o; };

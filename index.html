@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611130958';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611131400';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -127,7 +127,22 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
-<style>html,body{background:#0E1830}</style>
+<style>html,body{background:#0E1830}
+/* UGC report / block sheet and buttons (Google Play UGC policy) */
+.ugcSheet{position:fixed;inset:0;z-index:2147483000;background:rgba(3,6,14,.62);display:flex;align-items:flex-end;justify-content:center;padding:12px}
+.ugcBox{width:100%;max-width:440px;max-height:86vh;overflow:auto;background:#121a2c;color:#eef2f8;border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:16px;box-shadow:0 20px 50px -20px #000}
+.ugcT{font-size:17px;font-weight:900;margin-bottom:4px}
+.ugcS{font-size:13px;line-height:1.7;color:rgba(238,242,248,.75);margin-bottom:10px}
+.ugcS a{color:#8cc6ff}
+.ugcOpt{display:block;width:100%;min-height:46px;margin:6px 0;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;font:inherit;font-size:14.5px;font-weight:800;text-align:start;padding:10px 14px;cursor:pointer}
+.ugcOpt.ugcBlock{color:#ffb4a8;border-color:rgba(255,120,100,.35)}
+.ugcOpt.ugcYes{background:#E3A94B;color:#1a1206;border-color:#E3A94B;text-align:center}
+.ugcOpt.ugcCancel{text-align:center;background:transparent}
+.ugcSep{height:1px;background:rgba(255,255,255,.12);margin:10px 0}
+.ugcFlag{min-width:36px;min-height:36px;border:0;border-radius:10px;background:rgba(0,0,0,.25);color:rgba(255,255,255,.8);font-size:15px;cursor:pointer;margin-inline-start:6px}
+.pill{position:relative}.pl-flag{position:absolute;top:8px;inset-inline-end:8px;z-index:3}
+.fitMed{margin:6px 0 12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.07);font-size:12px;line-height:1.7;color:rgba(238,242,248,.78)}
+</style>
 <meta name="theme-color" content="#141c2b" />
 <link rel="manifest" id="mf" href="manifest.json" />
 <meta name="description" content="نفاف — طقس مكانك بلغتك أينما كنت: تنبيهات المطر قبل وصوله، الرادار، التحذيرات الرسمية من جهة بلدك، ومناخ مدن العالم شهرًا بشهر. مجاني وبلا إعلانات." />
@@ -6902,10 +6917,10 @@ function corrCard(){
  var c=FEED.corr[i];
  h+='<div class="cc-row">'+
  '<span class="cc-k">'+((OBS_LABEL[c.kind]||['—','—','—'])[L])+'</span>'+
- '<span class="cc-w">'+c.wilaya+'</span>'+
- (c.name?'<span class="cc-nm">'+c.name+'</span>':'')+
+ '<span class="cc-w">'+ugcE(c.wilaya)+'</span>'+
+ (c.name?'<span class="cc-nm">'+ugcE(c.name)+'</span>':'')+
  '<span class="cc-t">'+repAgo(c.ts)+'</span></div>';
- if(c.note)h+='<div class="cc-note">'+c.note+'</div>';
+ if(c.note)h+='<div class="cc-note">'+ugcE(c.note)+'</div>';
  }
  /* الإجماع */
  if(FEED.consensus&&FEED.consensus.length){
@@ -6955,17 +6970,27 @@ function pillArt(kind){
  return '<span class="pill-art"></span>';
 }
 
+/* ★ UGC safety (Google Play User Generated Content policy): every post can be reported, its author blocked;
+   reported posts and everything from blocked authors stay hidden on this device */
+function ugcE(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function ugcList(k){try{return JSON.parse(stGet(k)||'[]')}catch(e){return []}}
+function ugcHidden(it){if(!it)return true;return (it.id&&ugcList('flagged').indexOf(it.id)>=0)||(it.a&&ugcList('blockedAuthors').indexOf(it.a)>=0)}
+function ugcFlagBtn(it,cls){if(!it||!it.id)return '';return '<button type="button" class="'+(cls||'ugcFlag')+'" data-flag="'+ugcE(it.id)+'" data-a="'+ugcE(it.a||'')+'" aria-label="'+ugcE(pick('بلّغ أو احظر','إبلاغ أو حظر','Report or block'))+'">⚑</button>'}
+function ugcSafeImg(u){return /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(String(u||''))?u:''}
+
 /* اجمع كل الرصدات في قائمة واحدة */
 function pillItems(){
  var out=[],L=LI();
  if(FEED&&FEED.corr)FEED.corr.forEach(function(c){
- out.push({kind:c.kind,wilaya:c.wilaya,name:c.name,corr:true,ts:c.ts,photo:c.photo});
+ if(ugcHidden(c))return;
+ out.push({id:c.id,a:c.a,kind:c.kind,wilaya:c.wilaya,name:c.name,corr:true,ts:c.ts,photo:c.photo});
  });
  if(FEED&&FEED.consensus)FEED.consensus.forEach(function(g){
  out.push({kind:g.kind,wilaya:g.wilaya,count:g.count,ts:Date.now()});
  });
  if(FEED&&FEED.solo)FEED.solo.forEach(function(x){
- out.push({kind:x.kind,wilaya:x.wilaya,ts:x.ts,photo:x.photo});
+ if(ugcHidden(x))return;
+ out.push({id:x.id,a:x.a,kind:x.kind,wilaya:x.wilaya,ts:x.ts,photo:x.photo});
  });
  return out;
 }
@@ -6981,15 +7006,16 @@ function pillCard(){
  return '<div class="pill k-'+it.kind+'" id="pillCard">'+
  pillArt(it.kind)+
  '<div class="pill-tx">'+
- '<div class="pl-k">'+kn+' — '+it.wilaya+'</div>'+
+ '<div class="pl-k">'+kn+' — '+ugcE(it.wilaya)+'</div>'+
  '<div class="pl-m">'+
  (it.corr?'<span class="pl-badge">'+pick('مراسل','مراسل','Reporter')+'</span>':'')+
  (it.count?'<span class="pl-cnt">'+it.count+' '+pick('اتفقوا','إجماع','agree')+'</span>':'')+
- (it.name?'<span class="pl-nm">'+it.name+'</span>':'')+
+ (it.name?'<span class="pl-nm">'+ugcE(it.name)+'</span>':'')+
  '<span class="pl-t">'+repAgo(it.ts)+'</span>'+
  '</div>'+
  '</div>'+
- (it.photo?'<img class="pl-img" src="'+it.photo+'" alt="" />':'')+
+ (ugcSafeImg(it.photo)?'<img class="pl-img" src="'+ugcSafeImg(it.photo)+'" alt="" />':'')+
+ ugcFlagBtn(it,'ugcFlag pl-flag')+
  (items.length>1?'<div class="pl-dots">'+dots+'</div>':'')+
  '</div>';
 }
@@ -7033,7 +7059,7 @@ var NAFAF_ABOUT={
  '<b>ما ليس نفاف؟</b><br>'+
  'نفاف <b>تطبيق مستقل تمامًا</b> لا يمثّل أي جهة حكومية أو رسمية ولا ينتمي إليها '+
  'ولا يدّعي أي صفة رسمية. وهو <b>ليس جهة أرصاد</b>: لا يُنتج بيانات أرصاد ولا يملك محطات رصد ولا رادارًا. '+
- 'ولا يصدر تحذيرات ولا إنذارات ولا توجيهات سلامة. '+
+ 'ولا يصدر تحذيرات رسمية باسمه ولا توجيهات سلامة: التحذيرات الرسمية يعرضها كما تصدرها جهاتها حرفيًا مع اسمها ورابطها، وتنبيهات المطر فيه إشعارات تقديرية من صور الرادار العامة لا تُغني عن التحذير الرسمي. '+
  'والمصدر المعتمد الوحيد في الأحوال الجوية الشديدة هو <b>جهة الأرصاد الرسمية المختصة في بلدك</b>.<br><br>'+
  '<b>ما الذي يميّزه؟</b><br>'+
  '• <b>التقويم النجمي</b> — سهيل والوسم والمربعانية والدرور كما يعرفها أهل الجزيرة<br>'+
@@ -7050,13 +7076,13 @@ var NAFAF_ABOUT={
  '• <b>خصوصيتك لك</b> — بياناتك في جهازك لا عندنا',
 
  '<b>نفاف</b> كلمة خليجية تعني المطر الخفيف. مشروع <b>ثقافي تعليمي</b> يحفظ معرفة أهل الجزيرة بالسماء ويعرض معها تحليل نماذج جوية مفتوحة.<br><br>'+
- '<b>ما ليس نفاف:</b> تطبيق مستقل لا يمثّل أي جهة حكومية أو رسمية ولا ينتمي إليها. وليس جهة أرصاد: لا يُنتج بيانات أرصاد ولا يملك محطات رصد ولا يصدر تحذيرات. والمصدر المعتمد هو جهة الأرصاد الرسمية في بلدك.<br><br>'+
+ '<b>ما ليس نفاف:</b> تطبيق مستقل لا يمثّل أي جهة حكومية أو رسمية ولا ينتمي إليها. وليس جهة أرصاد: لا يُنتج بيانات أرصاد ولا يملك محطات رصد ولا يصدر تحذيرات رسمية: يعرض تحذيرات الجهات الرسمية كما هي مع رابطها، وتنبيهات المطر فيه تقديرية من الرادار. والمصدر المعتمد هو جهة الأرصاد الرسمية في بلدك.<br><br>'+
  '<b>المميزات:</b> التقويم النجمي العربي · مكتبة علمية · أرشيف مناخي موثّق · ثلاث لغات · تحليل نماذج مفتوحة · رصد مجتمعي.<br><br>'+
  '<b>الجهة:</b> مشروع فردي مستقل غير رسمي يعتمد على بيانات مفتوحة مجانية.<br><br>'+
  '<b>قيمنا:</b> الصدق في المصادر · حدود واضحة لا نتجاوزها · احترام الخصوصية.',
 
  '<b>Nafaf</b> is a Gulf word for light rain. A <b>cultural and educational</b> project preserving Arabian sky knowledge, presented alongside analysis from open global weather models.<br><br>'+
- '<b>What Nafaf is not:</b> An entirely independent app — not affiliated with, endorsed by, or representing any government agency. Not a meteorological authority: it produces no meteorological data, owns no observation stations, and issues no warnings. The authoritative source is your national meteorological service.<br><br>'+
+ '<b>What Nafaf is not:</b> An entirely independent app — not affiliated with, endorsed by, or representing any government agency. Not a meteorological authority: it produces no meteorological data, owns no observation stations, and issues no official warnings of its own: official warnings are shown word for word with the issuing authority named and linked, and Nafaf’s rain alerts are estimates from public radar imagery. The authoritative source is your national meteorological service.<br><br>'+
  '<b>Features:</b> Arabian star calendar · Science library · Documented climate archive · Three languages · Open model analysis · Community observation.<br><br>'+
  '<b>Who:</b> An independent project — not a company or official body. Self-funded, built on free open data.<br><br>'+
  '<b>Values:</b> Honesty over spectacle · Clear limits · Your privacy stays yours.'
@@ -7074,11 +7100,11 @@ var NAFAF_LEGAL={
  'الأرصاد الجوية الرسمية أو جهة الإنذار المبكر المختصة في بلدك</b> — وهي وحدها '+
  'المخوّلة بإصدار التحذيرات وتوجيه إجراءات السلامة. ارجع إليها دائمًا وتابع قنواتها الرسمية.<br><br>'+
  '<b>٣. حدود بيانات النماذج</b><br>'+
- 'نعتمد على نماذج تنبؤ عالمية (ECMWF · GFS · ICON) بدقة شبكة تقارب ١١ كم. هذه النماذج <b>تخطئ محليًا</b> وقد تختلف عمّا تراه بعينك. ولا تتوفر شبكة رادار أرضي مفتوحة في كثير من مناطق العالم — وما نسمّيه «رادار» في التطبيق هو تقدير من نماذج أو أقمار ونقول ذلك صراحةً في كل طبقة.<br><br>'+
+ 'نعتمد على نماذج تنبؤ عالمية (ECMWF · GFS · ICON) بدقة شبكة تقارب ١١ كم. هذه النماذج <b>تخطئ محليًا</b> وقد تختلف عمّا تراه بعينك. ونعرض صور رادار المطر المجمّعة من RainViewer حيث تتوفر — وهي لا تغطي كل مكان، و«مطر الساعة الجاية» فيها تقدير بتحريك صدى الرادار بسرعته الحالية. وما ليس رادارًا (نماذج أو أقمار) نقول ذلك صراحةً في كل طبقة.<br><br>'+
  '<b>٤. رصد المجتمع</b><br>'+
  'الرصدات التي يشاركها المستخدمون هي <b>ملاحظات شخصية غير مُتحقَّق منها علميًا</b>. نعرضها لإثراء الصورة لا لاعتمادها. ورصد المراسلين المعتمدين يُراجع يدويًا قبل النشر لكنه يبقى <b>وصفًا لا تحذيرًا</b>.<br><br>'+
  '<b>٥. ما لا يفعله نفاف إطلاقًا</b><br>'+
- '• لا يصدر تحذيرات سيول أو أودية<br>'+
+ '• لا يصدر تحذيرات سيول أو أودية باسمه<br>'+
  '• لا يقدّم نصائح صحية أو طبية<br>'+
  '• لا يتتبّع الأعاصير النشطة لحظيًا<br>'+
  '• لا يوجّه بإخلاء أو إجراءات سلامة<br><br>'+
@@ -8714,6 +8740,9 @@ function renderFit(){
  if(!FIT.on&&!FIT.last){var hs0=fitHist(); if(hs0.length){FIT.last=hs0[0];FIT.lastOld=true;}}
  var L=LI(), prof=fitProf(), h='';
  h+='<div class="sec-t">'+['رياضتي','رياضتي','My fitness'][L]+'</div>';
+ h+='<div class="fitMed">'+['للتسلية والمتابعة الشخصية فقط: نفاف ليس جهازًا طبيًا ولا يشخّص أو يعالج أي حالة، والسعرات والخطوات تقديرية. استشر مختصًا صحيًا قبل أي برنامج رياضي أو قرار صحي. سجلّ تمارينك يبقى على جهازك فقط.',
+  'لأغراض المتابعة الشخصية فقط: نفاف ليس جهازًا طبيًا ولا يشخّص أي حالة أو يعالجها أو يمنعها، والسعرات والخطوات تقديرية. استشر مختصًا صحيًا للحصول على المشورة الطبية. يُحفظ سجل التمارين على جهازك فقط.',
+  'For personal tracking only: Nafaf is not a medical device and does not diagnose, treat, cure or prevent any medical condition; calories and steps are estimates. Consult a healthcare professional for medical advice. Your workout history stays on your device.'][L]+'</div>';
  h+='<div class="sec-s">'+['مشي وجري ودراجة — مع جوّك الحقيقي','المشي والجري والدراجة مع حالة الطقس','Walk, run and ride — with your real weather'][L]+'</div>';
  var topCards=fitHypeCard()+fitWindowCard()+fitGoalCard();
  if(!FIT.on)h+=topCards;
@@ -10575,7 +10604,7 @@ function communityFeed(){
  var c=corrs[i];
  h+='<div class="cf-row corr">'+
  '<span class="cf-k">'+(OBS_LABEL[c.kind]||['—','—','—'])[L]+'</span>'+
- '<span class="cf-w">'+c.wilaya+(c.name?' · '+c.name:'')+'</span>'+
+ '<span class="cf-w">'+ugcE(c.wilaya)+(c.name?' · '+ugcE(c.name):'')+'</span>'+
  '<span class="cf-t">'+repAgo(c.ts)+'</span></div>';
  }
  }
@@ -10612,10 +10641,11 @@ function serverFeed(){
  h+='<div class="fd-sec">'+pick('من مراسلي نفاف','من المراسلين','From our reporters')+'</div>';
  for(var i=0;i<Math.min(4,FEED.corr.length);i++){
  var c=FEED.corr[i];
+ if(ugcHidden(c))continue;
  h+='<div class="cf"><span class="cf-badge">'+pick('مراسل','مراسل','Reporter')+'</span>'+
  '<span class="cf-k">'+(OBS_LABEL[c.kind]||['—','—','—'])[L]+'</span>'+
- '<span class="cf-w">'+c.wilaya+(c.name?' · '+c.name:'')+'</span>'+
- '<span class="cf-t">'+repAgo(c.ts)+'</span></div>';
+ '<span class="cf-w">'+ugcE(c.wilaya)+(c.name?' · '+ugcE(c.name):'')+'</span>'+
+ '<span class="cf-t">'+repAgo(c.ts)+'</span>'+ugcFlagBtn(c)+'</div>';
  }
  }
  if(FEED.consensus&&FEED.consensus.length){
@@ -10742,6 +10772,8 @@ function wireSheet(){
  'وصل رصدك؛ تتم مراجعته.','Received — pending review.'));
  PHOTO=null;
  reportsLoad();
+ } else if(r.error==='banned'){
+ toast(pick('حسابك ممنوع من النشر بسبب مخالفة شروط الاستخدام.','حسابك ممنوع من النشر لمخالفة الشروط.','Your account is banned from posting for breaking the terms.'),true);
  } else if(r.error==='rate'){
  toast(pick('رصدت قبل شوي — انتظر '+(r.minutes||30)+' دقيقة.',
  'يرجى الانتظار '+(r.minutes||30)+' دقيقة.','Please wait '+(r.minutes||30)+' min.'),true);
@@ -10767,7 +10799,7 @@ function wireSheet(){
  }
  });};
  var pb=$("photoBtn2");
- if(pb)pb.onclick=function(){var pi=$("photoInput");if(pi)pi.click();};
+ if(pb)pb.onclick=function(){ugcAgree(function(){var pi=$("photoInput");if(pi)pi.click();});};
  else{/* الزر يظهر في وضع الرصد فقط */}
  var pcl=$("photoClr");
  if(pcl)pcl.onclick=function(){PHOTO=null;renderSheet();toast(pick('حُذفت الصورة','حُذفت','Removed'));};
@@ -11874,12 +11906,12 @@ function renderGallery(){
  var h=head+'<div class="galGrid">',i;
  for(i=0;i<GALLERY.length;i++){
  var g=GALLERY[i];
- if(flagged.indexOf(g.id||i)>=0)continue;
+ if(flagged.indexOf(g.id||i)>=0||ugcHidden(g)||!ugcSafeImg(g.photo))continue;
  /* ★ زر الإبلاغ — شرط Google Play للمحتوى المُنشأ من المستخدمين */
- h+='<div class="galItem"><img src="'+g.photo+'" alt="" loading="lazy" />'+
- '<div class="gi-ov"><div class="gi-w">'+g.wilaya+'</div>'+
- '<div class="gi-m">'+(g.name?g.name+' · ':'')+repAgo(g.ts)+'</div></div>'+
- '<button class="gi-flag" data-flag="'+(g.id||i)+'" title="'+
+ h+='<div class="galItem"><img src="'+ugcSafeImg(g.photo)+'" alt="" loading="lazy" />'+
+ '<div class="gi-ov"><div class="gi-w">'+ugcE(g.wilaya)+'</div>'+
+ '<div class="gi-m">'+(g.name?ugcE(g.name)+' · ':'')+repAgo(g.ts)+'</div></div>'+
+ '<button class="gi-flag" data-flag="'+ugcE(g.id||i)+'" data-a="'+ugcE(g.a||'')+'" title="'+
  ['إبلاغ عن محتوى مسيء','الإبلاغ عن محتوى مخالف','Report inappropriate content'][L]+
  '">⚑</button></div>';
  }
@@ -11892,14 +11924,13 @@ function renderGallery(){
    ⚠️ تشترط السياسة «طبقة إشراف مرئية» قابلة للاستخدام فعليًا
       لا مجرد نص ضوابط.
    ============================================================ */
-function wireFlags(){
- var fs=document.querySelectorAll('[data-flag]'),i;
- for(i=0;i<fs.length;i++)fs[i].onclick=function(e){
-  e.stopPropagation();
-  flagContent(this.getAttribute('data-flag'));
- };
-}
-function flagContent(id){
+function wireFlags(){ /* clicks on [data-flag] are handled once, document-wide (below) */ }
+document.addEventListener('click',function(e){
+ var t=e.target&&e.target.closest&&e.target.closest('[data-flag]');if(!t)return;
+ e.preventDefault();e.stopPropagation();flagContent(t.getAttribute('data-flag'),t.getAttribute('data-a')||'');
+},true);
+function ugcRefresh(){try{if(typeof renderGallery==='function'&&$("galBody"))renderGallery()}catch(e){}try{if(sheetIsOpen())renderSheet()}catch(e){}try{if(typeof renderNow==='function'&&TAB==='now')renderNow()}catch(e){}}
+function flagContent(id,author){
  var L=LI();
  var reasons=[
   ['محتوى غير لائق','محتوى غير لائق','Inappropriate content'],
@@ -11907,35 +11938,49 @@ function flagContent(id){
   ['ليست صورة أجواء','خارج موضوع التطبيق','Not weather related'],
   ['منقولة أو مسروقة','انتهاك حقوق','Copyright / stolen'],
   ['مضلّلة أو مفبركة','محتوى مضلّل','Misleading or fake'],
+  ['إساءة أو تحرّش من هذا المستخدم','إساءة أو تحرش','Abuse or harassment by this user'],
   ['سبب آخر','سبب آخر','Other']
  ];
- var msg=['اختر سبب الإبلاغ:','اختر سبب الإبلاغ:','Select a reason:'][L]+String.fromCharCode(10,10);
- for(var i=0;i<reasons.length;i++)msg+=(i+1)+' — '+reasons[i][L]+String.fromCharCode(10);
- msg+=String.fromCharCode(10)+['اكتب الرقم:','اكتب الرقم:','Enter number:'][L];
- var pick0=prompt(msg,'1');
- if(!pick0)return;
- var nn=parseInt(pick0,10);
- if(!(nn>=1&&nn<=reasons.length)){
-  toast(['رقم غير صحيح','اختيار غير صحيح','Invalid choice'][L],true); return;
- }
- try{
-  if(PUSH_URL)fetch(PUSH_URL+'/report-abuse',{method:'POST',
-   headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({id:id,reason:reasons[nn-1][1],
-     vid:(typeof visitorId==='function')?visitorId():'',ts:Date.now()})})
-   .catch(function(){});
- }catch(e){}
- try{
-  var hid=JSON.parse(stGet('flagged')||'[]');
-  if(hid.indexOf(id)<0)hid.push(id);
-  stSet('flagged',JSON.stringify(hid));
- }catch(e){}
- alert(['شكرًا لك. وصل بلاغك وسيُراجَع خلال ٢٤ ساعة وأُخفي المحتوى عنك الآن.',
-  'شكرًا لك؛ وصل بلاغك وستتم مراجعته خلال ٢٤ ساعة وأُخفي المحتوى عنك.',
-  'Thank you. Your report was received and will be reviewed within 24 hours. The content is now hidden from your view.'][L]);
- if(typeof renderGallery==='function')renderGallery();
+ var old=document.getElementById('ugcSheet');if(old)old.remove();
+ var d=document.createElement('div');d.id='ugcSheet';d.className='ugcSheet';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+ var h='<div class="ugcBox"><div class="ugcT">'+ugcE(pick('بلّغ عن هذا المنشور','الإبلاغ عن المحتوى','Report this post'))+'</div>'+
+  '<div class="ugcS">'+ugcE(pick('نراجع كل بلاغ خلال ٢٤ ساعة، والمخالف يُحذف وقد يُمنع صاحبه.','تُراجع البلاغات خلال ٢٤ ساعة، ويُحذف المخالف وقد يُحظر صاحبه.','Every report is reviewed within 24 hours; violating posts are removed and their authors may be banned.'))+'</div>';
+ reasons.forEach(function(r,i){h+='<button type="button" class="ugcOpt" data-r="'+i+'">'+ugcE(r[L])+'</button>'});
+ if(author)h+='<div class="ugcSep"></div><button type="button" class="ugcOpt ugcBlock" data-b="1">🚫 '+ugcE(pick('احظر هذا المستخدم — ما يطلع لك شي منه بعد اليوم','حظر هذا المستخدم وإخفاء كل منشوراته','Block this user — hide everything they post'))+'</button>';
+ h+='<button type="button" class="ugcOpt ugcCancel" data-x="1">'+ugcE(pick('إلغاء','إلغاء','Cancel'))+'</button></div>';
+ d.innerHTML=h;document.body.appendChild(d);
+ function close(){d.remove()}
+ d.addEventListener('click',function(e){
+  if(e.target===d){close();return}
+  var b=e.target.closest('button');if(!b)return;
+  if(b.hasAttribute('data-x')){close();return}
+  if(b.hasAttribute('data-b')){
+   var bl=ugcList('blockedAuthors');if(bl.indexOf(author)<0)bl.push(author);stSet('blockedAuthors',JSON.stringify(bl));
+   try{if(PUSH_URL)fetch(PUSH_URL+'/report-abuse',{method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({id:id,a:author,kind:'block',reason:'blocked by user',vid:(typeof visitorId==='function')?visitorId():'',ts:Date.now()})}).catch(function(){})}catch(x){}
+   close();toast(pick('حظرناه — ما راح تشوف منشوراته.','تم حظر المستخدم وإخفاء منشوراته.','User blocked — their posts are hidden.'));ugcRefresh();return}
+  var n=+b.getAttribute('data-r');if(!(n>=0))return;
+  try{if(PUSH_URL)fetch(PUSH_URL+'/report-abuse',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:id,a:author,kind:'report',reason:reasons[n][2],vid:(typeof visitorId==='function')?visitorId():'',ts:Date.now()})}).catch(function(){})}catch(x){}
+  var hid=ugcList('flagged');if(hid.indexOf(id)<0)hid.push(id);stSet('flagged',JSON.stringify(hid));
+  close();toast(pick('وصل بلاغك — نراجعه خلال ٢٤ ساعة، وأخفيناه عنك.','تم استلام البلاغ وسيُراجع خلال ٢٤ ساعة، وأُخفي المحتوى عنك.','Report received — reviewed within 24 hours; hidden from you now.'));ugcRefresh();
+ });
 }
-
+/* posting rules must be accepted before the first photo is shared (UGC policy) */
+function ugcAgree(go){
+ if(stGet('ugcTermsOk')==='1'){go();return}
+ var old=document.getElementById('ugcSheet');if(old)old.remove();
+ var d=document.createElement('div');d.id='ugcSheet';d.className='ugcSheet';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+ d.innerHTML='<div class="ugcBox"><div class="ugcT">'+ugcE(pick('قبل ما تنشر صورة','قبل نشر صورتك','Before you share a photo'))+'</div>'+
+  '<div class="ugcS" style="text-align:start">'+pick('• صور الجو والسماء فقط، ومن تصويرك أنت<br>• بلا وجوه ولا لوحات سيارات ولا بيوت تُعرف<br>• بلا إساءة ولا كراهية ولا عنف ولا محتوى جنسي ولا إعلانات<br>• كل صورة تُراجع قبل النشر، والمخالف يُحذف وقد يُمنع صاحبه',
+   '• صور الطقس والسماء فقط ومن تصويرك<br>• دون وجوه أو لوحات مركبات أو منازل يمكن التعرف عليها<br>• يُمنع المحتوى المسيء أو الكاره أو العنيف أو الجنسي أو الإعلاني<br>• تُراجع كل صورة قبل نشرها، ويُحذف المخالف وقد يُحظر صاحبه',
+   '• Weather and sky only, taken by you<br>• No faces, number plates or identifiable homes<br>• No abuse, hate, violence, sexual content or ads<br>• Every photo is reviewed before it appears; violations are removed and may lead to a ban')+
+  '<br><a href="terms.html#ugc" target="_blank" rel="noopener">'+ugcE(pick('شروط الاستخدام كاملة','شروط الاستخدام','Full terms of use'))+'</a></div>'+
+  '<button type="button" class="ugcOpt ugcYes" data-y="1">'+ugcE(pick('أوافق على الشروط','أوافق على الشروط','I agree to the terms'))+'</button>'+
+  '<button type="button" class="ugcOpt ugcCancel" data-x="1">'+ugcE(pick('إلغاء','إلغاء','Cancel'))+'</button></div>';
+ document.body.appendChild(d);
+ d.addEventListener('click',function(e){if(e.target===d){d.remove();return}var b=e.target.closest('button');if(!b)return;d.remove();if(b.hasAttribute('data-y')){stSet('ugcTermsOk','1');go()}});
+}
 /* ★ شارة نوع المصدر — يميّز الرصد من النموذج من القمر */
 var SRC_KIND={
  satellite:['sat',['قمر صناعي','قمر صناعي','Satellite']],
@@ -11951,6 +11996,7 @@ var SRC_KIND={
  windmap:['mdl',['نموذج تنبؤ','نموذج تنبؤ','Forecast model']],
  stormmap:['mdl',['نموذج تنبؤ','نموذج تنبؤ','Forecast model']]
 };
+
 function srcBadge(kind){
  var k=SRC_KIND[kind];
  if(!k)return '';
@@ -12103,14 +12149,12 @@ function deleteEverything(){
  if(b){b.disabled=true;b.innerHTML=pick('جارٍ الحذف…','جارٍ الحذف…','Deleting…');}
 
  function wipeLocal(){
-  try{
-   var keys=[];
-   for(var i=0;i<localStorage.length;i++){
-    var k=localStorage.key(i);
-    if(k&&k.indexOf('nafaf_')===0)keys.push(k);
-   }
-   for(var j=0;j<keys.length;j++)localStorage.removeItem(keys[j]);
-  }catch(e){}
+  /* everything Nafaf keeps on this device: the anonymous id, places, history, settings, workouts */
+  try{localStorage.clear()}catch(e){}
+  try{sessionStorage.clear()}catch(e){}
+  try{for(var mk in MEM)delete MEM[mk]}catch(e){}
+  try{if(window.indexedDB&&indexedDB.databases)indexedDB.databases().then(function(ds){ds.forEach(function(x){if(x&&x.name)indexedDB.deleteDatabase(x.name)})}).catch(function(){})}catch(e){}
+  try{if(window.google&&google.accounts&&google.accounts.id)google.accounts.id.disableAutoSelect()}catch(e){}
   try{ if(window.caches&&caches.keys)caches.keys().then(function(ns){
    ns.forEach(function(n){caches.delete(n);}); }); }catch(e){}
  }
@@ -12118,9 +12162,13 @@ function deleteEverything(){
  /* ★ الخادم أولًا — ثم المحلي */
  var vid=(typeof visitorId==='function')?visitorId():null;
  if(PUSH_URL&&vid){
-  fetch(PUSH_URL+'/account/delete',{method:'POST',
-   headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({vid:vid})})
+  var ep=Promise.resolve(null);
+  try{if(navigator.serviceWorker&&navigator.serviceWorker.ready)ep=Promise.race([navigator.serviceWorker.ready.then(function(r){return r.pushManager.getSubscription()}).then(function(s){return s?s.endpoint:null}).catch(function(){return null}),new Promise(function(r){setTimeout(function(){r(null)},2500)})])}catch(e){}
+  ep.then(function(endpoint){
+   return fetch(PUSH_URL+'/account/delete',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({vid:vid,endpoint:endpoint})});
+  })
   .then(function(r){return r.json();})
   .then(function(){ finishDelete(wipeLocal,L); })
   .catch(function(){ finishDelete(wipeLocal,L); });
