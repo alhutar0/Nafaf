@@ -10,13 +10,12 @@ jobs:
           mkdir out && cd out
           W=https://nafa-push.alhutar0.workers.dev
           date -u > now.txt
-          curl -sS -m 30 -X POST -H 'content-type: text/plain' -d '{"vid":"probe-test-1","tab":"now","lang":"en","dev":"d","st":0,"src":"probe","page":"app"}' $W/live/beat > beat1.json
-          sleep 2
-          curl -sS -m 30 -X POST -H 'content-type: text/plain' -d '{"vid":"probe-test-1","tab":"live"}' $W/live/beat > beat2.json
-          curl -sS -m 30 -X POST -H 'content-type: text/plain' -d '{"vid":"probe-test-1"}' $W/live/bye > bye.txt
-          curl -sS -m 30 -X POST -H 'content-type: text/plain' -d '{"vid":"probe-test-2","tab":"now"}' $W/live/beat > beat3.json
-          curl -sS -m 30 -X POST -H 'content-type: text/plain' -d '{"vid":"probe-test-2"}' $W/live/bye >> bye.txt
-          curl -sS -m 30 -X POST -H 'content-type: application/json' -d '{"pass":"wrong"}' $W/admin/live > admin_noauth.json
+          for p in 24.347,56.709 23.6,58.4 51.5,-0.12 60.39,5.32 47.6,-122.3 53.55,9.99 1.35,103.82; do
+            la=${p%,*}; lo=${p#*,}
+            curl -sS -m 60 -o nc_$p.json -w "$p first %{http_code} %{time_total}s\n" "$W/nowcast?lat=$la&lon=$lo" >> times.txt
+            curl -sS -m 60 -o /dev/null -w "$p again %{http_code} %{time_total}s\n" "$W/nowcast?lat=$la&lon=$lo" >> times.txt
+          done
+          curl -sS -m 30 "https://api.rainviewer.com/public/weather-maps.json" > rv.json
           git init -q && git checkout -q -b probe-out && git add -A
           git -c user.name=probe -c user.email=probe@nafaf.online commit -qm probe
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" probe-out
