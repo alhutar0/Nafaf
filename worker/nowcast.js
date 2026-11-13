@@ -68,10 +68,11 @@ export async function regionMotion(lat, lon, R = 200) {
   if (wet < 40 || P.length < 2) return { t: f0.time, motion: null, region };
   const C = coarse(g0, w, h, 4), cIdx = wetIdx(C.o, C.W * C.H, 6000), fIdx = wetIdx(g0, w * h, 25000);
   const est = [];
+  const olds = await Promise.all([1, 2].map(back => { const f = P[P.length - 1 - back]; return f ? mosaic(tilesFor(F.host, f.path), gx0, gy0, w, h) : null; }));
   for (const back of [1, 2]) {
     const f = P[P.length - 1 - back]; if (!f) continue;
     const dt = (f0.time - f.time) / 3600; if (dt <= 0 || dt > 0.6) continue;
-    const g = await mosaic(tilesFor(F.host, f.path), gx0, gy0, w, h), Co = coarse(g, w, h, 4);
+    const g = olds[back - 1], Co = coarse(g, w, h, 4);
     const S = Math.max(2, Math.ceil(120 * dt / (kmpp * 4)));       /* up to ~120 km/h */
     const c = bestShift(C.o, Co.o, C.W, C.H, cIdx, 0, 0, S); if (!c.d || c.q < 0.3) continue;
     const r = bestShift(g0, g, w, h, fIdx, c.d[0] * 4, c.d[1] * 4, 4); if (!r.d || r.q < 0.25) continue;
@@ -96,7 +97,8 @@ export async function regionMotion(lat, lon, R = 200) {
 async function disc(getTile, gx, gy, rKm, kmpp) {
   const rp = rKm / kmpp, x0 = Math.floor(gx - rp), x1 = Math.ceil(gx + rp), y0 = Math.floor(gy - rp), y1 = Math.ceil(gy + rp);
   const T = new Map();
-  for (let ty = Math.floor(y0 / 256); ty <= Math.floor(y1 / 256); ty++) for (let tx = Math.floor(x0 / 256); tx <= Math.floor(x1 / 256); tx++) T.set(tx + '/' + ty, await getTile(tx, ty));
+  const J = []; for (let ty = Math.floor(y0 / 256); ty <= Math.floor(y1 / 256); ty++) for (let tx = Math.floor(x0 / 256); tx <= Math.floor(x1 / 256); tx++) J.push(getTile(tx, ty).then(t => T.set(tx + '/' + ty, t)));
+  await Promise.all(J);
   let n = 0; const w = [];
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
     if ((x + .5 - gx) ** 2 + (y + .5 - gy) ** 2 > rp * rp) continue;
@@ -127,7 +129,7 @@ export async function nowcastAt(lat, lon, M) {
   }
   /* the last hour as observed at the point itself */
   const past = [];
-  if (!dry) for (const f of P.slice(-7)) { const d = await disc(tilesFor(F.host, f.path), gx, gy, 3, kmpp); past.push([f.time, d[0], d[1]]); }
+  if (!dry) for (const [f, d] of await Promise.all(P.slice(-7).map(async f => [f, await disc(tilesFor(F.host, f.path), gx, gy, 3, kmpp)]))) past.push([f.time, d[0], d[1]]);
   return { t: f0.time, step: STEP, s, past };
 }
 

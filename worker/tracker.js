@@ -23,8 +23,10 @@ function km(a, b, c, d) { const R = 6371, r = Math.PI / 180, x = Math.sin((c - a
 export async function mosaic(getTile, gx0, gy0, w, h) {
   const g = new Int8Array(w * h).fill(-128);
   const tx0 = Math.floor(gx0 / 256), tx1 = Math.floor((gx0 + w - 1) / 256), ty0 = Math.floor(gy0 / 256), ty1 = Math.floor((gy0 + h - 1) / 256);
-  for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
-    const t = await getTile(tx, ty); if (!t) continue;
+  /* all tiles of the box in parallel (the frame's tiles are independent; sequential awaits cost seconds per box) */
+  const J = []; for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) J.push(getTile(tx, ty).then(t => [tx, ty, t]));
+  for (const [tx, ty, t] of await Promise.all(J)) {
+    if (!t) continue;
     for (let py = 0; py < 256; py++) {
       const y = ty * 256 + py - gy0; if (y < 0 || y >= h) continue;
       for (let px = 0; px < 256; px++) { const x = tx * 256 + px - gx0; if (x < 0 || x >= w) continue; g[y * w + x] = t[py * 256 + px]; }
