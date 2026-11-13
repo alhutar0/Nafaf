@@ -51,6 +51,14 @@ var NAFAF_LABS=[
  {id:'broadcast',n:'استوديو النشرة',e:'Broadcast Studio',s:'نشرة متحركة بلهجتك من أربعة نماذج',se:'An animated bulletin from four models',f:'broadcast.html',c:'#E58AB0',g:'make',net:1,p:'M3 6h18v11H3zM8 21h8M12 17v4M10 9.5v4l3.5-2z'},
  {id:'scent',n:'قارورة الجو',e:'Weather Flask',s:'امزج روائح طقسك وأهدها لصديق',se:'Blend the scents of your weather',f:'scent.html',c:'#D9A066',g:'make',net:0,p:'M10 3h4v3l3 3v10a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V9l3-3z'},
  {id:'village',n:'قرية نفاف',e:'Nafaf Village',s:'فلج وفوانيس ونخيل تكبر مع أيامك',se:'A falaj village that grows with your days',f:'village.html',c:'#B9D36A',g:'make',net:1,p:'M3 21V11l5-4 5 4v10M13 21v-7h8v7M6 21v-4h4v4M17 14V9'}];
+/* same visibility as the app: only labs the portal has switched on (by default the cyclone game) */
+(function(){try{var c=JSON.parse(localStorage.getItem('nx.cfg')||'null'),L=c&&c.labs;
+  if(!L||!L.length){NAFAF_LABS=NAFAF_LABS.filter(function(l){return l.id==='cyclone'});return;}
+  var by={};L.forEach(function(x){by[x.id]=x});
+  NAFAF_LABS=NAFAF_LABS.filter(function(l){return by[l.id]&&by[l.id].enabled!==false}).map(function(l){var o=by[l.id];if(!o)return l;var n={};for(var k in l)n[k]=l[k];if(o.label)n.n=o.label;if(o.en)n.e=o.en;if(o.star!=null)n.star=o.star?1:0;n._o=o.order;return n})
+    .sort(function(a,b){return (a._o==null?99:a._o)-(b._o==null?99:b._o)});
+}catch(e){}})();
+
 var NAFAF_GROUPS={water:['الماء والسيول','Water & floods'],air:['الجو والكواكب','Air & planets'],you:['رحلتك وجسمك','Your trip & body'],make:['إبداع ولعب','Create & play']};
 function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){return false}}
 

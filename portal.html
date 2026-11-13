@@ -715,8 +715,8 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
           <div class="opts" id="nKind">
             <span class="opt sel" data-k="info">🔵 معلومة</span>
             <span class="opt" data-k="good">🟢 خبر طيب</span>
-            <span class="opt" data-k="alert">🟡 تنبيه</span>
-            <span class="opt" data-k="urgent">🔴 عاجل</span>
+            <span class="opt" data-k="alert">🟡 ملاحظة</span>
+            <span class="opt" data-k="urgent">🔴 مهم</span>
           </div>
           <span class="lbl">العنوان</span>
           <input class="fld" id="nTitle" maxlength="90" placeholder="أمطار متوقعة على شمال الباطنة" />
@@ -762,10 +762,8 @@ textarea.fld{min-height:88px;resize:vertical;line-height:1.7}
             <span class="opt" data-v="30">نصف ساعة</span>
             <span class="opt sel" data-v="60">ساعة</span>
           </div>
-          <div class="rowSw" style="margin-top:12px">
-            <span>نشر الرصد الفردي تلقائيًا<div class="rd">بلا مراجعة منك</div></span>
-            <span class="sw" id="swAutoSolo"></span>
-          </div>
+          <div class="rd" style="margin-top:12px">كل رصد يُراجع قبل نشره — النشر التلقائي أُلغي التزامًا بسياسة Google Play للمحتوى الذي ينشئه المستخدمون.</div>
+          <span class="sw" id="swAutoSolo" style="display:none"></span>
           <button class="btn gold" id="bSaveRep" style="width:100%;margin-top:12px">حفظ</button>
         </div>
         <div class="card">
@@ -982,8 +980,10 @@ function toast(m,err){
   var t=$('toast'); t.innerHTML=m; t.className='toast on'+(err?' err':'');
   clearTimeout(tT); tT=setTimeout(function(){t.className='toast'+(err?' err':'');},2800);
 }
-function esc(s){return String(s==null?'':s).replace(/[<>&]/g,function(c){
-  return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];});}
+function esc(s){return String(s==null?'':s).replace(/[<>&"']/g,function(c){
+  return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c];});}
+/* only a real base64 image data URL may become an <img src> (user uploads are untrusted) */
+function safeImg(u){return /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/.test(String(u||''))?u:''}
 
 /* ═══════ الدخول ═══════ */
 $('loginBtn').onclick=function(){
@@ -1934,7 +1934,7 @@ function loadReports(){
         '<span style="color:#8b98ab">'+esc(x.wilaya||'—')+'</span>'+
         '<span style="margin-inline-start:auto;font-size:10px;color:#6b7789">'+
           new Date(x.ts).toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'})+'</span>'+
-        (x.photo?'<img src="'+x.photo+'" style="width:100%;max-height:110px;object-fit:cover;border-radius:10px;margin-top:6px" />':'')+
+        (safeImg(x.photo)?'<img src="'+safeImg(x.photo)+'" style="width:100%;max-height:110px;object-fit:cover;border-radius:10px;margin-top:6px" />':'')+
         (x.lat!=null?'<div style="width:100%;font-size:10px;color:#6b7789;direction:ltr;text-align:left">'+
           x.lat+', '+x.lon+' · <a href="https://maps.google.com/?q='+x.lat+','+x.lon+
           '" target="_blank" style="color:#9fd4f5">خريطة</a></div>':'')+
@@ -2035,7 +2035,7 @@ function loadGallery(){
   }
   $('galGrid').innerHTML='<div class="galG">'+ph.map(function(g){
    return '<div class="galIt">'+
-    '<img src="'+g.photo+'" alt="" />'+
+    '<img src="'+safeImg(g.photo)+'" alt="" />'+
     '<div class="gi-meta">'+
      '<span class="gi-w">'+esc(g.wilaya||'—')+'</span>'+
      (g.name?'<span class="gi-n">'+esc(g.name)+'</span>':'')+
@@ -2123,7 +2123,7 @@ function loadCorr(){
 /* ═══════ الملاحظات ═══════ */
 var FB_AR={idea:'💡 اقتراح',bug:'🐞 مشكلة',complaint:'⚠ شكوى',other:'✉ أخرى'};
 function loadAbuse(){
-  get('/admin/abuse/list?pass='+encodeURIComponent(PASS)).then(function(r){
+  api('/admin/abuse/list').then(function(r){
     if(!r||r.error)return;
     var items=r.reports||[];
     badge('badgeAbuse',r.pending||0);

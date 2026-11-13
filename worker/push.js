@@ -683,7 +683,7 @@ export default {
           try {
             const sub = JSON.parse(await env.NAFAF_KV.get(k.name));
             const ok = await sendPush(env, sub, {
-              title: item.title,
+              title: 'نفاف · ' + item.title,   /* always marked as Nafaf's own message, not an official warning */
               body: item.body || '',
               tag: 'nafaf-news',
               renotify: true,
@@ -996,23 +996,24 @@ export default {
       const cfgRaw = await env.NAFAF_KV.get('config');
       const cfg = cfgRaw ? JSON.parse(cfgRaw) : {};
       const ttlMin = Math.max(1, Math.min(60, parseInt(cfg.reportTTL, 10) || 30));
-      const autoSolo = !!cfg.autoPublishSolo;
+      /* autoPublishSolo retired: everything is reviewed */
 
       const item = {
         id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
         vid, kind, author,
-        photo: (typeof b.photo === 'string' && b.photo.indexOf('data:image/') === 0
-                && b.photo.length < 700000) ? b.photo : null,
-        wilaya: String(b.wilaya || '').slice(0, 40),
+        /* only a real base64 JPEG/PNG/WebP data URL (anything else could carry markup into the app or the portal) */
+        photo: (typeof b.photo === 'string' && b.photo.length < 700000
+                && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(b.photo)) ? b.photo : null,
+        wilaya: String(b.wilaya || '').replace(/[<>"'&`\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40),
         /* about 1 km: enough for a moderator to check the report against the weather there, never a home */
         lat: (typeof b.lat === 'number') ? Math.round(b.lat * 100) / 100 : null,
         lon: (typeof b.lon === 'number') ? Math.round(b.lon * 100) / 100 : null,
-        note: String(b.note || '').slice(0, 200),
+        note: '',   /* free text is not accepted from reports */
         isCorr, corrName,
         ts: Date.now(),
         expires: Date.now() + ttlMin * 60000,
-        /* ★ كل رصد ينتظر الموافقة — بما فيه المراسل */
-        status: (autoSolo && !isCorr) ? 'approved' : 'pending'
+        /* ★ every report waits for a moderator — no automatic publishing */
+        status: 'pending'
       };
 
       await env.NAFAF_KV.put('rep:' + item.id, JSON.stringify(item),
@@ -1047,6 +1048,7 @@ export default {
       /* ★ الإجماع التلقائي — ٣ أشخاص فأكثر بنفس الولاية والحالة */
       const groups = {};
       for (const r of live) {
+        if (r.status !== 'approved') continue;   /* agreement is counted from reviewed reports only */
         if (now - r.ts > consensusMin * 60000) continue;
         const key = (r.wilaya || '?') + '|' + r.kind;
         if (!groups[key]) groups[key] = new Set();
@@ -1157,6 +1159,11 @@ export default {
         }
       }
       await env.NAFAF_KV.put('email:' + email, vid);
+      /* every device this account signed in from, so deleting the account reaches all of them */
+      try {
+        const devs = JSON.parse((await env.NAFAF_KV.get('emailv:' + email)) || '[]');
+        if (devs.indexOf(vid) < 0) { devs.push(vid); await env.NAFAF_KV.put('emailv:' + email, JSON.stringify(devs.slice(-20)), { expirationTtl: 60 * 60 * 24 * 400 }); }
+      } catch (_) {}
 
       /* احفظ هوية المستخدم */
       await env.NAFAF_KV.put('user:' + vid, JSON.stringify({
@@ -1191,36 +1198,40 @@ export default {
 
       let removed = 0;
       const del = async k => { try { if ((await env.NAFAF_KV.get(k)) != null) { await env.NAFAF_KV.delete(k); removed++; } } catch (_) {} };
-      /* ١ · the Google sign-in profile (name, email, picture) and the email → account link */
-      try {
-        const u = JSON.parse((await env.NAFAF_KV.get('user:' + vid)) || 'null');
-        if (u && u.email && (await env.NAFAF_KV.get('email:' + u.email)) === vid) await del('email:' + u.email);
-      } catch (_) {}
-      /* ٢ · every key named after the account */
-      const author = await authorOf(vid);
-      for (const k of ['user:', 'corr:', 'capp:', 'cfgv:', 'sub_plus:', 'rlim:', 'live:', 'auth:', 'sub:', 'vis:', 'streak:', 'fbq:']) await del(k + vid);
-      await del('ah:' + author);
-      /* ٣ · rain-alert subscription and its approximate area (stored by the push endpoint, not by account) */
-      if (b.endpoint) { const h = btoa(String(b.endpoint)).slice(-40); await del('sub:' + h); await del('hb:' + h); }
-      /* ٤ · reports, gallery photos and messages */
-      const ids = new Set();
-      for (const [pre, mine] of [['rep:', r => r.vid === vid], ['gal:', r => r.vid === vid || r.author === author || ids.has(r.id)], ['fb:', r => r.vid === vid]]) {
-        try {
-          const list = await env.NAFAF_KV.list({ prefix: pre });
-          for (const k of list.keys) {
-            try { const r = JSON.parse(await env.NAFAF_KV.get(k.name)); if (r && mine(r)) { if (pre === 'rep:') ids.add(r.id); await env.NAFAF_KV.delete(k.name); removed++; } } catch (_) {}
-          }
-        } catch (_) {}
+      /* all device ids of this account: this device + every device the same Google account signed in from */
+      const vids = new Set([vid]), emails = new Set();
+      try { const u = JSON.parse((await env.NAFAF_KV.get('user:' + vid)) || 'null'); if (u && u.email) emails.add(u.email); } catch (_) {}
+      for (const e of emails) {
+        try { for (const v of JSON.parse((await env.NAFAF_KV.get('emailv:' + e)) || '[]')) vids.add(String(v)); } catch (_) {}
+        const m = await env.NAFAF_KV.get('email:' + e); if (m) vids.add(m);
       }
-      /* ٥ · abuse reports this person filed are kept for moderation, without their id */
-      try {
-        const list = await env.NAFAF_KV.list({ prefix: 'abuse:' });
-        for (const k of list.keys) {
-          try { const r = JSON.parse(await env.NAFAF_KV.get(k.name)); if (r && r.vid === vid) { r.vid = ''; await env.NAFAF_KV.put(k.name, JSON.stringify(r), { expirationTtl: 60 * 60 * 24 * 90 }); } } catch (_) {}
+      for (const v of vids) { try { const u = JSON.parse((await env.NAFAF_KV.get('user:' + v)) || 'null'); if (u && u.email) emails.add(u.email); } catch (_) {} }
+      /* older sign-ins (before device lists existed): any stored profile with the same email */
+      if (emails.size) for (const name of await kvKeys(env, 'user:')) {
+        try { const u = JSON.parse(await env.NAFAF_KV.get(name)); if (u && emails.has(u.email)) vids.add(name.slice(5)); } catch (_) {}
+      }
+      for (const e of emails) { await del('email:' + e); await del('emailv:' + e); }
+      const authors = new Set();
+      for (const v of vids) {
+        const author = await authorOf(v); authors.add(author);
+        for (const k of ['user:', 'corr:', 'capp:', 'cfgv:', 'sub_plus:', 'rlim:', 'live:', 'auth:', 'sub:', 'vis:', 'streak:', 'fbq:']) await del(k + v);
+        await del('ah:' + author);
+        /* the live-visitor log keeps one row per visitor per day: remove this visitor's rows */
+        try { if (env.PRESENCE) { const st = env.PRESENCE.get(env.PRESENCE.idFromName('live')); const r = await st.fetch('https://p/forget', { method: 'POST', body: JSON.stringify({ vid: v }) }); const j = await r.json(); removed += j.n || 0; } } catch (_) {}
+      }
+      /* rain-alert subscription and its approximate area (stored by the push endpoint, not by account) */
+      if (b.endpoint) { const h = btoa(String(b.endpoint)).slice(-40); await del('sub:' + h); await del('hb:' + h); }
+      /* reports, gallery photos and messages — every page of every list */
+      const ids = new Set();
+      for (const [pre, mine] of [['rep:', r => vids.has(r.vid)], ['gal:', r => vids.has(r.vid) || authors.has(r.author) || ids.has(r.id)], ['fb:', r => vids.has(r.vid)]]) {
+        for (const name of await kvKeys(env, pre)) {
+          try { const r = JSON.parse(await env.NAFAF_KV.get(name)); if (r && mine(r)) { if (pre === 'rep:') ids.add(r.id); await env.NAFAF_KV.delete(name); removed++; } } catch (_) {}
         }
-      } catch (_) {}
-      /* ٦ · the live-visitor log keeps one row per visitor per day: remove this visitor's rows */
-      try { if (env.PRESENCE) { const st = env.PRESENCE.get(env.PRESENCE.idFromName('live')); const r = await st.fetch('https://p/forget', { method: 'POST', body: JSON.stringify({ vid }) }); const j = await r.json(); removed += j.n || 0; } } catch (_) {}
+      }
+      /* abuse reports this person filed are kept for moderation, without their id */
+      for (const name of await kvKeys(env, 'abuse:')) {
+        try { const r = JSON.parse(await env.NAFAF_KV.get(name)); if (r && vids.has(r.vid)) { r.vid = ''; await env.NAFAF_KV.put(name, JSON.stringify(r), { expirationTtl: 60 * 60 * 24 * 90 }); } } catch (_) {}
+      }
       /* kept on purpose: a moderation ban ('ban:'), for up to a year, so a banned person cannot simply start again */
 
       return json({ ok: true, deleted: removed,
@@ -1232,6 +1243,11 @@ export default {
        ⚠️ لا تمنح أي ميزة إن كان النظام معطّلًا — الكل «بلس» فعليًا
           حتى تُفعّل billing.enabled من البوابة.
        ============================================================ */
+    /* Nafaf is free: billing, donations and plans are permanently off (Play payments policy + RainViewer's
+       condition). Every billing endpoint answers "disabled"; nothing can switch payments on remotely. */
+    if (url.pathname.startsWith('/billing/') || url.pathname.startsWith('/admin/billing/')) {
+      return json({ ok: true, enabled: false, tier: 'open', active: false, donateOn: false });
+    }
     if (url.pathname === '/billing/status') {
       const vid = url.searchParams.get('vid') || '';
       /* اقرأ الإعداد الحيّ مباشرة من KV */
@@ -1347,7 +1363,8 @@ export default {
 
     /* ★ قائمة البلاغات — للبوابة */
     if (url.pathname === '/admin/abuse/list') {
-      const p = url.searchParams.get('pass');
+      /* password in the POST body, not the URL (URLs end up in logs) */
+      const p = request.method === 'POST' ? ((await request.json().catch(() => ({}))).pass) : null;
       if (!(await checkPass(env, p))) return json({ error: 'unauthorized' }, 401);
       const list = await env.NAFAF_KV.list({ prefix: 'abuse:' });
       const out = [];
@@ -2080,6 +2097,13 @@ function defaultCfg() {
     /* قواعد العرض الشرطي */
     rules: []
   };
+}
+
+/* every key under a prefix (KV lists return at most 1000 keys per page) */
+async function kvKeys(env, prefix) {
+  const out = []; let cursor;
+  do { const r = await env.NAFAF_KV.list({ prefix, cursor }); for (const k of r.keys) out.push(k.name); cursor = r.list_complete ? null : r.cursor; } while (cursor);
+  return out;
 }
 
 /* public author handle: lets people block or report a contributor without exposing the device id */

@@ -101,5 +101,7 @@ export class Presence {
     const old = new Date(now - 400 * 864e5).toISOString().slice(0, 10);
     this.sql.exec('DELETE FROM visits WHERE day < ?', old);
     this.sql.exec('DELETE FROM conc WHERE m < ?', Math.floor(now / 60e3) - 3 * 1440);
+    /* first-visit dates are kept only as long as the daily rows they classify (13 months) */
+    this.sql.exec('DELETE FROM seen WHERE first_day < ?', old);
   }
 }

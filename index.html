@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611131400';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611131415';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -6257,8 +6257,9 @@ function newsLoad(){
  }).catch(function(){});
 }
 var NEWS_LABEL={
- urgent:['عاجل','عاجل','Breaking'],
- alert:['تنبيه','تنبيه','Alert'],
+ /* labelled as Nafaf's own notes, never as warnings (official warnings come only from the authorities' feeds) */
+ urgent:['مهم · من نفاف','مهم · من نفاف','Important · from Nafaf'],
+ alert:['ملاحظة · من نفاف','ملاحظة · من نفاف','Note · from Nafaf'],
  info:['معلومة','معلومة','Notice'],
  good:['بشارة','بشارة','Good news']
 };
@@ -6698,7 +6699,7 @@ function authLoad(){
  return r.json();
  }).then(function(c){
  GSI_ID=c.clientId||'';
- if(GSI_ID)loadGSI();
+ /* Google's sign-in script is loaded only when the person taps "Sign in", never at start-up */
  }).catch(function(){/* صامت عند الإقلاع — يُبلَّغ عند الضغط */});
  /* حدّث حالة المراسل */
  corrRefresh();
@@ -6773,6 +6774,13 @@ function doSignIn(){
  });
  return;
  }
+ if(!(window.google&&google.accounts&&google.accounts.id)){
+  loadGSI();doSignIn.n=(doSignIn.n||0)+1;
+  if(doSignIn.n<8)setTimeout(doSignIn,600);
+  else{doSignIn.n=0;toast(pick('ما قدرنا نفتح تسجيل الدخول بجوجل.','تعذّر فتح تسجيل الدخول بجوجل.','Could not open Google sign-in.'),true);}
+  return;
+ }
+ doSignIn.n=0;
  /* ★ لا نعتمد على النافذة التلقائية "One Tap" وحدها — كثير من المتصفحات
     (سامسونج إنترنت متصفح واتساب الداخلي الخفي) تمنعها بصمت تام
     ولا تستدعي حتى دالة الفشل. نعرض الزر الرسمي مباشرة ودائمًا 
@@ -6875,7 +6883,7 @@ function renderAccount(){
  h+='<div class="acc-opt" id="accNotif"><span>'+pick('تنبيه المطر','تنبيه المطر','Rain alerts')+'</span>'+
  '<span class="acc-val">'+(PUSH_ON?pick('مفعّل','مفعّل','On'):pick('مطفأ','مطفأ','Off'))+'</span></div>';
  h+='<div class="acc-opt" id="accData"><span>'+pick('بياناتي','بياناتي','My data')+'</span>'+
- '<span class="acc-val">'+pick('محفوظة بجهازك','محفوظة محليًا','Stored locally')+'</span></div>';
+ '<span class="acc-val">'+pick('عرض وحذف','عرض وحذف','View & delete')+'</span></div>';
 
  h+='<button class="shbtn danger" id="accOut">'+pick('تسجيل الخروج','تسجيل الخروج','Sign out')+'</button>';
  b.innerHTML=h;
@@ -7132,44 +7140,24 @@ var NAFAF_LEGAL={
 var NAFAF_PRIVACY={
  t:['الخصوصية','سياسة الخصوصية','Privacy'],
  body:[
- '<b>القاعدة الأولى: بياناتك تبقى في جهازك.</b><br><br>'+
- '<b>ما يبقى في جهازك ولا يغادره أبدًا</b><br>'+
- '• إعداداتك ولغتك ووحداتك<br>'+
- '• سلسلة أيامك وأرقامك القياسية<br>'+
- '• سجل ما تغيّر في سمائك<br>'+
- '• مدنك المفضّلة<br><br>'+
- '<b>ما يصل خادمنا — وفقط إن فعّلته أنت</b><br>'+
- '• <b>تنبيه المطر:</b> رمز اشتراك من متصفحك + منطقتك التقريبية (حوالي ١١ كم، مو عنوانك) ولغة التطبيق — عشان نعرف متى يقرب المطر منك. ما فيه اسم ولا بريد، وينحذف إذا وقفت التنبيهات أو بعد ١٢٠ يوم بدون استخدام<br>'+
- '• <b>الرصد:</b> نوع الحالة واسم ولايتك وإحداثيات تقريبية — للتدقيق فقط ولا تُعرض للعامة<br>'+
- '• <b>الزوار:</b> رقم عشوائي يولّده جهازك لعدّ الزيارات بلا أي معرّف شخصي، وأرقام مجمّعة مجهولة: كم واحد جديد وصل ومن أي مصدر، وكم ثبّت أو فعّل التنبيهات أو رجع — بدون أي معرّف أو موقع<br>'+
- '• <b>المراسلون:</b> بريدك واسمك من حساب جوجل — للتحقق من هويتك كمراسل فقط<br><br>'+
- '<b>ما يصل خادمنا تلقائيًا بلا أي معرّف</b><br>'+
- '• <b>التحذيرات الرسمية:</b> إحداثيات تقريبية (نحو ١٠٠ م) لنجلب تحذيرات مكانك من الجهة الرسمية في بلدك — لا تُخزَّن<br>'+
- '• <b>عدّادات الاستخدام:</b> خطوات مجهولة (أول زيارة، تثبيت، رجوع) مع مصدر الوصول ولغة التطبيق<br>'+
- '• <b>الأعطال التقنية:</b> نص الخطأ ونوع الجهاز وإصدار نفاف — لإصلاحه، وتُحذف بعد ٣٠ يومًا<br><br>'+
- '<b>ما لا نجمعه إطلاقًا</b><br>'+
- '• لا نتتبّع تحركاتك<br>'+
- '• لا نبيع بياناتك ولا نشاركها مع معلنين<br>'+
- '• لا نستخدم أدوات تتبّع خارجية<br>'+
- '• لا إعلانات في التطبيق<br><br>'+
- '<b>حقك في الحذف</b><br>'+
- 'امسح بيانات الموقع من متصفحك فتُمحى كل بياناتك المحلية فورًا. ولحذف اشتراكك من خادمنا أوقف «تنبيه المطر» من الإعدادات.<br><br>'+
- '<b>الخدمات الخارجية</b><br>'+
- 'نجلب الطقس وأسماء المدن من Open-Meteo، واسم منطقتك من BigDataCloud، والصور من NASA GIBS وRainViewer، والخرائط من OpenStreetMap. هذه الخدمات ترى عنوان IP الخاص بك كأي موقع تزوره ولها سياساتها الخاصة. التفاصيل الكاملة والشروط: <a href="privacy.html" target="_blank" rel="noopener">سياسة الخصوصية</a> · <a href="terms.html" target="_blank" rel="noopener">شروط الاستخدام</a>',
-
- '<b>بياناتك تبقى في جهازك.</b><br><br>'+
- '<b>محليًا:</b> الإعدادات · السلسلة · السجل · المفضّلة.<br><br>'+
- '<b>على الخادم (بموافقتك):</b> رمز الإشعارات مع المنطقة التقريبية (نحو ١١ كم) ولغة التطبيق لإرسال تنبيه المطر، وتُحذف بإيقافه · بيانات الرصد للتدقيق · عدّاد زوار مجهول · بريد المراسلين للتحقق.<br><br>'+
- '<b>تلقائيًا بلا معرّف:</b> إحداثيات تقريبية لجلب التحذيرات الرسمية (لا تُخزَّن) · عدّادات استخدام مجهولة · تقارير الأعطال التقنية.<br><br>'+
- '<b>لا نجمع:</b> تتبّع · بيع بيانات · أدوات تتبّع خارجية · إعلانات.<br><br>'+
- '<b>الحذف:</b> امسح بيانات الموقع من المتصفح وأوقف التنبيهات لحذف اشتراكك.',
-
- '<b>Your data stays on your device.</b><br><br>'+
- '<b>Local only:</b> Settings · streak · change log · favourites.<br><br>'+
- '<b>Sent to our server (only if you opt in):</b> push token with your approximate area (about 11 km, never your address) and app language, to send rain alerts — deleted when you switch alerts off or after 120 days unused · observation data for verification · anonymous visit counter · reporter email for identity check.<br><br>'+
- '<b>Sent automatically, with no identifier:</b> approximate coordinates to fetch official warnings (not stored) · anonymous usage counters · technical error reports.<br><br>'+
- '<b>We never:</b> track you · sell data · use third-party trackers · show ads.<br><br>'+
- '<b>Deletion:</b> Clear site data in your browser; turn off rain alerts to remove your subscription.'
+ '<b>الخلاصة:</b> لا إعلانات، ولا بيع لبياناتك، ولا أدوات تتبّع خارجية. نفاف يعمل كاملًا بلا حساب.<br><br>'+
+ '<b>يبقى في جهازك:</b> إعداداتك، ومدنك، وسجلّك، وتمارين «رياضتي»، وصور المشاركة التي تصنعها.<br><br>'+
+ '<b>يُرسل تلقائيًا لتشغيل الميزات:</b> إحداثيات تقريبية (≈ ١٠٠ م) لجلب الطقس والرادار والتحذيرات الرسمية لمكانك — تصل لمزوّدي الطقس ولخادم نفاف ولا تُخزَّن مع أي معرّف؛ ورقم عشوائي مجهول مع بلد الاتصال لعدّ الزوار؛ وتقارير الأعطال.<br><br>'+
+ '<b>يُرسل فقط إن فعّلته:</b> اشتراك تنبيه المطر مع منطقتك (≈ ١١ كم)؛ رصدك وصورك (تُراجع قبل النشر)؛ اسمك وبريدك وصورة حسابك إن سجّلت بجوجل؛ طلب المراسل ورسائلك لنا.<br><br>'+
+ '<b>حذف كل شيء:</b> الإعدادات ← بياناتي ← «حذف حسابي وكل بياناتي»، فيُحذف من جهازك ومن خوادمنا معًا.<br><br>'+
+ 'التفاصيل الكاملة: <a href="privacy.html" target="_blank" rel="noopener">سياسة الخصوصية</a>',
+ '<b>الخلاصة:</b> لا إعلانات، ولا بيع للبيانات، ولا أدوات تتبع خارجية، ويعمل نفاف كاملًا دون حساب.<br><br>'+
+ '<b>يبقى على جهازك:</b> الإعدادات، والمدن، والسجل، وتمارين «رياضتي»، وصور المشاركة.<br><br>'+
+ '<b>يُرسل تلقائيًا لتشغيل الميزات:</b> إحداثيات تقريبية (≈ ١٠٠ م) لجلب الطقس والرادار والتحذيرات الرسمية — تصل لمزوّدي الطقس ولخادم نفاف دون تخزينها مع معرّف؛ ورقم عشوائي مجهول مع بلد الاتصال لعدّ الزوار؛ وتقارير الأعطال.<br><br>'+
+ '<b>يُرسل عند تفعيله فقط:</b> اشتراك تنبيه المطر مع المنطقة (≈ ١١ كم)؛ الرصد والصور (تُراجع قبل النشر)؛ الاسم والبريد وصورة الحساب عند تسجيل الدخول بجوجل؛ طلب المراسل والرسائل.<br><br>'+
+ '<b>حذف كل شيء:</b> الإعدادات ← بياناتي ← «حذف الحساب وكل البيانات»، من الجهاز والخوادم معًا.<br><br>'+
+ 'التفاصيل: <a href="privacy.html" target="_blank" rel="noopener">سياسة الخصوصية</a>',
+ '<b>In short:</b> no ads, no selling of data, no third-party trackers; Nafaf works fully without an account.<br><br>'+
+ '<b>Stays on your device:</b> settings, places, history, “My fitness” workouts and the share images you make.<br><br>'+
+ '<b>Sent automatically to run the features:</b> approximate coordinates (≈100 m) to fetch weather, radar and official warnings for your place — received by the weather providers and Nafaf’s server, never stored with an identifier; a random anonymous number with the connection’s country to count visitors; technical error reports.<br><br>'+
+ '<b>Sent only if you switch it on:</b> the rain-alert subscription with your area (≈11 km); your reports and photos (reviewed before publication); your name, email and profile picture if you sign in with Google; reporter applications and messages to us.<br><br>'+
+ '<b>Delete everything:</b> Settings → My data → “Delete my account and all data”, from your device and our servers together.<br><br>'+
+ 'Full details: <a href="privacy.html#en" target="_blank" rel="noopener">privacy policy</a>'
  ]
 };
 
@@ -10654,7 +10642,7 @@ function serverFeed(){
  var g=FEED.consensus[j];
  h+='<div class="cf"><span class="cf-cnt">'+g.count+'</span>'+
  '<span class="cf-k">'+(OBS_LABEL[g.kind]||['—','—','—'])[L]+'</span>'+
- '<span class="cf-w">'+g.wilaya+'</span></div>';
+ '<span class="cf-w">'+ugcE(g.wilaya)+'</span></div>';
  }
  }
  return h;
@@ -10824,8 +10812,8 @@ function wireSheet(){
  btn.innerHTML=pick('لحظة…','لحظة…','…');
  pushSubscribe().then(function(res){
  pushBarHide();
- if(res.ok)toast(pick('تم! بينبّهك نفاف أول ما ينزل مطر.',
- 'تم التفعيل بنجاح.','Done — you\u2019ll be alerted when rain starts.'));
+ if(res.ok)toast(pick('تم! بينبّهك نفاف إذا رصد الرادار مطر قريب منك (تنبيه تقديري، مو تحذير رسمي).',
+ 'تم التفعيل: ستصلك تنبيهات تقديرية حين يرصد الرادار مطرًا قريبًا، وليست تحذيرات رسمية.','Done — you\u2019ll get estimated alerts when radar sees rain near you (not official warnings).'));
  else toast(res.why,true);
  });
  };
@@ -12170,11 +12158,18 @@ function deleteEverything(){
     body:JSON.stringify({vid:vid,endpoint:endpoint})});
   })
   .then(function(r){return r.json();})
-  .then(function(){ finishDelete(wipeLocal,L); })
-  .catch(function(){ finishDelete(wipeLocal,L); });
+  .then(function(j){ if(j&&j.ok)finishDelete(wipeLocal,L); else deleteFailed(L); })
+  .catch(function(){ deleteFailed(L); });
  } else {
   finishDelete(wipeLocal,L);
  }
+}
+/* the server could not confirm: keep the anonymous id so the user can retry (or use the email route) */
+function deleteFailed(L){
+ var b=$("delBtn");if(b){b.disabled=false;b.innerHTML=pick('حذف حسابي وكل بياناتي','حذف الحساب وكل البيانات','Delete my account and all data');}
+ alert(['ما قدرنا نوصل للخادم، وما حذفنا شي بعد. تأكد من الإنترنت وجرّب مرة ثانية، أو راسلنا على nafafweather@gmail.com من صفحة nafaf.online/delete-account.html',
+  'تعذّر الوصول إلى الخادم ولم يُحذف شيء بعد. تحقق من الاتصال وأعد المحاولة، أو راسلنا على nafafweather@gmail.com عبر nafaf.online/delete-account.html',
+  'We could not reach our server, so nothing has been deleted yet. Check your connection and try again, or email nafafweather@gmail.com (see nafaf.online/delete-account.html).'][L]);
 }
 function finishDelete(wipeLocal,L){
  /* ألغِ اشتراك الإشعارات */
@@ -12196,76 +12191,12 @@ function finishDelete(wipeLocal,L){
       ولا يظهر أي زر دفع — التطبيق كما هو تمامًا اليوم.
    ⚠️ لا تُفعّلها قبل ترقية Open-Meteo للخطة التجارية.
    ============================================================ */
-var BILL={tier:'open', active:false, limits:null, donateOn:false, donateUrl:''};
-var USAGE=null;
-
-/* عدّاد الاستخدام اليومي — محلي فقط */
-
-
-/* هل تجاوز المستخدم حدّه؟ — دائمًا false إن كان النظام معطّلًا */
-
-
-function billingLoad(){
- try{
-  if(!PUSH_URL)return;
-  var vid=(typeof visitorId==='function')?visitorId():'';
-  fetch(PUSH_URL+'/billing/status?vid='+encodeURIComponent(vid))
-  .then(function(r){return r.ok?r.json():null;})
-  .then(function(d){
-   if(!d||!d.ok)return;
-   BILL={tier:d.tier||'open', active:!!d.active, limits:d.limits||null,
-         until:d.until||null, priceYear:d.priceYear, currency:d.currency,
-         donateOn:!!d.donateOn, donateUrl:d.donateUrl||''};
-   if(TAB==='now'&&typeof renderSettings==='function'){}
-  })
-  .catch(function(){});
- }catch(e){}
-}
-
-/* ★ بطاقة الدعم في الإعدادات — تظهر فقط إن فُعّلت */
-function supportCard(){
- try{
-  var L=LI(), h='';
-  /* الدعم الطوعي */
-  if(BILL.donateOn&&BILL.donateUrl){
-   h+='<div class="m-grp">'+['ادعم نفاف','ادعم نفاف','Support Nafaf'][L]+'</div>';
-   h+='<div class="m-card"><div class="m-hint">'+[
-    'نفاف مجاني بالكامل ويبقى كذلك. لو عجبك شغلنا وحبيت تدعم استمراره تقدر تساهم بأي مبلغ.',
-    'نفاف مجاني بالكامل وسيبقى كذلك؛ ويمكنك دعم استمراره بأي مبلغ إن أحببت.',
-    'Nafaf is free and always will be. If you find it useful, you can support its continuation.'
-   ][L]+'</div>'+
-   '<button class="shbtn gold" id="donateBtn" style="width:100%;margin-top:10px">☕ '+
-    ['ادعم نفاف','ادعم نفاف','Support Nafaf'][L]+'</button></div>';
-  }
-  /* حالة الاشتراك — فقط إن فُعّل النظام */
-  if(BILL.tier!=='open'){
-   h+='<div class="m-grp">'+['اشتراكك','اشتراكك','Your plan'][L]+'</div>';
-   h+='<div class="m-card">';
-   if(BILL.active){
-    var d=BILL.until?new Date(BILL.until):null;
-    h+='<div class="planRow"><span class="planBadge on">★ نفاف بلس</span>'+
-     (d?'<span class="planTx">'+['ساري حتى','ساري حتى','Until'][L]+' '+
-      d.toLocaleDateString('ar')+'</span>':'')+'</div>';
-   } else {
-    h+='<div class="planRow"><span class="planBadge">'+
-     ['المجاني','المجاني','Free'][L]+'</span></div>';
-    h+='<div class="m-hint">'+[
-     'كل ما تشوفه الحين مجاني للأبد. بلس يضيف إشعارات بلا حد ومواقع متعددة وأرشيفًا أعمق.',
-     'كل الميزات الحالية مجانية دائمًا؛ وبلس يضيف إشعارات بلا حد ومواقع متعددة وأرشيفًا أعمق.',
-     'Everything you see stays free forever. Plus adds unlimited alerts, multiple places and deeper archive.'
-    ][L]+'</div>';
-   }
-   h+='</div>';
-  }
-  return h;
- }catch(e){ return ''; }
-}
-function wireSupport(){
- var b=$("donateBtn");
- if(b)b.onclick=function(){
-  try{ window.open(BILL.donateUrl,'_blank','noopener'); }catch(e){}
- };
-}
+/* Nafaf is free: no payments, subscriptions or donations of any kind (Google Play payments policy; RainViewer's
+   permission requires it). The old billing layer was removed from the app; these stubs keep older callers harmless. */
+var BILL={tier:'open',active:false,limits:null,donateOn:false,donateUrl:''};
+function billingLoad(){}
+function supportCard(){return ''}
+function wireSupport(){}
 /* ============================================================
    ★★★ ودجت نفاف — إشعار دائم بطقسك ★★★
    أقرب شيء لودجت الشاشة الرئيسية ضمن حدود تطبيق الويب:
@@ -12948,37 +12879,8 @@ touchStreak();applyAll();
    ⚠️ الحماية الحقيقية في الخادم (كلمة المرور) لا في الإخفاء
    ============================================================ */
 var GEAR_T=null, GEAR_HELD=false;
-function wireSecretPortal(){
- var g=$("gearBtn");
- if(!g)return;
- function start(){
-  GEAR_HELD=false;
-  clearTimeout(GEAR_T);
-  GEAR_T=setTimeout(function(){
-   GEAR_HELD=true;
-   try{ if(navigator.vibrate)navigator.vibrate([12,60,12]); }catch(e){}
-   /* تلميح بصري قبل الانتقال */
-   try{ g.style.transform='scale(1.35) rotate(90deg)'; g.style.opacity='.6'; }catch(e){}
-   setTimeout(function(){
-    try{ g.style.transform=''; g.style.opacity=''; }catch(e){}
-    location.href='portal.html';
-   },260);
-  },1400);   /* ثانية وأربعة أعشار */
- }
- function cancel(){ clearTimeout(GEAR_T); }
- g.addEventListener('touchstart',start,{passive:true});
- g.addEventListener('touchend',cancel);
- g.addEventListener('touchmove',cancel,{passive:true});
- g.addEventListener('touchcancel',cancel);
- g.addEventListener('mousedown',start);
- g.addEventListener('mouseup',cancel);
- g.addEventListener('mouseleave',cancel);
- /* امنع فتح الإعدادات إن كانت ضغطة مطوّلة */
- g.addEventListener('click',function(e){
-  if(GEAR_HELD){ e.preventDefault(); e.stopPropagation(); GEAR_HELD=false; }
- },true);
-}
-setTimeout(function(){wireSecretPortal();},900);
+/* the admin portal is not reachable from inside the app (no hidden features) */
+
 setTimeout(applyVisibility,1500);
 /* ★★★ زر الرجوع في أندرويد كتطبيق حقيقي ★★★
    ١ · يغلق النافذة المفتوحة (الإعدادات · المدينة · المزيد)
@@ -14602,51 +14504,6 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   if(due())setTimeout(show,DELAY);
 })();
 </script>
-<script>
-(function(){
-  function g(k){try{return localStorage.getItem(k)}catch(e){return null}}
-  function s(k,v){try{localStorage.setItem(k,v)}catch(e){}}
-  function ok(){try{return typeof widgetSupported==='function'&&widgetSupported()&&typeof WIDGET==='object'}catch(e){return false}}
-  function decided(){return g('widget')!==null}
-  function L(){try{return LI()}catch(e){return 0}}
-  function enable(silent){
-    var t0=Date.now();
-    (function wait(){
-      if(typeof W==='undefined'||!W){if(Date.now()-t0<90000)return setTimeout(wait,1500);return}
-      if(WIDGET.on)return;
-      WIDGET.on=true;s('widget','1');
-      widgetShow().then(function(r){
-        if(!r){WIDGET.on=false;s('widget','0');return}
-        try{widgetLoop()}catch(e){}try{widgetPaint()}catch(e){}
-        if(!silent)try{toast(['الودجت شغّال تلقائيًا — تلقاه في شريط الإشعارات، وتقدر توقفه من الإعدادات',
-          'تم تشغيل الودجت تلقائيًا في شريط الإشعارات، ويمكنك إيقافه من الإعدادات',
-          'Widget is on — it lives in your notification bar. Turn it off any time in Settings'][L()])}catch(e){}
-      })})();
-  }
-  function off(){return window.NXC&&NXC.widget&&NXC.widget.autoOn===false}
-  function ask(){
-    if(off())return;
-    if(decided()||!ok()||g('widget_auto')==='1')return;
-    s('widget_auto','1');
-    if(Notification.permission==='granted'){enable(false);return}
-    if(Notification.permission==='denied')return;
-    try{Notification.requestPermission().then(function(p){if(p==='granted')enable(false)})}catch(e){}
-  }
-  function standalone(){try{return navigator.standalone===true||matchMedia('(display-mode: standalone)').matches||document.referrer.indexOf('android-app://')===0}catch(e){return false}}
-  /* 1) first run: the onboarding Start button is a user gesture, so the permission prompt is allowed there */
-  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('#obDone');if(b&&!b.disabled)ask()},true);
-  setTimeout(function(){
-    if(off()||decided()||!ok())return;
-    /* 2) permission already granted (e.g. push alerts): switch on quietly */
-    if(Notification.permission==='granted'){s('widget_auto','1');enable(true);return}
-    /* 3) installed app opened after onboarding: ask on the first tap, once */
-    if(standalone()&&g('widget_auto')!=='1'&&Notification.permission==='default'){
-      var once=function(){document.removeEventListener('pointerup',once,true);ask()};
-      document.addEventListener('pointerup',once,true);
-    }
-  },7000);
-})();
-</script>
 <div id="nxInstSheet" role="dialog" aria-modal="true"><div class="p"><h3 id="nxIsH"></h3><p class="why" id="nxIsW"></p><ol id="nxIsL"></ol><button type="button" id="nxIsOk"></button></div></div>
 <script>
 (function(){
@@ -14673,6 +14530,8 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
       if(typeof pushSupported!=='function'||!pushSupported()||typeof PUSH_URL==='undefined'||!PUSH_URL)return;
       if(!here())return;
       var on=false;try{on=!!PUSH_ON}catch(e){}
+      /* only keeps an existing, user-created subscription's area up to date — never subscribes anyone by itself */
+      if(!on)return;
       var ll=(g('nx.push.ll')||'').split(','),h=here(),moved=ll.length<2||hav([+ll[0],+ll[1]],[h[0],h[1]])>((window.NXC&&+NXC.push.moveKm)||5);
       if(on&&!moved)return;
       if(Date.now()-lastTry<10*60000)return;lastTry=Date.now();
@@ -15874,7 +15733,10 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     return on?P('يبدأ','يبدأ','Starts')+' '+on:'';
   }
   function srcLine(a){
-    var link=a.web&&/^https?:/.test(a.web)?a.web:(a.cap&&/^https?:/.test(a.cap)?a.cap:'');
+    /* the authority's own site; else its CAP document if hosted on its own domain; never a third-party mirror —
+       then the WMO Register of Alerting Authorities, where the authority can be verified (Play: government info) */
+    var mirror=function(u){return /amazonaws\.com|meteoalarm\.org|capews\.com|alert-hub|worldweather\.org/i.test(u)};
+    var link=a.web&&/^https?:/.test(a.web)&&!mirror(a.web)?a.web:(a.cap&&/^https?:/.test(a.cap)&&!mirror(a.cap)?a.cap:'https://alertingauthority.wmo.int/');
     return P('المصدر','المصدر','Source')+': '+(link?'<a href="'+E(link)+'" target="_blank" rel="noopener">'+E((a.src&&a.src.name)||a.sender)+' ↗</a>':E((a.src&&a.src.name)||a.sender))+
       ' · '+P('النص كما نشرته الجهة الرسمية، بلا تعديل','النص كما نشرته الجهة الرسمية دون تعديل','Published text, unedited')+
       (a.src&&a.src.rights?' · '+E(a.src.rights):'');
