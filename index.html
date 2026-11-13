@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611130013';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611130958';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -13465,6 +13465,7 @@ setInterval(function(){
  }},60000);
 </script>
 
+
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -13860,6 +13861,9 @@ html.nx #authBadge{display:none!important}
 #nxSt.on{display:flex}
 #nxSt .pv{position:relative;height:min(64vh,620px);aspect-ratio:9/16;border-radius:22px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(0,0,0,.9);background:#0b1428}
 #nxSt .pv img{width:100%;height:100%;object-fit:cover;display:block}
+#nxSt .pv canvas,#nxSt .pv video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+#nxSt .pv .ld.pill{inset:auto 12px 12px;height:auto;padding:8px 12px;border-radius:999px;background:rgba(3,6,14,.72);font-weight:800;color:#fff}
+#nxSt .tip{margin:0;max-width:420px;text-align:center;font-size:12px;line-height:1.55;color:rgba(238,243,250,.66)}
 #nxSt .pv .ld{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.7);font-size:14px}
 #nxSt .seg{display:flex;gap:6px;background:rgba(255,255,255,.08);border-radius:999px;padding:4px}
 #nxSt .seg button{height:34px;padding:0 14px;border:0;border-radius:999px;background:transparent;color:#EEF3FA;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
@@ -15022,9 +15026,10 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
 </script>
 <div id="nxSt" role="dialog" aria-modal="true">
   <button type="button" class="x" id="nxStX" aria-label="close">✕</button>
-  <div class="seg" id="nxStSeg"><button type="button" data-f="story" class="on"></button><button type="button" data-f="post"></button></div>
-  <div class="pv"><img id="nxStImg" alt=""><div class="ld" id="nxStLd">…</div></div>
+  <div class="seg" id="nxStSeg"><button type="button" data-f="story" class="on"></button><button type="button" data-f="video"></button><button type="button" data-f="post"></button></div>
+  <div class="pv"><img id="nxStImg" alt=""><canvas id="nxStCv" width="720" height="1280"></canvas><video id="nxStVid" loop muted playsinline autoplay></video><div class="ld" id="nxStLd">…</div></div>
   <div class="bt"><button type="button" id="nxStShare"></button><button type="button" class="g" id="nxStSave"></button></div>
+  <p class="tip" id="nxStTip"></p>
 </div>
 <script>
 (function(){
@@ -15047,6 +15052,172 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   }
   function rr(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath()}
 
+  /* ═══ weather effects ═══
+     One loop is 6 s and every motion completes whole cycles in it, so the video loops without a seam.
+     Rain, clouds, dust and the bolt sit between the sky and the text; the lightning flash goes over everything. */
+  var LOOP=6,FXC={};
+  function cached(key,w,h,paint){if(!FXC[key]){var c=document.createElement('canvas');c.width=w;c.height=h;paint(c.getContext('2d'));FXC[key]=c}return FXC[key]}
+  function rnd(i){var v=Math.sin(i*127.1+311.7)*43758.5453;return v-Math.floor(v)}
+  function dither(x,W,H){ /* ±2 levels of grain: smooth skies otherwise band into stripes after JPEG */
+    try{var d=x.getImageData(0,0,W,H),a=d.data;for(var i=0;i<a.length;i+=4){var n=(Math.random()-.5)*4;a[i]+=n;a[i+1]+=n;a[i+2]+=n}x.putImageData(d,0,0)}catch(e){}}
+  function fxKind(st,tod){
+    var E=window.NX_EVENT,k=E&&E.k;
+    if(st==='storm')return 'storm';if(st==='rain_heavy')return 'rainH';if(st==='rain')return 'rain';if(st==='rain_light')return 'drizzle';
+    if(st==='fog')return 'fog';if(st==='dust'||k==='dust')return 'dust';if(st==='heat')return 'heat';if(st==='humid')return 'haze';
+    if(st==='cloudy')return 'clouds';if(k==='wind')return 'wind';
+    return tod==='night'?'night':'sun';
+  }
+  function rain(x,W,H,t,n,len,a,ang,wid){
+    x.save();x.lineCap='round';
+    for(var p=0;p<2;p++){            /* far drops (thin, faint, slower) then near drops */
+      var m=Math.round(n*(p?.4:.6)),Ln=p?len:len*.6,span=H+Ln;
+      x.strokeStyle='rgba(205,228,255,'+(p?a:a*.55)+')';x.lineWidth=p?wid:wid*.6;x.beginPath();
+      for(var i=0;i<m;i++){var r1=rnd(i+p*1000),r2=rnd(i*3.1+7+p*500),cyc=(p?3:2)*(1+Math.floor(r1*2));
+        var y=((r2+t/LOOP*cyc)%1)*span-Ln,X=r1*(W+240)-120-ang*H*.5+ang*y;
+        x.moveTo(X,y);x.lineTo(X+ang*Ln,y+Ln)}
+      x.stroke()}
+    x.restore();
+  }
+  function splash(x,W,H,t,n,a){
+    x.save();x.strokeStyle='#d4e6ff';x.lineWidth=2;
+    for(var i=0;i<n;i++){var ph=(rnd(i+40)+t/LOOP*3)%1,cx=rnd(i+90)*W,cy=H*(.752+rnd(i+130)*.1),r=4+ph*26;
+      x.globalAlpha=a*(1-ph);x.beginPath();x.ellipse(cx,cy,r,r*.28,0,0,Math.PI*2);x.stroke()}
+    x.restore();
+  }
+  function cloudBand(x,W,H,t,col,a,y0,y1,n){
+    var pad=360,c=cached('cl'+col+a+y0+y1+n,W+2*pad,y1-y0+2*pad,function(q){
+      for(var i=0;i<n;i++){var r=150+rnd(i+5)*170,cx=pad+rnd(i+11)*(W+200)-100,cy=pad+rnd(i+23)*(y1-y0);
+        var g=q.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba('+col+','+a+')');g.addColorStop(1,'rgba('+col+',0)');q.fillStyle=g;q.fillRect(cx-r,cy-r,2*r,2*r)}});
+    x.drawImage(c,-pad+Math.sin(Math.PI*2*t/LOOP)*36,y0-pad);
+  }
+  function bolt(x,W,H,seed,glow){
+    var px=W*(.64+rnd(seed)*.18),py=H*.05,pts=[[px,py]],k=0;
+    while(py<H*.64&&k<40){k++;py+=30+rnd(seed+k)*55;px+=(rnd(seed*3+k)-.5)*110;pts.push([px,py])}
+    function path(P){x.beginPath();x.moveTo(P[0][0],P[0][1]);for(var j=1;j<P.length;j++)x.lineTo(P[j][0],P[j][1]);x.stroke()}
+    var br=[];[3,7].forEach(function(s,bi){if(!pts[s])return;var q=[pts[s].slice()],dx=(bi?1:-1)*(40+rnd(seed+s)*30);
+      for(var j=1;j<5;j++)q.push([q[j-1][0]+dx*(.6+rnd(seed+s*j)*.6),q[j-1][1]+30+rnd(seed+s+j)*30]);br.push(q)});
+    x.save();x.lineJoin='round';x.lineCap='round';
+    x.shadowColor='rgba(170,200,255,1)';x.shadowBlur=40*glow;x.strokeStyle='rgba(190,215,255,'+(.55*glow)+')';x.lineWidth=12;path(pts);
+    x.shadowBlur=16;x.strokeStyle='rgba(255,255,255,'+glow+')';x.lineWidth=4;path(pts);x.lineWidth=2.4;br.forEach(path);
+    x.restore();
+  }
+  var STRIKES=[[1.0,.22,7],[1.38,.12,7],[4.3,.26,19]];   /* [start s, length s, bolt seed] */
+  function flash(t){var f=0,sd=0;STRIKES.forEach(function(S){if(t>=S[0]&&t<S[0]+S[1]){var v=1-(t-S[0])/S[1];if(v>f){f=v;sd=S[2]}}});return [f,sd]}
+  function fxBack(x,k,t){
+    var W=1080,H=1920,i;
+    if(k==='storm'){cloudBand(x,W,H,t,'14,18,34',.75,40,420,16);var F=flash(t);if(F[0]>0)bolt(x,W,H,F[1],F[0]);rain(x,W,H,t,260,70,.5,.2,3);splash(x,W,H,t,26,.5)}
+    else if(k==='rainH'){cloudBand(x,W,H,t,'40,48,70',.55,40,380,14);rain(x,W,H,t,300,80,.5,.12,3);splash(x,W,H,t,30,.5)}
+    else if(k==='rain'){cloudBand(x,W,H,t,'70,80,105',.4,40,340,10);rain(x,W,H,t,170,60,.45,.1,2.6);splash(x,W,H,t,16,.45)}
+    else if(k==='drizzle'){cloudBand(x,W,H,t,'120,130,150',.3,40,320,8);rain(x,W,H,t,110,34,.38,.06,2);splash(x,W,H,t,8,.35)}
+    else if(k==='clouds')cloudBand(x,W,H,t,'255,255,255',.16,60,520,14);
+    else if(k==='fog'||k==='haze'){
+      if(k==='haze'){x.fillStyle='rgba(232,236,242,.09)';x.fillRect(0,0,W,H)}
+      for(var lay=0;lay<2;lay++){var fb=cached('fog'+k+lay,W+400,H,function(q){
+          for(var j=lay;j<(k==='fog'?7:3);j+=2){q.save();q.translate(W/2+200,H*(.2+j*.1));q.scale(1,.16);var g=q.createRadialGradient(0,0,0,0,0,W*.85);
+            g.addColorStop(0,'rgba(230,236,245,'+(k==='fog'?.3:.16)+')');g.addColorStop(1,'rgba(230,236,245,0)');q.fillStyle=g;q.fillRect(-W,-W,2*W,2*W);q.restore()}});
+        x.drawImage(fb,-200+(lay?-1:1)*Math.sin(Math.PI*2*t/LOOP)*70,0)}}
+    else if(k==='dust'){
+      x.fillStyle='rgba(205,150,80,.26)';x.fillRect(0,0,W,H);
+      x.save();x.fillStyle='#f4cf98';
+      for(var gA=0;gA<4;gA++){x.globalAlpha=.3+gA*.14;x.beginPath();
+        for(i=gA;i<240;i+=4){var cyc=1+Math.floor(rnd(i+3)*2),px=((rnd(i+1)*W+t/LOOP*W*cyc)%W),py=rnd(i+2)*H*.9+Math.sin(Math.PI*2*(t/LOOP*2)+i)*8,sz=2.6+rnd(i+5)*4;x.rect(px,py,sz,sz)}
+        x.fill()}
+      x.globalAlpha=.22;x.strokeStyle='#f1d3a6';x.lineWidth=2;x.beginPath();
+      for(i=0;i<34;i++){var sx=((rnd(i+70)*(W+400)+t/LOOP*(W+400)*3)%(W+400))-300,sy=rnd(i+71)*H*.85;x.moveTo(sx,sy);x.lineTo(sx+240,sy+6)}x.stroke();x.restore()}
+    else if(k==='wind'){
+      x.save();x.strokeStyle='rgba(255,255,255,.28)';x.lineWidth=3;x.lineCap='round';
+      for(i=0;i<16;i++){var wx=((rnd(i+80)*(W+500)+t/LOOP*(W+500)*2)%(W+500))-400,wy=H*(.12+rnd(i+81)*.55);
+        x.beginPath();x.moveTo(wx,wy);x.quadraticCurveTo(wx+140,wy-26,wx+280,wy);x.stroke()}x.restore()}
+    else if(k==='heat'){
+      x.drawImage(cached('heat',W,H*.5,function(q){var hg=q.createRadialGradient(W*.82,H*.13,0,W*.82,H*.13,460);hg.addColorStop(0,'rgba(255,200,110,.55)');hg.addColorStop(1,'rgba(255,170,80,0)');q.fillStyle=hg;q.fillRect(0,0,W,H*.5)}),0,0);
+      x.save();x.strokeStyle='rgba(255,224,180,.14)';x.lineWidth=3;
+      for(var j=0;j<10;j++){x.beginPath();for(var q=0;q<=W;q+=20){var yy=H*(.655+j*.009)+Math.sin(q*.03+Math.PI*2*t/LOOP*2+j)*4;q?x.lineTo(q,yy):x.moveTo(q,yy)}x.stroke()}x.restore()}
+    else if(k==='sun'){
+      var cx2=W*.84,cy2=H*.11,RY=cached('rays',1800,1800,function(q){q.translate(900,900);
+          for(var j=0;j<12;j++){q.rotate(Math.PI*2/12);var rg=q.createLinearGradient(0,0,0,900);rg.addColorStop(0,'rgba(255,240,200,.16)');rg.addColorStop(1,'rgba(255,240,200,0)');
+            q.fillStyle=rg;q.beginPath();q.moveTo(0,0);q.lineTo(-46,900);q.lineTo(46,900);q.closePath();q.fill()}
+          var sg=q.createRadialGradient(0,0,0,0,0,320);sg.addColorStop(0,'rgba(255,238,190,.45)');sg.addColorStop(1,'rgba(255,238,190,0)');q.fillStyle=sg;q.fillRect(-320,-320,640,640)});
+      x.save();x.translate(cx2,cy2);x.rotate(Math.PI*2/12*(t/LOOP));x.drawImage(RY,-900,-900);x.restore()}
+    else if(k==='night'){
+      x.save();x.fillStyle='#fff';
+      var B=[[],[],[],[]];for(i=0;i<60;i++){var cyc2=1+Math.floor(rnd(i+60)*2),v=.5+.5*Math.sin(Math.PI*2*(t/LOOP*cyc2+rnd(i+61)));B[Math.min(3,Math.floor(v*4))].push(i)}
+      B.forEach(function(G,gi){x.globalAlpha=.15+gi*.22;x.beginPath();G.forEach(function(i){var z=3+rnd(i+64)*3;x.rect(rnd(i+62)*W,rnd(i+63)*H*.5,z,z)});x.fill()});
+      if(t>=2.2&&t<3){var pr=(t-2.2)/.8,sx2=W*.12+pr*W*.45,sy2=H*.06+pr*H*.12;x.globalAlpha=Math.sin(pr*Math.PI);
+        var lg=x.createLinearGradient(sx2,sy2,sx2-190,sy2-50);lg.addColorStop(0,'rgba(255,255,255,1)');lg.addColorStop(1,'rgba(255,255,255,0)');x.strokeStyle=lg;x.lineWidth=3;x.beginPath();x.moveTo(sx2,sy2);x.lineTo(sx2-190,sy2-50);x.stroke()}
+      x.restore()}
+  }
+  function fxFront(x,k,t){
+    if(k==='storm'){var f=flash(t)[0];if(f>0){x.fillStyle='rgba(220,232,255,'+(.3*f)+')';x.fillRect(0,0,1080,1920)}}
+  }
+  /* one frame: layers (pre-scaled to the output) + effects in 1080×1920 units scaled down */
+  function compose(Ly,x,t){
+    var w=x.canvas.width,h=x.canvas.height;
+    x.setTransform(1,0,0,1,0,0);x.drawImage(Ly.bg,0,0,w,h);
+    x.setTransform(w/1080,0,0,h/1920,0,0);fxBack(x,Ly.k,t);
+    x.setTransform(1,0,0,1,0,0);x.drawImage(Ly.fg,0,0,w,h);
+    x.setTransform(w/1080,0,0,h/1920,0,0);fxFront(x,Ly.k,t);x.setTransform(1,0,0,1,0,0);
+  }
+  function scaled(src,w,h){if(src.width===w)return src;var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(src,0,0,w,h);return c}
+  function still(Ly){var c=document.createElement('canvas');c.width=1080;c.height=1920;compose(Ly,c.getContext('2d'),Ly.k==='storm'?1.05:.9);return c}
+  /* video: MP4 (H.264) where the phone can record it; WhatsApp does not take WebM, so the fallback is a GIF */
+  function mp4Type(){
+    try{if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream)return null;
+      var c=['video/mp4;codecs=avc1.42E028','video/mp4;codecs=avc1.42E01F','video/mp4;codecs=avc1','video/mp4'];
+      for(var i=0;i<c.length;i++)if(MediaRecorder.isTypeSupported(c[i]))return c[i]}catch(e){}
+    return null;
+  }
+  function recordMp4(Ly,cv,type,prog,tok,done){
+    var x=cv.getContext('2d'),L2={bg:scaled(Ly.bg,cv.width,cv.height),fg:scaled(Ly.fg,cv.width,cv.height),k:Ly.k};
+    var FPS=30,N=LOOP*FPS,st,tr,rec,ch=[],i=0;
+    compose(L2,x,0);
+    try{st=cv.captureStream(0);tr=st.getVideoTracks()[0];if(!tr||!tr.requestFrame){st=cv.captureStream(FPS);tr=null}
+      rec=new MediaRecorder(st,{mimeType:type,videoBitsPerSecond:6e6})}catch(e){done(null);return}
+    rec.ondataavailable=function(e){if(e.data&&e.data.size)ch.push(e.data)};
+    rec.onstop=function(){try{st.getTracks().forEach(function(k){k.stop()})}catch(e){}done(tok()?new Blob(ch,{type:'video/mp4'}):null)};
+    rec.start();
+    var next=performance.now();
+    (function fr(){
+      if(!tok()){try{rec.stop()}catch(e){}return}
+      if(i>N){setTimeout(function(){try{rec.stop()}catch(e){}},80);return}
+      compose(L2,x,(i%N)/FPS);if(tr)tr.requestFrame();i++;prog(Math.min(1,i/N));
+      next+=1000/FPS;setTimeout(fr,Math.max(0,next-performance.now()));
+    })();
+  }
+  /* the precise path: every frame encoded with its own timestamp (WebCodecs → H.264 → MP4), so the clip is exactly
+     6 s at 30 fps however slow the phone is; frames are produced as fast as the phone can, not in real time */
+  async function recordWC(Ly,cv,prog,tok){
+    var m=await import('/vendor/mp4-muxer.min.mjs');
+    var w=cv.width,h=cv.height,cfg=null,cs=['avc1.640028','avc1.4d0028','avc1.42E028','avc1.42E01F'];
+    for(var j=0;j<cs.length&&!cfg;j++){var C={codec:cs[j],width:w,height:h,bitrate:6e6,framerate:30,avc:{format:'avc'}};
+      try{var r=await VideoEncoder.isConfigSupported(C);if(r&&r.supported)cfg=C}catch(e){}}
+    if(!cfg)return null;
+    var target=new m.ArrayBufferTarget(),mux=new m.Muxer({target:target,video:{codec:'avc',width:w,height:h,frameRate:30},fastStart:'in-memory'});
+    var bad=null,enc=new VideoEncoder({output:function(c,meta){mux.addVideoChunk(c,meta)},error:function(e){bad=e}});
+    enc.configure(cfg);
+    var x=cv.getContext('2d'),L2={bg:scaled(Ly.bg,w,h),fg:scaled(Ly.fg,w,h),k:Ly.k},FPS=30,N=LOOP*FPS;
+    for(var i=0;i<N;i++){
+      if(!tok()){try{enc.close()}catch(e){}return 'cancel'}
+      if(bad)throw bad;
+      compose(L2,x,i/FPS);
+      var f=new VideoFrame(cv,{timestamp:Math.round(i*1e6/FPS),duration:Math.round(1e6/FPS)});enc.encode(f,{keyFrame:i%60===0});f.close();
+      prog((i+1)/N);
+      await new Promise(function(r){setTimeout(r,enc.encodeQueueSize>6?12:0)});
+    }
+    await enc.flush();if(bad)throw bad;enc.close();mux.finalize();
+    return new Blob([target.buffer],{type:'video/mp4'});
+  }
+  function recordGif(Ly,prog,tok,done){
+    import('/vendor/gifenc.esm.js').then(function(m){
+      var w=360,h=640,c=document.createElement('canvas');c.width=w;c.height=h;var x=c.getContext('2d',{willReadFrequently:true});
+      var L2={bg:scaled(Ly.bg,w,h),fg:scaled(Ly.fg,w,h),k:Ly.k},gif=m.GIFEncoder(),N=60,i=0;
+      (function step(){if(!tok()){done(null);return}
+        for(var n=0;n<4&&i<N;n++,i++){compose(L2,x,i/N*LOOP);var d=x.getImageData(0,0,w,h).data,pal=m.quantize(d,256,{format:'rgb444'});
+          gif.writeFrame(m.applyPalette(d,pal,'rgb444'),w,h,{palette:pal,delay:100})}
+        prog(i/N);if(i<N){setTimeout(step,0);return}
+        gif.finish();done(new Blob([gif.bytes()],{type:'image/gif'}))})();
+    }).catch(function(){done(null)});
+  }
+
   function draw(ico){
     var Wd=1080,Hd=1920,c=document.createElement('canvas');c.width=Wd;c.height=Hd;var x=c.getContext('2d');
     var L=0;try{L=LI()}catch(e){}
@@ -15065,6 +15236,9 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     var sea=x.createLinearGradient(0,Hd*.74,0,Hd*.86);sea.addColorStop(0,'rgba(40,80,130,.9)');sea.addColorStop(1,'rgba(14,30,60,.95)');x.fillStyle=sea;x.fillRect(0,Hd*.74,Wd,Hd*.12);
     x.fillStyle='rgba(255,255,255,.10)';for(i=0;i<18;i++){x.fillRect((i*211)%Wd,Hd*.75+(i*37)%(Hd*.1),120+(i*29)%160,3)}
     x.fillStyle='rgba(6,12,24,.92)';x.fillRect(0,Hd*.86,Wd,Hd*.14);
+    dither(x,Wd,Hd);
+    /* everything below is the foreground layer: weather effects are drawn between the two */
+    var bg=c;c=document.createElement('canvas');c.width=Wd;c.height=Hd;x=c.getContext('2d');
     /* scrim behind the ring so the numbers read on any sky */
     var sc=x.createRadialGradient(Wd/2,820,60,Wd/2,820,560);sc.addColorStop(0,'rgba(6,12,28,.45)');sc.addColorStop(1,'rgba(6,12,28,0)');x.fillStyle=sc;x.fillRect(0,200,Wd,1240);
 
@@ -15077,7 +15251,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
       x.fillStyle=col;rr(x,Wd/2-tw/2,196,tw,78,39);x.fill();x.fillStyle='#120b0a';x.fillText(EVT.t,Wd/2,252);x.shadowBlur=20;
     } else {x.font='900 46px '+FONT;x.fillStyle='#F2C36B';x.fillText('NAFAF  ·  نفاف',Wd/2,250);}
     x.fillStyle='#fff';x.font='800 72px '+FONT;x.fillText((window.CUR&&CUR.n)||'',Wd/2,345);
-    x.font='600 34px '+FONT;x.fillStyle='rgba(255,255,255,.82)';
+    x.font='700 34px '+FONT;x.fillStyle='rgba(255,255,255,.94)';
     var loc=document.documentElement.lang||'ar';try{x.fillText(new Date().toLocaleDateString(loc,{weekday:'long',day:'numeric',month:'long'}),Wd/2,400)}catch(e){}
 
     /* pulse ring: the next 24 hours, each arc coloured by its temperature, rain as inner beads */
@@ -15098,7 +15272,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
       x.fillStyle='#fff';x.beginPath();x.arc(cx,cy-R,16,0,Math.PI*2);x.fill();
     }
     if(ico){x.drawImage(ico,cx-80,cy-250,160,160)}
-    x.shadowColor='rgba(0,0,0,.35)';x.shadowBlur=24;x.fillStyle='#fff';
+    x.shadowColor='rgba(0,0,0,.45)';x.shadowBlur=12;x.fillStyle='#fff';
     var T='';try{T=tconv(W.temperature_2m)}catch(e){}
     x.font='200 230px '+FONT;x.fillText(T+'°',cx+22,cy+90);
     x.font='800 52px '+FONT;x.fillText(window.nxTr?nxTr((m.t&&m.t[L])||''):((m.t&&m.t[L])||''),cx,cy+170);
@@ -15115,41 +15289,69 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     x.strokeStyle='rgba(242,195,107,.35)';x.lineWidth=2;rr(x,80,py,Wd-160,ph,34);x.stroke();
     x.fillStyle='#F2C36B';x.font='800 30px '+FONT;x.fillText(P('يقول الجد','يقول الجد','Grandpa says'),cx,py+52);
     x.fillStyle='#fff';x.font='600 38px '+FONT;var n=wrap(x,'«'+say+'»',cx,py+108,Wd-240,50,2);
-    if(star){x.fillStyle='rgba(255,255,255,.72)';x.font='500 28px '+FONT;wrap(x,'✦ '+star,cx,py+108+n*50+6,Wd-240,36,1)}
+    if(star){x.fillStyle='rgba(255,255,255,.9)';x.font='600 30px '+FONT;wrap(x,'✦ '+star,cx,py+108+n*50+6,Wd-240,36,1)}
 
     /* footer, above the bottom safe zone */
     x.fillStyle='#F2C36B';x.font='900 44px '+FONT;x.fillText('nafaf.online',cx,Hd-300);
-    x.fillStyle='rgba(255,255,255,.78)';x.font='600 30px '+FONT;x.fillText(P('شوف جوّك بعيون نفاف','اطّلع على طقسك مع نفاف','See your sky with Nafaf'),cx,Hd-252);
-    return c;
+    x.fillStyle='rgba(255,255,255,.92)';x.font='700 31px '+FONT;x.fillText(P('شوف جوّك بعيون نفاف','اطّلع على طقسك مع نفاف','See your sky with Nafaf'),cx,Hd-252);
+    FXC={};return {bg:bg,fg:c,k:fxKind(st,tod)};
   }
 
   function build(cb){
     var ico=new Image(),done=false;
-    function go(){if(done)return;done=true;var c=null;try{c=FMT==='story'?draw(ico.complete&&ico.naturalWidth?ico:null):null}catch(e){}cb(c)}
+    function go(){if(done)return;done=true;var c=null;try{c=FMT!=='post'?draw(ico.complete&&ico.naturalWidth?ico:null):null}catch(e){}cb(c)}
     try{var svg=v2Icon(v2IconKey(stateOf(W)),160).replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ');ico.onload=go;ico.onerror=go;ico.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)}catch(e){go()}
     setTimeout(go,900);
   }
   var box=document.getElementById('nxSt'),img=document.getElementById('nxStImg'),ld=document.getElementById('nxStLd');
+  var cv=document.getElementById('nxStCv'),vid=document.getElementById('nxStVid'),tip=document.getElementById('nxStTip'),RUN=0;
   function labels(){
-    var b=box.querySelectorAll('#nxStSeg button');b[0].textContent=P('قصة 9:16','قصة 9:16','Story 9:16');b[1].textContent=P('منشور','منشور','Post');
-    document.getElementById('nxStShare').textContent=P('شارك','مشاركة','Share');document.getElementById('nxStSave').textContent=P('احفظ الصورة','حفظ الصورة','Save image');
+    var b=box.querySelectorAll('#nxStSeg button');b[0].textContent=P('قصة 9:16','قصة 9:16','Story 9:16');b[1].textContent=P('متحرّك 🎬','متحرّك 🎬','Animated 🎬');b[2].textContent=P('منشور','منشور','Post');
+    document.getElementById('nxStShare').textContent=P('شارك','مشاركة','Share');
+    document.getElementById('nxStSave').textContent=FMT==='video'?P('احفظ الفيديو','حفظ الفيديو','Save video'):P('احفظ الصورة','حفظ الصورة','Save image');
+    tip.textContent=P('لأوضح صورة في واتساب: اضغط HD أعلى شاشة الإرسال قبل ما ترسل.','للحصول على أفضل جودة في واتساب: اختر HD أعلى شاشة الإرسال.','For the sharpest result on WhatsApp, tap HD at the top of the send screen.');
   }
+  function busy(t,pill){ld.textContent=t;ld.classList.toggle('pill',!!pill);ld.style.display='grid'}
   function render(){
-    BLOB=null;img.removeAttribute('src');ld.style.display='grid';
+    var my=++RUN,tok=function(){return my===RUN&&box.classList.contains('on')};
+    BLOB=null;img.removeAttribute('src');img.style.display='block';cv.style.display='none';vid.style.display='none';try{vid.pause();vid.removeAttribute('src');vid.load()}catch(e){}
+    busy('…');labels();
     if(FMT==='post'){ /* the original 4:5 card keeps its own share flow */
       box.classList.remove('on');try{shareCard()}catch(e){}return}
-    build(function(c){if(!c){ld.textContent=P('ما قدرت أجهّز الصورة','تعذّر إنشاء الصورة','Could not create the image');return}
-      c.toBlob(function(b){BLOB=b;if(b){img.src=URL.createObjectURL(b);ld.style.display='none'}},'image/png')});
+    build(function(Ly){
+      if(!tok())return;
+      if(!Ly){busy(P('ما قدرت أجهّز الصورة','تعذّر إنشاء الصورة','Could not create the image'));return}
+      if(FMT==='story'){
+        /* high-quality JPEG: WhatsApp turns every image into JPEG anyway; starting from a clean one loses least */
+        still(Ly).toBlob(function(b){if(!tok())return;BLOB=b;if(b){img.src=URL.createObjectURL(b);ld.style.display='none'}},'image/jpeg',.95);return}
+      /* animated: the live canvas is the preview while it records */
+      img.style.display='none';cv.style.display='block';
+      var type=mp4Type(),fin=function(b){
+        if(!tok())return;
+        if(!b){busy(P('ما قدرت أجهّز الفيديو على هذا الجهاز','تعذّر إنشاء الفيديو على هذا الجهاز','Could not create the video on this device'));return}
+        BLOB=b;cv.style.display='none';
+        if(b.type==='image/gif'){img.src=URL.createObjectURL(b);img.style.display='block'}
+        else{vid.src=URL.createObjectURL(b);vid.style.display='block';try{vid.play()}catch(e){}}
+        ld.style.display='none';ld.classList.remove('pill')};
+      var prog=function(f){if(tok())busy(P('نجهّز الفيديو… ','جارٍ تجهيز الفيديو… ','Making the video… ')+Math.round(f*100)+'%',true)};
+      var legacy=function(){if(!tok())return;
+        if(type)recordMp4(Ly,cv,type,prog,tok,fin);
+        else{compose({bg:scaled(Ly.bg,720,1280),fg:scaled(Ly.fg,720,1280),k:Ly.k},cv.getContext('2d'),.9);recordGif(Ly,prog,tok,fin)}};
+      if(window.VideoEncoder&&window.VideoFrame)recordWC(Ly,cv,prog,tok).then(function(b){if(b==='cancel')return;if(b)fin(b);else legacy()}).catch(function(){legacy()});
+      else legacy();
+    });
   }
-  function open(){if(!window.W)return;labels();FMT='story';box.querySelectorAll('#nxStSeg button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-f')==='story')});box.classList.add('on');render()}
-  function file(){return new File([BLOB],'nafaf-story.png',{type:'image/png'})}
-  function save(){if(!BLOB)return;var a=document.createElement('a');a.href=URL.createObjectURL(BLOB);a.download='nafaf-story.png';document.body.appendChild(a);a.click();a.remove();try{toast(P('حفظنا الصورة بجهازك','تم حفظ الصورة','Image saved'))}catch(e){}}
-  document.getElementById('nxStShare').onclick=function(){if(!BLOB)return;var f=file();
-    try{if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],text:P('طقسي اليوم مع نفاف','طقس اليوم مع نفاف','Today’s weather with Nafaf')+' 🌤 '+LINK}).then(function(){try{nxEv('story')}catch(_){}}).catch(function(){});return}}catch(e){}
+  function open(){if(!window.W)return;FMT='story';box.querySelectorAll('#nxStSeg button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-f')==='story')});box.classList.add('on');render()}
+  function ext(){return !BLOB?'png':BLOB.type==='image/gif'?'gif':BLOB.type.indexOf('video')===0?'mp4':BLOB.type==='image/jpeg'?'jpg':'png'}
+  function file(){return new File([BLOB],'nafaf-'+(FMT==='video'?'weather':'story')+'.'+ext(),{type:BLOB.type||'image/png'})}
+  function save(){if(!BLOB)return;var a=document.createElement('a');a.href=URL.createObjectURL(BLOB);a.download=file().name;document.body.appendChild(a);a.click();a.remove();
+    try{toast(FMT==='video'?P('حفظنا الفيديو بجهازك','تم حفظ الفيديو','Video saved'):P('حفظنا الصورة بجهازك','تم حفظ الصورة','Image saved'))}catch(e){}}
+  document.getElementById('nxStShare').onclick=function(){if(!BLOB)return;var f=file(),ev=FMT==='video'?'storyvid':'story';
+    try{if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],text:P('طقسي اليوم مع نفاف','طقس اليوم مع نفاف','Today’s weather with Nafaf')+' 🌤 '+LINK}).then(function(){try{nxEv(ev)}catch(_){}}).catch(function(){});return}}catch(e){}
     save()};
   document.getElementById('nxStSave').onclick=save;
-  document.getElementById('nxStX').onclick=function(){box.classList.remove('on')};
-  box.addEventListener('click',function(e){if(e.target===box)box.classList.remove('on')});
+  document.getElementById('nxStX').onclick=function(){box.classList.remove('on');RUN++};
+  box.addEventListener('click',function(e){if(e.target===box){box.classList.remove('on');RUN++}});
   document.getElementById('nxStSeg').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;FMT=b.getAttribute('data-f');
     box.querySelectorAll('#nxStSeg button').forEach(function(z){z.classList.toggle('on',z===b)});render()});
   /* the camera button in the top bar opens this sheet (story first, the 4:5 post one tap away).
