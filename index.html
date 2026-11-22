@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611221743';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611222030';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -13415,12 +13415,14 @@ setInterval(function(){
  }},60000);
 </script>
 
+
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
 html.nxNoIsland #nxIsland,html.nxNoIsland #nxPal,html.nxNoIsland #nxPalBack{display:none}
 html.nxNoRail #labRail{display:none}
 html.nxNoInst #nxInst{display:none}
+html.nxNoF-share #shareBtn,html.nxNoF-ugc #fabBtn,html.nx.nxNoF-ugc #fabBtn,html.nx.nxRep.nxNoF-ugc #fabBtn,html.nxNoF-ugc #fabTip,html.nxNoF-ask #askFab,html.nxNoF-ev #evBtn,html.nxNoF-fit #fitPill,html.nxNoF-pushBar #pushBar{display:none!important}
 html.nx.nxIsCenter #nxIsland{inset-inline-end:auto;left:50%;transform:translateX(-50%)}
 html.nx.nxIsCenter #nxIsland:active{transform:translateX(-50%) scale(.92)}
 /* — design.html — */
@@ -14008,6 +14010,9 @@ html.nxBusy #pushBar{display:none!important}
     nudge:{on:true,minSec:60,maxSec:120,showSec:10,pauseMin:15},
     summon:{on:true,delaySec:20,showSec:10,ignoreLimit:3},
     install:{pill:true},
+    fab:{share:true,ugc:true,ask:true,ev:true,fit:true,pushBar:true},   /* 23 Nov 2026: every floating button on/off from the portal (the gear stays: it holds account deletion) */
+    wxfx:{on:true},      /* live weather on screen */
+    stack:{on:true},     /* merge of the active-weather cards */
     push:{auto:true,moveKm:5,bgSync:true},
     widget:{autoOn:true},
     labShell:{on:true,tag:true,flash:true},
@@ -14024,6 +14029,7 @@ html.nxBusy #pushBar{display:none!important}
     H.classList.toggle('nxIsCenter',C.island.pos==='center');
     H.classList.toggle('nxNoRail',C.rail.on===false);
     H.classList.toggle('nxNoInst',C.install.pill===false);
+    var F=C.fab||{};['share','ugc','ask','ev','fit','pushBar'].forEach(function(k){H.classList.toggle('nxNoF-'+k,F[k]===false)});
     try{if(C.english.on===false&&localStorage.getItem('lang')==='en'){localStorage.setItem('lang','dial')}}catch(e){}
   }
   apply();
@@ -16128,12 +16134,12 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
      the others become chips under it; a tap opens that card in place, a second tap folds it again;
    · while any of them (or an official warning) is on screen, the «notify me» bar steps aside;
    · nothing here reads or changes weather data: it only shows/hides cards the other parts already built.
-   Phase 1: only on a device that opened nafaf.online/?stack=1 (owner test); ?stack=0 turns it off. */
+   On for everyone since 23 Nov 2026 (Issa's decision); ?stack=0 / ?stack=1 turn it off / on for one device. */
 (function () {
   var G = window, KEY = 'nf_stack';
   function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
-  try { var q = new URLSearchParams(location.search).get('stack'); if (q === '1') ls(KEY, '1'); if (q === '0') ls(KEY, null); } catch (e) {}
-  function enabled() { return ls(KEY) === '1' && !(G.NXC && G.NXC.stack === false); }
+  try { var q = new URLSearchParams(location.search).get('stack'); if (q === '1') ls(KEY, null); if (q === '0') ls(KEY, '0'); } catch (e) {}
+  function enabled() { var c = G.NXC && G.NXC.stack; return ls(KEY) !== '0' && !(c === false || (c && c.on === false)); }
   var ORDER = [['nxEvt', 'الحدث الآن', 'الحدث الآن', 'Now'], ['nxNc', 'الساعة الجاية', 'الساعة القادمة', 'Next hour'],
                ['nxCl', 'الخلايا القريبة', 'الخلايا القريبة', 'Nearby storms'], ['watchCard', 'مرصد الأمطار', 'مرصد الأمطار', 'Rain watch']];
   var open = {}, busy = false, queued = false;
@@ -16654,7 +16660,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
   try { var q = new URLSearchParams(location.search).get('wxfx'); if (q === '1') ls(OFF, null); if (q === '0') ls(OFF, '1'); } catch (e) {}
   ls(KEY, null);   /* the owner-test key of phase 1 is no longer used */
-  function allowed() { return !(G.NXC && G.NXC.wxfx === false); }
+  function allowed() { var c = G.NXC && G.NXC.wxfx; return !(c === false || (c && c.on === false)); }
   function wanted() { return allowed() && ls(OFF) !== '1'; }
   var cv = null, fx = null, last = '', radObj = null, radCur = null, shown = false;
   function ensure() {
