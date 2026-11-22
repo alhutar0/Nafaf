@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611221545';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611221630';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -13415,6 +13415,7 @@ setInterval(function(){
  }},60000);
 </script>
 
+
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -16579,14 +16580,16 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
 
 
 /* نفاف — الأجواء الحيّة على الشاشة الرئيسية (wxfx part)
-   phase 1: shown only on a device that opened nafaf.online/?wxfx=1 once (owner test); ?wxfx=0 removes it.
+   On for everyone since 22 Nov 2026 (Issa's decision); each person can switch it off in Settings → «الأجواء الحيّة».
+   ?wxfx=0 / ?wxfx=1 switch it off / on for this device.
    Kill switch: NXC.wxfx === false. Data: W (Open-Meteo current, same request Nafaf already makes), DUSTv (Open-Meteo air quality,
    same request), NX_RADAR (Nafaf's own /radar), NX_OFFICIAL (Nafaf's own /official). No new recipient of any user data. */
 (function () {
   var G = window, KEY = 'nf_wxfx', OFF = 'nf_wxfx_off';
   function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
-  try { var q = new URLSearchParams(location.search).get('wxfx'); if (q === '1') ls(KEY, '1'); if (q === '0') ls(KEY, null); } catch (e) {}
-  function allowed() { if (G.NXC && G.NXC.wxfx === false) return false; return ls(KEY) === '1'; }
+  try { var q = new URLSearchParams(location.search).get('wxfx'); if (q === '1') ls(OFF, null); if (q === '0') ls(OFF, '1'); } catch (e) {}
+  ls(KEY, null);   /* the owner-test key of phase 1 is no longer used */
+  function allowed() { return !(G.NXC && G.NXC.wxfx === false); }
   function wanted() { return allowed() && ls(OFF) !== '1'; }
   var cv = null, fx = null, last = '', radObj = null, radCur = null, shown = false;
   function ensure() {
