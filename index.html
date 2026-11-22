@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611131415';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611221545';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -12739,11 +12739,11 @@ function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"
 function fetchAll(){
  LAST_FETCH=Date.now();
  var lat=CUR.lat,lon=CUR.lon;
- W=null;HOURLY=null;DAILY=null;MARINE=null;UVv=null;PMv=null;GUSTS=null;
+ W=null;HOURLY=null;DAILY=null;MARINE=null;UVv=null;PMv=null;GUSTS=null;window.DUSTv=null;
  DAYS_SINCE_RAIN=null;YEARAGO=null;MODELS=null;MODEL_NOTE=null;NAFAF_TXT="";NAFAF_SRC="";SUNRISE=null;SUNSET=null;
  showPanels();
  fetch("https://api.open-meteo.com/v1/forecast?latitude="+lat+"&longitude="+lon+
- "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl"+
+ "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl,precipitation,snowfall,visibility"+
  "&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m"+
  "&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_sum,sunrise,sunset&forecast_days=7&models=best_match&timezone=auto")
 .then(function(r){if(!r.ok)throw 0;return r.json();})
@@ -12753,9 +12753,9 @@ function fetchAll(){
  if(d.daily&&d.daily.sunrise){SUNRISE=d.daily.sunrise[0];SUNSET=d.daily.sunset[0];}
  computeNight();computePressure();computeChanges();computeStability();feedScan();logRecords();showPanels();})
 .catch(function(){$("nowBody").innerHTML='<div class="loading">'+pick('تعذّر جلب الطقس. تأكّد من الإنترنت.','تعذّر الجلب.',"Couldn't load weather.")+'</div>';});
- fetch("https://air-quality-api.open-meteo.com/v1/air-quality?latitude="+lat+"&longitude="+lon+"&current=pm2_5,uv_index&timezone=auto")
+ fetch("https://air-quality-api.open-meteo.com/v1/air-quality?latitude="+lat+"&longitude="+lon+"&current=pm2_5,uv_index,dust&timezone=auto")
 .then(function(r){if(!r.ok)throw 0;return r.json();})
-.then(function(d){UVv=d.current.uv_index;PMv=d.current.pm2_5;if(TAB==='now')renderNow();}).catch(function(){});
+.then(function(d){UVv=d.current.uv_index;PMv=d.current.pm2_5;window.DUSTv=d.current.dust;if(TAB==='now')renderNow();}).catch(function(){});
  fetch("https://marine-api.open-meteo.com/v1/marine?latitude="+lat+"&longitude="+lon+"&current=wave_height,sea_surface_temperature&timezone=auto")
 .then(function(r){if(!r.ok)throw 0;return r.json();})
 .then(function(d){MARINE=d.current;logRecords();showPanels();}).catch(function(){MARINE=null;});
@@ -13415,7 +13415,6 @@ setInterval(function(){
  }},60000);
 </script>
 
-
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -13985,6 +13984,8 @@ html[dir=ltr] .nxNc .ax span{transform:translateX(-50%)}
 .nxNc .nt{padding:0 14px 11px;font-size:11px;color:rgba(238,242,248,.55);line-height:1.6}
 html.nx body.v2.wide #nowBody>#nxNc{grid-column:1/-1}
 .nxFutPane{filter:saturate(.45) brightness(1.15)}
+/* — wxfx.html — */
+#nxWx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40;opacity:0;transition:opacity .9s ease}
 </style>
 <script>
 /* Defaults = how Nafaf behaves with no portal setting. The portal publishes cfg.next; the app keeps the
@@ -16112,6 +16113,536 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   document.addEventListener('visibilitychange',function(){if(!document.hidden)try{load(true)}catch(e){}});
 })();
 </script>
+<script>
+/* نفاف — طبقة الطقس الحيّة (WxFX)
+ * Canvas 2D overlay that shows the current weather on the screen: rain by intensity with drops on the glass,
+ * thunderstorms, hail, snow, dust storms, fog, cyclones and wind.
+ * Safety: lightning is at most two soft pulses per strike and strikes are ≥3.5 s apart (well under the WCAG 2.3.1
+ * limit of three flashes a second); full-screen flash brightness is capped; prefers-reduced-motion → still picture,
+ * no flashes. Performance: device-pixel ratio capped, particle budget scales with screen area and drops by itself
+ * when frames run slow, the loop pauses when the page is hidden.
+ * API: const fx = NafafFX.create(canvas); fx.set({mode, intensity, windKmh, windDir, glass, reduced}); fx.stats()
+ *      NafafFX.fromWeather({weather_code, precipitation, wind_speed_10m, wind_direction_10m}, {dust, cyclone})
+ */
+(function (G) {
+  'use strict';
+  var TAU = Math.PI * 2;
+  function R(a, b) { return a + Math.random() * (b - a); }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+
+  /* per-mode recipe: particle counts are per 360×780 screen at intensity 1 */
+  var MODES = {
+    clear:   {},
+    drizzle: { drops: 260, len: [6, 12], spd: [380, 520], width: .7, alpha: .32, glass: .35, tint: [30, 45, 70, .10], splash: .15 },
+    rain:    { drops: 420, len: [12, 22], spd: [620, 820], width: 1.0, alpha: .42, glass: .7, tint: [22, 36, 62, .18], splash: .5, sheets: .05 },
+    heavy:   { drops: 760, len: [20, 34], spd: [820, 1100], width: 1.3, alpha: .5, glass: 1, tint: [16, 26, 48, .30], splash: 1, sheets: .11 },
+    storm:   { drops: 820, len: [22, 38], spd: [900, 1200], width: 1.4, alpha: .52, glass: 1, tint: [10, 16, 34, .40], splash: 1, sheets: .13, bolt: 1 },
+    hail:    { drops: 300, len: [14, 24], spd: [800, 1000], width: 1.1, alpha: .4, glass: .5, tint: [18, 26, 44, .32], splash: .5, hail: 220, bolt: .6 },
+    snow:    { snow: 320, tint: [210, 222, 240, .10] },
+    dust:    { dust: 650, tint: [176, 112, 52, .34] },
+    fog:     { fog: 1, tint: [214, 222, 232, .22] },
+    cyclone: { drops: 900, len: [26, 44], spd: [950, 1250], width: 1.4, alpha: .5, glass: 1, tint: [8, 14, 30, .46], splash: 1, sheets: .16, bolt: .5, spiral: 1, debris: 40, gust: 1 },
+    wind:    { streaks: 26, debris: 18 }
+  };
+
+  function create(canvas) {
+    var ctx = canvas.getContext('2d');
+    var W = 0, H = 0, DPR = 1, area = 1;
+    var S = { mode: 'clear', intensity: .7, windKmh: 10, windDir: 270, glass: true, reduced: false, budget: 1 };
+    var M = MODES.clear, raf = 0, last = 0, t = 0, running = false;
+    var drops = [], splashes = [], glass = [], flakes = [], hail = [], grains = [], debris = [], streaks = [];
+    var cache = {}, bolt = null, nextBolt = 0, slowFor = 0, fps = 60, fpsAcc = 0, fpsN = 0;
+    var mq = G.matchMedia ? G.matchMedia('(prefers-reduced-motion: reduce)') : null;
+    var sysReduced = !!(mq && mq.matches);
+    if (mq && mq.addEventListener) mq.addEventListener('change', function (e) { sysReduced = e.matches; draw1(); });
+
+    function reduced() { return S.reduced || sysReduced; }
+    /* wind_direction is where the wind comes FROM; on screen only the east–west part shows, as the slant of the rain */
+    function windX() {
+      var k = clamp(S.windKmh / 55, 0, 1.4), dx = -Math.sin(S.windDir * Math.PI / 180) * k;
+      if (M.gust) dx += Math.sin(t * .9) * .35 + Math.sin(t * 2.3) * .15;
+      return dx;
+    }
+    function count(n) { return Math.round((n || 0) * S.intensity * S.budget * area); }
+
+    function resize() {
+      var r = canvas.getBoundingClientRect();
+      DPR = Math.min(G.devicePixelRatio || 1, 1.75);
+      W = Math.max(1, r.width); H = Math.max(1, r.height); area = clamp(W * H / (360 * 780), .5, 2.2);
+      canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
+      cache = {}; rebuild();
+    }
+
+    function newDrop(d, top) {
+      var z = Math.random();
+      d.z = z; d.len = R(M.len[0], M.len[1]) * (.55 + z * .6); d.v = R(M.spd[0], M.spd[1]) * (.6 + z * .5);
+      d.x = R(-W * .3, W * 1.3); d.y = top ? R(-H, 0) : R(-H * .2, H);
+      return d;
+    }
+    function rebuild() {
+      var i;
+      drops.length = 0; flakes.length = 0; hail.length = 0; grains.length = 0; debris.length = 0; streaks.length = 0; splashes.length = 0;
+      if (!M.glass || !S.glass) glass.length = 0;
+      for (i = 0; i < count(M.drops); i++) drops.push(newDrop({}, false));
+      for (i = 0; i < count(M.snow); i++) flakes.push({ x: R(0, W), y: R(0, H), z: Math.random(), ph: R(0, TAU) });
+      for (i = 0; i < count(M.hail); i++) hail.push({ x: R(0, W), y: R(-H, H), v: R(650, 950), r: R(1.4, 3.2), b: 0 });
+      for (i = 0; i < count(M.dust); i++) grains.push({ x: R(0, W), y: R(0, H), z: Math.random(), v: R(260, 900) });
+      for (i = 0; i < count(M.debris); i++) debris.push({ x: R(0, W), y: R(0, H), a: R(0, TAU), s: R(2, 5), v: R(350, 800) });
+      for (i = 0; i < (M.streaks || 0); i++) streaks.push({ x: R(-W, W), y: R(H * .05, H * .9), l: R(80, 200), v: R(500, 900) });
+      nextBolt = t + R(1.2, 3);
+    }
+
+    /* ---------- cached textures ---------- */
+    function tex(key, w, h, paint) {
+      if (!cache[key]) { var c = document.createElement('canvas'); c.width = w; c.height = h; paint(c.getContext('2d'), w, h); cache[key] = c; }
+      return cache[key];
+    }
+    function sheetTex() {   /* a veil of rain: tall soft band */
+      return tex('sheet', 256, 512, function (q, w, h) {
+        var g = q.createLinearGradient(0, 0, w, 0);
+        g.addColorStop(0, 'rgba(200,215,235,0)'); g.addColorStop(.5, 'rgba(200,215,235,1)'); g.addColorStop(1, 'rgba(200,215,235,0)');
+        q.fillStyle = g; q.fillRect(0, 0, w, h);
+      });
+    }
+    function cloudTex(key, col, n) {
+      return tex(key, 1024, 512, function (q, w, h) {
+        for (var i = 0; i < n; i++) {
+          var r = R(60, 170), x = R(r, w - r), y = R(Math.min(r, h / 2), Math.max(h / 2, h - r)), g = q.createRadialGradient(x, y, 0, x, y, r);
+          g.addColorStop(0, 'rgba(' + col + ',.55)'); g.addColorStop(1, 'rgba(' + col + ',0)');
+          q.fillStyle = g; q.fillRect(x - r, y - r, 2 * r, 2 * r);
+        }
+      });
+    }
+    function spiralTex() {  /* cyclone: four log-spiral rain bands round a clear eye */
+      return tex('spiral', 900, 900, function (q, w, h) {
+        q.translate(w / 2, h / 2);
+        for (var arm = 0; arm < 4; arm++) {
+          for (var s = 0; s < 260; s++) {
+            var f = s / 260, th = arm * TAU / 4 + f * 4.6, rr = 40 + Math.exp(f * 2.35) * 38;
+            if (rr > 440) break;
+            var x = Math.cos(th) * rr, y = Math.sin(th) * rr, sz = 18 + f * 70, g = q.createRadialGradient(x, y, 0, x, y, sz);
+            var a = .09 * (1 - f * .5);
+            g.addColorStop(0, 'rgba(220,228,240,' + a + ')'); g.addColorStop(1, 'rgba(220,228,240,0)');
+            q.fillStyle = g; q.fillRect(x - sz, y - sz, 2 * sz, 2 * sz);
+          }
+        }
+        var e = q.createRadialGradient(0, 0, 0, 0, 0, 60); e.addColorStop(0, 'rgba(6,10,22,.55)'); e.addColorStop(1, 'rgba(6,10,22,0)');
+        q.fillStyle = e; q.fillRect(-60, -60, 120, 120);
+      });
+    }
+
+    /* ---------- lightning: fractal path, two soft pulses ---------- */
+    function makeBolt() {
+      var x = R(W * .15, W * .85), y = -10, pts = [[x, y]], endY = R(H * .35, H * .7);
+      while (y < endY) { y += R(H * .03, H * .07); x += R(-1, 1) * W * .07; pts.push([x, y]); }
+      var br = [];
+      for (var b = 0; b < 3; b++) {
+        var s = 2 + Math.floor(Math.random() * Math.max(1, pts.length - 4)), p = [pts[s].slice()], dx = (Math.random() < .5 ? -1 : 1) * W * R(.04, .08);
+        for (var j = 1; j < 5; j++) p.push([p[j - 1][0] + dx * R(.5, 1.1), p[j - 1][1] + H * R(.02, .05)]);
+        br.push(p);
+      }
+      return { pts: pts, br: br, t0: t, life: .45, cx: pts[0][0] };
+    }
+    function boltGlow(b) {   /* two pulses: 0 s and 0.18 s, then gone */
+      var e = t - b.t0; if (e > b.life) return 0;
+      var p1 = Math.exp(-e * 22), p2 = e > .18 ? Math.exp(-(e - .18) * 18) * .8 : 0;
+      return Math.min(1, p1 + p2);
+    }
+    function strokePath(P) { ctx.beginPath(); ctx.moveTo(P[0][0], P[0][1]); for (var i = 1; i < P.length; i++) ctx.lineTo(P[i][0], P[i][1]); ctx.stroke(); }
+
+    /* ---------- one frame ---------- */
+    function step(dt) {
+      var wx = windX(), i, d;
+      for (i = 0; i < drops.length; i++) {
+        d = drops[i]; d.y += d.v * dt; d.x += wx * d.v * dt * .42;
+        if (d.y - d.len > H) {
+          if (M.splash && Math.random() < M.splash * .5 && splashes.length < 90) splashes.push({ x: d.x, y: R(H * .78, H), r: 0, a: .5 * (.5 + d.z * .5) });
+          newDrop(d, true); d.y = R(-60, 0); d.x = R(-W * .3, W * 1.3);
+        }
+      }
+      for (i = splashes.length - 1; i >= 0; i--) { d = splashes[i]; d.r += 60 * dt; d.a -= 1.6 * dt; if (d.a <= 0) splashes.splice(i, 1); }
+      /* drops on the glass: appear, grow a little, the big ones run down */
+      if (M.glass && S.glass) {
+        var rate = M.glass * S.intensity * 9 * area;
+        if (glass.length < 70 * area && Math.random() < rate * dt) glass.push({ x: R(0, W), y: R(0, H * .95), r: R(1.5, 3) + (Math.random() < .25 ? R(2, 5) : 0), vy: 0, life: R(6, 14), age: 0 });
+        for (i = glass.length - 1; i >= 0; i--) {
+          d = glass[i]; d.age += dt;
+          if (d.r > 4.2) { d.vy = Math.min(140, d.vy + R(-20, 120) * dt); if (d.vy < 0) d.vy = 0; d.y += d.vy * dt; d.x += R(-6, 6) * dt;
+            if (d.vy > 30 && Math.random() < dt * 3 && glass.length < 90 * area) glass.push({ x: d.x, y: d.y - d.r * 1.6, r: R(.8, 1.6), vy: 0, life: R(2, 5), age: 0 }); }
+          if (d.y - d.r > H || d.age > d.life) glass.splice(i, 1);
+        }
+      } else glass.length = 0;
+      for (i = 0; i < flakes.length; i++) {
+        d = flakes[i]; var fv = 22 + d.z * 55; d.y += fv * dt; d.x += (Math.sin(t * .8 + d.ph) * 14 + wx * 60) * dt * (.5 + d.z);
+        if (d.y > H + 6) { d.y = -6; d.x = R(-20, W + 20); } if (d.x > W + 10) d.x = -10; if (d.x < -10) d.x = W + 10;
+      }
+      for (i = 0; i < hail.length; i++) {
+        d = hail[i]; if (!d.b) { d.y += d.v * dt; d.x += wx * 120 * dt; if (d.y > H * R(.82, 1)) { d.b = 1; d.v = -d.v * .28; } }
+        else { d.v += 1600 * dt; d.y += d.v * dt; if (d.v > 0 && d.y > H + 4) { d.x = R(0, W); d.y = R(-H * .4, 0); d.v = R(650, 950); d.b = 0; } }
+      }
+      var dw = wx >= 0 ? 1 : -1, dsp = Math.max(.35, Math.abs(wx));
+      for (i = 0; i < grains.length; i++) {
+        d = grains[i]; d.x += dw * d.v * dsp * dt * (.4 + d.z); d.y += Math.sin(t * 3 + i) * 12 * dt;
+        if (d.x > W + 30) { d.x = -30; d.y = R(0, H); } if (d.x < -30) { d.x = W + 30; d.y = R(0, H); }
+      }
+      for (i = 0; i < debris.length; i++) {
+        d = debris[i]; d.x += dw * d.v * Math.max(.5, Math.abs(wx)) * dt; d.y += Math.sin(t * 4 + i) * 60 * dt; d.a += 6 * dt;
+        if (d.x > W + 20) { d.x = -20; d.y = R(0, H); } if (d.x < -20) { d.x = W + 20; d.y = R(0, H); }
+      }
+      for (i = 0; i < streaks.length; i++) { d = streaks[i]; d.x += dw * d.v * dt; if (d.x > W + 220) { d.x = -d.l - R(0, W); d.y = R(H * .05, H * .9); } if (d.x < -220 - d.l) { d.x = W + R(0, W); d.y = R(H * .05, H * .9); } }
+      if (M.bolt && !reduced()) {
+        if (!bolt && t >= nextBolt) { bolt = makeBolt(); nextBolt = t + R(3.5, 9) / Math.max(.4, M.bolt * S.intensity); }
+        if (bolt && t - bolt.t0 > bolt.life) bolt = null;
+      }
+    }
+
+    function render() {
+      var i, d, wx = windX(), a, tint = M.tint, g;
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clearRect(0, 0, W, H);
+      if (tint) {   /* sky darkening grows with intensity; denser near the top for rain, near the ground for dust */
+        a = tint[3] * (.45 + .55 * S.intensity);
+        g = ctx.createLinearGradient(0, 0, 0, H);
+        var c = 'rgba(' + tint[0] + ',' + tint[1] + ',' + tint[2] + ',';
+        if (M.dust) { g.addColorStop(0, c + a * .55 + ')'); g.addColorStop(1, c + Math.min(.75, a * 1.5) + ')'); }
+        else { g.addColorStop(0, c + Math.min(.8, a * 1.35) + ')'); g.addColorStop(1, c + a * .6 + ')'); }
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      }
+      if (M.spiral) {
+        var sp = spiralTex(), sz = Math.max(W, H) * 1.6;
+        ctx.save(); ctx.globalAlpha = .3 + .3 * S.intensity; ctx.translate(W * .35, -H * .12); ctx.rotate(-t * .045); ctx.drawImage(sp, -sz / 2, -sz / 2, sz, sz); ctx.restore();
+      }
+      if (M.bolt || M.spiral || M.drops > 600) {   /* low cloud deck */
+        var ct = cloudTex('deck', '30,38,58', 46), off = (t * 14 * (1 + Math.abs(wx))) % 1024;
+        ctx.save(); ctx.globalAlpha = .55 * S.intensity + .2;
+        for (var k = -1; k <= Math.ceil(W / (1024 * .6)); k++) ctx.drawImage(ct, k * 1024 * .6 - off * .6, -H * .06, 1024 * .6, H * .32);
+        ctx.restore();
+      }
+      if (bolt) {   /* glow in the clouds above the strike, then the bolt */
+        var gl = boltGlow(bolt);
+        if (gl > 0) {
+          var cg = ctx.createRadialGradient(bolt.cx, H * .05, 0, bolt.cx, H * .05, W * .7);
+          cg.addColorStop(0, 'rgba(190,210,255,' + (.35 * gl) + ')'); cg.addColorStop(1, 'rgba(190,210,255,0)');
+          ctx.fillStyle = cg; ctx.fillRect(0, 0, W, H * .6);
+          ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+          ctx.shadowColor = 'rgba(170,200,255,1)'; ctx.shadowBlur = 18 * gl; ctx.strokeStyle = 'rgba(200,220,255,' + (.5 * gl) + ')'; ctx.lineWidth = 5; strokePath(bolt.pts);
+          ctx.shadowBlur = 8; ctx.strokeStyle = 'rgba(255,255,255,' + gl + ')'; ctx.lineWidth = 1.8; strokePath(bolt.pts);
+          ctx.lineWidth = 1; ctx.globalAlpha = .75 * gl; bolt.br.forEach(strokePath); ctx.restore();
+        }
+      }
+      if (M.fog) {
+        var ft = cloudTex('fog', '230,236,244', 40);
+        for (var L = 0; L < 3; L++) {
+          var o = (t * (8 + L * 6) + L * 300) % 1024;
+          ctx.save(); ctx.globalAlpha = (.35 + .3 * S.intensity) * (1 - L * .2);
+          for (var k2 = -1; k2 <= Math.ceil(W / 1024) + 1; k2++) ctx.drawImage(ft, k2 * 1024 - o, H * (.15 + L * .25), 1024, H * .45);
+          ctx.restore();
+        }
+      }
+      if (M.dust) {
+        var dt2 = cloudTex('dust', '196,132,64', 60);
+        for (var L2 = 0; L2 < 2; L2++) {
+          var o2 = ((t * (60 + L2 * 90) * Math.max(.4, Math.abs(wx))) % 1024) * (wx >= 0 ? 1 : -1);
+          ctx.save(); ctx.globalAlpha = (.35 + .5 * S.intensity) * (L2 ? .8 : 1);
+          for (var k3 = -2; k3 <= Math.ceil(W / 1024) + 1; k3++) ctx.drawImage(dt2, k3 * 1024 + o2, H * (L2 ? .35 : -.05), 1024, H * .75);
+          ctx.restore();
+        }
+        ctx.save(); ctx.lineCap = 'round';
+        for (var b = 0; b < 3; b++) {
+          ctx.strokeStyle = 'rgba(244,206,150,' + (.25 + b * .2) + ')'; ctx.lineWidth = .8 + b * .6; ctx.beginPath();
+          for (i = b; i < grains.length; i += 3) { d = grains[i]; var tl = (6 + d.z * 18) * (wx >= 0 ? 1 : -1); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - tl, d.y); }
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+      if (M.sheets) {
+        var sh = sheetTex();
+        ctx.save(); ctx.globalAlpha = M.sheets * S.intensity * 1.6;
+        for (i = 0; i < 4; i++) {
+          var sx = ((t * (120 + i * 40) * (wx >= 0 ? 1 : -1) * Math.max(.3, Math.abs(wx) + .3) + i * W * .45) % (W * 1.6) + W * 1.6) % (W * 1.6) - W * .3;
+          ctx.save(); ctx.translate(sx, 0); ctx.transform(1, 0, -wx * .35, 1, 0, 0); ctx.drawImage(sh, 0, -20, W * .45, H + 40); ctx.restore();
+        }
+        ctx.restore();
+      }
+      if (drops.length) {   /* three depth buckets so each is one stroke() call */
+        ctx.save(); ctx.lineCap = 'round';
+        for (var bk = 0; bk < 3; bk++) {
+          ctx.strokeStyle = 'rgba(205,222,250,' + (M.alpha * (.45 + bk * .3)) + ')'; ctx.lineWidth = M.width * (.6 + bk * .45); ctx.beginPath();
+          for (i = 0; i < drops.length; i++) { d = drops[i]; if ((d.z * 3 | 0) !== bk) continue; ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - wx * d.len * .42, d.y - d.len); }
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+      if (splashes.length) {
+        ctx.save(); ctx.strokeStyle = 'rgb(214,228,250)'; ctx.lineWidth = 1;
+        for (i = 0; i < splashes.length; i++) { d = splashes[i]; ctx.globalAlpha = d.a; ctx.beginPath(); ctx.ellipse(d.x, d.y, d.r, d.r * .3, 0, 0, TAU); ctx.stroke(); }
+        ctx.restore();
+      }
+      if (hail.length) {
+        ctx.save(); ctx.fillStyle = 'rgba(240,246,255,.92)'; ctx.beginPath();
+        for (i = 0; i < hail.length; i++) { d = hail[i]; ctx.moveTo(d.x + d.r, d.y); ctx.arc(d.x, d.y, d.r, 0, TAU); }
+        ctx.fill(); ctx.restore();
+      }
+      if (flakes.length) {
+        ctx.save();
+        for (var fb = 0; fb < 3; fb++) {
+          ctx.fillStyle = 'rgba(255,255,255,' + (.45 + fb * .2) + ')'; ctx.beginPath();
+          for (i = 0; i < flakes.length; i++) { d = flakes[i]; if ((d.z * 3 | 0) !== fb) continue; var r = .9 + d.z * 2.8; ctx.moveTo(d.x + r, d.y); ctx.arc(d.x, d.y, r, 0, TAU); }
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+      if (debris.length) {
+        ctx.save(); ctx.fillStyle = M.dust ? 'rgba(120,80,40,.8)' : 'rgba(60,80,50,.75)';
+        for (i = 0; i < debris.length; i++) { d = debris[i]; ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(d.a); ctx.fillRect(-d.s, -d.s * .35, d.s * 2, d.s * .7); ctx.restore(); }
+        ctx.restore();
+      }
+      if (streaks.length) {
+        ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+        for (i = 0; i < streaks.length; i++) { d = streaks[i]; ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.quadraticCurveTo(d.x + d.l / 2, d.y - 10, d.x + d.l, d.y); ctx.stroke(); }
+        ctx.restore();
+      }
+      if (glass.length) {   /* water on the glass: dark rim, clear body, bright highlight */
+        ctx.save();
+        for (i = 0; i < glass.length; i++) {
+          d = glass[i]; var fade = Math.min(1, d.age * 3, (d.life - d.age) * 1.5);
+          if (fade <= 0) continue;
+          var rx = d.r, ry = d.r * (d.vy > 30 ? 1.35 : 1);
+          ctx.globalAlpha = fade * .9;
+          var gg = ctx.createRadialGradient(d.x - rx * .3, d.y - ry * .35, rx * .1, d.x, d.y, rx * 1.05);
+          gg.addColorStop(0, 'rgba(255,255,255,.55)'); gg.addColorStop(.35, 'rgba(200,220,245,.16)'); gg.addColorStop(.85, 'rgba(20,30,50,.30)'); gg.addColorStop(1, 'rgba(20,30,50,0)');
+          ctx.fillStyle = gg; ctx.beginPath(); ctx.ellipse(d.x, d.y, rx, ry, 0, 0, TAU); ctx.fill();
+          if (d.vy > 30) { ctx.globalAlpha = fade * .25; ctx.fillStyle = 'rgba(210,225,245,1)'; ctx.fillRect(d.x - rx * .25, d.y - ry * 6, rx * .5, ry * 5); }
+        }
+        ctx.restore();
+      }
+      if (bolt && !reduced()) {   /* the only full-screen flash: soft, capped */
+        var fl = boltGlow(bolt) * .13 * S.intensity;
+        if (fl > .004) { ctx.fillStyle = 'rgba(225,235,255,' + fl + ')'; ctx.fillRect(0, 0, W, H); }
+      }
+    }
+
+    function frame(now) {
+      if (!running) return;
+      raf = requestAnimationFrame(frame);
+      var dt = last ? Math.min(.05, (now - last) / 1000) : .016; last = now;
+      t += dt; fpsAcc += dt; fpsN++;
+      if (fpsAcc >= .5) {
+        fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0;
+        if (fps < 40) { slowFor += .5; if (slowFor >= 2 && S.budget > .35) { S.budget = Math.max(.35, S.budget * .75); slowFor = 0; rebuild(); } } else slowFor = 0;
+      }
+      step(dt); render();
+    }
+    function draw1() {   /* reduced motion: one still frame, no flash */
+      if (!reduced()) { start(); return; }
+      stop(); t += 1; step(.2); render();
+    }
+    function start() { if (running || reduced()) return; running = true; last = 0; raf = requestAnimationFrame(frame); }
+    function stop() { running = false; cancelAnimationFrame(raf); }
+
+    function onVis() { if (document.hidden) stop(); else draw1(); }
+    document.addEventListener('visibilitychange', onVis);
+    var ro = G.ResizeObserver ? new ResizeObserver(resize) : null;
+    if (ro) ro.observe(canvas); else G.addEventListener('resize', resize);
+    resize();
+
+    return {
+      set: function (o) {
+        var re = false;
+        for (var k in o) if (o[k] !== undefined && S[k] !== o[k]) { if (k === 'mode' || k === 'intensity' || k === 'glass') re = true; S[k] = o[k]; }
+        M = MODES[S.mode] || MODES.clear;
+        if (re) { S.budget = Math.max(S.budget, .7); bolt = null; rebuild(); }
+        if (S.mode === 'clear') { stop(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); } else draw1();
+      },
+      stats: function () { return { fps: Math.round(fps), budget: +S.budget.toFixed(2), particles: drops.length + flakes.length + hail.length + grains.length + glass.length, reduced: reduced() }; },
+      destroy: function () { stop(); document.removeEventListener('visibilitychange', onVis); if (ro) ro.disconnect(); }
+    };
+  }
+
+  /* Open-Meteo current weather → mode + intensity. Extra flags come from Nafaf's own state (dust event, cyclone warning). */
+  function fromWeather(w, ex) {
+    w = w || {}; ex = ex || {};
+    var c = w.weather_code | 0, p = +w.precipitation || 0, o = { windKmh: +w.wind_speed_10m || 0, windDir: +w.wind_direction_10m || 0 };
+    function ip(lo, hi) { return clamp(.35 + (p - lo) / Math.max(.1, hi - lo) * .65, .35, 1); }
+    if (ex.cyclone) { o.mode = 'cyclone'; o.intensity = 1; return o; }
+    if (c === 96 || c === 99) { o.mode = 'hail'; o.intensity = c === 99 ? 1 : .75; return o; }
+    if (c === 95) { o.mode = 'storm'; o.intensity = p > 10 ? 1 : .8; return o; }
+    if (c === 65 || c === 82 || p >= 7.6) { o.mode = 'heavy'; o.intensity = ip(7.6, 30); return o; }
+    if (c === 63 || c === 81 || c === 66 || c === 67) { o.mode = 'rain'; o.intensity = ip(2.5, 7.6); return o; }
+    if (c === 61 || c === 80) { o.mode = 'rain'; o.intensity = .45; return o; }
+    if (c >= 51 && c <= 57) { o.mode = 'drizzle'; o.intensity = c >= 55 ? .9 : c >= 53 ? .65 : .4; return o; }
+    if ((c >= 71 && c <= 77) || c === 85 || c === 86) { o.mode = 'snow'; o.intensity = c === 75 || c === 86 ? 1 : c === 73 ? .7 : .45; return o; }
+    if (ex.dust) { o.mode = 'dust'; o.intensity = ex.dust === true ? .75 : clamp(+ex.dust, .3, 1); return o; }
+    if (c === 45 || c === 48) { o.mode = 'fog'; o.intensity = c === 48 ? .9 : .65; return o; }
+    if (o.windKmh >= 40) { o.mode = 'wind'; o.intensity = clamp(o.windKmh / 70, .4, 1); return o; }
+    o.mode = 'clear'; o.intensity = 0; return o;
+  }
+
+  G.NafafFX = { create: create, fromWeather: fromWeather, modes: Object.keys(MODES) };
+})(window);
+
+/* نفاف — من الأرقام الحقيقية إلى المشهد (NafafFX.decide)
+ * Each phenomenon from its most truthful source:
+ *   rain & its strength → radar echo at the point (observed); the model only when the radar shows nothing there
+ *   thunder & lightning → strong radar echo AND a thunder code from the model (both); never from one alone
+ *   hail                → hail code from the model AND a very strong echo (≥ 55 dBZ)
+ *   snow, fog           → model (snowfall, visibility, codes)
+ *   dust                → dust concentration (µg/m³) with visibility as support
+ *   cyclone             → only an official warning for this place
+ * In doubt, the lighter picture. Rain classes (AMS): drizzle < 0.5 · light 0.5–2.5 · moderate 2.5–7.6 · heavy 7.6–50 · violent > 50 mm/h.
+ */
+(function (G) {
+  'use strict';
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function lin(v, a, b, A, B) { return A + clamp((v - a) / (b - a), 0, 1) * (B - A); }
+  /* mm/h → [mode, intensity, Arabic class] */
+  function rainClass(r) {
+    if (r < .5) return ['drizzle', lin(r, .05, .5, .3, 1), 'رذاذ'];
+    if (r < 2.5) return ['rain', lin(r, .5, 2.5, .3, .62), 'مطر خفيف'];
+    if (r < 7.6) return ['rain', lin(r, 2.5, 7.6, .65, 1), 'مطر متوسط'];
+    if (r < 50) return ['heavy', lin(Math.log(r), Math.log(7.6), Math.log(50), .45, .95), 'مطر غزير'];
+    return ['heavy', 1, 'مطر عنيف'];
+  }
+  /* Issa's chosen look for each scene (17 Nov 2026, tested on his phone). The data moves the picture within ±30 % of it:
+     weak readings show 70 % of the look, the strongest 100 %. */
+  var LOOK = { drizzle: .85, rain: .80, heavy: .65, storm: .75, hail: .55, snow: .70, dust: .15, fog: .70, cyclone: .50, wind: .85 };
+  function finish(o) { if (o.mode !== 'clear') { o.strength = o.intensity; o.intensity = Math.round((LOOK[o.mode] || .7) * (.7 + .3 * clamp(o.strength, 0, 1)) * 100) / 100; } return o; }
+  var CYC = /cyclone|hurricane|typhoon|tropical storm|إعصار|عاصفة مدارية|منخفض مداري/i;
+
+  /* m: Open-Meteo current · aq: {dust} · rd: worker /radar · al: worker /official */
+  function decide(m, aq, rd, al) { return finish(decide0(m, aq, rd, al)); }
+  function decide0(m, aq, rd, al) {
+    m = m || {}; aq = aq || {}; rd = rd || {}; al = al || {};
+    var o = { windKmh: +m.wind_speed_10m || 0, windDir: +m.wind_direction_10m || 0, why: [], src: '' };
+    var code = m.weather_code | 0, modelMm = (+m.precipitation || 0), snowCm = +m.snowfall || 0, vis = m.visibility == null ? null : +m.visibility;
+    var radarOk = rd.ok === true, here = radarOk ? rd.here : null, near = radarOk ? rd.max : null, radarMm = here != null ? Math.round(Math.pow(Math.pow(10, here / 10) / 200, 1 / 1.6) * 10) / 10 : 0;
+    var thunderModel = code >= 95, hailModel = code === 96 || code === 99;
+    var snowModel = (code >= 71 && code <= 77) || code === 85 || code === 86 || snowCm > 0;
+
+    /* 1. cyclone: official warning only */
+    var cyc = (al.here || []).filter(function (a) { return CYC.test((a.event || '') + ' ' + (a.headline || '')); })[0];
+    if (cyc) { o.mode = 'cyclone'; o.intensity = 1; o.src = 'تحذير رسمي'; o.why.push('تحذير رسمي: ' + (cyc.event || cyc.headline)); return o; }
+
+    /* 2. snow: type from the model, strength from radar when it sees it */
+    if (snowModel) {
+      o.mode = 'snow'; o.intensity = here != null ? lin(here, 10, 35, .35, 1) : (snowCm >= 2 ? 1 : snowCm >= .5 ? .7 : .45);
+      o.src = here != null ? 'النموذج للنوع + الرادار للشدة' : 'النموذج'; o.why.push('ثلج ' + snowCm + ' سم/س'); return o;
+    }
+
+    /* 3. rain from radar */
+    if (here != null && here >= 15) {
+      var c = rainClass(radarMm);
+      o.mode = c[0]; o.intensity = c[1]; o.src = 'الرادار'; o.why.push(c[2] + ' (' + radarMm + ' ملم/س، ' + here + ' dBZ)');
+      if (thunderModel && (here >= 45 || (near != null && near >= 50))) {
+        o.mode = hailModel && here >= 55 ? 'hail' : 'storm'; o.intensity = Math.max(o.intensity, .75);
+        o.src = 'الرادار + رمز الرعد'; o.why.push(o.mode === 'hail' ? 'صدى قوي جدًا مع رمز برَد' : 'صدى قوي مع رمز رعد');
+      } else if (thunderModel) o.why.push('رمز رعد بلا صدى قوي: لا برق');
+      return o;
+    }
+
+    /* 4. no echo here but the model says rain: the lighter picture, labelled */
+    if (modelMm > 0 || (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || thunderModel) {
+      if (radarOk && rd.here == null && near != null && near >= 15) { o.why.push('مطر قريب (حتى 25 كم)، لا شيء فوقك'); }
+      if (radarOk) {
+        o.mode = 'drizzle'; o.intensity = .35; o.src = 'النموذج (مخفّف: الرادار لا يرى مطرًا فوقك)';
+        o.why.push('النموذج ' + modelMm + ' ملم، الرادار صافٍ');
+      } else {
+        var c2 = rainClass(Math.max(modelMm, .3)); o.mode = c2[0]; o.intensity = Math.min(c2[1], .6); o.src = 'النموذج (لا قراءة رادار)';
+        o.why.push(c2[2] + ' من النموذج');
+      }
+      return o;
+    }
+
+    /* 5. dust */
+    var dust = aq.dust == null ? null : +aq.dust;
+    if ((dust != null && dust >= 150) || (dust != null && dust >= 80 && vis != null && vis < 5000)) {
+      o.mode = 'dust'; o.intensity = lin(Math.log(Math.max(dust, 80)), Math.log(150), Math.log(1500), .35, 1);
+      o.src = 'تركيز الغبار' + (vis != null ? ' + الرؤية' : ''); o.why.push('غبار ' + Math.round(dust) + ' ميكروغرام/م³'); return o;
+    }
+
+    /* 6. fog */
+    if (code === 45 || code === 48 || (vis != null && vis < 1000)) {
+      o.mode = 'fog'; o.intensity = vis != null ? lin(vis, 1000, 100, .5, 1) : .7; o.src = 'النموذج';
+      o.why.push('ضباب' + (vis != null ? '، الرؤية ' + Math.round(vis) + ' م' : '')); return o;
+    }
+
+    /* 7. wind */
+    if (o.windKmh >= 40) { o.mode = 'wind'; o.intensity = lin(o.windKmh, 40, 80, .4, 1); o.src = 'النموذج'; o.why.push('رياح ' + Math.round(o.windKmh) + ' كم/س'); return o; }
+
+    o.mode = 'clear'; o.intensity = 0; o.src = radarOk ? 'الرادار + النموذج' : 'النموذج'; o.why.push('لا ظاهرة جوية تستحق تأثيرًا');
+    return o;
+  }
+  G.NafafFX = G.NafafFX || {};
+  G.NafafFX.decide = decide;
+  G.NafafFX.rainClass = rainClass;
+  G.NafafFX.LOOK = LOOK;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+
+/* نفاف — الأجواء الحيّة على الشاشة الرئيسية (wxfx part)
+   phase 1: shown only on a device that opened nafaf.online/?wxfx=1 once (owner test); ?wxfx=0 removes it.
+   Kill switch: NXC.wxfx === false. Data: W (Open-Meteo current, same request Nafaf already makes), DUSTv (Open-Meteo air quality,
+   same request), NX_RADAR (Nafaf's own /radar), NX_OFFICIAL (Nafaf's own /official). No new recipient of any user data. */
+(function () {
+  var G = window, KEY = 'nf_wxfx', OFF = 'nf_wxfx_off';
+  function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
+  try { var q = new URLSearchParams(location.search).get('wxfx'); if (q === '1') ls(KEY, '1'); if (q === '0') ls(KEY, null); } catch (e) {}
+  function allowed() { if (G.NXC && G.NXC.wxfx === false) return false; return ls(KEY) === '1'; }
+  function wanted() { return allowed() && ls(OFF) !== '1'; }
+  var cv = null, fx = null, last = '', radObj = null, radCur = null, shown = false;
+  function ensure() {
+    if (fx) return;
+    cv = document.createElement('canvas'); cv.id = 'nxWx'; cv.setAttribute('aria-hidden', 'true'); document.body.appendChild(cv);
+    fx = G.NafafFX.create(cv);
+  }
+  function hide() { if (!shown) return; shown = false; last = ''; if (cv) cv.style.opacity = 0; setTimeout(function () { if (!shown && fx) fx.set({ mode: 'clear' }); }, 900); }
+  function curKey() { return G.CUR ? (+G.CUR.lat).toFixed(2) + ',' + (+G.CUR.lon).toFixed(2) : ''; }
+  function tick() {
+    if (!wanted() || !G.W || G.TAB !== 'now' || document.hidden) { hide(); return; }
+    ensure();
+    /* NX_RADAR has no coordinates: trust it only if it arrived while this place was on screen */
+    if (G.NX_RADAR !== radObj) { radObj = G.NX_RADAR; radCur = curKey(); }
+    var rd = radObj && radCur === curKey() && !(radObj.age > 40 * 60) ? radObj : null;
+    var o = G.NafafFX.decide(G.W, { dust: G.DUSTv }, rd, { here: G.NX_OFFICIAL ? [G.NX_OFFICIAL] : [] });
+    if (G.MOTION === 'calm') o.intensity = Math.round(o.intensity * 70) / 100;
+    G.NX_WXFX = o;
+    var sig = curKey() + '|' + o.mode + '|' + o.intensity.toFixed(2) + '|' + Math.round(o.windKmh / 5) + '|' + Math.round(o.windDir / 20) + '|' + G.MOTION;
+    if (sig === last) return;
+    var first = !shown; last = sig; shown = true;
+    if (o.mode === 'clear') { cv.style.opacity = 0; setTimeout(function () { if (G.NX_WXFX === o) fx.set({ mode: 'clear' }); }, 900); return; }
+    cv.style.opacity = 0;
+    setTimeout(function () {
+      if (G.NX_WXFX !== o) return;
+      fx.set({ mode: o.mode, intensity: o.intensity, windKmh: o.windKmh, windDir: o.windDir, glass: true, reduced: G.MOTION === 'off' });
+      cv.style.opacity = 1;
+    }, first ? 50 : 900);
+  }
+  setInterval(tick, 3000); setTimeout(tick, 1500);
+  document.addEventListener('visibilitychange', tick);
+
+  /* settings: an on/off card under «الحركة», only where the feature is allowed */
+  function addSetting() {
+    var box = document.getElementById('setBody'); if (!box || !allowed() || box.querySelector('[data-wx]')) return;
+    var mo = box.querySelector('[data-mo]'); var card = mo && mo.closest('.m-card'); if (!card) return;
+    var L = function (a, b, c) { return typeof G.pick === 'function' ? G.pick(a, b, c) : a; };
+    var on = ls(OFF) !== '1', ob = typeof G.optBtn === 'function' ? G.optBtn : function (t, a, at) { return '<button class="opt' + (a ? ' on' : '') + '" ' + at + '>' + t + '</button>'; };
+    var d = document.createElement('div'); d.className = 'm-card';
+    d.innerHTML = '<div class="m-sec">' + L('الأجواء الحيّة', 'الأجواء الحيّة', 'Live weather on screen') + '</div>' +
+      '<div class="m-hint">' + L('مطر أو غبار أو ضباب على شاشتك حسب جوّك الحين، من الرادار وأرصاد النماذج. البرق خافت وما يومض بسرعة.',
+        'تأثيرات على الشاشة تعكس الطقس الحالي من الرادار والنماذج. البرق خافت وبطيء.',
+        'Rain, dust or fog on your screen from the radar and models right now. Lightning is soft and slow.') + '</div>' +
+      '<div class="m-row">' + ob(L('تشتغل', 'تشغيل', 'On'), on, 'data-wx="on"') + ob(L('مطفأة', 'إيقاف', 'Off'), !on, 'data-wx="off"') + '</div>';
+    card.parentNode.insertBefore(d, card.nextSibling);
+    d.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-wx]'); if (!b) return;
+      ls(OFF, b.getAttribute('data-wx') === 'off' ? '1' : null);
+      [].forEach.call(d.querySelectorAll('[data-wx]'), function (x) { var a = x === b; x.classList.toggle('on', a); x.classList.toggle('sel', a); x.setAttribute('aria-pressed', a); });
+      last = ''; tick();
+    });
+  }
+  new MutationObserver(addSetting).observe(document.documentElement, { childList: true, subtree: true });
+  G.NafafWxFX = { on: function () { return wanted() && shown && !!G.NX_WXFX && G.NX_WXFX.mode !== 'clear'; }, state: function () { return G.NX_WXFX || null; }, allowed: allowed };
+})();
+</script>
 <script type="text/plain" id="nxSceneSrc">
 /* Nafaf Next — live WebGL sky scene behind the app.
    Real sun & moon position for the selected city, weather-driven sky/clouds/rain/dust/fog/lightning,
@@ -16152,9 +16683,12 @@ function weatherTargets() {
   let rain = 0;
   if (/rain_light/.test(st)) rain = 0.3; else if (st === 'rain') rain = 0.6; else if (st === 'rain_heavy') rain = 0.9; else if (st === 'storm') rain = 1;
   const windKmh = w ? (w.wind_speed_10m || 0) : 8, windDir = w ? (w.wind_direction_10m || 0) : 0;
+  /* the live-weather layer (wxfx) draws rain, dust and fog from radar; the sky keeps only its clouds so the two never disagree */
+  const fxOn = !!(G.NafafWxFX && G.NafafWxFX.on());
+  if (fxOn) rain = 0;
   return {
-    st, cloud, rain, storm: st === 'storm' ? 1 : 0,
-    dust: st === 'dust' ? 1 : 0, fog: st === 'fog' ? 1 : 0, heat: (st === 'heat' || st === 'humid') ? 1 : 0,
+    st, cloud, rain, storm: st === 'storm' && !fxOn ? 1 : 0,
+    dust: st === 'dust' && !fxOn ? 1 : 0, fog: st === 'fog' && !fxOn ? 1 : 0, heat: (st === 'heat' || st === 'humid') ? 1 : 0,
     windKmh, windDir: windDir * D2R
   };
 }
