@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611221630';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611221743';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -13415,7 +13415,6 @@ setInterval(function(){
  }},60000);
 </script>
 
-
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -13985,6 +13984,14 @@ html[dir=ltr] .nxNc .ax span{transform:translateX(-50%)}
 .nxNc .nt{padding:0 14px 11px;font-size:11px;color:rgba(238,242,248,.55);line-height:1.6}
 html.nx body.v2.wide #nowBody>#nxNc{grid-column:1/-1}
 .nxFutPane{filter:saturate(.45) brightness(1.15)}
+/* — stack.html — */
+/* نفاف — دمج بطاقات الطقس النشط (stack). Hides nothing for good: a merged card is one tap away and keeps updating underneath. */
+.nxStkHide{display:none!important}
+#nxStk{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 14px}
+#nxStk button{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.20);color:inherit;border-radius:999px;padding:7px 13px;font:inherit;font-size:13px;line-height:1.2;cursor:pointer}
+#nxStk button[aria-expanded="true"]{background:rgba(232,179,90,.22);border-color:rgba(232,179,90,.6)}
+#nxStk button:focus-visible{outline:2px solid #e8b35a;outline-offset:2px}
+html.nxBusy #pushBar{display:none!important}
 /* — wxfx.html — */
 #nxWx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40;opacity:0;transition:opacity .9s ease}
 </style>
@@ -16112,6 +16119,64 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   /* keep the strip moving with the clock, and fetch each new radar frame */
   setInterval(function(){if(document.hidden)return;try{if(TAB==='now')paint()}catch(e){}try{load()}catch(e){}},60e3);
   document.addEventListener('visibilitychange',function(){if(!document.hidden)try{load(true)}catch(e){}});
+})();
+</script>
+<script>
+/* Rules (agreed with Issa, 22 Nov 2026):
+   · the official warning (#nxOfBox) is never merged, hidden or moved;
+   · of Nafaf's own rain cards only the most urgent stays open: event now → next hour → nearby cells → rain watch (when raining);
+     the others become chips under it; a tap opens that card in place, a second tap folds it again;
+   · while any of them (or an official warning) is on screen, the «notify me» bar steps aside;
+   · nothing here reads or changes weather data: it only shows/hides cards the other parts already built.
+   Phase 1: only on a device that opened nafaf.online/?stack=1 (owner test); ?stack=0 turns it off. */
+(function () {
+  var G = window, KEY = 'nf_stack';
+  function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
+  try { var q = new URLSearchParams(location.search).get('stack'); if (q === '1') ls(KEY, '1'); if (q === '0') ls(KEY, null); } catch (e) {}
+  function enabled() { return ls(KEY) === '1' && !(G.NXC && G.NXC.stack === false); }
+  var ORDER = [['nxEvt', 'الحدث الآن', 'الحدث الآن', 'Now'], ['nxNc', 'الساعة الجاية', 'الساعة القادمة', 'Next hour'],
+               ['nxCl', 'الخلايا القريبة', 'الخلايا القريبة', 'Nearby storms'], ['watchCard', 'مرصد الأمطار', 'مرصد الأمطار', 'Rain watch']];
+  var open = {}, busy = false, queued = false;
+  function L(a, b, c) { return typeof G.pick === 'function' ? G.pick(a, b, c) : a; }
+  function active(id) {
+    var el = document.getElementById(id); if (!el || !el.isConnected) return null;
+    if (id === 'watchCard' && !el.classList.contains('on')) return null;   /* the watch counts only while it shows rain now */
+    return el;
+  }
+  function apply() {
+    queued = false; if (busy) return; busy = true;
+    try {
+      var row = document.getElementById('nxStk'), items = [];
+      ORDER.forEach(function (o) { var el = active(o[0]); if (el) items.push({ id: o[0], el: el, label: L(o[1], o[2], o[3]) }); });
+      var official = !!document.getElementById('nxOfBox');
+      var want = enabled() && items.length >= 2;
+      document.documentElement.classList.toggle('nxBusy', enabled() && (items.length > 0 || official));
+      if (!want) {
+        ORDER.forEach(function (o) { var el = document.getElementById(o[0]); if (el && el.classList.contains('nxStkHide')) el.classList.remove('nxStkHide'); });
+        if (row) row.remove();
+        return;
+      }
+      var main = items[0], rest = items.slice(1);
+      if (main.el.classList.contains('nxStkHide')) main.el.classList.remove('nxStkHide');
+      rest.forEach(function (it) { var hide = !open[it.id]; if (it.el.classList.contains('nxStkHide') !== hide) it.el.classList.toggle('nxStkHide', hide); });
+      var sig = rest.map(function (it) { return it.id + (open[it.id] ? '+' : '-'); }).join(',');
+      if (!row) { row = document.createElement('div'); row.id = 'nxStk'; row.setAttribute('role', 'group'); row.setAttribute('aria-label', L('تفاصيل أخرى', 'تفاصيل أخرى', 'More details')); row.addEventListener('click', onChip); }
+      if (row.getAttribute('data-sig') !== sig) {
+        row.setAttribute('data-sig', sig); row.innerHTML = '';
+        rest.forEach(function (it) {
+          var b = document.createElement('button'); b.type = 'button'; b.setAttribute('data-for', it.id); b.setAttribute('aria-expanded', open[it.id] ? 'true' : 'false');
+          b.textContent = (open[it.id] ? '▴ ' : '▾ ') + it.label; row.appendChild(b);
+        });
+      }
+      if (row.previousElementSibling !== main.el || row.parentNode !== main.el.parentNode) main.el.parentNode.insertBefore(row, main.el.nextSibling);
+    } finally { busy = false; }
+  }
+  function onChip(e) { var b = e.target.closest('button[data-for]'); if (!b) return; var id = b.getAttribute('data-for'); open[id] = !open[id]; apply(); }
+  function soon() { if (queued || busy) return; queued = true; requestAnimationFrame(apply); }
+  new MutationObserver(soon).observe(document.documentElement, { childList: true, subtree: true });
+  /* a new place starts folded again */
+  var lastCur = null; setInterval(function () { var k = G.CUR ? G.CUR.lat + ',' + G.CUR.lon : ''; if (k !== lastCur) { lastCur = k; open = {}; soon(); } }, 2000);
+  G.NafafStack = { enabled: enabled, apply: apply };
 })();
 </script>
 <script>
