@@ -1728,6 +1728,7 @@ function defaultAlerts() {
       firstRain:   { on: true,  min: 0,    cap: 1, label: 'أول مطر بعد جفاف' },
       nearbyRain:  { on: true,  min: 60,   cap: 2, label: 'احتمال مطر خلال ٦ ساعات' },
       rainSoon:    { on: true,  min: 0.2,  cap: 3, label: 'المطر جاي (خلال ساعة)' },
+      rainArrive:  { on: true,  min: 0,    cap: 2, label: 'المطر يوصلك بعد ~دقائق (من حركة الرادار)' },
       rainNear:    { on: true,  min: 0.3,  cap: 2, label: 'مطر حولك (٢٢ كم)' },
       widget:      { on: true,  min: 0,    cap: 24, label: 'تحديث الودجت والتطبيق مغلق' },
       quake:       { on: false, min: 4.5,  cap: 1, label: 'زلزال بالمنطقة' },
@@ -1977,8 +1978,10 @@ async function runAlerts(env) {
       try {
         if (!inQuiet(sub, cfg)) {
           for (const e of cellEvents(now, prev, cfg, sub)) {
+            if (e.type === 'rainSoon' && (await soonRecent(env, sub.endpoint))) continue;   /* the radar already said it */
             if (!(await underCap(env, sub.endpoint, e.type, cfg))) continue;
             await sendPush(env, sub, e); await bumpCap(env, sub.endpoint, e.type);
+            if (e.type === 'rainSoon') await soonMark(env, sub.endpoint);
           }
         }
         /* الودجت: مرة كل ساعة تقريبًا لكل مستخدم، موزّعة على الدورات الست */
@@ -2254,12 +2257,33 @@ const RD_T = {
   bn: { cell: ['⛈️ ঝড়ের মেঘ আপনার দিকে', 'একটি শক্তিশালী ঝড়-কোষ ({dbz} dBZ){over} প্রায় {mins} মিনিটে (±{pm}) {nm} পৌঁছাতে পারে।'], overW: ' {o}-এর কাছে', start: ['🌧️ আপনার এখানে বৃষ্টি', 'রাডারে {nm}-এ এখন বৃষ্টি দেখা যাচ্ছে (প্রায় {mm} মিমি/ঘণ্টা)।'], heavy: ['⛈️ আপনার এখানে ভারী বৃষ্টি', 'রাডারে {nm}-এ ভারী বৃষ্টি (~{mm} মিমি/ঘণ্টা)। নিচু রাস্তা এড়িয়ে চলুন; আবহাওয়া দপ্তরের নির্দেশনা মানুন।'],
         near: ['🌧️ বৃষ্টি কাছেই', 'রাডারে {nm} থেকে {km} কিমি {dir} দিকে বৃষ্টি দেখা যাচ্ছে{trend}।'], trend: ', এগিয়ে আসছে', dirs: ['উত্তর', 'উত্তর-পূর্ব', 'পূর্ব', 'দক্ষিণ-পূর্ব', 'দক্ষিণ', 'দক্ষিণ-পশ্চিম', 'পশ্চিম', 'উত্তর-পশ্চিম'] },
 };
+/* «المطر يوصلك»: from the rain's motion on radar (nowcast.js). An estimate with its margin, never an official warning. */
+RD_T.ar.soon = ['🌧️ المطر يوصلك بعد ~{mins} دقيقة', 'حسب حركة المطر على الرادار، متوقع يبدأ المطر على {nm} بعد ~{mins} دقيقة (±{pm}). تقدير وليس تحذيرًا رسميًا.'];
+RD_T.en.soon = ['🌧️ Rain in about {mins} min', 'From the rain’s motion on radar, rain should start at {nm} in ~{mins} min (±{pm}). An estimate, not an official warning.'];
+if (RD_T.fr) RD_T.fr.soon = ['🌧️ Pluie dans ~{mins} min', 'D’après le mouvement de la pluie au radar, elle devrait commencer à {nm} dans ~{mins} min (±{pm}). Estimation, pas une alerte officielle.'];
+if (RD_T.de) RD_T.de.soon = ['🌧️ Regen in etwa {mins} Min.', 'Laut Bewegung des Regens auf dem Radar beginnt es in {nm} in ~{mins} Min. (±{pm}). Eine Schätzung, keine amtliche Warnung.'];
+if (RD_T.ur) RD_T.ur.soon = ['🌧️ تقریباً {mins} منٹ میں بارش', 'ریڈار پر بارش کی حرکت کے مطابق {nm} میں تقریباً {mins} منٹ (±{pm}) میں بارش شروع ہو سکتی ہے۔ یہ اندازہ ہے، سرکاری انتباہ نہیں۔'];
+if (RD_T.hi) RD_T.hi.soon = ['🌧️ लगभग {mins} मिनट में बारिश', 'रडार पर बारिश की चाल के अनुसार {nm} में लगभग {mins} मिनट (±{pm}) में बारिश शुरू हो सकती है। यह अनुमान है, आधिकारिक चेतावनी नहीं।'];
+if (RD_T.bn) RD_T.bn.soon = ['🌧️ প্রায় {mins} মিনিটে বৃষ্টি', 'রাডারে বৃষ্টির গতি অনুযায়ী {nm}-এ প্রায় {mins} মিনিটে (±{pm}) বৃষ্টি শুরু হতে পারে। এটি অনুমান, সরকারি সতর্কবার্তা নয়।'];
+/* first lead (10–45 min from now) where at least half of the sampling disc is wet, while it is dry at the point now */
+async function nowcastSoon(sub, env) {
+  const N = await nowcastCached(sub.lat, sub.lon, env); if (!N || !N.motion || !N.s) return null;
+  const age = Date.now() / 1000 - N.t; if (age > 20 * 60) return null;
+  const at = m => { const L = (m + age / 60) / N.step, i = Math.floor(L), a = N.s[i], b = N.s[i + 1]; if (!a) return null; if (!b) return a[0]; const f = L - i; return a[0] * (1 - f) + b[0] * f; };
+  const p0 = at(0); if (p0 == null || p0 >= 0.3) return null;
+  for (let m = 10; m <= 45; m += 5) { const p = at(m); if (p == null) return null; if (p >= 0.5) return { mins: m, pm: Math.max(5, Math.round(m * .25 / 5) * 5) }; }
+  return null;
+}
+/* one «rain is coming» per person per 90 min, whichever source (radar motion or model minutes) says it first */
+async function soonRecent(env, endpoint) { try { return !!(await env.NAFAF_KV.get('soon:' + hashStr(endpoint))); } catch (_) { return false; } }
+async function soonMark(env, endpoint) { try { await env.NAFAF_KV.put('soon:' + hashStr(endpoint), '1', { expirationTtl: 90 * 60 }); } catch (_) {} }
 function rdText(sub, kind, v) {
   const L = RD_T[sub.xl] || (isEn(sub) ? RD_T.en : RD_T.ar);
   const nm = sub.place || (L === RD_T.ar ? 'منطقتك' : L === RD_T.en ? 'your area' : ((XL[sub.xl] && XL[sub.xl].area) || 'your area'));
   const f = s => s.replace('{nm}', nm).replace('{mm}', v.mm).replace('{km}', v.km).replace('{dir}', L.dirs[v.dir] || '').replace('{trend}', v.trend ? L.trend : '')
     .replace('{dbz}', v.dbz).replace('{mins}', v.mins).replace('{pm}', v.pm).replace('{over}', v.over ? L.overW.replace('{o}', v.over) : '');
-  return [f(L[kind][0]), f(L[kind][1])];
+  const K = L[kind] || (isEn(sub) ? RD_T.en : RD_T.ar)[kind];
+  return [f(K[0]), f(K[1])];
 }
 async function runRadar(env) {
   const cfg = await getAlertCfg(env);
@@ -2289,11 +2313,12 @@ async function runRadar(env) {
         return c ? { mins: c.here.min, pm: c.here.pm, dbz: c.dbz, over: c.over, dir: c.dir, speed: c.speed } : null; } catch (_) { return null; }
     };
     if (startHit) log.wet++; else if (nearHit) log.near++;
-    if (!startHit && !heavyHit && !nearHit && !(r.max != null && r.max >= 40)) continue;
+    const soonGate = !startHit && r.max != null && r.max >= 22;   /* rain somewhere within 25 km: worth a nowcast */
+    if (!startHit && !heavyHit && !nearHit && !soonGate && !(r.max != null && r.max >= 40)) continue;
     for (const sub of cells.get(keys[i]).subs) {
       try {
         const hk = 'rd:' + hashStr(sub.endpoint); let st = {}; try { st = JSON.parse((await env.NAFAF_KV.get(hk)) || '{}'); } catch (_) {}
-        const now = Date.now(), quiet = inQuiet(sub, cfg); let changed = false, cellHit = null;
+        const now = Date.now(), quiet = inQuiet(sub, cfg); let changed = false, cellHit = null, soonHit = null;
         const send = async (type, kind, v, sev) => {
           if (T[type] && T[type].on === false) { why('off:' + type); return false; }
           if (!(await underCap(env, sub.endpoint, type, cfg))) { why('cap:' + type); return false; }
@@ -2311,6 +2336,10 @@ async function runRadar(env) {
         else if (startHit && !quiet && now - (st.s || 0) > 3 * 36e5) { if (await send('rainStart', 'start', { mm: mmh(r.here) }, 'alert')) { st.s = now; changed = true; } }
         else if (!startHit && !quiet && now - (st.c || 0) > 90 * 6e4 && now - (st.s || 0) > 60 * 6e4 && (cellHit = await cellFor(sub))) {
           if (await send('rainNear', 'cell', cellHit, 'alert')) { st.c = now; st.n = now; changed = true; }
+        }
+        else if (soonGate && !quiet && now - (st.k || 0) > 120 * 6e4 && now - (st.s || 0) > 60 * 6e4 && now - (st.c || 0) > 60 * 6e4
+                 && !(await soonRecent(env, sub.endpoint)) && (soonHit = await nowcastSoon(sub, env))) {
+          if (await send('rainArrive', 'soon', soonHit, 'notice')) { st.k = now; st.n = now; changed = true; await soonMark(env, sub.endpoint); }
         }
         else if (nearHit && !quiet && now - (st.n || 0) > 90 * 6e4 && now - (st.s || 0) > 60 * 6e4) {
           if (await send('rainNear', 'near', { km: r.closest.km, dir: r.closest.dir, trend: (r.trend || 0) >= 2 }, 'notice')) { st.n = now; changed = true; }
