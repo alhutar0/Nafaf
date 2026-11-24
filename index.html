@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611222030';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611241755';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -2512,8 +2512,9 @@ function clockText(){
  var diff='';
  if(TZ_OFF!=null){
   var mine=-new Date().getTimezoneOffset()*60;
-  var dh=Math.round((TZ_OFF-mine)/3600);
-  if(dh!==0)diff=' <em>'+(dh>0?'+':'')+dh+(L===2?'h':' س')+'</em>';
+  var dm=Math.round((TZ_OFF-mine)/60);   /* minutes: India is +1:30 from Oman, Nepal +1:45 */
+  if(dm!==0){var am=Math.abs(dm),hh2=Math.floor(am/60),mm2=am%60;
+   diff=' <em>'+(dm>0?'+':'-')+hh2+(mm2?':'+String(mm2).padStart(2,'0'):'')+(L===2?'h':' س')+'</em>';}
  }
  return '<b>'+t+'</b>'+diff;
 }
@@ -3312,6 +3313,19 @@ function nextChangeLine(){
  si=Clock.hourIndex();  /* ★ بتوقيت المدينة لا الجهاز */
  if(si<0)return null;
  var lim=Math.min(si+12,HOURLY.time.length),t0=W.temperature_2m;
+ /* ★ it is raining already (radar first, for this place and fresh; the model only without it):
+      never «rain likely around 00:00» under a card that says it is raining now */
+ var wet=false;
+ try{var R=window.NX_RADAR,K=(+CUR.lat).toFixed(2)+','+(+CUR.lon).toFixed(2);
+  if(R&&R.ok&&window.NX_RADAR_K===K&&!(R.age>40*60))wet=R.here!=null&&R.here>=15;
+  else wet=(+W.precipitation||0)>=0.1;}catch(e){}
+ if(wet){
+  var ei=-1;for(i=si+1;i<lim;i++){if((HOURLY.precipitation_probability[i]||0)<40){ei=i;break;}}
+  if(ei>0){var he=new Date(HOURLY.time[ei]),hes=String(he.getHours()).padStart(2,"0")+":00";
+   return pick('المطر نازل الحين · يخف حدود <b>'+hes+'</b>','تمطر الآن · يُتوقع أن تخف قرابة <b>'+hes+'</b>','Raining now · easing around <b>'+hes+'</b>');}
+  var hl=new Date(HOURLY.time[lim-1]),hls=String(hl.getHours()).padStart(2,"0")+":00";
+  return pick('المطر نازل الحين وممكن يستمر بعد <b>'+hls+'</b>','تمطر الآن وقد تستمر بعد <b>'+hls+'</b>','Raining now · may last past <b>'+hls+'</b>');
+ }
  for(i=si;i<lim;i++){var pr=HOURLY.precipitation_probability[i]||0;
  if(pr>=50){var hh=new Date(HOURLY.time[i]),hs=String(hh.getHours()).padStart(2,"0")+":00";
  return pick('المطر يبدأ حدود <b>'+hs+'</b> (احتمال '+pr+'٪)','يُتوقع هطول قرابة <b>'+hs+'</b> باحتمال '+pr+'٪','Rain likely around <b>'+hs+'</b> ('+pr+'%)');}}
@@ -5341,8 +5355,10 @@ function geoKm(a1,o1,a2,o2){
 }
 function geoResolve(lat,lon,cb){
  /* ★ الذاكرة تُستخدم فقط لنفس البقعة تقريبًا */
- if(GEO&&GEO.lat!=null&&geoKm(GEO.lat,GEO.lon,lat,lon)<1.5){cb(GEO);return;}
  var lang=(LANG==='en')?'en':'ar';
+ /* ★ the cached names count only in the same language (older caches carry no tag: they were Arabic) */
+ if(GEO&&GEO.lat!=null&&(GEO.lang||'ar')===lang&&geoKm(GEO.lat,GEO.lon,lat,lon)<1.5){cb(GEO);return;}
+ var cb0=cb;cb=function(g){if(g)g.lang=lang;cb0(g)};
 
  /* ═══════════════════════════════════════════════════════════
     ★ عكس الترميز بمصدرين — الأدق أولًا
@@ -12487,7 +12503,7 @@ h+='</div><div class="m-card"><div class="m-sec">'+pick('الوضع السينم
  var bs=$("setBody").getElementsByTagName("button"),j;
  for(j=0;j<bs.length;j++)bs[j].onclick=function(){
  var b=this;
- if(b.getAttribute('data-lang')){LANG=b.getAttribute('data-lang');stSet('lang',LANG);}
+ if(b.getAttribute('data-lang')){var wasEn=LANG==='en';LANG=b.getAttribute('data-lang');stSet('lang',LANG);if(wasEn!==(LANG==='en'))setTimeout(relabelPlace,0);}
  else if(b.getAttribute('data-mo')){MOTION=b.getAttribute('data-mo');stSet('motion',MOTION);}
  else if(b.getAttribute('data-wd')){stSet('wide',b.getAttribute('data-wd'));wideApply();}
  else if(b.getAttribute('data-ts')){TSCALE=parseFloat(b.getAttribute('data-ts'));stSet('tscale',String(TSCALE));applyScale();}
@@ -12580,6 +12596,22 @@ function selectGlobal(lat,lon,nm,co,sub){
   }
   /* ★ رمز الدولة يأتي من الخدمة نفسها — يعمل لكل دول العالم */
   if(g.cc)CUR.cc=g.cc;
+  paintLocName();
+ });
+}
+/* ★ language switched: fetch the place names again in the new language (Tamil Nadu · India, not تاميل نادو · الهند).
+   Built-in cities already carry both names, so they are left alone. */
+function relabelPlace(){
+ if(!CUR||CUR.lat==null||typeof geoResolve!=='function')return;
+ try{if(CITIES.indexOf(CUR)>=0)return;}catch(e){}
+ var lat=+CUR.lat,lon=+CUR.lon;GEO=null;
+ geoResolve(lat,lon,function(g){
+  if(!g||!CUR||+CUR.lat!==lat||+CUR.lon!==lon)return;
+  GEO=g;var lb=geoLabel(g);
+  if(lb&&lb.main){CUR.n=lb.main;CUR.en=lb.main;CUR.sub=lb.sub||'';if(lb.country){CUR.c=lb.country;CUR.cen=lb.country;}}
+  if(g.cc)CUR.cc=g.cc;
+  var sl=parseFloat(stGet('myLat')),so=parseFloat(stGet('myLon'));
+  if(Math.abs(sl-lat)<1e-6&&Math.abs(so-lon)<1e-6){try{stSet('geo',JSON.stringify(g))}catch(e){}stSet('myName',CUR.n);stSet('myCo',CUR.c||'');stSet('mySub',CUR.sub||'');}
   paintLocName();
  });
 }
@@ -13414,7 +13446,6 @@ setInterval(function(){
  else paintSky(stateOf(W)); /* تحديث ناعم للتدرّج كل دقيقة */
  }},60000);
 </script>
-
 
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
@@ -14726,6 +14757,8 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     f.querySelector('.nxRepL').textContent=P('رصد','رصد','Report');f.setAttribute('aria-label',P('أرسل رصدك','إرسال رصد','Send a report'))}
   if(typeof window.applyVisibility==='function'&&!window.applyVisibility.__nx){var av=window.applyVisibility;window.applyVisibility=function(){var r=av.apply(this,arguments);try{repPaint()}catch(e){}return r};window.applyVisibility.__nx=1;try{applyVisibility=window.applyVisibility}catch(e){}}
   repPaint();setTimeout(repPaint,3000);setTimeout(repPaint,9000);
+  /* the label follows a language switch made in Settings (html[lang] flips between ar and en) */
+  try{new MutationObserver(function(){repPaint()}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']})}catch(e){}
 
   window.nxAlerts={auto:auto,state:state,paint:paint};
 })();
@@ -15626,7 +15659,7 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
     var k=(+CUR.lat).toFixed(2)+','+(+CUR.lon).toFixed(2);if(k===RADK&&Date.now()-RADT<4*6e4)return;
     RADK=k;RADT=Date.now();
     fetch(API+'/radar?lat='+(+CUR.lat).toFixed(3)+'&lon='+(+CUR.lon).toFixed(3)).then(function(r){return r.ok?r.json():null}).then(function(j){
-      if(!j||!j.ok)return;var was=JSON.stringify(RAD&&[RAD.here,RAD.closest]);RAD=j;window.NX_RADAR=j;
+      if(!j||!j.ok)return;var was=JSON.stringify(RAD&&[RAD.here,RAD.closest]);RAD=j;window.NX_RADAR=j;window.NX_RADAR_K=k;
       if(JSON.stringify([j.here,j.closest])!==was)try{card()}catch(e){}
     }).catch(function(){});
   }
