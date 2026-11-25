@@ -108,7 +108,7 @@
 /* Errors on real phones: the message, file name, line, Nafaf build and device family — nothing about the person.
    At most 5 different errors per visit, each once; the portal shows them grouped (Health → device errors). */
 (function(){
-  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611241755';
+  var API='https://nafa-push.alhutar0.workers.dev',seen={},sent=0;window.NX_BUILD='2611251040';
   function fam(){var u=navigator.userAgent||'',os=/Android/.test(u)?'Android':/iPhone|iPad|iPod/.test(u)?'iOS':/Windows/.test(u)?'Windows':/Mac OS/.test(u)?'Mac':/Linux/.test(u)?'Linux':'other';
     var br=/SamsungBrowser\/(\d+)/.exec(u)?'Samsung':/EdgA?\/(\d+)/.exec(u)?'Edge':/Firefox\/(\d+)/.exec(u)?'Firefox':/CriOS|Chrome\/(\d+)/.exec(u)?'Chrome':/Safari\//.test(u)?'Safari':'other';
     var m=/(?:Chrome|Firefox|Version|SamsungBrowser|Edg[A]?)\/(\d+)/.exec(u);return os+' '+br+(m?' '+m[1]:'')+(/; wv\)/.test(u)?' wv':'')}
@@ -13447,6 +13447,7 @@ setInterval(function(){
  }},60000);
 </script>
 
+
 <!-- ═══════ NAFAF NEXT LAYER (one layer: design · labs rail · bento · island · nudge · widget · WebGL scene) ═══════ -->
 <style>
 /* — cfg.html — */
@@ -14343,12 +14344,13 @@ function nafafEN(){try{return localStorage.getItem('lang')==='en'}catch(e){retur
   var isl=$('nxIsland'),pal=$('nxPal'),back=$('nxPalBack'),q=$('nxQ'),pb=$('nxPB');
   var lastMsg='',peekT=0;
   function wide(){return B.classList.contains('wide')}
-  function lift(){var bars=document.querySelectorAll('.installBar'),top=null;for(var i=0;i<bars.length;i++){var b=bars[i];if(!b.classList.contains('on'))continue;var r=b.getBoundingClientRect();if(r.height&&r.top<innerHeight)top=top==null?r.top:Math.min(top,r.top)}
+  function lift(){if(!isl||!pal)return;var bars=document.querySelectorAll('.installBar'),top=null;for(var i=0;i<bars.length;i++){var b=bars[i];if(!b.classList.contains('on'))continue;var r=b.getBoundingClientRect();if(r.height&&r.top<innerHeight)top=top==null?r.top:Math.min(top,r.top)}
     if(top==null&&!wide()){var dk=document.getElementById('v2Dock');if(dk){var dr=dk.getBoundingClientRect();if(dr.height)top=dr.top}}
     isl.style.bottom=top!=null?(innerHeight-top+10)+'px':'';pal.style.bottom=top!=null?(innerHeight-top+66)+'px':'';
     var pb2=top!=null?innerHeight-top+66:90;pal.style.maxHeight=Math.max(260,innerHeight-pb2-Math.max(16,(window.visualViewport?0:0)+16))+'px'}
   setInterval(lift,1200);
-  function island(){H.classList.toggle('nxWideUI',wide());lift();
+  /* ★ arrange() can run before the island is wired (weather already cached when this part loads): wait one tick, never throw */
+  function island(){if(!isl){setTimeout(function(){if(isl)island()},0);return}H.classList.toggle('nxWideUI',wide());lift();
     if(!W){$('nxIT').textContent='—';return}
     var st='clear';try{st=stateOf(W)}catch(e){}
     $('nxIT').textContent=T(W.temperature_2m)+'°';
